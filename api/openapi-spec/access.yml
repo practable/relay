@@ -1,0 +1,85 @@
+swagger: '2.0'
+info:
+  version: '0.3'
+  title: Crossbar
+  description: API for accessing github.com/timdrysdale/crossbar websocket relay
+  contact:
+    email: timothy.d.drysdale@gmail.com
+    name: Timothy Drysdale
+    url: https://github.com/timdrysdale
+host: localhost
+basePath: /
+securityDefinitions: {}
+schemes:
+- http
+consumes:
+- application/json
+produces:
+- application/json
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header 
+paths:
+  /session/{session_id}:
+    post:
+      description: access the specified session
+      summary: session
+      operationId: session
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: scope
+        in: query
+        required: true
+        enum:
+        - readonly
+        - writeonly
+        - readwrite
+        - shellhost
+        - shellclient
+        type: string
+        description: The operator to apply on the variables
+      - name: nbf
+        in: query
+        required: true
+        type: number
+        format: unix-timestamp
+        description: Earliest access time and start of session
+      - name: exp
+        in: query
+        required: true
+        type: number
+        format: unix-timestamp
+        description: Latest access time and end of session
+      - name: session_id
+        in: path
+        required: true
+        type: string
+        description: Session identification code
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            type: string
+          examples:
+            text/plain: b142eb22-1f16-4af1-ba14-e70a7afcbcc2
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+definitions:
+  ScopeType:
+    title: ScopeType
+    description: Possible scopes are readonly, writeonly, readwrite, shellhost, shellclient
+    type: string
+    enum:
+    - readonly
+    - writeonly
+    - readwrite
+    - shellhost
+    - shellclient
