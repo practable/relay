@@ -10,12 +10,41 @@ import (
 
 //let configuration be passed as argument to permit testing
 type Config struct {
-	Addr      string
-	Secret    string
-	Audience  string
-	ApiHost   string
-	ApiPort   int
-	ApiSecret string
+
+	// Listen is the listening address
+	Listen string
+
+	// Host must be matched by the token
+	Host string
+
+	// ExchangeCode swaps a code for the associated Token
+	ExchangeCode func(string) (Permission, error)
+
+	// CreateCode stores a token for code exchange within a limited time
+	CreateCode func(Permission, int64) string
+
+	// Gets the system time (unix, seconds)
+	GetTime func() int64
+}
+
+// Permission represents claims required in the apiKey JWT
+type Permission struct {
+	// Host must match the incoming request's intended host
+	Host string `json:"host"`
+
+	// Topic represents the communication channel;
+	// either /session/{session_id} or /shell/{session_id}.
+	Topic string `json:"topic"`
+
+	// Scopes controlling access to relay;
+	// either ["read"],["write"], or ["read","write"] for session, or ["host"]/["client"] for shell
+	Scopes []string `json:"scopes"`
+
+	// Nbf is the earliest unix time stamp at which the session can start (in seconds).
+	Nbf int64 `json:"nbf"`
+
+	// Exp is the unix time stamp at which the session must end or before (in seconds).
+	Exp int64 `json:"exp"`
 }
 
 // Auth message to send on successful connection or not ...

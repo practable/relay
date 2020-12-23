@@ -3,17 +3,12 @@ package crossbar
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"math"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
-	"github.com/eclesh/welford"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
 	log "github.com/sirupsen/logrus"
@@ -38,6 +33,17 @@ var (
 	newline = []byte{'\n'}
 	space   = []byte{' '}
 )
+
+// TODO
+// - change auth to code-for-token
+// - per ip throttling with github.com/didip/tollbooth
+// - package stats.html with
+// - canary connection + reporting
+// - add auth to stats connection
+// - tidy comments to look better in docs
+// - remove stale code and comments
+// - redo load testing / performance / memory leakage
+// - add benchmarking
 
 // 4096 Bytes is the approx average message size
 // this number does not limit message size
@@ -339,66 +345,6 @@ func (c *Client) readPump(broadcaster bool) {
 	wg.Wait()
 }
 
-// checkAuth checks the claims are ok
-//
-// the route must match the audience
-// the lifetime is the number of seconds for which the token is valid
-
-func checkAuth(data []byte, secret string, route string, now int64) (int64, error) {
-
-	tokenError := errors.New("Token invalid for this resource")
-	var lifetime int64 = 0
-
-	token, err := jwt.Parse(strings.TrimSpace(string(data)), func(token *jwt.Token) (interface{}, error) {
-		// verify alg is expected
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		// global config option
-		return []byte(secret), nil
-	})
-
-	if err != nil {
-		msg := fmt.Sprintf("Error reading token %s", err.Error())
-		log.WithFields(log.Fields{"error": err}).Warn(msg)
-		tokenError = errors.New(msg)
-
-	} else {
-
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-
-			if claims["aud"] == route {
-				tokenError = nil
-				log.WithFields(log.Fields{"route": route}).Info("Authorised - client can communicate")
-			} else {
-				msg := fmt.Sprintf("Denied - not permitted to access %s with token for %s", route, claims["aud"])
-				log.WithFields(log.Fields{"wanted": claims["aud"], "actual": route}).Warn(msg)
-				tokenError = errors.New(msg)
-			}
-
-			if val, ok := claims["exp"]; ok {
-
-				if exp, ok := val.(float64); ok {
-					lifetime = int64(exp) - time.Now().Unix()
-					log.WithFields(log.Fields{"lifetime": lifetime, "exp": claims["exp"]}).Info("Lifetime")
-				} else {
-					msg := "Couldn't calculate lifetime, leaving as zero lifetime connection"
-					log.WithFields(log.Fields{"exp": claims["exp"]}).Info(msg)
-					tokenError = errors.New(msg)
-				}
-			}
-
-		} else {
-			msg := "Error checking claims in JWT"
-			log.WithFields(log.Fields{"err": err}).Error(msg)
-			tokenError = errors.New(msg)
-		}
-
-	}
-
-	return lifetime, tokenError
-}
-
 // writePump pumps messages from the hub to the websocket connection.
 //
 // A goroutine running writePump is started for each connection. The
@@ -486,56 +432,6 @@ func (c *Client) writePump(closed <-chan struct{}) {
 	}
 }
 
-// serveWs handles websocket requests from the peer.
-func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Request, config Config) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.WithField("error", err).Error("Upgrading serveWs")
-		return
-	}
-
-	// reuse our existing hub which does not know about permissions
-	// so enforce in readPump by ignoring messages when the client has
-	// no permission to input messages to the crossbar for broadcast
-	// i.e. any client connecting to /out/<rest/of/path>
-	broadcaster := true
-	topic := slashify(r.URL.Path)
-	if strings.HasPrefix(topic, "/out/") {
-		// we're a receiver-only, so
-		// prevent any messages being broadcast from this client
-		broadcaster = false
-	} else if strings.HasPrefix(topic, "/in/") {
-		// we're a sender to receiver only clients, hence
-		// convert topic so we write to those receiving clients
-		topic = strings.Replace(topic, "/in", "/out", 1)
-	} // else do nothing i.e. permit bidirectional messaging at other endpoints
-
-	// initialise statistics
-	tx := &Frames{size: welford.New(), ns: welford.New()}
-	rx := &Frames{size: welford.New(), ns: welford.New()}
-	stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
-
-	client := &Client{hub: hub,
-		conn:        conn,
-		send:        make(chan message, 256),
-		adminSend:   make(chan message, 2),
-		topic:       topic,
-		broadcaster: broadcaster,
-		stats:       stats,
-		name:        uuid.New().String(),
-		userAgent:   r.UserAgent(),
-		remoteAddr:  r.Header.Get("X-Forwarded-For"),
-		secret:      config.Secret,
-		audience:    config.Audience,
-	}
-	client.hub.register <- client
-
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
-	go client.writePump(closed)
-	go client.readPump(broadcaster)
-}
-
 func serveStats(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Request, config Config) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -555,6 +451,7 @@ func serveStats(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http
 }
 
 func servePage(w http.ResponseWriter, r *http.Request) {
+	// TODO use gobuffalo/packr to embed this file or wait for go1.16
 	log.Println(r.URL)
 	if r.URL.Path != "/stats" {
 		http.Error(w, "Not found", http.StatusNotFound)

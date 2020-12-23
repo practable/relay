@@ -19,15 +19,6 @@ import (
 	"github.com/timdrysdale/crossbar/pkg/access/restapi/operations"
 )
 
-// Permission represents claims required in the apiKey JWT
-type Permission struct {
-	Host      string `json:"host"`
-	SessionID string `json:"session_id"`
-	Scope     string `json:"scope"`
-	Nbf       int64  `json:"nbf"`
-	Exp       int64  `json:"exp"`
-}
-
 // if adding omit_empty or other decorators, then improve reflection code as per
 // https://stackoverflow.com/questions/40864840/how-to-get-the-json-field-names-of-a-struct-in-golang
 
