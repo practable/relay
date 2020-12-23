@@ -27,12 +27,10 @@ func (t *ExpToken) Expired() bool {
 
 // NewExpToken creates a new token expiring in ttl seconds from now
 func NewExpToken(token jwt.Token, ttl int64) ExpToken {
-
 	return ExpToken{
 		Token: token,
 		Exp:   GetTime() + ttl,
 	}
-
 }
 
 // CodeStore represents the codes, and their associated expiring tokens.
@@ -41,10 +39,10 @@ type CodeStore struct {
 	sync.Mutex
 
 	// Store is a map of codes to Tokens.
-	Store map[string]ExpToken
+	store map[string]ExpToken
 
 	// TTL is lifetime in seconds of a code
-	TTL int64
+	ttl int64
 
 	//
 	closed chan struct{}
@@ -58,8 +56,8 @@ func GetTime() int64 {
 // NewDefaultCodeSTore returns a codestore with code lifetime of 30seconds.
 func NewDefaultCodeStore() *CodeStore {
 	c := &CodeStore{
-		Store:  make(map[string]ExpToken),
-		TTL:    30,
+		store:  make(map[string]ExpToken),
+		ttl:    30,
 		closed: make(chan struct{}),
 	}
 	go c.keepClean()
@@ -68,7 +66,7 @@ func NewDefaultCodeStore() *CodeStore {
 
 // WithTTL sets the code lifetime of the new CodeStore (in seconds).
 func (c *CodeStore) WithTTL(ttl int64) *CodeStore {
-	c.TTL = ttl
+	c.ttl = ttl
 	return c
 }
 
@@ -78,18 +76,16 @@ func (c *CodeStore) Close() {
 	close(c.closed)
 }
 
+// keepClean periodically removes stale codes/tokens
 func (c *CodeStore) keepClean() {
-
 	for {
 		select {
 		case <-c.closed:
 			return
-		case <-time.After(time.Duration(c.TTL) * time.Second):
+		case <-time.After(time.Duration(2*c.ttl) * time.Second):
 			c.CleanExpired()
 		}
-
 	}
-
 }
 
 // GenerateCode returns a unique string to be used as a code
@@ -103,7 +99,7 @@ func (c *CodeStore) SubmitToken(token jwt.Token) string {
 	c.Lock()
 	defer c.Unlock()
 	code := GenerateCode()
-	c.Store[code] = NewExpToken(token, c.TTL)
+	c.store[code] = NewExpToken(token, c.ttl)
 	return code
 }
 
@@ -111,12 +107,12 @@ func (c *CodeStore) SubmitToken(token jwt.Token) string {
 func (c *CodeStore) ExchangeCode(code string) (jwt.Token, error) {
 	c.Lock()
 	defer c.Unlock()
-	token, ok := c.Store[code]
+	token, ok := c.store[code]
 	if !ok {
 		return jwt.Token{}, errors.New("No code")
 	}
 	// can only get code once.
-	delete(c.Store, code)
+	delete(c.store, code)
 	return token.Token, nil
 
 }
@@ -125,9 +121,17 @@ func (c *CodeStore) ExchangeCode(code string) (jwt.Token, error) {
 func (c *CodeStore) CleanExpired() {
 	c.Lock()
 	defer c.Unlock()
-	for code, token := range c.Store {
+	for code, token := range c.store {
 		if token.Expired() {
-			delete(c.Store, code)
+			delete(c.store, code)
 		}
 	}
+}
+
+func (c *CodeStore) GetTTL() int64 {
+	return c.ttl
+}
+
+func (c *CodeStore) GetCodeCount() int {
+	return len(c.store)
 }
