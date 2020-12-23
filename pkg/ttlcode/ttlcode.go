@@ -45,6 +45,9 @@ type CodeStore struct {
 
 	// TTL is lifetime in seconds of a code
 	TTL int64
+
+	//
+	closed chan struct{}
 }
 
 // GetTime gets the current Unix time in seconds.
@@ -55,9 +58,11 @@ func GetTime() int64 {
 // NewDefaultCodeSTore returns a codestore with code lifetime of 30seconds.
 func NewDefaultCodeStore() *CodeStore {
 	c := &CodeStore{
-		Store: make(map[string]ExpToken),
-		TTL:   30,
+		Store:  make(map[string]ExpToken),
+		TTL:    30,
+		closed: make(chan struct{}),
 	}
+	go c.keepClean()
 	return c
 }
 
@@ -65,6 +70,26 @@ func NewDefaultCodeStore() *CodeStore {
 func (c *CodeStore) WithTTL(ttl int64) *CodeStore {
 	c.TTL = ttl
 	return c
+}
+
+func (c *CodeStore) Close() {
+	c.Lock()
+	defer c.Unlock()
+	close(c.closed)
+}
+
+func (c *CodeStore) keepClean() {
+
+	for {
+		select {
+		case <-c.closed:
+			return
+		case <-time.After(time.Duration(c.TTL) * time.Second):
+			c.CleanExpired()
+		}
+
+	}
+
 }
 
 // GenerateCode returns a unique string to be used as a code
