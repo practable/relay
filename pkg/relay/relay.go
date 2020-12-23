@@ -1,18 +1,19 @@
-package cmd
+package relay
 
 import (
 	"sync"
 
-	"github.com/timdrysdale/crossbar/pkg/access"
+	"github.com/timdrysdale/relay/pkg/access"
+	"github.com/timdrysdale/relay/pkg/crossbar"
 )
 
-func crossbar(config Config, closed chan struct{}, parentwg *sync.WaitGroup) {
+func Relay(config Config, closed chan struct{}, parentwg *sync.WaitGroup) {
 
 	var wg sync.WaitGroup
 
 	messagesToDistribute := make(chan message, 10) //TODO make buffer length configurable
 
-	var topics topicDirectory
+	var topics crossbar.TopicDirectory
 
 	topics.directory = make(map[string][]clientDetails)
 
@@ -20,9 +21,9 @@ func crossbar(config Config, closed chan struct{}, parentwg *sync.WaitGroup) {
 
 	wg.Add(3)
 
-	go HandleConnections(closed, &wg, clientActionsChan, messagesToDistribute, config)
+	go crossbar.HandleConnections(closed, &wg, clientActionsChan, messagesToDistribute, config)
 
-	go HandleClients(closed, &wg, &topics, clientActionsChan)
+	go crossbar.HandleClients(closed, &wg, &topics, clientActionsChan)
 
 	go access.API(closed, &wg, config.ApiPort, config.ApiHost, config.ApiSecret, *access.DefaultOptions())
 

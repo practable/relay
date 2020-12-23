@@ -1,4 +1,4 @@
-package cmd
+package crossbar
 
 import (
 	"bytes"
@@ -102,7 +102,7 @@ func TestTooEarlyForAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go crossbar(config, closed, &wg)
+	go Crossbar(config, closed, &wg)
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -158,7 +158,7 @@ func TestTooLateForAuth(t *testing.T) {
 	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
 	http.DefaultServeMux = new(http.ServeMux)
 
-	// setup crossbar on local (free) port
+	// setup Crossbar on local (free) port
 
 	closed := make(chan struct{})
 	var wg sync.WaitGroup
@@ -179,7 +179,7 @@ func TestTooLateForAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go crossbar(config, closed, &wg)
+	go Crossbar(config, closed, &wg)
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -235,7 +235,7 @@ func TestBadServerAuth(t *testing.T) {
 	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
 	http.DefaultServeMux = new(http.ServeMux)
 
-	// setup crossbar on local (free) port
+	// setup Crossbar on local (free) port
 
 	closed := make(chan struct{})
 	var wg sync.WaitGroup
@@ -256,7 +256,7 @@ func TestBadServerAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go crossbar(config, closed, &wg)
+	go Crossbar(config, closed, &wg)
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -363,7 +363,7 @@ func TestBadClientAuth(t *testing.T) {
 	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
 	http.DefaultServeMux = new(http.ServeMux)
 
-	// setup crossbar on local (free) port
+	// setup Crossbar on local (free) port
 
 	closed := make(chan struct{})
 	var wg sync.WaitGroup
@@ -384,7 +384,7 @@ func TestBadClientAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go crossbar(config, closed, &wg)
+	go Crossbar(config, closed, &wg)
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -510,7 +510,7 @@ func TestAuth(t *testing.T) {
 	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
 	http.DefaultServeMux = new(http.ServeMux)
 
-	// setup crossbar on local (free) port
+	// setup Crossbar on local (free) port
 
 	closed := make(chan struct{})
 	var wg sync.WaitGroup
@@ -531,7 +531,7 @@ func TestAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go crossbar(config, closed, &wg)
+	go Crossbar(config, closed, &wg)
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -641,7 +641,7 @@ func TestCrossbarUniDirectionalMessaging(t *testing.T) {
 	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
 	http.DefaultServeMux = new(http.ServeMux)
 
-	// setup crossbar on local (free) port
+	// setup Crossbar on local (free) port
 
 	closed := make(chan struct{})
 	var wg sync.WaitGroup
@@ -656,7 +656,7 @@ func TestCrossbarUniDirectionalMessaging(t *testing.T) {
 		Addr: addr,
 	}
 	wg.Add(1)
-	go crossbar(config, closed, &wg)
+	go Crossbar(config, closed, &wg)
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -730,7 +730,7 @@ func TestCrossbarBidirectionalMessaging(t *testing.T) {
 	//TODO - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
 	http.DefaultServeMux = new(http.ServeMux)
 
-	// setup crossbar on local (free) port
+	// setup Crossbar on local (free) port
 
 	closed := make(chan struct{})
 	var wg sync.WaitGroup
@@ -747,7 +747,7 @@ func TestCrossbarBidirectionalMessaging(t *testing.T) {
 	}
 
 	wg.Add(1)
-	go crossbar(config, closed, &wg)
+	go Crossbar(config, closed, &wg)
 
 	time.Sleep(10 * time.Millisecond)
 

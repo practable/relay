@@ -1,4 +1,4 @@
-package cmd
+package crossbar
 
 /*
 func TestHandleMessages(t *testing.T) {

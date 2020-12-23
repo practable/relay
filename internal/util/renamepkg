@@ -1,0 +1,2 @@
+#!/bin/sh
+sed -i "s/package $1/package $2/g" *.go

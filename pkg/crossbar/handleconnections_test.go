@@ -1,4 +1,4 @@
-package cmd
+package crossbar
 
 // TODO refactor with interface in client struct to allow mocking
 // of *websocket.Conn https://github.com/gorilla/websocket/issues/74
