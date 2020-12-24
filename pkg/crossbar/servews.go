@@ -52,7 +52,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	log.Trace("upgraded to ws")
+	log.Trace("upgraded to ws") //Cannot return any http responses from here on
 
 	// Enforce permissions by exchanging the authcode for a connection ticket
 	// which contains expiry time, route, and permissions
@@ -66,7 +66,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	// if no code or empty, return 401
 	if code == "" {
-		http.Error(w, "Unauthorized - No Code", http.StatusUnauthorized)
+		log.WithField("topic", topic).Info("Unauthorized - No Code")
 		return
 	}
 
@@ -78,7 +78,6 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	if err != nil {
 		log.WithField("topic", topic).Info("Unauthorized - Invalid Code")
-		http.Error(w, "Unauthorized - Invalid Code", http.StatusUnauthorized)
 		return
 	}
 
@@ -86,7 +85,6 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 	// It's been validated so we don't need to re-do that
 	if !permission.ValidPermissionToken(token) {
 		log.WithField("topic", topic).Info("Unauthorized - Not a permission token")
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
@@ -96,7 +94,6 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	if err != nil {
 		log.WithField("topic", topic).Info("Unauthorized - Not a permission token")
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
@@ -104,7 +101,6 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	if p.NotBefore > now {
 		log.WithField("topic", topic).Info("Unauthorized - Too early")
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
@@ -118,7 +114,6 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	if audienceBad || topicBad || expired {
 		log.WithFields(log.Fields{"audienceBad": audienceBad, "topicBad": topicBad, "expired": expired, "topic": topic}).Trace("Token invalid")
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
@@ -137,7 +132,6 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	if !(canRead || canWrite) {
 		log.WithFields(log.Fields{"topic": topic, "scopes": p.Scopes}).Trace("No valid scopes")
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
