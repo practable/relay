@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"math"
 	"net/http"
-	"strings"
+	"strconv"
 	"sync"
 	"time"
 
@@ -35,7 +35,6 @@ var (
 )
 
 // TODO
-// - change auth to code-for-token
 // - per ip throttling with github.com/didip/tollbooth
 // - package stats.html with
 // - canary connection + reporting
@@ -62,12 +61,15 @@ func fpsFromNs(ns float64) float64 {
 }
 
 func (c *Client) statsReporter() {
+
 	defer func() {
 		c.conn.Close()
 	}()
+
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+
 	for {
 		_, _, err := c.conn.ReadMessage()
 		if err != nil {
@@ -79,13 +81,6 @@ func (c *Client) statsReporter() {
 
 		for _, topic := range c.hub.clients {
 			for client, _ := range topic {
-
-				//c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-				//
-				//w, err := c.conn.NextWriter(websocket.TextMessage)
-				//if err != nil {
-				//	return
-				//}
 
 				var tx ReportStats
 
@@ -138,15 +133,9 @@ func (c *Client) statsReporter() {
 					return
 				} else {
 					c.send <- message{data: b, mt: websocket.TextMessage}
-					//w.Write(b)
 				}
-
-				//if err := w.Close(); err != nil {
-				//	return
-				//}
 			}
 		}
-
 	}
 }
 
@@ -173,14 +162,6 @@ func (c *Client) statsManager(closed <-chan struct{}) {
 
 			w.Write(message.data)
 
-			// commented out because need one object per message?
-			// Add queued chunks to the current websocket message, without delimiter.
-			//n := len(c.send)
-			//for i := 0; i < n; i++ {
-			//	followOnMessage := <-c.send
-			//	w.Write(followOnMessage.data)
-			//}
-
 			if err := w.Close(); err != nil {
 				return
 			}
@@ -200,34 +181,22 @@ func (c *Client) statsManager(closed <-chan struct{}) {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Client) readPump(broadcaster bool) {
-
-	quit := make(chan struct{})
-
-	// use wg to reinforce that we must kill the timer goroutine (to avoid memory leaks)
-	// TODO: figure out how to test this behaviour explicitly, so it is not lost in future updates
-	var wg sync.WaitGroup
+func (c *Client) readPump() {
 
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
-		log.Debug("Deferred close of readPump")
-		close(quit)
+		log.Trace("readpump closed")
 	}()
 
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
-	// skip authentication if there is no secret
-	if c.secret == "" {
-		log.WithField("topic", c.topic).Warn("No secret supplied so authorisation is permitted for all connections")
-		c.authorised = true
-	}
-
 	for {
 
 		mt, data, err := c.conn.ReadMessage()
+
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Errorf("error: %v", err)
@@ -235,98 +204,7 @@ func (c *Client) readPump(broadcaster bool) {
 			break
 		}
 
-		if !c.authorised {
-
-			// this if statement deliberately does not allow authorisation to be extended by additional auth messages sent later
-			// Since we only receive one authorisation message per connection, for a spam connection it will either
-			// a/ stay connected until auth attempted, receiving nothing, and using little resource
-			// b/ attempt auth, fail, get disconnected, and need to reconnect - in which case we look to proxy for rate-limiting the reconnections
-
-			// check if the message is a JWT with authentication
-			// https://github.com/dgrijalva/jwt-go/issues/397: Make sure you're not clicking "secret base64 encoded" if you enter "mysecret" as the secret.
-
-			// We convert all broadcasters connecting on /in/<route> to the topic of /out/<route>
-			// so we need to adjust our topic back to /in/<route> before we can check the token
-			topic := c.topic
-
-			if c.broadcaster {
-				topic = strings.Replace(topic, "/out/", "/in/", 1)
-			}
-
-			route := c.audience + topic
-
-			now := time.Now().Unix()
-
-			lifetime, err := checkAuth(data, c.secret, route, now)
-
-			if err == nil {
-
-				c.authorised = true
-
-				wg.Add(1)
-
-				go func() {
-
-					defer wg.Done()
-
-					select {
-					case <-quit:
-						log.WithFields(log.Fields{"topic": c.topic}).Debug("Timeout has been cancelled by quit channel")
-						return
-					case <-time.After(time.Duration(lifetime) * time.Second):
-
-						c.authorised = false
-
-						// don't send expired message to avoid jsmpeg having to check each incoming message
-						// for whether it is MPEG TS or json
-						// propose using separate service to send "information on token status"
-						// i.e. subscribe to the token alerts service with your tokens ...
-						// (which need not necessarily check the signature?)
-
-						log.WithFields(log.Fields{"topic": c.topic}).Warn("Token has expired")
-					}
-
-				}()
-
-				accepted := &AuthMessage{
-					Topic:      topic,
-					Token:      string(data),
-					Authorised: true,
-					Reason:     "ok",
-				}
-
-				reply, err := json.Marshal(accepted)
-
-				if err == nil {
-					c.adminSend <- message{sender: *c, data: reply, mt: websocket.TextMessage}
-				} else {
-					log.WithField("error", err.Error()).Warn("Could not marshal authorisation-accepted message")
-				}
-
-			} else {
-
-				denied := &AuthMessage{
-					Topic:      topic,
-					Token:      string(data),
-					Authorised: false,
-					Reason:     err.Error(), //"denied",
-				}
-
-				reply, err := json.Marshal(denied)
-
-				if err == nil {
-					log.WithField("topic", topic).Debug("Sending auth denied message")
-					c.adminSend <- message{sender: *c, data: reply, mt: websocket.TextMessage}
-					log.WithField("topic", topic).Info("Sent auth denied message")
-				} else {
-					log.WithField("error", err.Error()).Warn("Could not marshal authorisation-denied message")
-				}
-				time.Sleep(50 * time.Millisecond) // allow some time for denied message to be sent
-				log.WithField("topic", c.topic).Warn("Auth incorrect, closing connection")
-				return // close connection if auth is incorrect. Will this mess up
-
-			}
-		} else if broadcaster { // do in this order to save broadcasting the auth message! (TODO - add test for this)
+		if c.canWrite {
 
 			c.hub.broadcast <- message{sender: *c, data: data, mt: mt}
 
@@ -341,8 +219,6 @@ func (c *Client) readPump(broadcaster bool) {
 
 		}
 	}
-
-	wg.Wait()
 }
 
 // writePump pumps messages from the hub to the websocket connection.
@@ -350,7 +226,7 @@ func (c *Client) readPump(broadcaster bool) {
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-func (c *Client) writePump(closed <-chan struct{}) {
+func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -361,23 +237,6 @@ func (c *Client) writePump(closed <-chan struct{}) {
 		log.Debug("Write pump alive")
 		select {
 
-		case message, ok := <-c.adminSend:
-			log.Debug("Sending admin message")
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-			w, err := c.conn.NextWriter(message.mt)
-			if err != nil {
-				return
-			}
-
-			w.Write(message.data)
-			if err := w.Close(); err != nil {
-				return
-			}
 		case message, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
@@ -386,7 +245,7 @@ func (c *Client) writePump(closed <-chan struct{}) {
 				return
 			}
 
-			if c.authorised { //only send if authorised
+			if c.canRead { //only send if authorised to read
 
 				w, err := c.conn.NextWriter(message.mt)
 				if err != nil {
@@ -427,6 +286,8 @@ func (c *Client) writePump(closed <-chan struct{}) {
 				return
 			}
 		case <-closed:
+			return
+		case <-cancelled:
 			return
 		}
 	}
@@ -476,7 +337,9 @@ func HandleConnections(closed <-chan struct{}, wg *sync.WaitGroup, clientActions
 		serveStats(closed, hub, w, r, config)
 	})
 
-	h := &http.Server{Addr: config.Addr, Handler: nil}
+	addr := ":" + strconv.Itoa(config.Listen)
+
+	h := &http.Server{Addr: addr, Handler: nil}
 
 	go func() {
 		if err := h.ListenAndServe(); err != nil {

@@ -23,37 +23,27 @@ type Token struct {
 	jwt.StandardClaims
 }
 
-func NewToken(host, topic string, scopes []string, iat, exp, nbf int64) *Token {
-	return &Token{
-		Host:   host,
+func NewToken(audience, topic string, scopes []string, iat, nbf, exp int64) Token {
+	return Token{
 		Topic:  topic,
 		Scopes: scopes,
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  iat,
 			NotBefore: nbf,
 			ExpiresAt: exp,
+			Audience:  audience,
 		},
 	}
 }
 
-func ConvertToJWT(token *Token) *jwt.Token {
-	/*
-		mc := jwt.MapClaims{}
-
-		v := reflect.ValueOf(token)
-
-		for i := 0; i < v.Type().NumField(); i++ {
-
-			mc[v.Type().Field(i).Tag.Get("json")] = v.Field(i).Interface()
-		}
-	*/
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, token)
+func ConvertToJWT(token Token) jwt.Token {
+	return *jwt.NewWithClaims(jwt.SigningMethodHS256, token)
 }
 
-func ValidPermissionToken(token *jwt.Token) bool {
+func ValidPermissionToken(token jwt.Token) bool {
 
 	actualType := reflect.ValueOf(token.Claims).Type()
-	expectedType := reflect.ValueOf(&Token{}).Type()
+	expectedType := reflect.ValueOf(Token{}).Type()
 
 	if actualType != expectedType {
 		return false
@@ -63,10 +53,9 @@ func ValidPermissionToken(token *jwt.Token) bool {
 
 }
 
-func GetPermissionToken(token *jwt.Token) (*Token, error) {
-	permission, ok := token.Claims.(*Token)
-	if !ok {
-		return nil, errors.New("Not a permission token")
+func GetPermissionToken(token jwt.Token) (Token, error) {
+	if !ValidPermissionToken(token) {
+		return Token{}, errors.New("Not a permission token")
 	}
-	return permission, nil
+	return token.Claims.(Token), nil
 }

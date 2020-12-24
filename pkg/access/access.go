@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/loads"
@@ -138,4 +139,64 @@ func pretty(t interface{}) string {
 	}
 
 	return string(json)
+}
+
+// checkAuth checks the claims are ok
+//
+// the route must match the audience
+// the lifetime is the number of seconds for which the token is valid
+
+func checkAuth(data []byte, secret string, route string, now int64) (int64, error) {
+
+	tokenError := errors.New("Token invalid for this resource")
+	var lifetime int64 = 0
+
+	token, err := jwt.Parse(strings.TrimSpace(string(data)), func(token *jwt.Token) (interface{}, error) {
+		// verify alg is expected
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		// global config option
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		msg := fmt.Sprintf("Error reading token %s", err.Error())
+		log.WithFields(log.Fields{"error": err}).Warn(msg)
+		tokenError = errors.New(msg)
+
+	} else {
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+
+			if claims["aud"] == route {
+				tokenError = nil
+				log.WithFields(log.Fields{"route": route}).Info("Authorised - client can communicate")
+			} else {
+				msg := fmt.Sprintf("Denied - not permitted to access %s with token for %s", route, claims["aud"])
+				log.WithFields(log.Fields{"wanted": claims["aud"], "actual": route}).Warn(msg)
+				tokenError = errors.New(msg)
+			}
+
+			if val, ok := claims["exp"]; ok {
+
+				if exp, ok := val.(float64); ok {
+					lifetime = int64(exp) - time.Now().Unix()
+					log.WithFields(log.Fields{"lifetime": lifetime, "exp": claims["exp"]}).Info("Lifetime")
+				} else {
+					msg := "Couldn't calculate lifetime, leaving as zero lifetime connection"
+					log.WithFields(log.Fields{"exp": claims["exp"]}).Info(msg)
+					tokenError = errors.New(msg)
+				}
+			}
+
+		} else {
+			msg := "Error checking claims in JWT"
+			log.WithFields(log.Fields{"err": err}).Error(msg)
+			tokenError = errors.New(msg)
+		}
+
+	}
+
+	return lifetime, tokenError
 }

@@ -6,53 +6,43 @@ import (
 
 	"github.com/eclesh/welford"
 	"github.com/gorilla/websocket"
+	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
 //let configuration be passed as argument to permit testing
 type Config struct {
 
-	// Listen is the listening address
-	Listen string
+	// Listen is the listening port
+	Listen int
 
-	// Host must be matched by the token
-	Host string
+	// Audience must match the host in token
+	Audience string
 
 	// ExchangeCode swaps a code for the associated Token
-	ExchangeCode func(string) (Permission, error)
-
-	// CreateCode stores a token for code exchange within a limited time
-	CreateCode func(Permission, int64) string
-
-	// Gets the system time (unix, seconds)
-	GetTime func() int64
+	CodeStore *ttlcode.CodeStore
 }
 
-// Permission represents claims required in the apiKey JWT
-type Permission struct {
-	// Host must match the incoming request's intended host
-	Host string `json:"host"`
-
-	// Topic represents the communication channel;
-	// either /session/{session_id} or /shell/{session_id}.
-	Topic string `json:"topic"`
-
-	// Scopes controlling access to relay;
-	// either ["read"],["write"], or ["read","write"] for session, or ["host"]/["client"] for shell
-	Scopes []string `json:"scopes"`
-
-	// Nbf is the earliest unix time stamp at which the session can start (in seconds).
-	Nbf int64 `json:"nbf"`
-
-	// Exp is the unix time stamp at which the session must end or before (in seconds).
-	Exp int64 `json:"exp"`
+func NewDefaultConfig() *Config {
+	c := &Config{}
+	c.Listen = 3000
+	c.CodeStore = ttlcode.NewDefaultCodeStore()
+	return c
 }
 
-// Auth message to send on successful connection or not ...
-type AuthMessage struct {
-	Topic      string `json:"topic"`
-	Token      string `json:"token"`
-	Authorised bool   `json:"authorised"`
-	Reason     string `json:"reason"`
+func (c *Config) WithListen(listen int) *Config {
+	c.Listen = listen
+	return c
+}
+
+func (c *Config) WithAudience(audience string) *Config {
+	c.Audience = audience
+	return c
+}
+
+func (c *Config) WithCodeStoreTTL(ttl int64) *Config {
+	c.CodeStore = ttlcode.NewDefaultCodeStore().
+		WithTTL(ttl)
+	return c
 }
 
 // Client is a middleperson between the websocket connection and the hub.
@@ -64,9 +54,6 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan message
-
-	// admin messages which are always sent, e.g. to unauthorised client
-	adminSend chan message
 
 	// string representing the path the client connected to
 	topic string
@@ -88,6 +75,9 @@ type Client struct {
 	userAgent string
 
 	remoteAddr string
+
+	// existence of scopes to read, write
+	canRead, canWrite bool
 }
 
 type RxTx struct {

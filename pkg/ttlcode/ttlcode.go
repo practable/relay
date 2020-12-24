@@ -53,6 +53,10 @@ func GetTime() int64 {
 	return time.Now().Unix()
 }
 
+func (c *CodeStore) GetTime() int64 {
+	return GetTime()
+}
+
 // NewDefaultCodeSTore returns a codestore with code lifetime of 30seconds.
 func NewDefaultCodeStore() *CodeStore {
 	c := &CodeStore{
