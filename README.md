@@ -5,12 +5,25 @@ Secure websocket relay server and clients for sharing video, data, and ssh acros
 IN DEVELOPMENT NOW - REPO HERE FOR BACKUP ONLY - DO NOT USE - API IN FLUX
 
 
-# Crossbar
-![alt text][logo]
+Ignore below here (README.md from crossbar ...)
 
+
+```
+
+
+
+
+
+
+
+
+
+
+#Crossbar
+![alt text][logo]
 ![alt text][status]
 ![alt text][coverage]
-
+```
 Crossbar relays websocket streams
 
 ## Why?
