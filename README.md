@@ -1,5 +1,10 @@
 # relay
 Secure websocket relay server and clients for sharing video, data, and ssh across firewall boundaries
+
+
+IN DEVELOPMENT NOW - REPO HERE FOR BACKUP ONLY - DO NOT USE - API IN FLUX
+
+
 # Crossbar
 ![alt text][logo]
 
