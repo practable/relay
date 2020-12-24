@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/rand"
 	"net/http"
 	"os"
 	"strconv"
@@ -353,7 +354,7 @@ func BenchmarkSmallMessage(b *testing.B) {
 	wg.Add(1)
 	go Crossbar(config, closed, &wg)
 
-	var timeout = 1 * time.Millisecond
+	var timeout = 5 * time.Millisecond
 
 	// safety margin to get crossbar running
 	time.Sleep(timeout)
@@ -451,7 +452,7 @@ func BenchmarkLargeMessage(b *testing.B) {
 	wg.Add(1)
 	go Crossbar(config, closed, &wg)
 
-	var timeout = 1 * time.Millisecond
+	var timeout = 5 * time.Millisecond
 
 	// safety margin to get crossbar running
 	time.Sleep(timeout)
@@ -479,13 +480,8 @@ func BenchmarkLargeMessage(b *testing.B) {
 
 	time.Sleep(timeout)
 
-	data := []byte("x")
-
-	for k := 0; k < 20; k++ {
-		data = append(data, data...)
-	}
-
-	b.Logf("Message size: %d bytes", len(data))
+	data := make([]byte, 1024*1024)
+	rand.Read(data)
 
 	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 
@@ -493,6 +489,122 @@ func BenchmarkLargeMessage(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for m := 0; m < 100; m++ {
+			s0.Out <- msgOut
+			// always record the result to prevent
+			// the compiler eliminating the function call.
+			msg = <-s1.In
+		}
+	}
+
+	// always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	assert.Equal(b, data, msg.Data)
+
+	cancel()
+	time.Sleep(timeout)
+
+	// Teardown crossbar
+	time.Sleep(timeout)
+	close(closed)
+	wg.Wait()
+
+}
+
+func BenchmarkLargeRandomPacketGeneration(b *testing.B) {
+
+	data := make([]byte, 1024*1024)
+	var ping, pong reconws.WsMessage
+	bar := make(chan reconws.WsMessage, 2)
+	for n := 0; n < b.N; n++ {
+		for m := 0; m < 100; m++ {
+			rand.Read(data)
+			ping = reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+			bar <- ping
+			pong = <-bar
+		}
+	}
+	assert.Equal(b, pong.Data, data)
+}
+
+func BenchmarkLargeRandomMessage(b *testing.B) {
+
+	// Setup logging
+
+	debug := false
+
+	if debug {
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
+
+	// Setup crossbar
+
+	http.DefaultServeMux = new(http.ServeMux)
+
+	// setup crossbar on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	config := Config{
+		Listen:    port,
+		Audience:  audience,
+		CodeStore: cs,
+	}
+
+	wg.Add(1)
+	go Crossbar(config, closed, &wg)
+
+	var timeout = 5 * time.Millisecond
+
+	// safety margin to get crossbar running
+	time.Sleep(timeout)
+
+	// Start tests
+
+	// *** TestCanConnectWithValidCode ***
+	// these parameters reused by:
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	scopes := []string{"read", "write"}
+
+	token := MakeTestToken(audience, session, scopes, 5)
+
+	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+
+	s0 := reconws.New()
+	go s0.Dial(ctx, audience+session+"?code="+code0)
+
+	s1 := reconws.New()
+	go s1.Dial(ctx, audience+session+"?code="+code1)
+
+	time.Sleep(timeout)
+
+	data := make([]byte, 1024*1024)
+
+	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+
+	var msg reconws.WsMessage
+
+	for n := 0; n < b.N; n++ {
+		for m := 0; m < 100; m++ {
+			rand.Read(data)
+			msgOut = reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 			s0.Out <- msgOut
 			// always record the result to prevent
 			// the compiler eliminating the function call.

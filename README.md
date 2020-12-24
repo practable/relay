@@ -25,8 +25,17 @@ BenchmarkSmallMessage-32    	       8	 134451695 ns/op
 134.5ms for 1000 messages equates to in excess of 7,000 messages per second
 
 #### 1MByte message
+
+Random data:
+
 Each test is 100 message of 1MB, taking 934ms.
 The total data throughput is 8bits/Byte * 100MB = 800Mbits
+
+
+```
+BenchmarkLargeMessage: crossbar_test.go:488: Message size: 1048576 bytes
+BenchmarkLargeMessage-32    	       2	 933766152 ns/op
+```
 
 for a bandwidth of 800Mbits/0.934sec = 858 Mbps (Mega bits per sec)
 
@@ -36,25 +45,40 @@ This bandwidth of ~850 Mbps is
   - close to the maximum theoretical limit of a GiGE network connection (1000 Mbps)
 
 The test used the same data in each packet to avoid dragging the results down with the overhead of generating random data. But we can explore whether the compilier is doing some fancy caching optimisation by running a separate benchmark on the random data generation.
-
-
-
 ```
-    BenchmarkLargeMessage: crossbar_test.go:488: Message size: 1048576 bytes
-BenchmarkLargeMessage-32    	       2	 933766152 ns/op
+BenchmarkLargeMessage
+BenchmarkLargeMessage-32                   	       2	 958564581 ns/op
+BenchmarkLargeRandomPacketGeneration
+BenchmarkLargeRandomPacketGeneration-32    	       2	 618112575 ns/op
+BenchmarkLargeRandomMessage
+BenchmarkLargeRandomMessage-32             	       1	2421145176 ns/op
 ```
 
-### Mixed usage
+The adjusted duration for sending and receiving is now 2.42 - 0.62 = 1.8 sec
+
+This gives an adjusted bandwidth, ignoring the data generation time, of 444 Mbps.
+
+This bandwidth of ~450 Mbps is 
+
+  - still in excess of my fibre broadband download speed (350 Mbps)
+  - close to the half the maximum theoretical limit of a GiGE network connection (1000 Mbps)
+
+This is still a fairly benign test, in that all the network traffic is internal to my machine.
+
+
+### Real world test (>=375Mbps)
+
+  - Videos (20) source - Edinburgh, UK
+  - Crossbar - London, UK
+  - Receivers (>300) - Edinburgh, UK
+
 Running on EC2 c5.(x)large in EU-london I ran a 'real use' test and managted to sustain 20 videos in and >300 videos out, and could not push further because of my home fibre bandwidth limits.
 Each video captured live from raspberry pi on my home network (20x)
 Individual bandwidth was 1.1Mbps per video, ~30fps 640x480 MPEGTS from ffmpeg for use jsmpeg decoder in browser
 Total bandwidth in from video cameras was 22-24Mbps (within the published limit of my home fibre of 30Mbps)
 Total bandwith out ~375Mbps (just over the published limit of my home fibre sysm of 350Mbps).
 
-## Testing
-
-TODO - for the whitebox tests, run as whitebox tests against a single instantiation of the server ....
-
+The peak bandwith for the testing was done with 500 video clients, but this hit the rate limit of my fibre to my house, and it is therefore possible that crossbar could do more ....
 
 
 ## TODO
