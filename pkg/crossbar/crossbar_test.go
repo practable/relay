@@ -18,6 +18,9 @@ import (
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
+// NB don't use reconws for production clients; it does not understand
+// the use of auth codes i.e that can only be used once
+
 var testSession = "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 var wrongSession = "/session/90fd9a71-2247-5f61-76e5-4d5cc2e34e0f"
 
@@ -35,6 +38,8 @@ var testAudience = "ws://127.0.0.1"
 
 var testLifetime = int64(5)
 var testBuffer = int64(1)
+
+var timeout = 200 * time.Millisecond
 
 func MakeDefaultTestToken(audience string) permission.Token {
 	return MakeTestToken(audience, testSession, testScopesRW, testLifetime)
@@ -119,7 +124,6 @@ func TestCanAuthWithCode(t *testing.T) {
 	us0 := audience + serverEndPoint + code0
 	us1 := audience + serverEndPoint + code1
 
-	timeout := 100 * time.Millisecond
 	time.Sleep(timeout)
 
 	s0 := reconws.New()
@@ -176,7 +180,7 @@ func TestSingleUseCode(t *testing.T) {
 
 	go Crossbar(config, closed, &wg)
 
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(timeout)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -189,7 +193,6 @@ func TestSingleUseCode(t *testing.T) {
 	us0 := audience + serverEndPoint + code0
 	us1 := audience + serverEndPoint + code1
 
-	timeout := 100 * time.Millisecond
 	time.Sleep(timeout)
 
 	s0 := reconws.New()
@@ -230,7 +233,159 @@ func TestSingleUseCode(t *testing.T) {
 
 }
 
-func TestScopesEnforcedRW(t *testing.T) {
+func TestScopesEnforcedRWToRW(t *testing.T) {
+
+	defer debug(false)()
+
+	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
+	http.DefaultServeMux = new(http.ServeMux)
+
+	// setup crossbar on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audience := getTestAudience(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	config := Config{
+		Listen:    port,
+		Audience:  audience,
+		CodeStore: cs,
+	}
+
+	wg.Add(1)
+
+	go Crossbar(config, closed, &wg)
+
+	time.Sleep(timeout)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	token := MakeDefaultTestToken(audience)
+
+	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+
+	serverEndPoint := testSession + "?code="
+	us0 := audience + serverEndPoint + code0
+	us1 := audience + serverEndPoint + code1
+
+	time.Sleep(timeout)
+
+	s0 := reconws.New()
+	go s0.Reconnect(ctx, us0)
+
+	s1 := reconws.New()
+	go s1.Reconnect(ctx, us1)
+
+	// do authorisation
+	mtype := websocket.TextMessage
+
+	data := []byte("foo")
+	s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
+
+	_ = expectOneSlice(s1.In, data, timeout, t)
+
+	time.Sleep(timeout)
+
+	data = []byte("bar")
+
+	s1.Out <- reconws.WsMessage{Data: data, Type: mtype}
+
+	_ = expectOneSlice(s0.In, data, timeout, t)
+
+	cancel()
+
+	time.Sleep(timeout)
+
+	close(closed)
+
+	wg.Wait()
+
+}
+
+func TestScopesEnforcedRWToR(t *testing.T) {
+
+	defer debug(false)()
+
+	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
+	http.DefaultServeMux = new(http.ServeMux)
+
+	// setup crossbar on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audience := getTestAudience(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	config := Config{
+		Listen:    port,
+		Audience:  audience,
+		CodeStore: cs,
+	}
+
+	wg.Add(1)
+
+	go Crossbar(config, closed, &wg)
+
+	time.Sleep(timeout)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	tokenRW := MakeDefaultTestToken(audience)
+
+	tokenR := MakeScopeTestToken(audience, testScopesR)
+
+	code0 := cs.SubmitToken(permission.ConvertToJWT(tokenRW))
+	code1 := cs.SubmitToken(permission.ConvertToJWT(tokenR))
+
+	serverEndPoint := testSession + "?code="
+	us0 := audience + serverEndPoint + code0
+	us1 := audience + serverEndPoint + code1
+
+	time.Sleep(timeout)
+
+	s0 := reconws.New()
+	go s0.Reconnect(ctx, us0)
+
+	s1 := reconws.New()
+	go s1.Reconnect(ctx, us1)
+
+	// do authorisation
+	mtype := websocket.TextMessage
+
+	data := []byte("foo")
+	s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
+
+	_ = expectOneSlice(s1.In, data, timeout, t)
+
+	time.Sleep(timeout)
+
+	data = []byte("bar")
+
+	s1.Out <- reconws.WsMessage{Data: data, Type: mtype}
+
+	expectNoMsg(s0.In, timeout, t)
+
+	cancel()
+
+	time.Sleep(timeout)
+
+	close(closed)
+
+	wg.Wait()
+
+}
+
+func TestEnforceAudience(t *testing.T) {
 
 	defer debug(false)()
 
@@ -263,15 +418,15 @@ func TestScopesEnforcedRW(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	token := MakeDefaultTestToken(audience)
+	tokenBadAudience := MakeWrongAudienceTestToken()
 
-	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code0 := cs.SubmitToken(permission.ConvertToJWT(tokenBadAudience))
 	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
 
 	serverEndPoint := testSession + "?code="
 	us0 := audience + serverEndPoint + code0
 	us1 := audience + serverEndPoint + code1
 
-	timeout := 100 * time.Millisecond
 	time.Sleep(timeout)
 
 	s0 := reconws.New()
@@ -286,15 +441,160 @@ func TestScopesEnforcedRW(t *testing.T) {
 	data := []byte("foo")
 	s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
 
-	_ = expectOneSlice(s1.In, data, timeout, t)
+	expectNoMsg(s1.In, timeout, t)
 
 	time.Sleep(timeout)
 
+	cancel()
+
+	time.Sleep(timeout)
+
+	close(closed)
+
+	wg.Wait()
+
+}
+
+func TestEnforceSessionID(t *testing.T) {
+
+	defer debug(false)()
+
+	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
+	http.DefaultServeMux = new(http.ServeMux)
+
+	// setup crossbar on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audience := getTestAudience(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	config := Config{
+		Listen:    port,
+		Audience:  audience,
+		CodeStore: cs,
+	}
+
+	wg.Add(1)
+
+	go Crossbar(config, closed, &wg)
+
+	time.Sleep(10 * time.Millisecond)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	token := MakeDefaultTestToken(audience)
+	tokenWrongSession := MakeWrongSessionTestToken(audience)
+
+	code0 := cs.SubmitToken(permission.ConvertToJWT(tokenWrongSession))
+	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+
+	serverEndPoint := testSession + "?code="
+	us0 := audience + serverEndPoint + code0
+	us1 := audience + serverEndPoint + code1
+
+	time.Sleep(timeout)
+
+	s0 := reconws.New()
+	go s0.Reconnect(ctx, us0)
+
+	s1 := reconws.New()
+	go s1.Reconnect(ctx, us1)
+
+	// do authorisation
+	mtype := websocket.TextMessage
+
+	data := []byte("foo")
+	s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
+
+	expectNoMsg(s1.In, timeout, t)
+
+	time.Sleep(timeout)
+
+	cancel()
+
+	time.Sleep(timeout)
+
+	close(closed)
+
+	wg.Wait()
+
+}
+
+func TestEnforceExpire(t *testing.T) {
+
+	defer debug(false)()
+
+	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
+	http.DefaultServeMux = new(http.ServeMux)
+
+	// setup crossbar on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audience := getTestAudience(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	config := Config{
+		Listen:    port,
+		Audience:  audience,
+		CodeStore: cs,
+	}
+
+	wg.Add(1)
+
+	go Crossbar(config, closed, &wg)
+
+	time.Sleep(10 * time.Millisecond)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	token := MakeDefaultTestToken(audience)
+	tokenExpiringSoon := MakeTestToken(audience, testSession, testScopesRW, 3)
+
+	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code1 := cs.SubmitToken(permission.ConvertToJWT(tokenExpiringSoon))
+
+	serverEndPoint := testSession + "?code="
+	us0 := audience + serverEndPoint + code0
+	us1 := audience + serverEndPoint + code1
+
+	time.Sleep(timeout)
+
+	s0 := reconws.New()
+	go s0.Reconnect(ctx, us0)
+
+	s1 := reconws.New()
+	go s1.Reconnect(ctx, us1)
+
+	// do authorisation
+	mtype := websocket.TextMessage
+
+	data := []byte("foo")
+	s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
+	_ = expectOneSlice(s1.In, data, timeout, t)
+
+	time.Sleep(time.Second)
+
 	data = []byte("bar")
+	s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
+	_ = expectOneSlice(s1.In, data, timeout, t)
 
-	s1.Out <- reconws.WsMessage{Data: data, Type: mtype}
+	time.Sleep(3 * time.Second)
 
-	_ = expectOneSlice(s0.In, data, timeout, t)
+	// S1 should have timed out by now
+
+	data = []byte("pop")
+	s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
+	expectNoMsg(s1.In, 4*timeout, t)
 
 	cancel()
 
