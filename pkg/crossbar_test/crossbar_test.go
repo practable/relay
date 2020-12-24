@@ -1,4 +1,4 @@
-package crossbar
+package crossbar_test
 
 import (
 	"bufio"
@@ -17,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/reconws"
+	"github.com/timdrysdale/relay/pkg/crossbar"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
@@ -31,7 +32,7 @@ func MakeTestToken(audience, topic string, scopes []string, lifetime int64) perm
 	return permission.NewToken(audience, topic, scopes, begin, begin, end)
 }
 
-func TestCrossbar(t *testing.T) {
+func TestExternalCrossbar(t *testing.T) {
 
 	// Setup logging
 
@@ -63,14 +64,14 @@ func TestCrossbar(t *testing.T) {
 
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
 	cs := ttlcode.NewDefaultCodeStore()
-	config := Config{
+	config := crossbar.Config{
 		Listen:    port,
 		Audience:  audience,
 		CodeStore: cs,
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go crossbar.Crossbar(config, closed, &wg)
 	// safety margin to get crossbar running
 	time.Sleep(time.Second)
 
@@ -302,208 +303,6 @@ func TestCrossbar(t *testing.T) {
 	case <-time.After(timeout):
 		t.Log("TestEnforceExpiresAt...PASS")
 	}
-	cancel()
-	time.Sleep(timeout)
-
-	// Teardown crossbar
-	time.Sleep(timeout)
-	close(closed)
-	wg.Wait()
-
-}
-
-func BenchmarkSmallMessage(b *testing.B) {
-
-	// Setup logging
-
-	debug := false
-
-	if debug {
-		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
-		defer log.SetOutput(os.Stdout)
-
-	} else {
-		var ignore bytes.Buffer
-		logignore := bufio.NewWriter(&ignore)
-		log.SetOutput(logignore)
-	}
-
-	// Setup crossbar
-
-	http.DefaultServeMux = new(http.ServeMux)
-
-	// setup crossbar on local (free) port
-	closed := make(chan struct{})
-	var wg sync.WaitGroup
-
-	port, err := freeport.GetFreePort()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
-	cs := ttlcode.NewDefaultCodeStore()
-	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-	}
-
-	wg.Add(1)
-	go Crossbar(config, closed, &wg)
-
-	var timeout = 1 * time.Millisecond
-
-	// safety margin to get crossbar running
-	time.Sleep(timeout)
-
-	// Start tests
-
-	// *** TestCanConnectWithValidCode ***
-	// these parameters reused by:
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
-	scopes := []string{"read", "write"}
-
-	token := MakeTestToken(audience, session, scopes, 5)
-
-	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
-
-	s0 := reconws.New()
-	go s0.Dial(ctx, audience+session+"?code="+code0)
-
-	s1 := reconws.New()
-	go s1.Dial(ctx, audience+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	data := []byte("foo")
-
-	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-
-	var msg reconws.WsMessage
-
-	for n := 0; n < b.N; n++ {
-		for m := 0; m < 1000; m++ {
-			s0.Out <- msgOut
-			// always record the result to prevent
-			// the compiler eliminating the function call.
-			msg = <-s1.In
-		}
-	}
-
-	// always store the result to a package level variable
-	// so the compiler cannot eliminate the Benchmark itself.
-	assert.Equal(b, data, msg.Data)
-
-	cancel()
-	time.Sleep(timeout)
-
-	// Teardown crossbar
-	time.Sleep(timeout)
-	close(closed)
-	wg.Wait()
-
-}
-
-func BenchmarkLargeMessage(b *testing.B) {
-
-	// Setup logging
-
-	debug := false
-
-	if debug {
-		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
-		defer log.SetOutput(os.Stdout)
-
-	} else {
-		var ignore bytes.Buffer
-		logignore := bufio.NewWriter(&ignore)
-		log.SetOutput(logignore)
-	}
-
-	// Setup crossbar
-
-	http.DefaultServeMux = new(http.ServeMux)
-
-	// setup crossbar on local (free) port
-	closed := make(chan struct{})
-	var wg sync.WaitGroup
-
-	port, err := freeport.GetFreePort()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
-	cs := ttlcode.NewDefaultCodeStore()
-	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-	}
-
-	wg.Add(1)
-	go Crossbar(config, closed, &wg)
-
-	var timeout = 1 * time.Millisecond
-
-	// safety margin to get crossbar running
-	time.Sleep(timeout)
-
-	// Start tests
-
-	// *** TestCanConnectWithValidCode ***
-	// these parameters reused by:
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
-	scopes := []string{"read", "write"}
-
-	token := MakeTestToken(audience, session, scopes, 5)
-
-	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
-
-	s0 := reconws.New()
-	go s0.Dial(ctx, audience+session+"?code="+code0)
-
-	s1 := reconws.New()
-	go s1.Dial(ctx, audience+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	data := []byte("x")
-
-	for k := 0; k < 20; k++ {
-		data = append(data, data...)
-	}
-
-	b.Logf("Message size: %d bytes", len(data))
-
-	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-
-	var msg reconws.WsMessage
-
-	for n := 0; n < b.N; n++ {
-		for m := 0; m < 100; m++ {
-			s0.Out <- msgOut
-			// always record the result to prevent
-			// the compiler eliminating the function call.
-			msg = <-s1.In
-		}
-	}
-
-	// always store the result to a package level variable
-	// so the compiler cannot eliminate the Benchmark itself.
-	assert.Equal(b, data, msg.Data)
-
 	cancel()
 	time.Sleep(timeout)
 

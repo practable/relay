@@ -16,10 +16,33 @@ Benchmarking of a mixed-communications relay can be relatively complex, although
 On Intel(R) Xeon(R) Silver 4110 CPU @ 2.10GHz
 
 #### Small message
-3-byte payload: 2,500 messages per second (single producer, single consumer)
+small timeouts (1ms)
+
+3-byte payload: 1000 messages per benchmark (single producer, single consumer)
+```
+BenchmarkSmallMessage-32    	       8	 134451695 ns/op
+```
+134.5ms for 1000 messages equates to in excess of 7,000 messages per second
 
 #### 1MByte message
-throughput of 720Mbits per second of payload 
+Each test is 100 message of 1MB, taking 934ms.
+The total data throughput is 8bits/Byte * 100MB = 800Mbits
+
+for a bandwidth of 800Mbits/0.934sec = 858 Mbps (Mega bits per sec)
+
+This bandwidth of ~850 Mbps is 
+
+  - more than twice my fibre broadband download speed (350 Mbps * 2 = 700 Mbps)
+  - close to the maximum theoretical limit of a GiGE network connection (1000 Mbps)
+
+The test used the same data in each packet to avoid dragging the results down with the overhead of generating random data. But we can explore whether the compilier is doing some fancy caching optimisation by running a separate benchmark on the random data generation.
+
+
+
+```
+    BenchmarkLargeMessage: crossbar_test.go:488: Message size: 1048576 bytes
+BenchmarkLargeMessage-32    	       2	 933766152 ns/op
+```
 
 ### Mixed usage
 Running on EC2 c5.(x)large in EU-london I ran a 'real use' test and managted to sustain 20 videos in and >300 videos out, and could not push further because of my home fibre bandwidth limits.
