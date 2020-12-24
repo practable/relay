@@ -7,13 +7,55 @@ IN DEVELOPMENT NOW - REPO HERE FOR BACKUP ONLY - DO NOT USE - API IN FLUX
 
 Ignore below here (README.md from crossbar ...)
 
+## Benchmarking
+
+Benchmarking of a mixed-communications relay can be relatively complex, although simple results are enough to give a picture of the performance available. Note that simple calculations on mixed loads, based on the single-producer, single-consumer benchmarks cannot be done accurately because of compiler efficiencies e.g. in duplicating outgoing messages (an order of magnitude less CPU + memory load to duplicate outgoing videos, than it is to receive an incoming video)
+
+### Single-producer, single-consumer benchmarks
+
+On Intel(R) Xeon(R) Silver 4110 CPU @ 2.10GHz
+
+#### Small message
+3-byte payload: 2,500 messages per second (single producer, single consumer)
+
+#### 1MByte message
+throughput of 720Mbits per second of payload 
+
+### Mixed usage
+Running on EC2 c5.(x)large in EU-london I ran a 'real use' test and managted to sustain 20 videos in and >300 videos out, and could not push further because of my home fibre bandwidth limits.
+Each video captured live from raspberry pi on my home network (20x)
+Individual bandwidth was 1.1Mbps per video, ~30fps 640x480 MPEGTS from ffmpeg for use jsmpeg decoder in browser
+Total bandwidth in from video cameras was 22-24Mbps (within the published limit of my home fibre of 30Mbps)
+Total bandwith out ~375Mbps (just over the published limit of my home fibre sysm of 350Mbps).
+
+## Testing
+
+TODO - for the whitebox tests, run as whitebox tests against a single instantiation of the server ....
+
+
+
+## TODO
 
 ```
+./pkg/crossbar/crossbar.go:11:	messagesToDistribute := make(chan message, 10) //TODO make buffer length configurable
+./pkg/crossbar/models.go~:144:// TODO - remove unused types below this line (some still in use)
+./pkg/crossbar/handleconnections.go:37:// TODO
+./pkg/crossbar/handleconnections.go:51:// TODO restrict CheckOrigin
+./pkg/crossbar/handleconnections.go:260:				// TODO check what impact, if any, this has on jsmpeg memory requirements
+./pkg/crossbar/handleconnections.go:262:				// TODO benchmark effect of loading on message queuing
+./pkg/crossbar/handleconnections.go:303:	// TODO check authorisation to get stats
+./pkg/crossbar/handleconnections.go:315:	// TODO use gobuffalo/packr to embed this file or wait for go1.16
+./pkg/crossbar/handleconnections.go:346:			log.Info("ListenAndServe: ", err) //TODO upgrade to fatal once httptest is supported
+./pkg/crossbar/crossbar_oldtest.nogo:323:	// TODO we will want to build servers and clients that are polite about reconnecting
+./pkg/crossbar/crossbar_oldtest.nogo:725:	//TODO - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
+./pkg/crossbar/models.go:134:// TODO - remove unused types below this line (some still in use)
+./pkg/crossbar/servews.go:37:		ct = Unsupported //TODO implement shell!
+./pkg/crossbar/handleconnections_test.go:3:// TODO refactor with interface in client struct to allow mocking
+./pkg/crossbar/crossbar.go~:14:	messagesToDistribute := make(chan message, 10) //TODO make buffer length configurable
+./pkg/access/access.go:68:			// TODO - send correct error code, 401 / 403 rather than 500
+./pkg/relay/relay.go:14:	messagesToDistribute := make(chan message, 10) //TODO make buffer length configurable
 
-
-
-
-
+```
 
 
 

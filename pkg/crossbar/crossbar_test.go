@@ -3,6 +3,7 @@ package crossbar
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -83,6 +84,179 @@ func getTestAudience(port int) string {
 	return testAudience + ":" + strconv.Itoa(port)
 }
 
+func BenchmarkSend1MBMessage100(b *testing.B) {
+
+	defer debug(false)()
+
+	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
+	http.DefaultServeMux = new(http.ServeMux)
+
+	// setup crossbar on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audience := getTestAudience(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	config := Config{
+		Listen:    port,
+		Audience:  audience,
+		CodeStore: cs,
+	}
+
+	wg.Add(1)
+
+	go Crossbar(config, closed, &wg)
+
+	time.Sleep(10 * time.Millisecond)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	token := MakeDefaultTestToken(audience)
+
+	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+
+	serverEndPoint := testSession + "?code="
+	us0 := audience + serverEndPoint + code0
+	us1 := audience + serverEndPoint + code1
+
+	time.Sleep(timeout)
+
+	s0 := reconws.New()
+	go s0.Reconnect(ctx, us0)
+
+	s1 := reconws.New()
+	go s1.Reconnect(ctx, us1)
+
+	// do authorisation
+	mtype := websocket.TextMessage
+
+	data := []byte("x")
+
+	for n := 0; n < 19; n++ {
+		data = append(data, data...)
+	}
+
+	fmt.Println(len(data))
+
+	var val []byte
+	for n := 0; n < b.N; n++ {
+		// always record the result to avoid
+		// the compiler eliminating the function call.
+		for m := 0; m < 100; m++ {
+			s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
+			select {
+			case msg := <-s1.In:
+				val = msg.Data
+			case <-time.After(timeout):
+			}
+		}
+
+	}
+	// always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	log.Trace(val)
+
+	time.Sleep(timeout)
+
+	cancel()
+
+	time.Sleep(timeout)
+
+	close(closed)
+
+	wg.Wait()
+
+}
+
+func BenchmarkSendShortMessage100(b *testing.B) {
+
+	defer debug(false)()
+
+	//Todo - add support for httptest https://stackoverflow.com/questions/40786526/resetting-http-handlers-in-golang-for-unit-testing
+	http.DefaultServeMux = new(http.ServeMux)
+
+	// setup crossbar on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audience := getTestAudience(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	config := Config{
+		Listen:    port,
+		Audience:  audience,
+		CodeStore: cs,
+	}
+
+	wg.Add(1)
+
+	go Crossbar(config, closed, &wg)
+
+	time.Sleep(10 * time.Millisecond)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	token := MakeDefaultTestToken(audience)
+
+	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+
+	serverEndPoint := testSession + "?code="
+	us0 := audience + serverEndPoint + code0
+	us1 := audience + serverEndPoint + code1
+
+	time.Sleep(timeout)
+
+	s0 := reconws.New()
+	go s0.Reconnect(ctx, us0)
+
+	s1 := reconws.New()
+	go s1.Reconnect(ctx, us1)
+
+	// do authorisation
+	mtype := websocket.TextMessage
+
+	data := []byte("foo")
+	var val []byte
+	for n := 0; n < b.N; n++ {
+		// always record the result to avoid
+		// the compiler eliminating the function call.
+		for m := 0; m < 100; m++ {
+			s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
+			select {
+			case msg := <-s1.In:
+				val = msg.Data
+			case <-time.After(timeout):
+			}
+		}
+
+	}
+	// always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	log.Trace(val)
+
+	time.Sleep(timeout)
+
+	cancel()
+
+	time.Sleep(timeout)
+
+	close(closed)
+
+	wg.Wait()
+
+}
+
 func TestCanAuthWithCode(t *testing.T) {
 
 	defer debug(false)()
@@ -138,7 +312,12 @@ func TestCanAuthWithCode(t *testing.T) {
 	data := []byte("foo")
 	s0.Out <- reconws.WsMessage{Data: data, Type: mtype}
 
-	_ = expectOneSlice(s1.In, data, timeout, t)
+	select {
+	case msg := <-s1.In:
+		assert.Equal(t, data, msg.Data)
+	case <-time.After(timeout):
+		t.Fail()
+	}
 
 	time.Sleep(timeout)
 
