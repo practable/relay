@@ -87,33 +87,24 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	// check token is a permission token so we can process it properly
 	// It's been validated so we don't need to re-do that
-	if !permission.ValidPermissionToken(&token) {
-		log.WithField("topic", topic).Info("Unauthorized - Not a permission token")
-		return
-	}
-
-	// convert claims into permission.Token for convenience
-
-	p, err := permission.GetPermissionToken(&token)
-
-	if err != nil {
-		log.WithField("topic", topic).Info("Unauthorized - Could not convert to a permission token")
+	if !permission.HasRequiredClaims(token) {
+		log.WithField("topic", topic).Info("Unauthorized - original token missing claims")
 		return
 	}
 
 	now := config.CodeStore.GetTime()
 
-	if p.NotBefore > now {
+	if token.NotBefore > now {
 		log.WithField("topic", topic).Info("Unauthorized - Too early")
 		return
 	}
 
-	ttl := p.ExpiresAt - now
+	ttl := token.ExpiresAt - now
 
 	log.WithFields(log.Fields{"ttl": ttl, "topic": topic}).Trace()
 
-	audienceBad := (config.Audience != p.Audience)
-	topicBad := (topic != p.Topic)
+	audienceBad := (config.Audience != token.Audience)
+	topicBad := (topic != token.Topic)
 	expired := ttl < 0
 
 	if audienceBad || topicBad || expired {
@@ -125,7 +116,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	var canRead, canWrite bool
 
-	for _, scope := range p.Scopes {
+	for _, scope := range token.Scopes {
 		if scope == "read" {
 			canRead = true
 		}
@@ -135,7 +126,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 	}
 
 	if !(canRead || canWrite) {
-		log.WithFields(log.Fields{"topic": topic, "scopes": p.Scopes}).Trace("No valid scopes")
+		log.WithFields(log.Fields{"topic": topic, "scopes": token.Scopes}).Trace("No valid scopes")
 		return
 	}
 

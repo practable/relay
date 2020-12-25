@@ -1,12 +1,7 @@
 package permission
 
 import (
-	"errors"
-	"fmt"
-	"reflect"
-
 	"github.com/dgrijalva/jwt-go"
-	log "github.com/sirupsen/logrus"
 )
 
 // Permission represents claims required in the apiKey JWT
@@ -39,28 +34,14 @@ func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf,
 	}
 }
 
-func ConvertToJWT(token Token) *jwt.Token {
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, token)
-}
+func HasRequiredClaims(token Token) bool {
 
-func ValidPermissionToken(token *jwt.Token) bool {
-
-	actualType := reflect.ValueOf(token.Claims).Type()
-	expectedType := reflect.ValueOf(Token{}).Type()
-
-	log.Trace(fmt.Sprintf("actualType: %v\nexptecType: %v\n", actualType, expectedType))
-
-	if actualType != expectedType {
+	if token.Topic == "" ||
+		len(token.Scopes) == 0 ||
+		token.ConnectionType == "" ||
+		token.Audience == "" ||
+		token.ExpiresAt == 0 {
 		return false
 	}
-
 	return true
-
-}
-
-func GetPermissionToken(token *jwt.Token) (Token, error) {
-	if !ValidPermissionToken(token) {
-		return Token{}, errors.New("Not a permission token")
-	}
-	return token.Claims.(Token), nil
 }

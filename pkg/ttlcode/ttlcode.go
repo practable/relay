@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"github.com/timdrysdale/relay/pkg/permission"
 )
 
 // Token represents a token and its expiry time.
@@ -14,7 +14,7 @@ import (
 type ExpToken struct {
 
 	// Token represents a token of arbitrary type.
-	Token jwt.Token
+	Token permission.Token
 
 	// Exp represents the expiry Unix time in seconds.
 	Exp int64
@@ -26,7 +26,7 @@ func (t *ExpToken) Expired() bool {
 }
 
 // NewExpToken creates a new token expiring in ttl seconds from now
-func NewExpToken(token jwt.Token, ttl int64) ExpToken {
+func NewExpToken(token permission.Token, ttl int64) ExpToken {
 	return ExpToken{
 		Token: token,
 		Exp:   GetTime() + ttl,
@@ -99,7 +99,7 @@ func GenerateCode() string {
 }
 
 // SubmitToken returns a code that can be swapped for the token, until the code/token becomes stale.
-func (c *CodeStore) SubmitToken(token jwt.Token) string {
+func (c *CodeStore) SubmitToken(token permission.Token) string {
 	c.Lock()
 	defer c.Unlock()
 	code := GenerateCode()
@@ -108,12 +108,12 @@ func (c *CodeStore) SubmitToken(token jwt.Token) string {
 }
 
 // ExchangeCode swaps a (valid) code for the associated token.
-func (c *CodeStore) ExchangeCode(code string) (jwt.Token, error) {
+func (c *CodeStore) ExchangeCode(code string) (permission.Token, error) {
 	c.Lock()
 	defer c.Unlock()
 	token, ok := c.store[code]
 	if !ok {
-		return jwt.Token{}, errors.New("No code")
+		return permission.Token{}, errors.New("invalid code")
 	}
 	// can only get code once.
 	delete(c.store, code)

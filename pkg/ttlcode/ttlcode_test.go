@@ -4,32 +4,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
-func createToken() jwt.Token {
-	// Create a new token object, specifying signing method and the claims
-	// you would like it to contain.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"foo": "bar",
-		"nbf": time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
-	})
-
-	return *token
-}
-
-func createTokenWithClaim(claim, value string) jwt.Token {
-	// Create a new token object, specifying signing method and the claims
-	// you would like it to contain.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"foo": "bar",
-		"nbf": time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
-		claim: value,
-	})
-
-	return *token
+func createToken() permission.Token {
+	// test token
+	return permission.NewToken(
+		"wss://some.server.io",
+		"session",
+		uuid.New().String(),
+		[]string{"read", "write"},
+		time.Now().Unix()-1,
+		time.Now().Unix()-1,
+		time.Now().Unix()+5,
+	)
 }
 
 func TestCreateTokenStoreTTL(t *testing.T) {
@@ -66,7 +57,7 @@ func TestSubmitExchangeToken(t *testing.T) {
 
 	later := ttlcode.GetTime()
 
-	assert.True(t, later < (earlier+ttl), "exchange took too long")
+	assert.True(t, later < (earlier+ttl), "test issue, exchange took too long")
 
 	assert.Equal(t, token, tok)
 
@@ -90,7 +81,8 @@ func TestTokensExpire(t *testing.T) {
 		WithTTL(ttl)
 	defer c.Close()
 
-	token := createTokenWithClaim("token", "99")
+	token := createToken()
+
 	code := c.SubmitToken(token)
 
 	<-time.After(3 * time.Second)
@@ -111,7 +103,7 @@ func TestStoreIsCleaned(t *testing.T) {
 		WithTTL(ttl)
 	defer c.Close()
 
-	token := createTokenWithClaim("token", "99")
+	token := createToken()
 
 	_ = c.SubmitToken(token)
 
@@ -135,10 +127,10 @@ func TestTokensAreDistinct(t *testing.T) {
 		WithTTL(ttl)
 	defer c.Close()
 
-	token0 := createTokenWithClaim("token", "0")
+	token0 := createToken()
 	code0 := c.SubmitToken(token0)
 
-	token1 := createTokenWithClaim("token", "1")
+	token1 := createToken()
 	code1 := c.SubmitToken(token1)
 
 	// reverse order

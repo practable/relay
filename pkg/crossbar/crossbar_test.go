@@ -37,8 +37,7 @@ func TestCrossbar(t *testing.T) {
 
 	// Setup logging
 
-	debug := true
-
+	debug := false
 	if debug {
 		log.SetLevel(log.TraceLevel)
 		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
@@ -91,10 +90,10 @@ func TestCrossbar(t *testing.T) {
 
 	token := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
-	code1 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code0 := cs.SubmitToken(token)
+	code1 := cs.SubmitToken(token)
 
-	fmt.Printf("Submitting token of type %T\n", *(permission.ConvertToJWT(token)))
+	fmt.Printf("Submitting token of type %T\n", token)
 
 	s0 := reconws.New()
 	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
@@ -143,8 +142,8 @@ func TestCrossbar(t *testing.T) {
 
 	// try the last test again, getting new codes, and replying
 
-	code0 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
-	code1 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code0 = cs.SubmitToken(token)
+	code1 = cs.SubmitToken(token)
 
 	ctx, cancel = context.WithCancel(context.Background())
 
@@ -181,8 +180,8 @@ func TestCrossbar(t *testing.T) {
 	scopes = []string{"read"}
 	tokenReadOnly := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
-	code1 = cs.SubmitToken(*(permission.ConvertToJWT(tokenReadOnly)))
+	code0 = cs.SubmitToken(token)
+	code1 = cs.SubmitToken(tokenReadOnly)
 
 	ctx, cancel = context.WithCancel(context.Background())
 
@@ -220,8 +219,8 @@ func TestCrossbar(t *testing.T) {
 	scopes = []string{"read"}
 	tokenWrongAudience := MakeTestToken("ws://wrong.server.io", ct, session, scopes, 5)
 
-	code0 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
-	code1 = cs.SubmitToken(*(permission.ConvertToJWT(tokenWrongAudience)))
+	code0 = cs.SubmitToken(token)
+	code1 = cs.SubmitToken(tokenWrongAudience)
 
 	ctx, cancel = context.WithCancel(context.Background())
 
@@ -249,8 +248,8 @@ func TestCrossbar(t *testing.T) {
 	scopes = []string{"read"}
 	tokenWrongSessionID := MakeTestToken(audience, ct, "wrongone", scopes, 5)
 
-	code0 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
-	code1 = cs.SubmitToken(*(permission.ConvertToJWT(tokenWrongSessionID)))
+	code0 = cs.SubmitToken(token)
+	code1 = cs.SubmitToken(tokenWrongSessionID)
 
 	ctx, cancel = context.WithCancel(context.Background())
 
@@ -277,8 +276,8 @@ func TestCrossbar(t *testing.T) {
 	tokenLong := MakeTestToken(audience, ct, session, scopes, 5)
 	tokenShort := MakeTestToken(audience, ct, session, scopes, 2)
 
-	code0 = cs.SubmitToken(*(permission.ConvertToJWT(tokenLong)))
-	code1 = cs.SubmitToken(*(permission.ConvertToJWT(tokenShort)))
+	code0 = cs.SubmitToken(tokenLong)
+	code1 = cs.SubmitToken(tokenShort)
 
 	ctx, cancel = context.WithCancel(context.Background())
 
@@ -375,8 +374,8 @@ func BenchmarkSmallMessage(b *testing.B) {
 
 	token := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
-	code1 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code0 := cs.SubmitToken(token)
+	code1 := cs.SubmitToken(token)
 
 	s0 := reconws.New()
 	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
@@ -473,8 +472,8 @@ func BenchmarkLargeMessage(b *testing.B) {
 
 	token := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
-	code1 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code0 := cs.SubmitToken(token)
+	code1 := cs.SubmitToken(token)
 
 	s0 := reconws.New()
 	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
@@ -588,8 +587,8 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 	token := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
-	code1 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code0 := cs.SubmitToken(token)
+	code1 := cs.SubmitToken(token)
 
 	s0 := reconws.New()
 	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
