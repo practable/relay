@@ -245,16 +245,13 @@ func TestCrossbar(t *testing.T) {
 
 	// reader connects with a token intended for a different session on same server
 	// should NOT receive message!
-	scopes = []string{"read"}
-	tokenWrongSessionID := MakeTestToken(audience, ct, "wrongone", scopes, 5)
-
 	code0 = cs.SubmitToken(token)
-	code1 = cs.SubmitToken(tokenWrongSessionID)
+	code1 = cs.SubmitToken(token)
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1) //connects to correct session
+	go s0.Dial(ctx, audience+"/"+ct+"/"+"notMySession?code="+code0) //connects to wrong session
+	go s1.Dial(ctx, audience+"/"+ct+"/"+"notMySession?code="+code1) //connects to (same) wrong session
 
 	data = []byte("notgoingtogetthis")
 	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}

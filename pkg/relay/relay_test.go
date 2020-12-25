@@ -69,11 +69,10 @@ func TestRelay(t *testing.T) {
 
 	// Start tests
 
-	// Get a code from access
+	// TestBidirectionalChat
 
 	client := &http.Client{}
 
-	// Start tests
 	var claims permission.Token
 
 	claims.IssuedAt = time.Now().Unix() - 1
@@ -140,7 +139,7 @@ func TestRelay(t *testing.T) {
 		assert.Equal(t, data, msg.Data)
 	case <-time.After(timeout):
 		cancel()
-		t.Fatal("TestCanConnectWithValidCode...FAIL")
+		t.Fatal("TestBidirectionalChat...FAIL")
 	}
 
 	data = []byte("pong")
@@ -150,11 +149,65 @@ func TestRelay(t *testing.T) {
 	select {
 	case msg := <-s0.In:
 		assert.Equal(t, data, msg.Data)
-		t.Logf("TestCanConnectWithValidCode...PASS\n")
+		t.Logf("TestBidirectionalChat...PASS\n")
+	case <-time.After(timeout):
+		t.Fatal("TestBidirectinalChat...FAIL")
+	}
+	cancel()
+
+	// TestPreventValidCodeAtWrongSessionID
+
+	// reuse client, ping, pong, token etc from previous test
+
+	// clientPing gets uri with code
+	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &ping)
+	assert.NoError(t, err)
+	assert.True(t, strings.HasPrefix(ping.URI, target+"/session/123?code="))
+
+	// clientPong gets uri with code
+	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &pong)
+	assert.NoError(t, err)
+	assert.True(t, strings.HasPrefix(pong.URI, target+"/session/123?code="))
+
+	// now clients connect using their uris...
+
+	time.Sleep(timeout)
+
+	ctx, cancel = context.WithCancel(context.Background())
+	go s0.Dial(ctx, strings.Replace(ping.URI, "123", "456", 1))
+
+	go s1.Dial(ctx, strings.Replace(pong.URI, "123", "456", 1))
+
+	time.Sleep(timeout)
+
+	data = []byte("ping")
+
+	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+
+	select {
+	case msg := <-s1.In:
+		t.Fatal("TestPreventValidCodeAtWrongSessionID...FAIL")
+		assert.Equal(t, data, msg.Data)
 	case <-time.After(timeout):
 		cancel()
-		t.Fatal("TestCanConnectWithValidCode...FAIL")
+		t.Logf("TestPreventValidCodeAtWrongSessionID...PASS")
 	}
+	cancel()
+	// teardown relay
 
 	close(closed)
 	wg.Wait()
