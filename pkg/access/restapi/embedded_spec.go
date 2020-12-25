@@ -56,36 +56,6 @@ func init() {
         "operationId": "session",
         "parameters": [
           {
-            "enum": [
-              "readonly",
-              "writeonly",
-              "readwrite",
-              "shellhost",
-              "shellclient"
-            ],
-            "type": "string",
-            "description": "The operator to apply on the variables",
-            "name": "scope",
-            "in": "query",
-            "required": true
-          },
-          {
-            "type": "number",
-            "format": "unix-timestamp",
-            "description": "Earliest access time and start of session",
-            "name": "nbf",
-            "in": "query",
-            "required": true
-          },
-          {
-            "type": "number",
-            "format": "unix-timestamp",
-            "description": "Latest access time and end of session",
-            "name": "exp",
-            "in": "query",
-            "required": true
-          },
-          {
             "type": "string",
             "description": "Session identification code",
             "name": "session_id",
@@ -108,20 +78,6 @@ func init() {
           }
         }
       }
-    }
-  },
-  "definitions": {
-    "ScopeType": {
-      "description": "Possible scopes are readonly, writeonly, readwrite, shellhost, shellclient",
-      "type": "string",
-      "title": "ScopeType",
-      "enum": [
-        "readonly",
-        "writeonly",
-        "readwrite",
-        "shellhost",
-        "shellclient"
-      ]
     }
   },
   "securityDefinitions": {
@@ -171,36 +127,6 @@ func init() {
         "operationId": "session",
         "parameters": [
           {
-            "enum": [
-              "readonly",
-              "writeonly",
-              "readwrite",
-              "shellhost",
-              "shellclient"
-            ],
-            "type": "string",
-            "description": "The operator to apply on the variables",
-            "name": "scope",
-            "in": "query",
-            "required": true
-          },
-          {
-            "type": "number",
-            "format": "unix-timestamp",
-            "description": "Earliest access time and start of session",
-            "name": "nbf",
-            "in": "query",
-            "required": true
-          },
-          {
-            "type": "number",
-            "format": "unix-timestamp",
-            "description": "Latest access time and end of session",
-            "name": "exp",
-            "in": "query",
-            "required": true
-          },
-          {
             "type": "string",
             "description": "Session identification code",
             "name": "session_id",
@@ -223,20 +149,6 @@ func init() {
           }
         }
       }
-    }
-  },
-  "definitions": {
-    "ScopeType": {
-      "description": "Possible scopes are readonly, writeonly, readwrite, shellhost, shellclient",
-      "type": "string",
-      "title": "ScopeType",
-      "enum": [
-        "readonly",
-        "writeonly",
-        "readwrite",
-        "shellhost",
-        "shellclient"
-      ]
     }
   },
   "securityDefinitions": {

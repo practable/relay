@@ -52,17 +52,13 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 	api.SessionHandler = operations.SessionHandlerFunc(
 		func(params operations.SessionParams, principal interface{}) middleware.Responder {
 
-			// TODO what is principal - does it need to handle error cases?
-			fmt.Println(pretty(params))
-			fmt.Println(pretty(principal))
-
-			token, ok := principal.(jwt.Token)
+			token, ok := principal.(*jwt.Token)
 			if !ok {
 				return operations.NewSessionUnauthorized().WithPayload("Token Not JWT")
 			}
 
 			// save checking for key existence individually by checking all at once
-			claims, ok := token.Claims.(permission.Token)
+			claims, ok := token.Claims.(*permission.Token)
 
 			if !ok {
 				return operations.NewSessionUnauthorized().WithPayload("Token Incorrect Fields")
@@ -82,7 +78,7 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 
 			token.Claims = claims
 
-			code := cs.SubmitToken(token)
+			code := cs.SubmitToken(*token)
 
 			return operations.NewSessionOK().WithPayload(code)
 		})

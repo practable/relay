@@ -74,6 +74,7 @@ func TestAPI(t *testing.T) {
 	claims.Audience = audience
 	claims.Topic = "123"
 	claims.ConnectionType = "session"
+	claims.Scopes = []string{"read", "write"}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
@@ -83,7 +84,7 @@ func TestAPI(t *testing.T) {
 
 	req, err = http.NewRequest("POST", audience+"/session/123", nil)
 	req.Header.Add("Authorization", bearer)
-	t.Log(bearer)
+
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	body, _ = ioutil.ReadAll(resp.Body)

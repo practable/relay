@@ -10,17 +10,11 @@ import (
 	"net/url"
 	golangswaggerpaths "path"
 	"strings"
-
-	"github.com/go-openapi/swag"
 )
 
 // SessionURL generates an URL for the session operation
 type SessionURL struct {
 	SessionID string
-
-	Exp   float64
-	Nbf   float64
-	Scope string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -60,25 +54,6 @@ func (o *SessionURL) Build() (*url.URL, error) {
 		_basePath = "/"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
-
-	qs := make(url.Values)
-
-	expQ := swag.FormatFloat64(o.Exp)
-	if expQ != "" {
-		qs.Set("exp", expQ)
-	}
-
-	nbfQ := swag.FormatFloat64(o.Nbf)
-	if nbfQ != "" {
-		qs.Set("nbf", nbfQ)
-	}
-
-	scopeQ := o.Scope
-	if scopeQ != "" {
-		qs.Set("scope", scopeQ)
-	}
-
-	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

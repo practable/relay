@@ -31,29 +31,6 @@ paths:
       produces:
       - application/json
       parameters:
-      - name: scope
-        in: query
-        required: true
-        enum:
-        - readonly
-        - writeonly
-        - readwrite
-        - shellhost
-        - shellclient
-        type: string
-        description: The operator to apply on the variables
-      - name: nbf
-        in: query
-        required: true
-        type: number
-        format: unix-timestamp
-        description: Earliest access time and start of session
-      - name: exp
-        in: query
-        required: true
-        type: number
-        format: unix-timestamp
-        description: Latest access time and end of session
       - name: session_id
         in: path
         required: true
@@ -72,14 +49,4 @@ paths:
         401:
           description: Unauthorized
           schema: {}
-definitions:
-  ScopeType:
-    title: ScopeType
-    description: Possible scopes are readonly, writeonly, readwrite, shellhost, shellclient
-    type: string
-    enum:
-    - readonly
-    - writeonly
-    - readwrite
-    - shellhost
-    - shellclient
+

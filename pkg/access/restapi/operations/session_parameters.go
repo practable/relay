@@ -9,11 +9,8 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/errors"
-	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 )
 
 // NewSessionParams creates a new SessionParams object
@@ -32,21 +29,6 @@ type SessionParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Latest access time and end of session
-	  Required: true
-	  In: query
-	*/
-	Exp float64
-	/*Earliest access time and start of session
-	  Required: true
-	  In: query
-	*/
-	Nbf float64
-	/*The operator to apply on the variables
-	  Required: true
-	  In: query
-	*/
-	Scope string
 	/*Session identification code
 	  Required: true
 	  In: path
@@ -63,23 +45,6 @@ func (o *SessionParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 
 	o.HTTPRequest = r
 
-	qs := runtime.Values(r.URL.Query())
-
-	qExp, qhkExp, _ := qs.GetOK("exp")
-	if err := o.bindExp(qExp, qhkExp, route.Formats); err != nil {
-		res = append(res, err)
-	}
-
-	qNbf, qhkNbf, _ := qs.GetOK("nbf")
-	if err := o.bindNbf(qNbf, qhkNbf, route.Formats); err != nil {
-		res = append(res, err)
-	}
-
-	qScope, qhkScope, _ := qs.GetOK("scope")
-	if err := o.bindScope(qScope, qhkScope, route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	rSessionID, rhkSessionID, _ := route.Params.GetOK("session_id")
 	if err := o.bindSessionID(rSessionID, rhkSessionID, route.Formats); err != nil {
 		res = append(res, err)
@@ -88,91 +53,6 @@ func (o *SessionParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-// bindExp binds and validates parameter Exp from query.
-func (o *SessionParams) bindExp(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	if !hasKey {
-		return errors.Required("exp", "query", rawData)
-	}
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: true
-	// AllowEmptyValue: false
-	if err := validate.RequiredString("exp", "query", raw); err != nil {
-		return err
-	}
-
-	value, err := swag.ConvertFloat64(raw)
-	if err != nil {
-		return errors.InvalidType("exp", "query", "float64", raw)
-	}
-	o.Exp = value
-
-	return nil
-}
-
-// bindNbf binds and validates parameter Nbf from query.
-func (o *SessionParams) bindNbf(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	if !hasKey {
-		return errors.Required("nbf", "query", rawData)
-	}
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: true
-	// AllowEmptyValue: false
-	if err := validate.RequiredString("nbf", "query", raw); err != nil {
-		return err
-	}
-
-	value, err := swag.ConvertFloat64(raw)
-	if err != nil {
-		return errors.InvalidType("nbf", "query", "float64", raw)
-	}
-	o.Nbf = value
-
-	return nil
-}
-
-// bindScope binds and validates parameter Scope from query.
-func (o *SessionParams) bindScope(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	if !hasKey {
-		return errors.Required("scope", "query", rawData)
-	}
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: true
-	// AllowEmptyValue: false
-	if err := validate.RequiredString("scope", "query", raw); err != nil {
-		return err
-	}
-
-	o.Scope = raw
-
-	if err := o.validateScope(formats); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// validateScope carries on validations for parameter Scope
-func (o *SessionParams) validateScope(formats strfmt.Registry) error {
-
-	if err := validate.EnumCase("scope", "query", o.Scope, []interface{}{"readonly", "writeonly", "readwrite", "shellhost", "shellclient"}, true); err != nil {
-		return err
-	}
-
 	return nil
 }
 
