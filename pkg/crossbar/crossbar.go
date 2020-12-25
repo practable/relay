@@ -18,9 +18,9 @@ func Crossbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
 
 	wg.Add(2)
 
-	go HandleConnections(closed, &wg, clientActionsChan, messagesToDistribute, config)
+	go handleConnections(closed, &wg, clientActionsChan, messagesToDistribute, config)
 
-	go HandleClients(closed, &wg, &topics, clientActionsChan)
+	go handleClients(closed, &wg, &topics, clientActionsChan)
 
 	//go access.API(closed, &wg, config.ApiPort, config.ApiHost, config.ApiSecret, *access.DefaultOptions())
 

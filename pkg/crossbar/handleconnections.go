@@ -57,7 +57,7 @@ func fpsFromNs(ns float64) float64 {
 	return 1 / (ns * 1e-9)
 }
 
-func HandleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, clientActionsChan chan clientAction, messagesFromMe chan message, config Config) {
+func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, clientActionsChan chan clientAction, messagesFromMe chan message, config Config) {
 	hub := newHub()
 	go hub.run()
 

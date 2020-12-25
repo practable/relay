@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func HandleClients(closed <-chan struct{}, wg *sync.WaitGroup, topics *topicDirectory, clientActionsChan chan clientAction) {
+func handleClients(closed <-chan struct{}, wg *sync.WaitGroup, topics *topicDirectory, clientActionsChan chan clientAction) {
 
 	defer func() {
 
