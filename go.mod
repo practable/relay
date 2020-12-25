@@ -12,6 +12,8 @@ require (
 	github.com/go-openapi/strfmt v0.19.11
 	github.com/go-openapi/swag v0.19.12
 	github.com/go-openapi/validate v0.19.15
+	github.com/gobuffalo/packr v1.30.1 // indirect
+	github.com/gobuffalo/packr/v2 v2.5.1
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/jessevdk/go-flags v1.4.0

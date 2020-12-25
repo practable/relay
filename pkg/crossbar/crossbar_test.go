@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"os"
 	"strconv"
@@ -37,7 +37,7 @@ func TestCrossbar(t *testing.T) {
 
 	// Setup logging
 
-	debug := false
+	debug := true
 	if debug {
 		log.SetLevel(log.TraceLevel)
 		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
@@ -63,11 +63,13 @@ func TestCrossbar(t *testing.T) {
 	}
 
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
+	secret := "somesecret"
 	cs := ttlcode.NewDefaultCodeStore()
 	config := Config{
 		Listen:    port,
 		Audience:  audience,
 		CodeStore: cs,
+		Secret:    secret,
 	}
 
 	wg.Add(1)
@@ -93,8 +95,6 @@ func TestCrossbar(t *testing.T) {
 	code0 := cs.SubmitToken(token)
 	code1 := cs.SubmitToken(token)
 
-	fmt.Printf("Submitting token of type %T\n", token)
-
 	s0 := reconws.New()
 	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
 
@@ -114,6 +114,54 @@ func TestCrossbar(t *testing.T) {
 	case <-time.After(timeout):
 		t.Fatal("TestCanConnectWithValidCode...FAIL")
 	}
+
+	// while connected, get stats
+	statsToken := MakeTestToken(audience, ct, "stats", scopes, 5)
+	statsCode := cs.SubmitToken(statsToken)
+	stats := reconws.New()
+	go stats.Dial(ctx, audience+"/"+ct+"/stats?code="+statsCode)
+
+	//TODO send message, receive stats
+
+	cmd, err := json.Marshal(StatsCommand{Command: "update"})
+
+	assert.NoError(t, err)
+
+	stats.Out <- reconws.WsMessage{Data: cmd, Type: websocket.TextMessage}
+
+	select {
+	case msg := <-stats.In:
+
+		t.Log("TestGetStats...PROVISIONAL-PASS")
+
+		var reports []*ClientReport
+
+		err := json.Unmarshal(msg.Data, &reports)
+
+		assert.NoError(t, err)
+
+		agents := make(map[string]int)
+
+		for _, report := range reports {
+			count, ok := agents[report.Topic]
+			if !ok {
+				agents[report.Topic] = 1
+				continue
+			}
+
+			agents[report.Topic] = count + 1
+		}
+
+		if agents[session] == 2 {
+			t.Log("TestGetStats...PASS")
+		} else {
+			t.Fatalf("TestGetStats...FAIL")
+		}
+
+	case <-time.After(timeout):
+		t.Fatalf("TestGetStats...FAIL")
+	}
+
 	cancel()
 	time.Sleep(timeout)
 

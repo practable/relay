@@ -18,6 +18,9 @@ type Config struct {
 	// Audience must match the host in token
 	Audience string
 
+	// Secret is used to validating statsTokens
+	Secret string
+
 	// ExchangeCode swaps a code for the associated Token
 	CodeStore *ttlcode.CodeStore
 }
@@ -62,9 +65,6 @@ type Client struct {
 
 	audience string
 
-	// is client allowed to provide input to the crossbar?
-	broadcaster bool
-
 	//is client allowed to receive data?
 	authorised bool
 
@@ -97,7 +97,9 @@ type ReportStats struct {
 type ClientReport struct {
 	Topic string `json:"topic"`
 
-	Broadcaster bool `json:"broadcaster"`
+	CanRead bool `json:"canRead"`
+
+	CanWrite bool `json:"canWrite"`
 
 	Connected string `json:"connected"`
 
@@ -106,6 +108,10 @@ type ClientReport struct {
 	UserAgent string `json:"userAgent"`
 
 	Stats RxTx `json:"stats"`
+}
+
+type StatsCommand struct {
+	Command string `json:"cmd"`
 }
 
 type Stats struct {
