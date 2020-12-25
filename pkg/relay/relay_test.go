@@ -30,7 +30,7 @@ import (
 func TestRelay(t *testing.T) {
 
 	// Setup logging
-	debug := true
+	debug := false
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -131,12 +131,24 @@ func TestRelay(t *testing.T) {
 
 	time.Sleep(timeout)
 
-	data := []byte("foo")
+	data := []byte("ping")
 
 	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 
 	select {
 	case msg := <-s1.In:
+		assert.Equal(t, data, msg.Data)
+	case <-time.After(timeout):
+		cancel()
+		t.Fatal("TestCanConnectWithValidCode...FAIL")
+	}
+
+	data = []byte("pong")
+
+	s1.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+
+	select {
+	case msg := <-s0.In:
 		assert.Equal(t, data, msg.Data)
 		t.Logf("TestCanConnectWithValidCode...PASS\n")
 	case <-time.After(timeout):

@@ -1,19 +1,15 @@
 package permission
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/util"
 )
 
-func TestNewTokenConvertToJWTValidate(t *testing.T) {
+func TestNewTokenValidate(t *testing.T) {
 
-	debug := false
-
-	host := "some.host.io"
+	audience := "some.host.io"
 	topic := "someid"
 	scopes := []string{"read", "write"}
 	nbf := time.Now().Unix()
@@ -21,24 +17,16 @@ func TestNewTokenConvertToJWTValidate(t *testing.T) {
 	exp := nbf + 10
 	ct := "session"
 
-	token := NewToken(host, topic, ct, scopes, iat, nbf, exp)
+	token := NewToken(audience, ct, topic, scopes, iat, nbf, exp)
 
-	jwtToken := ConvertToJWT(token)
+	assert.Equal(t, audience, token.Audience)
+	assert.Equal(t, ct, token.ConnectionType)
+	assert.Equal(t, topic, token.Topic)
+	assert.Equal(t, scopes, token.Scopes)
+	assert.Equal(t, iat, token.IssuedAt)
+	assert.Equal(t, nbf, token.NotBefore)
+	assert.Equal(t, exp, token.ExpiresAt)
 
-	mc := jwtToken.Claims
-
-	assert.Equal(t, token, mc)
-
-	assert.True(t, ValidPermissionToken(jwtToken))
-
-	p, err := GetPermissionToken(jwtToken)
-
-	assert.NoError(t, err)
-
-	assert.Equal(t, token, p)
-
-	if debug {
-		fmt.Println(util.Pretty(p))
-	}
+	assert.True(t, HasRequiredClaims(token))
 
 }

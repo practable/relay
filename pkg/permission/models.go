@@ -7,10 +7,15 @@ import (
 // Permission represents claims required in the apiKey JWT
 type Token struct {
 
-	// Topic represents the communication channel;
-	// either /session/{session_id} or /shell/{session_id}.
+	// Topic identifies the communication channel;
+	// think of it as a session_id, or room (webrtc)
+	// Don't reuse standard claim Subject as that is for a
+	// usually for a user and is reserved for later usage.
 	Topic string `json:"topic"`
 
+	// Determines the type of communication channel
+	// and hence required scopes + hub/client implementation
+	// e.g. "session" or "shell"
 	ConnectionType string `json:"prefix"`
 
 	// Scopes controlling access to relay;

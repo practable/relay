@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -102,7 +101,13 @@ func TestAPI(t *testing.T) {
 	var p operations.SessionOKBody
 	err = json.Unmarshal(body, &p)
 	assert.NoError(t, err)
-	assert.True(t, strings.HasPrefix(p.URI, "wss://relay.example.io/session/123?code="))
+
+	t.Log(p.URI)
+	t.Log(len("wss://relay.example.io/session/123?code="))
+
+	expected := "wss://relay.example.io/session/123?code="
+
+	assert.Equal(t, expected, p.URI[0:len(expected)])
 
 	// End tests
 	close(closed)

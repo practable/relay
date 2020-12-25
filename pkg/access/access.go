@@ -61,7 +61,11 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 			claims, ok := token.Claims.(*permission.Token)
 
 			if !ok {
-				return operations.NewSessionUnauthorized().WithPayload("Token Incorrect Fields")
+				return operations.NewSessionUnauthorized().WithPayload("Token Claims Incorrect Type")
+			}
+
+			if !permission.HasRequiredClaims(*claims) {
+				return operations.NewSessionUnauthorized().WithPayload("Token Missing Required Claims")
 			}
 
 			if params.SessionID == "" {
@@ -73,16 +77,23 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 				return operations.NewSessionUnauthorized().WithPayload("Token Wrong Topic")
 			}
 
-			// swap in hostname of the actual relay (i.e. target)
-			claims.Audience = target
+			// TODO - have the scopes been checked already?
 
-			token.Claims = claims
+			pt := permission.NewToken(
+				target,
+				claims.ConnectionType,
+				params.SessionID,
+				claims.Scopes,
+				claims.IssuedAt,
+				claims.NotBefore,
+				claims.ExpiresAt,
+			)
 
-			code := cs.SubmitToken(*token)
+			code := cs.SubmitToken(pt)
 
-			log.Trace(fmt.Sprintf("submitting token of type %T", *token))
+			log.Trace(fmt.Sprintf("submitting token of type %T", pt))
 
-			uri := claims.Audience + "/" + claims.ConnectionType + "/" + claims.Topic + "?code=" + code
+			uri := target + "/" + claims.ConnectionType + "/" + claims.Topic + "?code=" + code
 
 			return operations.NewSessionOK().WithPayload(
 				&operations.SessionOKBody{
