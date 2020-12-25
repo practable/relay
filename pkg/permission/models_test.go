@@ -14,13 +14,14 @@ func TestNewTokenConvertToJWTValidate(t *testing.T) {
 	debug := false
 
 	host := "some.host.io"
-	topic := "/session/someid"
+	topic := "someid"
 	scopes := []string{"read", "write"}
 	nbf := time.Now().Unix()
 	iat := nbf
 	exp := nbf + 10
+	ct := "session"
 
-	token := NewToken(host, topic, scopes, iat, nbf, exp)
+	token := NewToken(host, topic, ct, scopes, iat, nbf, exp)
 
 	jwtToken := ConvertToJWT(token)
 

@@ -2,12 +2,8 @@ package access
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"log"
-	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -15,75 +11,24 @@ import (
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/security"
-	"github.com/go-openapi/swag"
-	"github.com/timdrysdale/crossbar/pkg/access/restapi"
-	"github.com/timdrysdale/crossbar/pkg/access/restapi/operations"
+	log "github.com/sirupsen/logrus"
+	"github.com/timdrysdale/relay/pkg/access/restapi"
+	"github.com/timdrysdale/relay/pkg/access/restapi/operations"
+	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
-// if adding omit_empty or other decorators, then improve reflection code as per
-// https://stackoverflow.com/questions/40864840/how-to-get-the-json-field-names-of-a-struct-in-golang
-
-// NewPermission creates a new Permission object.
-func NewPermission() *Permission {
-	return &Permission{}
-}
-
-// CheckClaims makes sure all required claims are present
-func checkClaims(claims jwt.MapClaims) (*Permission, error) {
-
-	p := NewPermission()
-
-	v := reflect.ValueOf(*p)
-	ty := v.Type()
-
-	for i := 0; i < v.NumField(); i++ {
-
-		k := ty.Field(i).Tag.Get("json")
-
-		if v, ok := claims[k]; ok {
-			fmt.Println(k, v)
-		} else {
-			return nil, fmt.Errorf("missing claim %s", k)
-		}
-	}
-
-	return p, nil
-}
-
-// ValidateHeader checks the bearer token.
-// wrap the secret so we can get it at runtime without using global
-func validateHeaderSecret(secret string) security.TokenAuthentication {
-
-	return func(bearerHeader string) (interface{}, error) {
-		// For apiKey security syntax see https://swagger.io/docs/specification/2-0/authentication/
-		bearerToken := strings.Split(bearerHeader, " ")[1]
-		claims := jwt.MapClaims{}
-		token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("error decoding token")
-			}
-			return []byte(secret), nil
-		})
-		if err != nil {
-			// TODO - send correct error code, 401 / 403 rather than 500
-			return nil, err
-		}
-		if !token.Valid {
-			return nil, errors.New("invalid token")
-		}
-		return checkClaims(claims)
-	}
-}
-
-type Options struct {
-	DisableAuth bool
-}
-
-func DefaultOptions() *Options {
-	return &Options{}
-}
-
-func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret string, options Options) {
+// API starts the API
+// Inputs
+// @closed - channel will be closed when server shutsdown
+// @wg - waitgroup, we must wg.Done() when we are shutdown
+// @port - where to listen locally
+// @host - external FQDN of the host (for checking against tokens) e.g. https://relay-access.practable.io
+// @target - FQDN of the relay instance e.g. wss://relay.practable.io
+// @secret- HMAC shared secret which incoming tokens will be signed with
+// @cs - pointer to the CodeStore this API shares with the crossbar websocket relay
+// @options - for future backwards compatibility (no options currently available)
+func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore, options Options) {
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {
@@ -101,20 +46,45 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret stri
 	server.Port = port
 
 	// set the Authorizer
-	api.BearerAuth = validateHeaderSecret(secret)
+	api.BearerAuth = validateHeader(secret, host)
 
 	// set the Handler
-	//
 	api.SessionHandler = operations.SessionHandlerFunc(
 		func(params operations.SessionParams, principal interface{}) middleware.Responder {
+
+			// TODO what is principal - does it need to handle error cases?
 			fmt.Println(pretty(params))
-			name := swag.StringValue(&params.SessionID)
-			if name == "" {
-				name = "World"
+			fmt.Println(pretty(principal))
+
+			token, ok := principal.(jwt.Token)
+			if !ok {
+				return operations.NewSessionUnauthorized().WithPayload("Token Not JWT")
 			}
 
-			greeting := fmt.Sprintf("Hello, %s!", name)
-			return operations.NewSessionOK().WithPayload(greeting + pretty(principal))
+			// save checking for key existence individually by checking all at once
+			claims, ok := token.Claims.(permission.Token)
+
+			if !ok {
+				return operations.NewSessionUnauthorized().WithPayload("Token Incorrect Fields")
+			}
+
+			if params.SessionID == "" {
+				return operations.NewSessionUnauthorized().WithPayload("Path Missing SessionID")
+			}
+
+			if claims.Topic != params.SessionID {
+				log.WithFields(log.Fields{"topic": claims.Topic, "session_id": params.SessionID}).Debug("topic does not match sessionID")
+				return operations.NewSessionUnauthorized().WithPayload("Token Wrong Topic")
+			}
+
+			// swap in hostname of the actual relay (i.e. target)
+			claims.Audience = target
+
+			token.Claims = claims
+
+			code := cs.SubmitToken(token)
+
+			return operations.NewSessionOK().WithPayload(code)
 		})
 
 	go func() {
@@ -131,6 +101,49 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret stri
 
 }
 
+// ValidateHeader checks the bearer token.
+// wrap the secret so we can get it at runtime without using global
+func validateHeader(secret, host string) security.TokenAuthentication {
+
+	return func(bearerToken string) (interface{}, error) {
+		// For apiKey security syntax see https://swagger.io/docs/specification/2-0/authentication/
+		log.Trace(bearerToken)
+		claims := &permission.Token{}
+		fmt.Println(pretty(claims))
+
+		token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method was %v", token.Header["alg"])
+			}
+			return []byte(secret), nil
+		})
+
+		if err != nil {
+			log.WithFields(log.Fields{"error": err}).Info(err.Error())
+			return nil, fmt.Errorf("error reading token was %s", err.Error())
+		}
+
+		if !token.Valid { //checks iat, nbf, exp
+			log.Info("Token invalid")
+			return nil, fmt.Errorf("token invalid")
+		}
+
+		if claims.Audience != host {
+
+			log.WithFields(log.Fields{"aud": claims.Audience, "host": host}).Info("aud does not match this host")
+			return nil, fmt.Errorf("aud %s does not match this host %s", claims.Audience, host)
+		}
+
+		// already checked but belt and braces ....
+		if claims.ExpiresAt <= time.Now().Unix() {
+			log.Info(fmt.Sprintf("Expired at %d", claims.ExpiresAt))
+			return nil, fmt.Errorf("expired at %d", claims.ExpiresAt)
+		}
+
+		return token, nil
+	}
+}
+
 func pretty(t interface{}) string {
 
 	json, err := json.MarshalIndent(t, "", "\t")
@@ -139,64 +152,4 @@ func pretty(t interface{}) string {
 	}
 
 	return string(json)
-}
-
-// checkAuth checks the claims are ok
-//
-// the route must match the audience
-// the lifetime is the number of seconds for which the token is valid
-
-func checkAuth(data []byte, secret string, route string, now int64) (int64, error) {
-
-	tokenError := errors.New("Token invalid for this resource")
-	var lifetime int64 = 0
-
-	token, err := jwt.Parse(strings.TrimSpace(string(data)), func(token *jwt.Token) (interface{}, error) {
-		// verify alg is expected
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		// global config option
-		return []byte(secret), nil
-	})
-
-	if err != nil {
-		msg := fmt.Sprintf("Error reading token %s", err.Error())
-		log.WithFields(log.Fields{"error": err}).Warn(msg)
-		tokenError = errors.New(msg)
-
-	} else {
-
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-
-			if claims["aud"] == route {
-				tokenError = nil
-				log.WithFields(log.Fields{"route": route}).Info("Authorised - client can communicate")
-			} else {
-				msg := fmt.Sprintf("Denied - not permitted to access %s with token for %s", route, claims["aud"])
-				log.WithFields(log.Fields{"wanted": claims["aud"], "actual": route}).Warn(msg)
-				tokenError = errors.New(msg)
-			}
-
-			if val, ok := claims["exp"]; ok {
-
-				if exp, ok := val.(float64); ok {
-					lifetime = int64(exp) - time.Now().Unix()
-					log.WithFields(log.Fields{"lifetime": lifetime, "exp": claims["exp"]}).Info("Lifetime")
-				} else {
-					msg := "Couldn't calculate lifetime, leaving as zero lifetime connection"
-					log.WithFields(log.Fields{"exp": claims["exp"]}).Info(msg)
-					tokenError = errors.New(msg)
-				}
-			}
-
-		} else {
-			msg := "Error checking claims in JWT"
-			log.WithFields(log.Fields{"err": err}).Error(msg)
-			tokenError = errors.New(msg)
-		}
-
-	}
-
-	return lifetime, tokenError
 }

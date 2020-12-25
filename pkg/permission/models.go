@@ -9,12 +9,12 @@ import (
 
 // Permission represents claims required in the apiKey JWT
 type Token struct {
-	// Host must match the incoming request's intended host
-	Host string `json:"host"`
 
 	// Topic represents the communication channel;
 	// either /session/{session_id} or /shell/{session_id}.
 	Topic string `json:"topic"`
+
+	ConnectionType string `json:"prefix"`
 
 	// Scopes controlling access to relay;
 	// either ["read"],["write"], or ["read","write"] for session, or ["host"]/["client"] for shell
@@ -23,10 +23,11 @@ type Token struct {
 	jwt.StandardClaims
 }
 
-func NewToken(audience, topic string, scopes []string, iat, nbf, exp int64) Token {
+func NewToken(audience, topic, connectionType string, scopes []string, iat, nbf, exp int64) Token {
 	return Token{
-		Topic:  topic,
-		Scopes: scopes,
+		Topic:          topic,
+		Scopes:         scopes,
+		ConnectionType: connectionType,
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  iat,
 			NotBefore: nbf,
