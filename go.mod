@@ -17,6 +17,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
+	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.1

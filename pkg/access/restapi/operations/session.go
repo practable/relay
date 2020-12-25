@@ -9,6 +9,8 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // SessionHandlerFunc turns a function with the right signature into a session handler
@@ -70,4 +72,36 @@ func (o *Session) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
+}
+
+// SessionOKBody session o k body
+//
+// swagger:model SessionOKBody
+type SessionOKBody struct {
+
+	// uri
+	URI string `json:"uri,omitempty"`
+}
+
+// Validate validates this session o k body
+func (o *SessionOKBody) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *SessionOKBody) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *SessionOKBody) UnmarshalBinary(b []byte) error {
+	var res SessionOKBody
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
 }

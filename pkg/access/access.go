@@ -80,7 +80,12 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 
 			code := cs.SubmitToken(*token)
 
-			return operations.NewSessionOK().WithPayload(code)
+			uri := claims.Audience + "/" + claims.ConnectionType + "/" + claims.Topic + "?code=" + code
+
+			return operations.NewSessionOK().WithPayload(
+				&operations.SessionOKBody{
+					URI: uri,
+				})
 		})
 
 	go func() {
@@ -103,9 +108,7 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 
 	return func(bearerToken string) (interface{}, error) {
 		// For apiKey security syntax see https://swagger.io/docs/specification/2-0/authentication/
-		log.Trace(bearerToken)
 		claims := &permission.Token{}
-		fmt.Println(pretty(claims))
 
 		token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

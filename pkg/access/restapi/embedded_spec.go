@@ -66,10 +66,17 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "uri": {
+                  "type": "string"
+                }
+              }
             },
             "examples": {
-              "text/plain": "b142eb22-1f16-4af1-ba14-e70a7afcbcc2"
+              "text/plain": {
+                "code": "b142eb22-1f16-4af1-ba14-e70a7afcbcc2"
+              }
             }
           },
           "401": {
@@ -137,10 +144,17 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "uri": {
+                  "type": "string"
+                }
+              }
             },
             "examples": {
-              "text/plain": "b142eb22-1f16-4af1-ba14-e70a7afcbcc2"
+              "text/plain": {
+                "code": "b142eb22-1f16-4af1-ba14-e70a7afcbcc2"
+              }
             }
           },
           "401": {

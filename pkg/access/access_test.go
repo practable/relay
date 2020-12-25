@@ -3,10 +3,12 @@ package access
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -16,6 +18,7 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/relay/pkg/access/restapi/operations"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
@@ -88,8 +91,11 @@ func TestAPI(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	body, _ = ioutil.ReadAll(resp.Body)
-	bodyStr = string([]byte(body))
-	t.Log(bodyStr)
+
+	var p operations.SessionOKBody
+	err = json.Unmarshal(body, &p)
+	assert.NoError(t, err)
+	assert.True(t, strings.HasPrefix(p.URI, "wss://relay.example.io/session/123?code="))
 
 	// End tests
 	close(closed)

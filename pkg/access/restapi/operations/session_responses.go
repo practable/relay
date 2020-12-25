@@ -23,7 +23,7 @@ type SessionOK struct {
 	/*
 	  In: Body
 	*/
-	Payload string `json:"body,omitempty"`
+	Payload *SessionOKBody `json:"body,omitempty"`
 }
 
 // NewSessionOK creates SessionOK with default headers values
@@ -33,13 +33,13 @@ func NewSessionOK() *SessionOK {
 }
 
 // WithPayload adds the payload to the session o k response
-func (o *SessionOK) WithPayload(payload string) *SessionOK {
+func (o *SessionOK) WithPayload(payload *SessionOKBody) *SessionOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the session o k response
-func (o *SessionOK) SetPayload(payload string) {
+func (o *SessionOK) SetPayload(payload *SessionOKBody) {
 	o.Payload = payload
 }
 
@@ -47,9 +47,11 @@ func (o *SessionOK) SetPayload(payload string) {
 func (o *SessionOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
-	payload := o.Payload
-	if err := producer.Produce(rw, payload); err != nil {
-		panic(err) // let the recovery middleware deal with this
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
 	}
 }
 
