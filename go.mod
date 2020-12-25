@@ -16,6 +16,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jpillora/backoff v1.0.0 // indirect
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.7.0

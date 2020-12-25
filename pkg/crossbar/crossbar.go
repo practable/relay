@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-func Crossbar(config Config, closed chan struct{}, parentwg *sync.WaitGroup) {
+func Crossbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
 
 	var wg sync.WaitGroup
 

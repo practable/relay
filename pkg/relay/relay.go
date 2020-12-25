@@ -5,30 +5,29 @@ import (
 
 	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/crossbar"
+	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
-func Relay(config Config, closed chan struct{}, parentwg *sync.WaitGroup) {
+func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPort int, audience, secret, target string, options access.Options) {
 
 	var wg sync.WaitGroup
 
-	messagesToDistribute := make(chan message, 10) //TODO make buffer length configurable
+	var cs *ttlcode.CodeStore
 
-	var topics crossbar.TopicDirectory
+	cs = ttlcode.NewDefaultCodeStore()
 
-	topics.directory = make(map[string][]clientDetails)
+	config := crossbar.Config{
+		Listen:    relayPort,
+		Audience:  target,
+		CodeStore: cs,
+	}
 
-	clientActionsChan := make(chan clientAction)
+	wg.Add(1)
+	go crossbar.Crossbar(config, closed, &wg)
 
-	wg.Add(3)
-
-	go crossbar.HandleConnections(closed, &wg, clientActionsChan, messagesToDistribute, config)
-
-	go crossbar.HandleClients(closed, &wg, &topics, clientActionsChan)
-
-	go access.API(closed, &wg, config.ApiPort, config.ApiHost, config.ApiSecret, *access.DefaultOptions())
+	wg.Add(1)
+	go access.API(closed, &wg, accessPort, audience, secret, target, cs, options)
 
 	wg.Wait()
-
 	parentwg.Done()
-
 }

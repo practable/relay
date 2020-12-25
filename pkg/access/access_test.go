@@ -23,6 +23,13 @@ import (
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
+func TestGetPrefixFromPath(t *testing.T) {
+
+	assert.Equal(t, "foo%20bar", getPrefixFromPath("/foo%20bar/glum"))
+	assert.Equal(t, "", getPrefixFromPath("ooops/foo%20bar/glum"))
+
+}
+
 func TestAPI(t *testing.T) {
 
 	debug := true

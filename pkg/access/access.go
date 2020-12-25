@@ -80,6 +80,8 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 
 			code := cs.SubmitToken(*token)
 
+			log.Trace(fmt.Sprintf("submitting token of type %T", *token))
+
 			uri := claims.Audience + "/" + claims.ConnectionType + "/" + claims.Topic + "?code=" + code
 
 			return operations.NewSessionOK().WithPayload(

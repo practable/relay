@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -26,17 +27,17 @@ import (
 // it does NOT understand the use of auth codes
 // use Dial instead.
 
-func MakeTestToken(audience, topic string, scopes []string, lifetime int64) permission.Token {
+func MakeTestToken(audience, connectionType, topic string, scopes []string, lifetime int64) permission.Token {
 	begin := time.Now().Unix() - 1 //ensure it's in the past
 	end := begin + lifetime
-	return permission.NewToken(audience, topic, scopes, begin, begin, end)
+	return permission.NewToken(audience, connectionType, topic, scopes, begin, begin, end)
 }
 
 func TestCrossbar(t *testing.T) {
 
 	// Setup logging
 
-	debug := false
+	debug := true
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -84,19 +85,22 @@ func TestCrossbar(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	ct := "session"
+	session := "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 	scopes := []string{"read", "write"}
 
-	token := MakeTestToken(audience, session, scopes, 5)
+	token := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code0 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code1 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+
+	fmt.Printf("Submitting token of type %T\n", *(permission.ConvertToJWT(token)))
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, audience+session+"?code="+code0)
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, audience+session+"?code="+code1)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
 
 	time.Sleep(timeout)
 
@@ -119,8 +123,8 @@ func TestCrossbar(t *testing.T) {
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+session+"?code="+code0)
-	go s1.Dial(ctx, audience+session+"?code="+code1)
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
 
 	time.Sleep(timeout)
 
@@ -139,13 +143,13 @@ func TestCrossbar(t *testing.T) {
 
 	// try the last test again, getting new codes, and replying
 
-	code0 = cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 = cs.SubmitToken(permission.ConvertToJWT(token))
+	code0 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code1 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+session+"?code="+code0)
-	go s1.Dial(ctx, audience+session+"?code="+code1)
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
 
 	time.Sleep(timeout)
 
@@ -175,15 +179,15 @@ func TestCrossbar(t *testing.T) {
 
 	// try the last test again, getting new codes, and replying (blocked!)
 	scopes = []string{"read"}
-	tokenReadOnly := MakeTestToken(audience, session, scopes, 5)
+	tokenReadOnly := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 = cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 = cs.SubmitToken(permission.ConvertToJWT(tokenReadOnly))
+	code0 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code1 = cs.SubmitToken(*(permission.ConvertToJWT(tokenReadOnly)))
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+session+"?code="+code0)
-	go s1.Dial(ctx, audience+session+"?code="+code1)
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
 
 	time.Sleep(timeout)
 
@@ -214,15 +218,15 @@ func TestCrossbar(t *testing.T) {
 	// reader connects with a token intended for the same session on another server
 	// should NOT receive message!
 	scopes = []string{"read"}
-	tokenWrongAudience := MakeTestToken("ws://wrong.server.io", session, scopes, 5)
+	tokenWrongAudience := MakeTestToken("ws://wrong.server.io", ct, session, scopes, 5)
 
-	code0 = cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 = cs.SubmitToken(permission.ConvertToJWT(tokenWrongAudience))
+	code0 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code1 = cs.SubmitToken(*(permission.ConvertToJWT(tokenWrongAudience)))
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+session+"?code="+code0)
-	go s1.Dial(ctx, audience+session+"?code="+code1) //connects to correct audience
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1) //connects to correct audience
 
 	time.Sleep(timeout)
 
@@ -243,15 +247,15 @@ func TestCrossbar(t *testing.T) {
 	// reader connects with a token intended for a different session on same server
 	// should NOT receive message!
 	scopes = []string{"read"}
-	tokenWrongSessionID := MakeTestToken(audience, "/session/wrongone", scopes, 5)
+	tokenWrongSessionID := MakeTestToken(audience, ct, "wrongone", scopes, 5)
 
-	code0 = cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 = cs.SubmitToken(permission.ConvertToJWT(tokenWrongSessionID))
+	code0 = cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code1 = cs.SubmitToken(*(permission.ConvertToJWT(tokenWrongSessionID)))
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+session+"?code="+code0)
-	go s1.Dial(ctx, audience+session+"?code="+code1) //connects to correct session
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1) //connects to correct session
 
 	data = []byte("notgoingtogetthis")
 	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
@@ -268,18 +272,18 @@ func TestCrossbar(t *testing.T) {
 	// *** TestEnforceExpiresAt
 
 	// reader connects, sends messages, then is disconnected when session expires
-	session = "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	session = "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 	scopes = []string{"read", "write"}
-	tokenLong := MakeTestToken(audience, session, scopes, 5)
-	tokenShort := MakeTestToken(audience, session, scopes, 2)
+	tokenLong := MakeTestToken(audience, ct, session, scopes, 5)
+	tokenShort := MakeTestToken(audience, ct, session, scopes, 2)
 
-	code0 = cs.SubmitToken(permission.ConvertToJWT(tokenLong))
-	code1 = cs.SubmitToken(permission.ConvertToJWT(tokenShort))
+	code0 = cs.SubmitToken(*(permission.ConvertToJWT(tokenLong)))
+	code1 = cs.SubmitToken(*(permission.ConvertToJWT(tokenShort)))
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+session+"?code="+code0)
-	go s1.Dial(ctx, audience+session+"?code="+code1)
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
 
 	time.Sleep(timeout)
 
@@ -365,20 +369,20 @@ func BenchmarkSmallMessage(b *testing.B) {
 	// these parameters reused by:
 
 	ctx, cancel := context.WithCancel(context.Background())
-
+	ct := "session"
 	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 	scopes := []string{"read", "write"}
 
-	token := MakeTestToken(audience, session, scopes, 5)
+	token := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code0 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code1 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, audience+session+"?code="+code0)
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, audience+session+"?code="+code1)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
 
 	time.Sleep(timeout)
 
@@ -463,20 +467,20 @@ func BenchmarkLargeMessage(b *testing.B) {
 	// these parameters reused by:
 
 	ctx, cancel := context.WithCancel(context.Background())
-
-	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	ct := "session"
+	session := "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 	scopes := []string{"read", "write"}
 
-	token := MakeTestToken(audience, session, scopes, 5)
+	token := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code0 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code1 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, audience+session+"?code="+code0)
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, audience+session+"?code="+code1)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
 
 	time.Sleep(timeout)
 
@@ -578,20 +582,20 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 	// these parameters reused by:
 
 	ctx, cancel := context.WithCancel(context.Background())
-
+	ct := "session"
 	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 	scopes := []string{"read", "write"}
 
-	token := MakeTestToken(audience, session, scopes, 5)
+	token := MakeTestToken(audience, ct, session, scopes, 5)
 
-	code0 := cs.SubmitToken(permission.ConvertToJWT(token))
-	code1 := cs.SubmitToken(permission.ConvertToJWT(token))
+	code0 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
+	code1 := cs.SubmitToken(*(permission.ConvertToJWT(token)))
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, audience+session+"?code="+code0)
+	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, audience+session+"?code="+code1)
+	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
 
 	time.Sleep(timeout)
 

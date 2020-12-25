@@ -8,6 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func clientExists(topics *topicDirectory, client clientDetails) bool {
@@ -73,4 +74,17 @@ func debug(debug bool) func() {
 		suppressLog()
 		return displayLog
 	}
+}
+
+func TestGetPrefixFromPath(t *testing.T) {
+
+	assert.Equal(t, "foo%20bar", GetPrefixFromPath("/foo%20bar/glum"))
+	assert.Equal(t, "", GetPrefixFromPath("ooops/foo%20bar/glum"))
+
+}
+func TestGetTopicFromPath(t *testing.T) {
+
+	assert.Equal(t, "glum", GetTopicFromPath("/foo%20bar/glum"))
+	assert.Equal(t, "", GetTopicFromPath("ooops/foo%20bar/glum"))
+
 }

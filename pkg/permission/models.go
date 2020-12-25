@@ -2,9 +2,11 @@ package permission
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/dgrijalva/jwt-go"
+	log "github.com/sirupsen/logrus"
 )
 
 // Permission represents claims required in the apiKey JWT
@@ -23,7 +25,7 @@ type Token struct {
 	jwt.StandardClaims
 }
 
-func NewToken(audience, topic, connectionType string, scopes []string, iat, nbf, exp int64) Token {
+func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf, exp int64) Token {
 	return Token{
 		Topic:          topic,
 		Scopes:         scopes,
@@ -37,14 +39,16 @@ func NewToken(audience, topic, connectionType string, scopes []string, iat, nbf,
 	}
 }
 
-func ConvertToJWT(token Token) jwt.Token {
-	return *jwt.NewWithClaims(jwt.SigningMethodHS256, token)
+func ConvertToJWT(token Token) *jwt.Token {
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, token)
 }
 
-func ValidPermissionToken(token jwt.Token) bool {
+func ValidPermissionToken(token *jwt.Token) bool {
 
 	actualType := reflect.ValueOf(token.Claims).Type()
 	expectedType := reflect.ValueOf(Token{}).Type()
+
+	log.Trace(fmt.Sprintf("actualType: %v\nexptecType: %v\n", actualType, expectedType))
 
 	if actualType != expectedType {
 		return false
@@ -54,7 +58,7 @@ func ValidPermissionToken(token jwt.Token) bool {
 
 }
 
-func GetPermissionToken(token jwt.Token) (Token, error) {
+func GetPermissionToken(token *jwt.Token) (Token, error) {
 	if !ValidPermissionToken(token) {
 		return Token{}, errors.New("Not a permission token")
 	}

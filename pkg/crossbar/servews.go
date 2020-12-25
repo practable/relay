@@ -1,8 +1,8 @@
 package crossbar
 
 import (
+	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/eclesh/welford"
@@ -26,14 +26,19 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 	// check if topic is of a supported type before we go any further
 	ct := Unsupported
 
-	topic := slashify(r.URL.Path)
+	path := slashify(r.URL.Path)
 
-	log.WithField("topic", topic).Trace()
+	log.WithField("path", path).Trace()
 
-	if strings.HasPrefix(topic, "/session/") {
+	prefix := GetPrefixFromPath(path)
+	topic := GetTopicFromPath(path)
+
+	log.Trace(fmt.Sprintf("%s -> %s and %s\n", path, prefix, topic))
+
+	if prefix == "session" {
 		ct = Session
 	}
-	if strings.HasPrefix(topic, "/shell/") {
+	if prefix == "shell" {
 		ct = Unsupported //TODO implement shell!
 	}
 
@@ -41,13 +46,12 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	if ct == Unsupported {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		log.WithField("topic", topic).Error("topic unsuported")
+		log.WithField("connectionType", topic).Error("connectionType unsuported")
 		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.WithField("error", err).Error("serveWs failed to upgrade to websocket")
 		return
 	}
@@ -83,17 +87,17 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	// check token is a permission token so we can process it properly
 	// It's been validated so we don't need to re-do that
-	if !permission.ValidPermissionToken(token) {
+	if !permission.ValidPermissionToken(&token) {
 		log.WithField("topic", topic).Info("Unauthorized - Not a permission token")
 		return
 	}
 
 	// convert claims into permission.Token for convenience
 
-	p, err := permission.GetPermissionToken(token)
+	p, err := permission.GetPermissionToken(&token)
 
 	if err != nil {
-		log.WithField("topic", topic).Info("Unauthorized - Not a permission token")
+		log.WithField("topic", topic).Info("Unauthorized - Could not convert to a permission token")
 		return
 	}
 
