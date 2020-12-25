@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// StatsClient starts a routine which sends stats reports on demand.
 func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, hub *Hub, config Config) {
 
 	tx := &Frames{size: welford.New(), ns: welford.New()}
@@ -35,6 +36,7 @@ func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, hub *Hub, config Co
 
 }
 
+// StatsReporter sends a stats update in response to {"cmd":"update"}.
 func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 
 	defer wg.Done()
@@ -55,6 +57,10 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 			return
 		case msg, ok := <-c.send: // received a message from hub
 
+			if !ok {
+				return //send is closed, so we are finished
+			}
+
 			err := json.Unmarshal(msg.data, &sc)
 
 			if err != nil {
@@ -65,9 +71,6 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 
 			doUpdate := false
 
-			if !ok {
-				return //send is closed, so we are finished
-			}
 			if sc.Command == "update" {
 				doUpdate = true
 			}
@@ -79,14 +82,21 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 					return //send is closed, so we are finished
 				}
 
-				log.WithField("msg", string(msg.data)).Trace("StatsReporter received message")
+				err = json.Unmarshal(msg.data, &sc)
 
-				if string(msg.data) == `{"cmd":"update"}` {
-					doUpdate = true
+				if err != nil {
+					log.WithFields(log.Fields{"error": err, "msg": string(msg.data)}).Trace("statsReporter could not marshall into json")
 				}
 
+				log.WithField("cmd", sc.Command).Trace("statsReporter received command")
+
+				if sc.Command == "update" {
+					doUpdate = true
+				}
 			}
+
 			log.WithField("doUpdate", doUpdate).Trace("statsReporter do update?")
+
 			if !doUpdate { //don't send updated stats
 				continue
 			}
