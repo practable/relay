@@ -58,7 +58,7 @@ func TestHandler(t *testing.T) {
 	var topics topicDirectory
 	topics.directory = make(map[string][]clientDetails)
 
-	go HandleClients(closed, &wg, &topics, clientActionsChan)
+	go handleClients(closed, &wg, &topics, clientActionsChan)
 
 	client1 := clientDetails{"client1", "topic1", make(chan message, 2)}
 	client2 := clientDetails{"client2", "topic2", make(chan message, 2)}
