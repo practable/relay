@@ -38,6 +38,8 @@ import (
 type WsMessage struct {
 	Data []byte
 	Type int
+	To   string
+	From string
 }
 
 // connects (retrying/reconnecting if necessary) to websocket server at url

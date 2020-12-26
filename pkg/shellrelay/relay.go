@@ -5,7 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/access"
-	"github.com/timdrysdale/relay/pkg/crossbar"
+	"github.com/timdrysdale/relay/pkg/shellbar"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
@@ -17,14 +17,14 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPo
 
 	cs = ttlcode.NewDefaultCodeStore()
 
-	config := crossbar.Config{
+	config := shellbar.Config{
 		Listen:    relayPort,
 		Audience:  target,
 		CodeStore: cs,
 	}
 
 	wg.Add(1)
-	go crossbar.Crossbar(config, closed, &wg)
+	go shellbar.Shellbar(config, closed, &wg)
 
 	wg.Add(1)
 	go access.API(closed, &wg, accessPort, audience, secret, target, cs, options)
