@@ -21,10 +21,10 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/reconws"
 	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/access/restapi/operations"
 	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/timdrysdale/relay/pkg/reconws"
 )
 
 func TestRelay(t *testing.T) {

@@ -4,20 +4,27 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 	"github.com/jpillora/backoff"
+	"github.com/phayes/freeport"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
-	crossbar "github.com/timdrysdale/relay/pkg/crossbar/cmd"
+	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/relay/pkg/access"
+	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/timdrysdale/relay/pkg/relay"
 )
 
 var testAuthToken string = "some.test.token"
@@ -26,6 +33,24 @@ func init() {
 
 	log.SetLevel(log.PanicLevel)
 
+}
+
+func MakeTestToken(audience, secret string, ttl int64) (string, error) {
+
+	var claims permission.Token
+
+	claims.IssuedAt = time.Now().Unix() - 1
+	claims.NotBefore = time.Now().Unix() - 1
+	claims.ExpiresAt = time.Now().Unix() + ttl
+	claims.Audience = audience
+	claims.Topic = "123"
+	claims.ConnectionType = "session"
+	claims.Scopes = []string{"read", "write"}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign and get the complete encoded token as a string using the secret
+	return token.SignedString([]byte(secret))
 }
 
 func TestBackoff(t *testing.T) {
@@ -55,71 +80,126 @@ func TestBackoff(t *testing.T) {
 
 }
 
-func TestAuthBad(t *testing.T) {
+func TestReconnectAuth(t *testing.T) {
 
-	r := New()
+	// Setup logging
+	debug := false
 
-	// Create test server with the echo handler.
-	s := httptest.NewServer(http.HandlerFunc(auth))
-	defer s.Close()
+	if debug {
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
 
-	// Convert http://127.0.0.1 to ws://127.0.0.
-	u := "ws" + strings.TrimPrefix(s.URL, "http")
-	token := "not.the.right.token"
+	} else {
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	defer cancel()
-	go r.ReconnectAuth(ctx, u, token)
+	// Setup relay on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
 
-	payload := []byte("Hello")
-	mtype := int(websocket.TextMessage)
+	ports, err := freeport.GetFreePorts(2)
+	assert.NoError(t, err)
+
+	relayPort := ports[0]
+	accessPort := ports[1]
+
+	audience := "http://[::]:" + strconv.Itoa(accessPort)
+	target := "ws://127.0.0.1:" + strconv.Itoa(relayPort)
+
+	secret := "testsecret"
+
+	wg.Add(1)
+
+	startTime := time.Now().Unix()
+	go func() {
+		time.Sleep(2 * time.Second)
+		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
+	}()
+
+	// We can't start, stop and restart the relay.Relay without causing mux issues due to net/http
+	// It panics on registration of multiple handlers
+	// so start with it not running, then after some time,
+	// and attempts have been made to connect - start relay
+	// and see if the ReconnectAuth clients will connect.
+
+	// Sign and get the complete encoded token as a string using the secret
+	bearer, err := MakeTestToken(audience, secret, 30)
+	assert.NoError(t, err)
+
+	// now clients connect using their uris...
+
+	var timeout = 100 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	s0 := New()
+	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
+
+	s1 := New()
+	go s1.ReconnectAuth(ctx, audience+"/session/123", bearer)
+
+	time.Sleep(timeout)
+
+	data := []byte("prestart-ping-no-chance")
 
 	select {
-	case <-time.After(1000 * time.Millisecond):
-		// all ok
-	case r.Out <- WsMessage{Data: payload, Type: mtype}:
-		t.Errorf("Did not expect to be able to send a message when not authorised")
+	case s0.Out <- WsMessage{Data: data, Type: websocket.TextMessage}:
+		t.Fatal("s0 sent messsage to dead relay")
+		select {
+		case <-s1.In:
+			t.Fatal("no message expected")
+		case <-time.After(timeout):
+		}
+	case <-time.After(timeout):
 	}
+
+	data = []byte("prestart-pong-no-chance")
+
+	select { //send may or may not happen
+	case s1.Out <- WsMessage{Data: data, Type: websocket.TextMessage}:
+		t.Fatal("s1 sent messsage to dead relay")
+		select {
+		case <-s0.In:
+			t.Fatal("no message expected")
+		case <-time.After(timeout):
+		}
+	case <-time.After(timeout):
+	}
+
+	// check we finished test before relay started
+	assert.True(t, startTime+2 > time.Now().Unix())
+
+	// now ensure relay is running
+	time.Sleep(3)
+
+	data = []byte("ping")
+
+	s0.Out <- WsMessage{Data: data, Type: websocket.TextMessage}
 
 	select {
-	case <-time.After(50 * time.Millisecond):
-		// all ok
-	case _ = <-r.In:
-		t.Errorf("Did not expect get a reply to message we did not send")
+	case msg := <-s1.In:
+		assert.Equal(t, data, msg.Data)
+	case <-time.After(timeout):
+		t.Fatal("No message")
 	}
 
-	time.Sleep(2 * time.Second)
+	data = []byte("pong")
 
-}
+	s1.Out <- WsMessage{Data: data, Type: websocket.TextMessage}
 
-func TestAuth(t *testing.T) {
-
-	r := New()
-
-	// Create test server with the echo handler.
-	s := httptest.NewServer(http.HandlerFunc(auth))
-	defer s.Close()
-
-	// Convert http://127.0.0.1 to ws://127.0.0.
-	u := "ws" + strings.TrimPrefix(s.URL, "http")
-	token := testAuthToken
-
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	defer cancel()
-	go r.ReconnectAuth(ctx, u, token)
-
-	payload := []byte("Hello")
-	mtype := int(websocket.TextMessage)
-
-	r.Out <- WsMessage{Data: payload, Type: mtype}
-
-	reply := <-r.In
-
-	if bytes.Compare(reply.Data, payload) != 0 {
-		t.Errorf("Got unexpected response: %s, wanted %s\n", reply.Data, payload)
+	select {
+	case msg := <-s0.In:
+		assert.Equal(t, data, msg.Data)
+	case <-time.After(timeout):
+		t.Fatal("No message")
 	}
-
-	time.Sleep(2 * time.Second)
+	cancel()
+	// Shutdown the Relay and check no messages are being sent
+	close(closed)
+	wg.Wait()
 
 }
 
@@ -296,53 +376,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-}
-
-func auth(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer c.Close()
-
-	mt, message, err := c.ReadMessage()
-	if err != nil {
-		return
-	}
-
-	reply := crossbar.AuthMessage{
-		Authorised: false,
-		Token:      testAuthToken,
-		Reason:     "Denied", //not an official message ...
-	}
-
-	if string(message) == testAuthToken {
-		reply = crossbar.AuthMessage{
-			Authorised: true,
-			Reason:     "ok",
-		}
-	}
-
-	message, err = json.Marshal(&reply)
-
-	err = c.WriteMessage(mt, message)
-	if err != nil {
-
-		return
-	}
-
-	//now echo
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			break
-		}
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			break
-		}
-	}
-
 }
 
 func deny(w http.ResponseWriter, r *http.Request, c chan int) {

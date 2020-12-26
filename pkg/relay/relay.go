@@ -3,6 +3,7 @@ package relay
 import (
 	"sync"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/crossbar"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
@@ -30,4 +31,5 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPo
 
 	wg.Wait()
 	parentwg.Done()
+	log.Trace("Relay done")
 }

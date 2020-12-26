@@ -87,4 +87,5 @@ func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, clientA
 	h.Shutdown(ctx)
 	wg.Wait()
 	parentwg.Done()
+	log.Trace("handleConnections is done")
 }

@@ -19,7 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/agg"
-	crossbar "github.com/timdrysdale/relay/pkg/crossbar/cmd"
+	"github.com/timdrysdale/relay/pkg/crossbar"
 	"github.com/timdrysdale/relay/pkg/hub"
 	"github.com/timdrysdale/relay/pkg/reconws"
 )
