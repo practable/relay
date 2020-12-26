@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+  <style>
+	table,
+	td {
+    border: 1px solid #333;
+	}
+
+	thead,
+	tfoot {
+    background-color: #333;
+    color: #fff;
+	}
+  </style>
+  <body>
+
+	<h1>Crossbar stats</h1>
+
+	<table id="broadcaster">
+      <thead>
+        <tr>
+          <th colspan="99">Broadcasters</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+	</table>
+
+</br>
+
+<table id="receiver">
+  <thead>
+    <tr>
+      <th colspan="99">Receivers</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+
+<script>
+
+  var broadcastTable
+  var receiveTable
+  let bcols = ["topic","last","Avg Bytes","FPS", "Connected","remoteAddr","userAgent"]
+  let rcols = ["topic","last","Avg size","FPS", "Connected","remoteAddr","userAgent"]
+
+  var somePackage = {};
+
+  var scheme = 'wss://';
+
+  somePackage.connect = function()  {
+
+	  if (document.location.host.startsWith('localhost')){	  
+		  scheme = 'ws://'
+	  }
+	  if (document.location.host.startsWith('127.0.0.1')){	  
+		  scheme = 'ws://'
+	  }
+	  
+	  
+  var ws = new WebSocket(scheme+document.location.host+'/ws');
+  ws.onopen = function() {
+  console.log('ws connected');
+  somePackage.ws = ws;
+  };
+  ws.onerror = function() {
+  console.log('ws error');
+  };
+  ws.onclose = function() {
+  console.log('ws closed');
+  };
+  ws.onmessage = function(msgevent) {
+  var msg = JSON.parse(msgevent.data);
+  console.log('in :', msg);
+  // message received, do something
+  addRow(broadcastTable, receiveTable, msg)
+  };
+  };
+
+  somePackage.send = function(msg) {
+  if (!this.ws) {
+  console.log('no connection');
+  return;
+  }
+  console.log('out:', msg)
+  this.ws.send(window.JSON.stringify(msg));
+  };
+
+  function addRow(broadcastTable, receiveTable, data){
+
+  if (data.broadcaster == true){ 
+
+  let row = broadcastTable.insertRow();
+  let info = {topic: data.topic, 
+  last: data.stats.tx.last,
+  size: data.stats.tx.size,
+  fps: Math.round(data.stats.tx.fps),
+  connected: data.connected,
+  remoteAddr: data.remoteAddr,
+  userAgent: data.userAgent
+  }
+  for (key in info) {
+  console.log(key)
+  let cell = row.insertCell();
+  let text = document.createTextNode(info[key]);
+  cell.appendChild(text);
+  }
+  } else {
+  let row = receiveTable.insertRow();
+
+  let info = {topic: data.topic, 
+  last: data.stats.rx.last,
+  size: data.stats.rx.size,
+  fps: Math.round(data.stats.rx.fps),
+  connected: data.connected,
+  remoteAddr: data.remoteAddr,
+  userAgent: data.userAgent
+  }
+  
+  for (key in info) {
+  let cell = row.insertCell();
+  let text = document.createTextNode(info[key]);
+  cell.appendChild(text);
+  }
+
+  }
+  
+  }
+
+  function generateTableHead(table, data) {
+  let thead = table.createTHead();
+  let row = thead.insertRow();
+  for (let key of data) {
+  let th = document.createElement("th");
+  let text = document.createTextNode(key);
+  th.appendChild(text);
+  row.appendChild(th);
+  }
+  }
+
+  function deleteAllRows(table){
+  for(var i = table.rows.length - 1; i > 0; i--)
+  {
+  table.deleteRow(i);
+  }
+  }
+
+
+  // DOM is ready by now
+  (function() {
+
+  broadcastTable = document.getElementById("broadcaster");
+  receiveTable = document.getElementById("receiver");
+
+  generateTableHead(broadcastTable, bcols);
+  generateTableHead(receiveTable, rcols);
+
+  somePackage.connect()
+  setTimeout(function(){somePackage.send("-"); }, 1000);
+  setInterval(function(){
+
+  deleteAllRows(broadcastTable)
+  deleteAllRows(receiveTable)
+  somePackage.send("-"); 
+
+  }, 5000);
+
+  })();
+</script>
+
+  </body>
+</html>
+
+<script>
+
+
+
+</script>
