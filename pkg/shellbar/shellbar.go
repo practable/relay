@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-func Crossbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
+func Shellbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
 
 	var wg sync.WaitGroup
 
@@ -21,8 +21,6 @@ func Crossbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
 	go handleConnections(closed, &wg, clientActionsChan, messagesToDistribute, config)
 
 	go handleClients(closed, &wg, &topics, clientActionsChan)
-
-	//go access.API(closed, &wg, config.ApiPort, config.ApiHost, config.ApiSecret, *access.DefaultOptions())
 
 	wg.Wait()
 
