@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/agg"
 	"github.com/timdrysdale/relay/pkg/hub"
 	"github.com/timdrysdale/relay/pkg/reconws"
@@ -96,8 +97,10 @@ func (h *Hub) Run(closed chan struct{}) {
 			go client.RelayOut(client.Context)
 
 			if token == "" {
+				log.WithFields(log.Fields{"url": urlStr}).Trace("Starting Reconnect")
 				go ws.Reconnect(client.Context, urlStr)
 			} else {
+				log.WithFields(log.Fields{"url": urlStr, "token": token}).Trace("Starting ReconnectAuth")
 				go ws.ReconnectAuth(client.Context, urlStr, token)
 			}
 			//user must check stats to learn of errors

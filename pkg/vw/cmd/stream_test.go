@@ -1,20 +1,33 @@
 package cmd
 
 import (
-	"encoding/json"
+	"bufio"
+	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/phayes/freeport"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/agg"
-	crossbar "github.com/timdrysdale/relay/pkg/crossbar/cmd"
+	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/timdrysdale/relay/pkg/reconws"
+	"github.com/timdrysdale/relay/pkg/relay"
 	"github.com/timdrysdale/relay/pkg/rwc"
 )
 
@@ -105,7 +118,10 @@ func TestStreamUsingInternals(t *testing.T) {
 	args := fmt.Sprintf("-re -i sample.ts -f mpegts -codec:v mpeg1video -s 640x480 -b:v 1000k -r 24 -bf 0 %s", dest)
 	argSlice := strings.Split(args, " ")
 	cmd := exec.Command("ffmpeg", argSlice...)
-	err := cmd.Run()
+	fp, err := filepath.Abs("../test")
+	assert.NoError(t, err)
+	cmd.Dir = fp
+	err = cmd.Run()
 	if err != nil {
 		t.Error("ffmpeg", err)
 	}
@@ -138,7 +154,18 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 	//                                                   sizes
 	//
 	// start up our streaming programme
+	debug := false
 
+	if debug {
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
 	go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
 
 	// destination websocket reporting channels
@@ -214,6 +241,9 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 	args := fmt.Sprintf("-re -f concat -i list.txt -f mpegts -codec:v mpeg1video -s 640x480 -b:v 1000k -r 24 -bf 0 %s", dest)
 	argSlice := strings.Split(args, " ")
 	cmd := exec.Command("ffmpeg", argSlice...)
+	fp, err := filepath.Abs("../test")
+	assert.NoError(t, err)
+	cmd.Dir = fp
 	go func() {
 		err := cmd.Run()
 		if err != nil {
@@ -271,19 +301,42 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 	//
 	// start up our streaming programme
 
+	// Setup logging
+	debug := false
+
+	if debug {
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
+
+	// Setup relay on local (free) ports to receive wss streams
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	ports, err := freeport.GetFreePorts(2)
+	assert.NoError(t, err)
+
+	relayPort := ports[0]
+	accessPort := ports[1]
+
+	audience := "http://[::]:" + strconv.Itoa(accessPort)
+	target := "ws://127.0.0.1:" + strconv.Itoa(relayPort)
+
+	secret := "testsecret"
+
+	wg.Add(1)
+
+	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
+
 	go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
 
-	// destination websocket reporting channels
-	msgSize0 := make(chan int)
-	msgSize1 := make(chan int)
-	authToken := "some.test.token"
-
-	//destination websocket servers
-	serverExternal0 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { reportSizeAuth(w, r, msgSize0, authToken) }))
-	defer serverExternal0.Close()
-
-	serverExternal1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { reportSizeAuth(w, r, msgSize1, authToken) }))
-	defer serverExternal1.Close()
+	time.Sleep(time.Second) // big safety margin to get crossbar running
 
 	// destination changeover signalling (to save guessing ffmpeg startup time)
 	ffmpegRunning := make(chan struct{})
@@ -294,45 +347,103 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 	// destination rules
 	Id := "00" //same for both as changing, not duplicating, destination
 
-	url0, _ := url.Parse(serverExternal0.URL)
-	wss0 := fmt.Sprintf("ws://localhost:%s", url0.Port())
-	destinationRule0 := rwc.Rule{Stream: "stream/large", Destination: wss0, Id: Id, Token: authToken}
+	// bearer tokens for the connections
+	var claims permission.Token
 
-	url1, _ := url.Parse(serverExternal1.URL)
-	wss1 := fmt.Sprintf("ws://localhost:%s", url1.Port())
-	destinationRule1 := rwc.Rule{Stream: "stream/large", Destination: wss1, Id: Id, Token: authToken}
+	claims.IssuedAt = time.Now().Unix() - 1
+	claims.NotBefore = time.Now().Unix() - 1
+	claims.ExpiresAt = time.Now().Unix() + 30
+	claims.Audience = audience
+	claims.Topic = "123"
+	claims.ConnectionType = "session"
+	claims.Scopes = []string{"write"}
+
+	token0 := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign and get the complete encoded token as a string using the secret
+	bearer0, err := token0.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	// Make token for different topic
+	claims.Topic = "456"
+	token1 := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	bearer1, err := token1.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	destination0 := audience + "/session/123"
+	destination1 := audience + "/session/456"
+
+	destinationRule0 := rwc.Rule{Stream: "stream/large", Destination: destination0, Id: Id, Token: bearer0}
+	destinationRule1 := rwc.Rule{Stream: "stream/large", Destination: destination1, Id: Id, Token: bearer1}
+
+	// set up some receivers for the stream
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	claims.Topic = "123"
+	claims.Scopes = []string{"read"}
+	token0read := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	bearer0read, err := token0read.SignedString([]byte(secret))
+	assert.NoError(t, err)
+	claims.Topic = "456"
+	token1read := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	bearer1read, err := token1read.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	s0 := reconws.New()
+	go s0.ReconnectAuth(ctx, destination0, bearer0read)
+
+	s1 := reconws.New()
+	go s1.ReconnectAuth(ctx, destination1, bearer1read)
 
 	// receivers
 	rxCount0 := 0
 	rxCount1 := 0
-	var wg sync.WaitGroup
+
 	wg.Add(2)
+
 	go func() {
 		defer wg.Done()
 		select {
-		case <-msgSize0:
+		case <-s0.In:
 			close(ffmpegRunning) //signal to main body of test
 			rxCount0++
-		case <-time.After(time.Second):
+		case <-time.After(5 * time.Second):
 			t.Error("Timeout on destination websocket server 0")
+			return
 		}
-		for msgSize := range msgSize0 {
-			if msgSize > 0 {
-				rxCount0++
+		for {
+			select {
+			case <-closed:
+				return
+			case msg, ok := <-s0.In:
+				if !ok {
+					t.Log("s0.In channel closed")
+					return
+				}
+				if len(msg.Data) > 0 {
+					rxCount0++
+				}
 			}
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		select {
-		case <-msgSize1:
-			rxCount1++
-		case <-time.After(time.Second):
-			t.Error("Timeout on destination websocket server 1")
-		}
-		for msgSize := range msgSize1 {
-			if msgSize > 0 {
-				rxCount1++
+		for {
+			select {
+			case msg, ok := <-s1.In:
+				if !ok {
+					t.Log("s1.In channel closed")
+					return
+				}
+				if len(msg.Data) > 0 {
+					rxCount1++
+				}
+			case <-time.After(5 * time.Second):
+				t.Error("Timeout on destination websocket server 0")
+				return
+			case <-closed:
+				return
 			}
 		}
 	}()
@@ -347,6 +458,10 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 	args := fmt.Sprintf("-re -f concat -i list.txt -f mpegts -codec:v mpeg1video -s 640x480 -b:v 1000k -r 24 -bf 0 %s", dest)
 	argSlice := strings.Split(args, " ")
 	cmd := exec.Command("ffmpeg", argSlice...)
+	fp, err := filepath.Abs("../test")
+	assert.NoError(t, err)
+	cmd.Dir = fp
+
 	go func() {
 		err := cmd.Run()
 		if err != nil {
@@ -356,7 +471,7 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 
 	select {
 	case <-ffmpegRunning:
-	case <-time.After(time.Second): //avoid hanging if test failed
+	case <-time.After(5 * time.Second): //avoid hanging if test failed
 		t.Error("Timeout: ffmpeg too slow to send first frame / ffmpeg frames not received")
 	}
 
@@ -376,13 +491,10 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 		t.Errorf("Insufficient frames received by server 1: %d", rxCount1)
 	}
 
+	cancel()
 	close(app.Closed)
-
-	close(msgSize0)
-	close(msgSize1)
-
-	time.Sleep(1 * time.Second)
-
+	close(closed)
+	wg.Wait()
 }
 
 func reportSize(w http.ResponseWriter, r *http.Request, msgSize chan int) {
@@ -391,48 +503,6 @@ func reportSize(w http.ResponseWriter, r *http.Request, msgSize chan int) {
 		return
 	}
 	defer c.Close()
-	for {
-		_, message, err := c.ReadMessage()
-		if err != nil {
-			break
-		}
-		msgSize <- len(message)
-	}
-}
-
-func reportSizeAuth(w http.ResponseWriter, r *http.Request, msgSize chan int, authToken string) {
-	c, err := testUpgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer c.Close()
-
-	mt, message, err := c.ReadMessage()
-	if err != nil {
-		return
-	}
-
-	reply := crossbar.AuthMessage{
-		Authorised: false,
-		Token:      string(message),
-		Reason:     "Denied", //not an official message ...
-	}
-
-	if string(message) == authToken {
-		reply = crossbar.AuthMessage{
-			Authorised: true,
-			Reason:     "ok",
-		}
-	}
-
-	message, err = json.Marshal(&reply)
-
-	err = c.WriteMessage(mt, message)
-	if err != nil {
-
-		return
-	}
-
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {

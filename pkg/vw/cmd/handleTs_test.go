@@ -106,6 +106,8 @@ func TestHandleTsFrameBoundaries(t *testing.T) {
 
 	cmd := exec.Command("ffmpeg", argSlice...)
 
+	cmd.Dir = "../test"
+
 	err := cmd.Run()
 
 	if err != nil {

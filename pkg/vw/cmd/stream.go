@@ -18,7 +18,7 @@ import (
 
 type Specification struct {
 	Port               int    `default:"8888"`
-	LogLevel           string `split_words:"true" default:"TRACE"`
+	LogLevel           string `split_words:"true" default:"PANIC"`
 	MuxBufferLength    int    `default:"10"`
 	ClientBufferLength int    `default:"5"`
 	ClientTimeoutMs    int    `default:"1000"`
