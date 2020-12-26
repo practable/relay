@@ -1,0 +1,2 @@
+#!/bin/sh
+websocat ws://localhost:8888/ws/pendulum tcp-listen:127.0.0.1:9999 --text

@@ -1,0 +1,2 @@
+#!/bin/sh
+curl -X POST -H "Content-Type: application/json" -d '{"stream":"pendulum","destination":"wss://relay.practable.io/bi/demo/data","id":"1"}' http://localhost:8888/api/destinations  
