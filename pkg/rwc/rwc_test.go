@@ -3,25 +3,31 @@ package rwc
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
+	"github.com/phayes/freeport"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/agg"
-	"github.com/timdrysdale/relay/pkg/crossbar"
 	"github.com/timdrysdale/relay/pkg/hub"
+	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/reconws"
+	"github.com/timdrysdale/relay/pkg/relay"
 )
 
 var testAuthToken string = "some.test.token"
@@ -30,6 +36,24 @@ func init() {
 
 	log.SetLevel(log.ErrorLevel)
 
+}
+
+func makeTestToken(audience, secret string, ttl int64) (string, error) {
+
+	var claims permission.Token
+
+	claims.IssuedAt = time.Now().Unix() - 1
+	claims.NotBefore = time.Now().Unix() - 1
+	claims.ExpiresAt = time.Now().Unix() + ttl
+	claims.Audience = audience
+	claims.Topic = "123"
+	claims.ConnectionType = "session"
+	claims.Scopes = []string{"read", "write"}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign and get the complete encoded token as a string using the secret
+	return token.SignedString([]byte(secret))
 }
 
 func TestInstantiateHub(t *testing.T) {
@@ -501,16 +525,62 @@ func TestDeleteAllRule(t *testing.T) {
 	}
 }
 
-func TestSendMessageTopicAuth(t *testing.T) {
+func TestConnectAuth(t *testing.T) {
 
-	// Create test server with the echo handler.
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authShout(w, r)
-	}))
-	defer s.Close()
+	// Setup logging
+	debug := false
 
+	if debug {
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
+
+	// Setup relay on local (free) port
 	closed := make(chan struct{})
-	defer close(closed)
+	var wg sync.WaitGroup
+
+	ports, err := freeport.GetFreePorts(2)
+	assert.NoError(t, err)
+
+	relayPort := ports[0]
+	accessPort := ports[1]
+
+	audience := "http://[::]:" + strconv.Itoa(accessPort)
+	target := "ws://127.0.0.1:" + strconv.Itoa(relayPort)
+
+	secret := "testsecret"
+
+	wg.Add(1)
+
+	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
+
+	// allow relay to start up
+	time.Sleep(time.Second)
+
+	timeout := 100 * time.Millisecond
+
+	// Sign and get the complete encoded token as a string using the secret
+	bearer, err := makeTestToken(audience, secret, 30)
+	assert.NoError(t, err)
+
+	destination := audience + "/session/123"
+
+	// connect a client and have them waiting for a message
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	s1 := reconws.New()
+	go s1.ReconnectAuth(ctx, audience+"/session/123", bearer)
+
+	time.Sleep(timeout)
+
+	// Now do the rwc thing...
 
 	mh := agg.New()
 	go mh.Run(closed)
@@ -522,8 +592,7 @@ func TestSendMessageTopicAuth(t *testing.T) {
 
 	id := "rule0"
 	stream := "medium"
-	destination := "ws" + strings.TrimPrefix(s.URL, "http")
-	token := testAuthToken
+	token := bearer
 
 	r := &Rule{Id: id,
 		Stream:      stream,
@@ -548,18 +617,23 @@ func TestSendMessageTopicAuth(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 
 	payload := []byte("test message")
-	shoutedPayload := []byte("TEST MESSAGE")
 
 	mh.Broadcast <- hub.Message{Data: payload, Type: websocket.TextMessage, Sender: *c, Sent: time.Now()}
 
+	// Now we need to see if we got it...
+
 	select {
-	case msg := <-reply:
-		if bytes.Compare(msg.Data, shoutedPayload) != 0 {
-			t.Error("Got wrong message")
-		}
-	case <-time.After(10 * time.Millisecond):
-		t.Error("timed out waiting for message")
+	case msg := <-s1.In:
+		assert.Equal(t, payload, msg.Data)
+	case <-time.After(timeout):
+		t.Fatal("No message")
 	}
+
+	cancel()
+	// Shutdown the Relay and check no messages are being sent
+	close(closed)
+	wg.Wait()
+
 }
 
 func TestWriteToFile(t *testing.T) {
@@ -1061,54 +1135,6 @@ func report(w http.ResponseWriter, r *http.Request, msgChan chan reconws.WsMessa
 		}
 		msgChan <- reconws.WsMessage{Data: message, Type: mt}
 	}
-}
-
-func authShout(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer c.Close()
-
-	mt, message, err := c.ReadMessage()
-	if err != nil {
-		return
-	}
-
-	reply := crossbar.AuthMessage{
-		Authorised: false,
-		Token:      testAuthToken,
-		Reason:     "Denied", //not an official message ...
-	}
-
-	if string(message) == testAuthToken {
-		reply = crossbar.AuthMessage{
-			Authorised: true,
-			Reason:     "ok",
-		}
-	}
-
-	message, err = json.Marshal(&reply)
-
-	err = c.WriteMessage(mt, message)
-	if err != nil {
-
-		return
-	}
-
-	//now ECHO (shout!)
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			break
-		}
-		message = []byte(strings.ToUpper(string(message)))
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			break
-		}
-	}
-
 }
 
 func shout(w http.ResponseWriter, r *http.Request) {

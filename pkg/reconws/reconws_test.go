@@ -35,7 +35,7 @@ func init() {
 
 }
 
-func MakeTestToken(audience, secret string, ttl int64) (string, error) {
+func makeTestToken(audience, secret string, ttl int64) (string, error) {
 
 	var claims permission.Token
 
@@ -126,7 +126,8 @@ func TestReconnectAuth(t *testing.T) {
 	// and see if the ReconnectAuth clients will connect.
 
 	// Sign and get the complete encoded token as a string using the secret
-	bearer, err := MakeTestToken(audience, secret, 30)
+	bearer, err := makeTestToken(audience, secret, 30)
+
 	assert.NoError(t, err)
 
 	// now clients connect using their uris...
