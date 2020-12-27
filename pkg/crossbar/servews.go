@@ -30,8 +30,8 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	log.WithField("path", path).Trace()
 
-	prefix := GetPrefixFromPath(path)
-	topic := GetTopicFromPath(path)
+	prefix := getConnectionTypeFromPath(path)
+	topic := getTopicFromPath(path)
 
 	log.Trace(fmt.Sprintf("%s -> %s and %s\n", path, prefix, topic))
 

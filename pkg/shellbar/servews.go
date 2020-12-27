@@ -30,23 +30,20 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	log.WithField("path", path).Trace()
 
-	prefix := GetPrefixFromPath(path)
-	topic := GetTopicFromPath(path)
+	connectionType := getConnectionTypeFromPath(path)
+	topic := getSessionIDFromPath(path)
 
-	log.Trace(fmt.Sprintf("%s -> %s and %s\n", path, prefix, topic))
+	log.Trace(fmt.Sprintf("%s -> %s and %s\n", path, connectionType, topic))
 
-	if prefix == "session" {
-		ct = Session
-	}
-	if prefix == "shell" {
-		ct = Unsupported //TODO implement shell!
+	if connectionType == "shell" {
+		ct = Shell
 	}
 
 	log.WithField("connectionType", ct).Trace()
 
 	if ct == Unsupported {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		log.WithField("connectionType", topic).Error("connectionType unsuported")
+		log.WithField("connectionType", connectionType).Error("connectionType unsuported")
 		return
 	}
 

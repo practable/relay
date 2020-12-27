@@ -29,9 +29,9 @@ func slashify(path string) string {
 
 }
 
-func GetPrefixFromPath(path string) string {
+func getConnectionTypeFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/([\\w\\%-]*)\\/")
+	re := regexp.MustCompile("^\\/([\\w\\%-]*)")
 
 	matches := re.FindStringSubmatch(path)
 
@@ -44,16 +44,38 @@ func GetPrefixFromPath(path string) string {
 	return matches[1]
 }
 
-func GetTopicFromPath(path string) string {
+func getTopicFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/[\\w\\%-]*\\/([\\w\\%-/]*)?")
-
+	re := regexp.MustCompile("^\\/[\\w\\%-]*\\/([\\w\\%-\\/]*)")
 	matches := re.FindStringSubmatch(path)
 
 	if len(matches) < 2 {
 		return ""
 	}
-	// matches[0] = "/{prefix}/{topic}"
-	// matches[1] = "{topic}"
+
 	return matches[1]
+}
+
+func getSessionIDFromPath(path string) string {
+
+	re := regexp.MustCompile("^\\/[\\w\\%-]*\\/([\\w\\%-]*)")
+	matches := re.FindStringSubmatch(path)
+
+	if len(matches) < 2 {
+		return ""
+	}
+
+	return matches[1]
+}
+
+func getConnectionIDFromPath(path string) string {
+
+	re := regexp.MustCompile("^\\/(?:([\\w\\%-]*)\\/){2}([\\w\\%-]*)")
+	matches := re.FindStringSubmatch(path)
+
+	if len(matches) < 2 {
+		return ""
+	}
+
+	return matches[2]
 }

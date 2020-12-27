@@ -76,16 +76,38 @@ func debug(debug bool) func() {
 	}
 }
 
-func TestGetPrefixFromPath(t *testing.T) {
+func TestGetConnectionTypeFromPath(t *testing.T) {
 
-	assert.Equal(t, "foo%20bar", GetPrefixFromPath("/foo%20bar/glum"))
-	assert.Equal(t, "", GetPrefixFromPath("ooops/foo%20bar/glum"))
+	assert.Equal(t, "connectionType", getConnectionTypeFromPath("/connectionType/sessionID"))
+	assert.Equal(t, "", getConnectionTypeFromPath("NoLeadingSlash/A/B/C"))
+	assert.Equal(t, "foo%20bar", getConnectionTypeFromPath("/foo%20bar/glum"))
+	assert.Equal(t, "", getConnectionTypeFromPath("ooops/foo%20bar/glum"))
 
 }
 func TestGetTopicFromPath(t *testing.T) {
 
-	assert.Equal(t, "glum", GetTopicFromPath("/foo%20bar/glum"))
-	assert.Equal(t, "", GetTopicFromPath("ooops/foo%20bar/glum"))
-	assert.Equal(t, "glum/happy", GetTopicFromPath("/foo%20bar/glum/happy"))
-	assert.Equal(t, "glum/happy", GetTopicFromPath("/foo%20bar/glum/happy?code=alkjaslkjdf"))
+	assert.Equal(t, "sessionID", getTopicFromPath("/connectionType/sessionID"))
+	assert.Equal(t, "", getTopicFromPath("NoLeadingSlash/A/B/C"))
+	assert.Equal(t, "session%20ID/connection%20ID", getTopicFromPath("/connectionType/session%20ID/connection%20ID"))
+	assert.Equal(t, "sessionID/connectionID", getTopicFromPath("/connectionType/sessionID/connectionID?QueryParams=Something"))
+	assert.Equal(t, "sessionID/connectionID", getTopicFromPath("/connectionType/sessionID/connectionID?QueryParams=Something&SomeThing=Else"))
+}
+
+func TestGetSessionIDFromPath(t *testing.T) {
+
+	assert.Equal(t, "sessionID", getSessionIDFromPath("/connectionType/sessionID"))
+	assert.Equal(t, "", getSessionIDFromPath("NoLeadingSlash/A/B/C"))
+	assert.Equal(t, "session%20ID", getSessionIDFromPath("/connectionType/session%20ID/connection%20ID"))
+	assert.Equal(t, "sessionID", getSessionIDFromPath("/connectionType/sessionID/connectionID?QueryParams=Something"))
+	assert.Equal(t, "sessionID", getSessionIDFromPath("/connectionType/sessionID/connectionID?QueryParams=Something&SomeThing=Else"))
+}
+
+func TestGetConnectionIDFromPath(t *testing.T) {
+
+	assert.Equal(t, "", getConnectionIDFromPath("/connectionType/sessionID"))
+	assert.Equal(t, "", getConnectionIDFromPath("NoLeadingSlash/A/B/C"))
+	assert.Equal(t, "connection%20ID", getConnectionIDFromPath("/connectionType/session%20ID/connection%20ID  "))
+	assert.Equal(t, "connectionID", getConnectionIDFromPath("/connectionType/sessionID/connectionID?QueryParams=Something"))
+	assert.Equal(t, "connectionID", getConnectionIDFromPath("/connectionType/sessionID/connectionID?QueryParams=Something&SomeThing=Else"))
+
 }
