@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/access"
+	"github.com/timdrysdale/relay/pkg/shellaccess"
 	"github.com/timdrysdale/relay/pkg/shellbar"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
@@ -27,7 +28,7 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPo
 	go shellbar.Shellbar(config, closed, &wg)
 
 	wg.Add(1)
-	go access.API(closed, &wg, accessPort, audience, secret, target, cs, options)
+	go shellaccess.API(closed, &wg, accessPort, audience, secret, target, cs, options)
 
 	wg.Wait()
 	parentwg.Done()
