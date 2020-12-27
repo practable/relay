@@ -46,14 +46,13 @@ func GetPrefixFromPath(path string) string {
 
 func GetTopicFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/[\\w\\%-]*\\/([\\w\\%-]*)")
+	re := regexp.MustCompile("^\\/[\\w\\%-]*\\/([\\w\\%-/]*)?")
 
 	matches := re.FindStringSubmatch(path)
 
 	if len(matches) < 2 {
 		return ""
 	}
-
 	// matches[0] = "/{prefix}/{topic}"
 	// matches[1] = "{topic}"
 	return matches[1]

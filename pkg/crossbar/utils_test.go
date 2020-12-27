@@ -86,5 +86,6 @@ func TestGetTopicFromPath(t *testing.T) {
 
 	assert.Equal(t, "glum", GetTopicFromPath("/foo%20bar/glum"))
 	assert.Equal(t, "", GetTopicFromPath("ooops/foo%20bar/glum"))
-
+	assert.Equal(t, "glum/happy", GetTopicFromPath("/foo%20bar/glum/happy"))
+	assert.Equal(t, "glum/happy", GetTopicFromPath("/foo%20bar/glum/happy?code=asjdlkfjaslkdjf"))
 }
