@@ -46,7 +46,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	if ct == Unsupported {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		log.WithField("connectionType", topic).Error("connectionType unsuported")
+		log.WithField("connectionType", prefix).Error("connectionType unsuported")
 		return
 	}
 
