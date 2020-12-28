@@ -24,6 +24,9 @@ func handleClients(closed <-chan struct{}, wg *sync.WaitGroup, topics *topicDire
 		case <-closed:
 			return
 		case request := <-clientActionsChan:
+
+			log.WithField("clientAction", request).Trace("handleClients")
+
 			if request.action == clientAdd {
 
 				addClientToTopic(topics, request.client)
@@ -51,7 +54,7 @@ func addClientToTopic(topics *topicDirectory, client clientDetails) {
 			"action": clientAdd,
 			"verb":   "add",
 			"count":  1,
-		}).Info("Added first client to new topic")
+		}).Debug("Added first client to new topic")
 
 	} else {
 		topics.Lock()
@@ -65,7 +68,8 @@ func addClientToTopic(topics *topicDirectory, client clientDetails) {
 			"action": clientAdd,
 			"verb":   "add",
 			"count":  count,
-		}).Info("Added client to existing topic")
+		}).Debug("Added client to existing topic")
+
 	}
 }
 
@@ -85,7 +89,7 @@ func deleteClientFromTopic(topics *topicDirectory, client clientDetails) {
 			"action": clientDelete,
 			"verb":   "delete",
 			"count":  count,
-		}).Info("Deleting client from existing topic")
+		}).Debug("Deleting client from existing topic")
 
 	} else {
 
@@ -95,6 +99,6 @@ func deleteClientFromTopic(topics *topicDirectory, client clientDetails) {
 			"action": clientDelete,
 			"verb":   "delete",
 			"count":  0,
-		}).Info("Ignoring: can't delete client from non-existent topic")
+		}).Debug("Ignoring: can't delete client from non-existent topic")
 	}
 }

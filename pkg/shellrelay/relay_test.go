@@ -22,10 +22,10 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/access/restapi/operations"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/reconws"
+	"github.com/timdrysdale/relay/pkg/shellaccess"
 )
 
 func TestRelay(t *testing.T) {
@@ -64,7 +64,7 @@ func TestRelay(t *testing.T) {
 
 	wg.Add(1)
 
-	go Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
+	go Relay(closed, &wg, accessPort, relayPort, audience, secret, target, shellaccess.Options{})
 
 	time.Sleep(time.Second) // big safety margin to get crossbar running
 

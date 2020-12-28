@@ -133,17 +133,13 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 			return operations.NewShellUnauthorized().WithPayload("Can only have Client Or Host Scope, Not Both")
 		}
 
-		tokenTopic := claims.Topic
-		uriTopic := claims.Topic
+		topic := claims.Topic
 		topicSalt := ""
-		connectionID := ""
 		alertHost := false
 
 		if hasClientScope { //need a new unique connection
-			connectionID = uuid.New().String()
+			topic = uriTopic + "/" + uuid.New().String()
 			topicSalt = uuid.New().String()
-			tokenTopic = tokenTopic + "/" + connectionID + "/" + topicSalt
-			uriTopic = uriTopic + "/" + connectionID
 			alertHost = true
 		}
 
@@ -158,7 +154,7 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 		pt := permission.NewToken(
 			target,
 			claims.ConnectionType,
-			tokenTopic,
+			topic,
 			[]string{"read", "write"}, // sanitise out of abundance of caution - all use cases are read+write only
 			claims.IssuedAt,
 			claims.NotBefore,
@@ -170,7 +166,7 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 
 		code := cs.SubmitToken(pt)
 
-		uri := target + "/" + claims.ConnectionType + "/" + uriTopic + "?code=" + code
+		uri := target + "/" + claims.ConnectionType + "/" + topic + "?code=" + code
 
 		return operations.NewShellOK().WithPayload(
 			&operations.ShellOKBody{

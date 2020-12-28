@@ -48,6 +48,11 @@ func (c *Config) WithCodeStoreTTL(ttl int64) *Config {
 	return c
 }
 
+type ConnectionAction struct {
+	Action string `json:"action"`
+	URI    string `json:"uri"`
+}
+
 // Client is a middleperson between the websocket connection and the hub.
 type Client struct {
 	hub *Hub

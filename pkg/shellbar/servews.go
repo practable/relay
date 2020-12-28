@@ -1,12 +1,14 @@
 package shellbar
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/eclesh/welford"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/util"
@@ -31,7 +33,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 	log.WithField("path", path).Trace()
 
 	connectionType := getConnectionTypeFromPath(path)
-	topic := getSessionIDFromPath(path)
+	topic := getTopicFromPath(path)
 
 	log.Trace(fmt.Sprintf("%s -> %s and %s\n", path, connectionType, topic))
 
@@ -135,7 +137,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		close(cancelled)
 	}()
 
-	if ct == Session {
+	if ct == Shell {
 		// initialise statistics
 		tx := &Frames{size: welford.New(), ns: welford.New()}
 		rx := &Frames{size: welford.New(), ns: welford.New()}
@@ -144,7 +146,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		client := &Client{hub: hub,
 			conn:       conn,
 			send:       make(chan message, 256),
-			topic:      topic,
+			topic:      topic + token.TopicSalt,
 			stats:      stats,
 			name:       uuid.New().String(),
 			userAgent:  r.UserAgent(),
@@ -155,8 +157,55 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		}
 		client.hub.register <- client
 
+		log.WithField("Topic", client.topic).Trace("Registering Client")
+
 		go client.writePump(closed, cancelled)
 		go client.readPump()
+
+		if token.AlertHost {
+			fmt.Println("***Alerting Host***")
+			// initialise statistics
+			tx := &Frames{size: welford.New(), ns: welford.New()}
+			rx := &Frames{size: welford.New(), ns: welford.New()}
+			stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
+
+			// alert SSH host agent to make a new connection to relay at the same address
+			adminClient := &Client{
+				topic: getHostTopicFromUniqueTopic(topic),
+				name:  uuid.New().String(),
+				stats: stats,
+			}
+
+			hub.register <- adminClient
+			log.WithField("Topic", adminClient.topic).Trace("*** Registering Temporary AdminClient***")
+			permission.SetAlertHost(&token, false) //turn off host alert
+			code = config.CodeStore.SubmitToken(token)
+			log.WithField("token", token).Trace("Submitting token for host")
+
+			// same URL as client used, but different code (and leave out the salt)
+			uri := token.Audience + "/" + token.ConnectionType + "/" + token.Topic + "?code=" + code
+
+			ca := ConnectionAction{
+				Action: "connect",
+				URI:    uri,
+			}
+
+			camsg, err := json.Marshal(ca)
+
+			if err != nil {
+				log.WithFields(log.Fields{"error": err, "uri": uri}).Error("Failed to make connectionAction message")
+				return
+			}
+
+			go func() { // send connectionAction then deregister client
+				time.Sleep(100 * time.Millisecond)
+				hub.broadcast <- message{sender: *adminClient, data: camsg, mt: websocket.TextMessage}
+				time.Sleep(30 * time.Second)
+				hub.unregister <- adminClient
+			}()
+
+		}
+
 		return
 	}
 

@@ -4,13 +4,12 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/shellaccess"
 	"github.com/timdrysdale/relay/pkg/shellbar"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
-func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPort int, audience, secret, target string, options access.Options) {
+func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPort int, audience, secret, target string, options shellaccess.Options) {
 
 	var wg sync.WaitGroup
 

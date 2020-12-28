@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -33,7 +35,7 @@ func MakeTestToken(audience, connectionType, topic string, scopes []string, life
 	return permission.NewToken(audience, connectionType, topic, scopes, begin, begin, end)
 }
 
-func TestCrossbar(t *testing.T) {
+func TestShellbar(t *testing.T) {
 
 	// Setup logging
 
@@ -49,11 +51,11 @@ func TestCrossbar(t *testing.T) {
 		log.SetOutput(logignore)
 	}
 
-	// Setup crossbar
+	// Setup shellbar
 
 	http.DefaultServeMux = new(http.ServeMux)
 
-	// setup crossbar on local (free) port
+	// setup shellbar on local (free) port
 	closed := make(chan struct{})
 	var wg sync.WaitGroup
 
@@ -73,55 +75,113 @@ func TestCrossbar(t *testing.T) {
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
-	// safety margin to get crossbar running
+	go Shellbar(config, closed, &wg)
+	// safety margin to get shellbar running
 	time.Sleep(time.Second)
 
 	var timeout = 100 * time.Millisecond
 
 	// Start tests
 
-	// *** TestCanConnectWithValidCode ***
-	// these parameters reused by following tests:
+	// *** TestConnectUniquely ***
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	ct := "session"
+	// construct host token & connect
+	ct := "shell"
 	session := "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
-	scopes := []string{"read", "write"}
+	scopes := []string{"read", "write"} //host, client scopes are known only to access
 
-	token := MakeTestToken(audience, ct, session, scopes, 5)
+	tokenHost := MakeTestToken(audience, ct, session, scopes, 5)
+	codeHost := cs.SubmitToken(tokenHost)
 
-	code0 := cs.SubmitToken(token)
-	code1 := cs.SubmitToken(token)
+	h := reconws.New()
+	go h.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
 
-	s0 := reconws.New()
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	// construct client token & connect
+	connectionID := "607109e7-3841-4d0f-ba6a-91e8b817f3f5"
+	clientTopic := session + "/" + connectionID
+	topicSalt := "42f3b247-2632-40b3-8aeb-ce2218cbf26d"
+	topicInHub := clientTopic + topicSalt
+	tokenClient := MakeTestToken(audience, ct, clientTopic, scopes, 5)
+	permission.SetTopicSalt(&tokenClient, topicSalt)
+	permission.SetAlertHost(&tokenClient, true)
 
-	s1 := reconws.New()
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+	codeClient0 := cs.SubmitToken(tokenClient)
+	c0 := reconws.New()
+	client0UniqueURI := audience + "/" + ct + "/" + clientTopic
+
+	ctx0, cancel0 := context.WithCancel(context.Background())
+	go c0.Dial(ctx0, client0UniqueURI+"?code="+codeClient0)
+
+	var ca ConnectionAction
+
+	select {
+
+	case <-time.After(time.Second):
+		t.Fatal("TestHostAdminGetsConnectAction...FAIL\n")
+
+	case msg, ok := <-h.In:
+
+		assert.True(t, ok)
+
+		err = json.Unmarshal(msg.Data, &ca)
+		assert.NoError(t, err)
+		assert.Equal(t, "connect", ca.Action)
+
+		base := strings.Split(ca.URI, "?")[0]
+
+		assert.Equal(t, client0UniqueURI, base)
+		if client0UniqueURI == base {
+			t.Logf("TestHostAdminGetsConnectAction...PASS\n")
+		} else {
+			t.Fatal("TestHostAdminGetsConnectAction...FAIL\n")
+		}
+	}
+
+	// Host now dials the unqiue connection
+	h1 := reconws.New()
+	go h1.Dial(ctx, ca.URI)
 
 	time.Sleep(timeout)
 
-	data := []byte("foo")
+	data := []byte("ping")
 
-	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+	h1.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 
 	select {
-	case msg := <-s1.In:
+	case msg := <-c0.In:
 		assert.Equal(t, data, msg.Data)
-		t.Logf("TestCanConnectWithValidCode...PASS\n")
+		if reflect.DeepEqual(data, msg.Data) {
+			t.Logf("TestHostConnectsToUniqueSession...PASS\n")
+		} else {
+			t.Fatal("TestHostConnectsToUniqueSession...FAIL")
+		}
 	case <-time.After(timeout):
-		t.Fatal("TestCanConnectWithValidCode...FAIL")
+		t.Fatal("TestHostConnectsToUniqueSession...FAIL")
+	}
+
+	data = []byte("pong")
+
+	c0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+	select {
+	case msg := <-h1.In:
+		assert.Equal(t, data, msg.Data)
+		if reflect.DeepEqual(data, msg.Data) {
+			t.Logf("TestHostReceivesDataFromUniqueSession...PASS\n")
+		} else {
+			t.Fatal("TestHostReceivesDataFromUniqueSession...FAIL (wrong message)")
+		}
+	case <-time.After(timeout):
+		t.Fatal("TestHostReceivesDataFromUniqueSession...FAIL")
 	}
 
 	// while connected, get stats
+	scopes = []string{"read", "write"}
 	statsToken := MakeTestToken(audience, ct, "stats", scopes, 5)
 	statsCode := cs.SubmitToken(statsToken)
 	stats := reconws.New()
 	go stats.Dial(ctx, audience+"/"+ct+"/stats?code="+statsCode)
-
-	//TODO send message, receive stats
 
 	cmd, err := json.Marshal(StatsCommand{Command: "update"})
 
@@ -152,10 +212,13 @@ func TestCrossbar(t *testing.T) {
 			agents[report.Topic] = count + 1
 		}
 
-		if agents[session] == 2 {
+		if agents[topicInHub] == 2 {
 			t.Log("TestGetStats...PASS")
 		} else {
 			t.Fatalf("TestGetStats...FAIL")
+			pretty, err := json.MarshalIndent(reports, "", "\t")
+			assert.NoError(t, err)
+			fmt.Println(string(pretty))
 		}
 
 	case <-time.After(timeout):
@@ -165,504 +228,30 @@ func TestCrossbar(t *testing.T) {
 	cancel()
 	time.Sleep(timeout)
 
-	// *** TestCannotConnectWithReusedCode ***
-	// try the last test again, without getting new codes
+	t.Log("Disconnect not implemented")
 
-	ctx, cancel = context.WithCancel(context.Background())
-
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+	cancel0() //disconnect the client
 
 	select {
-	case <-s1.In:
-		t.Fatal("TestCannotConnectWithReusedCode...FAIL")
 	case <-time.After(timeout):
-		t.Log("TestCannotConnectWithReusedCode...PASS")
-	}
-	cancel()
-	time.Sleep(timeout)
-
-	// *** TestEnforceScopesRWToRW
-
-	// try the last test again, getting new codes, and replying
-
-	code0 = cs.SubmitToken(token)
-	code1 = cs.SubmitToken(token)
-
-	ctx, cancel = context.WithCancel(context.Background())
-
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	data = []byte("ping")
-	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case msg := <-s1.In:
-		assert.Equal(t, data, msg.Data)
-	case <-time.After(timeout):
-		t.Fatal("TestEnforceScopesRWToRW...FAIL")
-	}
-
-	data = []byte("pong")
-	s1.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case msg := <-s0.In:
-		assert.Equal(t, data, msg.Data)
-		t.Log("TestEnforceScopesRWToRW...PASS")
-	case <-time.After(timeout):
-		t.Fatal("TestEnforceScopesRWToRW...FAIL")
-	}
-
-	cancel()
-	time.Sleep(timeout)
-
-	// *** TestEnforceScopesRWToR
-
-	// try the last test again, getting new codes, and replying (blocked!)
-	scopes = []string{"read"}
-	tokenReadOnly := MakeTestToken(audience, ct, session, scopes, 5)
-
-	code0 = cs.SubmitToken(token)
-	code1 = cs.SubmitToken(tokenReadOnly)
-
-	ctx, cancel = context.WithCancel(context.Background())
-
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	data = []byte("ping")
-	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case msg := <-s1.In:
-		assert.Equal(t, data, msg.Data)
-	case <-time.After(timeout):
-		t.Fatal("TestEnforceScopesRWToROnly...FAIL")
-	}
-
-	data = []byte("nopong")
-	// Send a message - should be silently ignored by crossbar
-	s1.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case <-s0.In:
-		t.Fatal("TestEnforceScopesRWToROnly...FAIL")
-	case <-time.After(timeout):
-		t.Log("TestEnforceScopesRWToROnly...PASS")
-	}
-
-	cancel()
-	time.Sleep(timeout)
-
-	// *** TestEnforceAudience
-
-	// reader connects with a token intended for the same session on another server
-	// should NOT receive message!
-	scopes = []string{"read"}
-	tokenWrongAudience := MakeTestToken("ws://wrong.server.io", ct, session, scopes, 5)
-
-	code0 = cs.SubmitToken(token)
-	code1 = cs.SubmitToken(tokenWrongAudience)
-
-	ctx, cancel = context.WithCancel(context.Background())
-
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1) //connects to correct audience
-
-	time.Sleep(timeout)
-
-	data = []byte("nohopeofgettingthere")
-	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case <-s1.In:
-		t.Fatal("TestEnforceAudience...FAIL")
-	case <-time.After(timeout):
-		t.Log("TestEnforceAudience...PASS")
-	}
-
-	cancel()
-	time.Sleep(timeout)
-
-	// *** TestEnforceSessionID
-
-	// reader connects with a token intended for a different session on same server
-	// should NOT receive message!
-	code0 = cs.SubmitToken(token)
-	code1 = cs.SubmitToken(token)
-
-	ctx, cancel = context.WithCancel(context.Background())
-
-	go s0.Dial(ctx, audience+"/"+ct+"/"+"notMySession?code="+code0) //connects to wrong session
-	go s1.Dial(ctx, audience+"/"+ct+"/"+"notMySession?code="+code1) //connects to (same) wrong session
-
-	data = []byte("notgoingtogetthis")
-	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case <-s1.In:
-		t.Fatal("TestEnforceSessionID...FAIL")
-	case <-time.After(timeout):
-		t.Log("TestEnforceSessionID...PASS")
-	}
-
-	cancel()
-	time.Sleep(timeout)
-
-	// *** TestEnforceExpiresAt
-
-	// reader connects, sends messages, then is disconnected when session expires
-	session = "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
-	scopes = []string{"read", "write"}
-	tokenLong := MakeTestToken(audience, ct, session, scopes, 5)
-	tokenShort := MakeTestToken(audience, ct, session, scopes, 2)
-
-	code0 = cs.SubmitToken(tokenLong)
-	code1 = cs.SubmitToken(tokenShort)
-
-	ctx, cancel = context.WithCancel(context.Background())
-
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	data = []byte("wanttohearsomething?")
-	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case msg := <-s1.In:
-		assert.Equal(t, data, msg.Data)
-	case <-time.After(timeout):
-		t.Fatal("TestEnforceExpiresAt...FAIL")
-	}
-
-	// wait for s1's session to expire
-	time.Sleep(2 * time.Second)
-
-	data = []byte("wohtooslow")
-	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case <-s1.In:
-		t.Fatal("TestEnforceExpiresAt...FAIL")
-	case <-time.After(timeout):
-		t.Log("TestEnforceExpiresAt...PASS")
-	}
-	cancel()
-	time.Sleep(timeout)
-
-	// Teardown crossbar
-	time.Sleep(timeout)
-	close(closed)
-	wg.Wait()
-
-}
-
-func BenchmarkSmallMessage(b *testing.B) {
-
-	// Setup logging
-
-	debug := false
-
-	if debug {
-		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
-		defer log.SetOutput(os.Stdout)
-
-	} else {
-		var ignore bytes.Buffer
-		logignore := bufio.NewWriter(&ignore)
-		log.SetOutput(logignore)
-	}
-
-	// Setup crossbar
-
-	http.DefaultServeMux = new(http.ServeMux)
-
-	// setup crossbar on local (free) port
-	closed := make(chan struct{})
-	var wg sync.WaitGroup
-
-	port, err := freeport.GetFreePort()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
-	cs := ttlcode.NewDefaultCodeStore()
-	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-	}
-
-	wg.Add(1)
-	go Crossbar(config, closed, &wg)
-
-	var timeout = 5 * time.Millisecond
-
-	// safety margin to get crossbar running
-	time.Sleep(timeout)
-
-	// Start tests
-
-	// *** TestCanConnectWithValidCode ***
-	// these parameters reused by:
-
-	ctx, cancel := context.WithCancel(context.Background())
-	ct := "session"
-	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
-	scopes := []string{"read", "write"}
-
-	token := MakeTestToken(audience, ct, session, scopes, 5)
-
-	code0 := cs.SubmitToken(token)
-	code1 := cs.SubmitToken(token)
-
-	s0 := reconws.New()
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-
-	s1 := reconws.New()
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	data := []byte("foo")
-
-	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-
-	var msg reconws.WsMessage
-
-	for n := 0; n < b.N; n++ {
-		for m := 0; m < 1000; m++ {
-			s0.Out <- msgOut
-			// always record the result to prevent
-			// the compiler eliminating the function call.
-			msg = <-s1.In
+		t.Fatal("No disconnect message")
+	case msg, ok := <-h.In:
+		assert.True(t, ok)
+
+		err = json.Unmarshal(msg.Data, &ca)
+		assert.NoError(t, err)
+		assert.Equal(t, "disconnect", ca.Action)
+
+		base := strings.Split(ca.URI, "?")[0]
+
+		assert.Equal(t, client0UniqueURI, base)
+		if client0UniqueURI == base {
+			t.Logf("TestHostAdminGetsDisconnectAction...PASS\n")
+		} else {
+			t.Fatal("TestHostAdminGetsDisconnectAction...FAIL\n")
 		}
+
 	}
-
-	// always store the result to a package level variable
-	// so the compiler cannot eliminate the Benchmark itself.
-	assert.Equal(b, data, msg.Data)
-
-	cancel()
-	time.Sleep(timeout)
-
-	// Teardown crossbar
-	time.Sleep(timeout)
-	close(closed)
-	wg.Wait()
-
-}
-
-func BenchmarkLargeMessage(b *testing.B) {
-
-	// Setup logging
-
-	debug := false
-
-	if debug {
-		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
-		defer log.SetOutput(os.Stdout)
-
-	} else {
-		var ignore bytes.Buffer
-		logignore := bufio.NewWriter(&ignore)
-		log.SetOutput(logignore)
-	}
-
-	// Setup crossbar
-
-	http.DefaultServeMux = new(http.ServeMux)
-
-	// setup crossbar on local (free) port
-	closed := make(chan struct{})
-	var wg sync.WaitGroup
-
-	port, err := freeport.GetFreePort()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
-	cs := ttlcode.NewDefaultCodeStore()
-	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-	}
-
-	wg.Add(1)
-	go Crossbar(config, closed, &wg)
-
-	var timeout = 5 * time.Millisecond
-
-	// safety margin to get crossbar running
-	time.Sleep(timeout)
-
-	// Start tests
-
-	// *** TestCanConnectWithValidCode ***
-	// these parameters reused by:
-
-	ctx, cancel := context.WithCancel(context.Background())
-	ct := "session"
-	session := "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
-	scopes := []string{"read", "write"}
-
-	token := MakeTestToken(audience, ct, session, scopes, 5)
-
-	code0 := cs.SubmitToken(token)
-	code1 := cs.SubmitToken(token)
-
-	s0 := reconws.New()
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-
-	s1 := reconws.New()
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	data := make([]byte, 1024*1024)
-	rand.Read(data)
-
-	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-
-	var msg reconws.WsMessage
-
-	for n := 0; n < b.N; n++ {
-		for m := 0; m < 100; m++ {
-			s0.Out <- msgOut
-			// always record the result to prevent
-			// the compiler eliminating the function call.
-			msg = <-s1.In
-		}
-	}
-
-	// always store the result to a package level variable
-	// so the compiler cannot eliminate the Benchmark itself.
-	assert.Equal(b, data, msg.Data)
-
-	cancel()
-	time.Sleep(timeout)
-
-	// Teardown crossbar
-	time.Sleep(timeout)
-	close(closed)
-	wg.Wait()
-
-}
-
-func BenchmarkLargeRandomPacketGeneration(b *testing.B) {
-
-	data := make([]byte, 1024*1024)
-	var ping, pong reconws.WsMessage
-	bar := make(chan reconws.WsMessage, 2)
-	for n := 0; n < b.N; n++ {
-		for m := 0; m < 100; m++ {
-			rand.Read(data)
-			ping = reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-			bar <- ping
-			pong = <-bar
-		}
-	}
-	assert.Equal(b, pong.Data, data)
-}
-
-func BenchmarkLargeRandomMessage(b *testing.B) {
-
-	// Setup logging
-
-	debug := false
-
-	if debug {
-		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
-		defer log.SetOutput(os.Stdout)
-
-	} else {
-		var ignore bytes.Buffer
-		logignore := bufio.NewWriter(&ignore)
-		log.SetOutput(logignore)
-	}
-
-	// Setup crossbar
-
-	http.DefaultServeMux = new(http.ServeMux)
-
-	// setup crossbar on local (free) port
-	closed := make(chan struct{})
-	var wg sync.WaitGroup
-
-	port, err := freeport.GetFreePort()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
-	cs := ttlcode.NewDefaultCodeStore()
-	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-	}
-
-	wg.Add(1)
-	go Crossbar(config, closed, &wg)
-
-	var timeout = 5 * time.Millisecond
-
-	// safety margin to get crossbar running
-	time.Sleep(timeout)
-
-	// Start tests
-
-	// *** TestCanConnectWithValidCode ***
-	// these parameters reused by:
-
-	ctx, cancel := context.WithCancel(context.Background())
-	ct := "session"
-	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
-	scopes := []string{"read", "write"}
-
-	token := MakeTestToken(audience, ct, session, scopes, 5)
-
-	code0 := cs.SubmitToken(token)
-	code1 := cs.SubmitToken(token)
-
-	s0 := reconws.New()
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-
-	s1 := reconws.New()
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
-
-	time.Sleep(timeout)
-
-	data := make([]byte, 1024*1024)
-
-	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-
-	var msg reconws.WsMessage
-
-	for n := 0; n < b.N; n++ {
-		for m := 0; m < 100; m++ {
-			rand.Read(data)
-			msgOut = reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-			s0.Out <- msgOut
-			// always record the result to prevent
-			// the compiler eliminating the function call.
-			msg = <-s1.In
-		}
-	}
-
-	// always store the result to a package level variable
-	// so the compiler cannot eliminate the Benchmark itself.
-	assert.Equal(b, data, msg.Data)
 
 	cancel()
 	time.Sleep(timeout)
