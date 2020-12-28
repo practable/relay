@@ -13,7 +13,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/shellaccess/restapi/operations"
 )
 
-//go:generate swagger generate server --target ../../access --name Access --spec ../../../api/openapi-spec/access.yml --principal interface{} --exclude-main
+//go:generate swagger generate server --target ../../shellaccess --name Access --spec ../../../api/openapi-spec/shellaccess.yml --principal interface{} --exclude-main
 
 func configureFlags(api *operations.AccessAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -49,9 +49,9 @@ func configureAPI(api *operations.AccessAPI) http.Handler {
 	//
 	// Example:
 	// api.APIAuthorizer = security.Authorized()
-	if api.SessionHandler == nil {
-		api.SessionHandler = operations.SessionHandlerFunc(func(params operations.SessionParams, principal interface{}) middleware.Responder {
-			return middleware.NotImplemented("operation operations.Session has not yet been implemented")
+	if api.ShellHandler == nil {
+		api.ShellHandler = operations.ShellHandlerFunc(func(params operations.ShellParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation operations.Shell has not yet been implemented")
 		})
 	}
 

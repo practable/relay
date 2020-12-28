@@ -12,11 +12,9 @@ import (
 	"strings"
 )
 
-// SessionURL generates an URL for the session operation
-type SessionURL struct {
-	SessionID string
-
-	ConnectionID *string
+// ShellURL generates an URL for the shell operation
+type ShellURL struct {
+	ShellID string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -26,7 +24,7 @@ type SessionURL struct {
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *SessionURL) WithBasePath(bp string) *SessionURL {
+func (o *ShellURL) WithBasePath(bp string) *ShellURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -34,21 +32,21 @@ func (o *SessionURL) WithBasePath(bp string) *SessionURL {
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *SessionURL) SetBasePath(bp string) {
+func (o *ShellURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *SessionURL) Build() (*url.URL, error) {
+func (o *ShellURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/shell/{session_id}"
+	var _path = "/shell/{shell_id}"
 
-	sessionID := o.SessionID
-	if sessionID != "" {
-		_path = strings.Replace(_path, "{session_id}", sessionID, -1)
+	shellID := o.ShellID
+	if shellID != "" {
+		_path = strings.Replace(_path, "{shell_id}", shellID, -1)
 	} else {
-		return nil, errors.New("sessionId is required on SessionURL")
+		return nil, errors.New("shellId is required on ShellURL")
 	}
 
 	_basePath := o._basePath
@@ -57,23 +55,11 @@ func (o *SessionURL) Build() (*url.URL, error) {
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
-	qs := make(url.Values)
-
-	var connectionIDQ string
-	if o.ConnectionID != nil {
-		connectionIDQ = *o.ConnectionID
-	}
-	if connectionIDQ != "" {
-		qs.Set("connection_id", connectionIDQ)
-	}
-
-	_result.RawQuery = qs.Encode()
-
 	return &_result, nil
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *SessionURL) Must(u *url.URL, err error) *url.URL {
+func (o *ShellURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -84,17 +70,17 @@ func (o *SessionURL) Must(u *url.URL, err error) *url.URL {
 }
 
 // String returns the string representation of the path with query string
-func (o *SessionURL) String() string {
+func (o *ShellURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *SessionURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *ShellURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on SessionURL")
+		return nil, errors.New("scheme is required for a full url on ShellURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on SessionURL")
+		return nil, errors.New("host is required for a full url on ShellURL")
 	}
 
 	base, err := o.Build()
@@ -108,6 +94,6 @@ func (o *SessionURL) BuildFull(scheme, host string) (*url.URL, error) {
 }
 
 // StringFull returns the string representation of a complete url
-func (o *SessionURL) StringFull(scheme, host string) string {
+func (o *ShellURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

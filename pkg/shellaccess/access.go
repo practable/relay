@@ -64,111 +64,120 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 	// set the Authorizer
 	api.BearerAuth = validateHeader(secret, host)
 
-	// set the Handler
-	api.SessionHandler = operations.SessionHandlerFunc(
-		func(params operations.SessionParams, principal interface{}) middleware.Responder {
+	// set the Handlers
+	api.ShellHandler = operations.ShellHandlerFunc(func(params operations.ShellParams, principal interface{}) middleware.Responder {
 
-			token, ok := principal.(*jwt.Token)
-			if !ok {
-				return operations.NewSessionUnauthorized().WithPayload("Token Not JWT")
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			return operations.NewShellUnauthorized().WithPayload("Token Not JWT")
+		}
+
+		// save checking for key existence individually by checking all at once
+		claims, ok := token.Claims.(*permission.Token)
+
+		if !ok {
+			return operations.NewShellUnauthorized().WithPayload("Token Claims Incorrect Type")
+		}
+
+		if !permission.HasRequiredClaims(*claims) {
+			return operations.NewShellUnauthorized().WithPayload("Token Missing Required Claims")
+		}
+
+		if params.ShellID == "" {
+			return operations.NewShellUnauthorized().WithPayload("Path Missing ShellID")
+		}
+
+		if claims.Topic != params.ShellID {
+			return operations.NewShellUnauthorized().WithPayload("ShellID Does Not Match Token")
+		}
+
+		// Now we check the scopes ....
+		// If "host" is present, then we connect to the base session
+		// If "client" is present, then we connect to a unique sub-session
+		//  Scopes are modified to be read, write
+		// If both scopes are offered, then the behaviour depends on the routing
+		// default to treating as a host
+		// unless a ConnectionID present in query e.g.
+		// &connection_id=134234234324
+		// in which case, distinguishing between host and client is irrelevant
+
+		hasClientScope := false
+		hasHostScope := false
+		hasStatsScope := false
+
+		for _, scope := range claims.Scopes {
+			if scope == "host" {
+				hasHostScope = true
 			}
-
-			// save checking for key existence individually by checking all at once
-			claims, ok := token.Claims.(*permission.Token)
-
-			if !ok {
-				return operations.NewSessionUnauthorized().WithPayload("Token Claims Incorrect Type")
+			if scope == "client" {
+				hasClientScope = true
 			}
-
-			if !permission.HasRequiredClaims(*claims) {
-				return operations.NewSessionUnauthorized().WithPayload("Token Missing Required Claims")
+			if scope == "stats" {
+				hasStatsScope = true
 			}
+		}
 
-			if params.SessionID == "" {
-				return operations.NewSessionUnauthorized().WithPayload("Path Missing SessionID")
-			}
+		if hasStatsScope && params.ShellID != "stats" {
+			return operations.NewShellUnauthorized().WithPayload("Path Not Valid for Stats Scope")
+		}
 
-			if claims.Topic != params.SessionID {
-				return operations.NewSessionUnauthorized().WithPayload("SessionID Does Not Match Token")
-			}
+		if !hasStatsScope && params.ShellID == "stats" {
+			return operations.NewShellUnauthorized().WithPayload("Path Not Valid Without Stats Scope")
+		}
 
-			// Now we check the scopes ....
-			// If "host" is present, then we connect to the base session
-			// If "client" is present, then we connect to a unique sub-session
-			//  Scopes are modified to be read, write
-			// If both scopes are offered, then the behaviour depends on the routing
-			// default to treating as a host
-			// unless a ConnectionID present in query e.g.
-			// &connection_id=134234234324
-			// in which case, distinguishing between host and client is irrelevant
+		if !(hasClientScope || hasHostScope) {
+			return operations.NewShellUnauthorized().WithPayload("Missing Client or Host Scope")
+		}
 
-			hasClientScope := false
-			hasHostScope := false
-			hasStatsScope := false
+		if hasClientScope && hasHostScope {
+			return operations.NewShellUnauthorized().WithPayload("Can only have Client Or Host Scope, Not Both")
+		}
 
-			for _, scope := range claims.Scopes {
-				if scope == "host" {
-					hasHostScope = true
-				}
-				if scope == "client" {
-					hasClientScope = true
-				}
-				if scope == "stats" {
-					hasStatsScope = true
-				}
-			}
+		tokenTopic := claims.Topic
+		uriTopic := claims.Topic
+		topicSalt := ""
+		connectionID := ""
+		alertHost := false
 
-			if hasStatsScope && params.SessionID != "stats" {
-				return operations.NewSessionUnauthorized().WithPayload("Path Not Valid for Stats Scope")
-			}
+		if hasClientScope { //need a new unique connection
+			connectionID = uuid.New().String()
+			topicSalt = uuid.New().String()
+			tokenTopic = tokenTopic + "/" + connectionID + "/" + topicSalt
+			uriTopic = uriTopic + "/" + connectionID
+			alertHost = true
+		}
 
-			if !hasStatsScope && params.SessionID == "stats" {
-				return operations.NewSessionUnauthorized().WithPayload("Path Not Valid Without Stats Scope")
-			}
+		// Shellbar will take care of alerting the admin channel of
+		// the new connection for protocol timing reasons
+		// Because ssh is "server speaks first", we want to bridge
+		// to the server only when client already in place and
+		// listening. There are no further hits on the access endpoint
+		// though - the rest is done via websockets
+		// hence no handler is needed for https://{access-host}/shell/{shell_id}/{connection_id}
 
-			if !(hasClientScope || hasHostScope) {
-				return operations.NewSessionUnauthorized().WithPayload("Missing Client or Host Scope")
-			}
+		pt := permission.NewToken(
+			target,
+			claims.ConnectionType,
+			tokenTopic,
+			[]string{"read", "write"}, // sanitise out of abundance of caution - all use cases are read+write only
+			claims.IssuedAt,
+			claims.NotBefore,
+			claims.ExpiresAt,
+		)
 
-			sessionID := params.SessionID
+		permission.SetTopicSalt(&pt, topicSalt)
+		permission.SetAlertHost(&pt, alertHost)
 
-			// If there is no ConnectionID, then either
-			// a/ host making their management connection to base session
-			// b/ someone looking for stats
-			// c/ client requesting a unique connection
-			// If there is no connection_id, it's not a stats request, and there is no host scope, then assume c.
+		code := cs.SubmitToken(pt)
 
-			if params.ConnectionID == "" && params.SessionID != "stats" && !hasHostScope {
-				// Client looking for a new unique connection
-				sessionID = sessionID + "/" + uuid.New().String()
-			}
+		uri := target + "/" + claims.ConnectionType + "/" + uriTopic + "?code=" + code
 
-			// Shellbar will take care of alerting the admin channel of
-			// the new connection for protocol timing reasons
-			// Because ssh is "server speaks first", we want to bridge
-			// to the server only when client already in place and
-			// listening. We can
+		return operations.NewShellOK().WithPayload(
+			&operations.ShellOKBody{
+				URI: uri,
+			})
 
-			pt := permission.NewToken(
-				target,
-				claims.ConnectionType,
-				sessionID,
-				[]string{"read", "write"}, // sanitise out of abundance of caution - all use cases are read+write only
-				claims.IssuedAt,
-				claims.NotBefore,
-				claims.ExpiresAt,
-			)
-
-			code := cs.SubmitToken(pt)
-
-			uri := target + "/" + claims.ConnectionType + "/" + sessionID + "?code=" + code
-
-			return operations.NewSessionOK().WithPayload(
-				&operations.SessionOKBody{
-					URI: uri,
-				})
-
-		})
+	})
 
 	go func() {
 		<-closed

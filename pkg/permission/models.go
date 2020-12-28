@@ -22,6 +22,16 @@ type Token struct {
 	// either ["read"],["write"], or ["read","write"] for session, or ["host"]/["client"] for shell
 	Scopes []string `json:"scopes"`
 
+	// ConnectionIDSalt remains hidden within a relay
+	// and is used to obscure the actual topic used in a hub
+	// from visibility in access logs e.g. in shellbar
+	TopicSalt string `json:"topicSalt,omitempty"`
+
+	// AlertHost controls whether making _this_
+	// particular connection should alert the host
+	// This is needed for ssh hosts in shellbar
+	AlertHost bool `json:"alertHost,omitempty"`
+
 	jwt.StandardClaims
 }
 
@@ -37,6 +47,14 @@ func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf,
 			Audience:  audience,
 		},
 	}
+}
+
+func SetTopicSalt(token *Token, salt string) {
+	token.TopicSalt = salt
+}
+
+func SetAlertHost(token *Token, alertHost bool) {
+	token.AlertHost = alertHost
 }
 
 func HasRequiredClaims(token Token) bool {

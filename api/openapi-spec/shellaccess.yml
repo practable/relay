@@ -22,25 +22,20 @@ securityDefinitions:
     name: Authorization
     in: header 
 paths:
-  /shell/{session_id}:
+  /shell/{shell_id}:
     post:
-      description: access the specified session
-      summary: session
-      operationId: session
+      description: access the specified shell host
+      summary: shell
+      operationId: shell
       deprecated: false
       produces:
       - application/json
       parameters:
-      - name: session_id
+      - name: shell_id
         in: path
         required: true
         type: string
-        description: Session identification code
-      - name: connection_id
-        in: query
-        required: false
-        type: string
-        description: Unique connection identification code
+        description: Shell host identification code
       security:
         - Bearer: []  
       responses:
@@ -52,9 +47,10 @@ paths:
               uri:
                 type: string
           examples:
-            text/plain: {"code":"b142eb22-1f16-4af1-ba14-e70a7afcbcc2"}
+                        application/json: {"uri":"wss://some.relay.io/shell/b142eb22-1f16-4af1-ba14-e70a7afcbcc2/3a8ab4d6-a2a3-4271-9130-8731411b87cc?code=8b4f378e-6edc-42d5-b497-0f6d32ad8be3"}
           headers: {}
         401:
           description: Unauthorized
           schema: {}
+ 
 

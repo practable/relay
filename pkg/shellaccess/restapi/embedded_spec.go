@@ -41,32 +41,26 @@ func init() {
   "host": "localhost",
   "basePath": "/",
   "paths": {
-    "/shell/{session_id}": {
+    "/shell/{shell_id}": {
       "post": {
         "security": [
           {
             "Bearer": []
           }
         ],
-        "description": "access the specified session",
+        "description": "access the specified shell host",
         "produces": [
           "application/json"
         ],
-        "summary": "session",
-        "operationId": "session",
+        "summary": "shell",
+        "operationId": "shell",
         "parameters": [
           {
             "type": "string",
-            "description": "Session identification code",
-            "name": "session_id",
+            "description": "Shell host identification code",
+            "name": "shell_id",
             "in": "path",
             "required": true
-          },
-          {
-            "type": "string",
-            "description": "Unique connection identification code",
-            "name": "connection_id",
-            "in": "query"
           }
         ],
         "responses": {
@@ -80,8 +74,8 @@ func init() {
               }
             },
             "examples": {
-              "text/plain": {
-                "code": "b142eb22-1f16-4af1-ba14-e70a7afcbcc2"
+              "application/json": {
+                "uri": "wss://some.relay.io/shell/b142eb22-1f16-4af1-ba14-e70a7afcbcc2/3a8ab4d6-a2a3-4271-9130-8731411b87cc?code=8b4f378e-6edc-42d5-b497-0f6d32ad8be3"
               }
             }
           },
@@ -125,32 +119,26 @@ func init() {
   "host": "localhost",
   "basePath": "/",
   "paths": {
-    "/shell/{session_id}": {
+    "/shell/{shell_id}": {
       "post": {
         "security": [
           {
             "Bearer": []
           }
         ],
-        "description": "access the specified session",
+        "description": "access the specified shell host",
         "produces": [
           "application/json"
         ],
-        "summary": "session",
-        "operationId": "session",
+        "summary": "shell",
+        "operationId": "shell",
         "parameters": [
           {
             "type": "string",
-            "description": "Session identification code",
-            "name": "session_id",
+            "description": "Shell host identification code",
+            "name": "shell_id",
             "in": "path",
             "required": true
-          },
-          {
-            "type": "string",
-            "description": "Unique connection identification code",
-            "name": "connection_id",
-            "in": "query"
           }
         ],
         "responses": {
@@ -164,8 +152,8 @@ func init() {
               }
             },
             "examples": {
-              "text/plain": {
-                "code": "b142eb22-1f16-4af1-ba14-e70a7afcbcc2"
+              "application/json": {
+                "uri": "wss://some.relay.io/shell/b142eb22-1f16-4af1-ba14-e70a7afcbcc2/3a8ab4d6-a2a3-4271-9130-8731411b87cc?code=8b4f378e-6edc-42d5-b497-0f6d32ad8be3"
               }
             }
           },

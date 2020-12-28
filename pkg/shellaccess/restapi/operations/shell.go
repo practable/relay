@@ -13,42 +13,42 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// SessionHandlerFunc turns a function with the right signature into a session handler
-type SessionHandlerFunc func(SessionParams, interface{}) middleware.Responder
+// ShellHandlerFunc turns a function with the right signature into a shell handler
+type ShellHandlerFunc func(ShellParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn SessionHandlerFunc) Handle(params SessionParams, principal interface{}) middleware.Responder {
+func (fn ShellHandlerFunc) Handle(params ShellParams, principal interface{}) middleware.Responder {
 	return fn(params, principal)
 }
 
-// SessionHandler interface for that can handle valid session params
-type SessionHandler interface {
-	Handle(SessionParams, interface{}) middleware.Responder
+// ShellHandler interface for that can handle valid shell params
+type ShellHandler interface {
+	Handle(ShellParams, interface{}) middleware.Responder
 }
 
-// NewSession creates a new http.Handler for the session operation
-func NewSession(ctx *middleware.Context, handler SessionHandler) *Session {
-	return &Session{Context: ctx, Handler: handler}
+// NewShell creates a new http.Handler for the shell operation
+func NewShell(ctx *middleware.Context, handler ShellHandler) *Shell {
+	return &Shell{Context: ctx, Handler: handler}
 }
 
-/*Session swagger:route POST /shell/{session_id} session
+/*Shell swagger:route POST /shell/{shell_id} shell
 
-session
+shell
 
-access the specified session
+access the specified shell host
 
 */
-type Session struct {
+type Shell struct {
 	Context *middleware.Context
-	Handler SessionHandler
+	Handler ShellHandler
 }
 
-func (o *Session) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *Shell) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
 		r = rCtx
 	}
-	var Params = NewSessionParams()
+	var Params = NewShellParams()
 
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {
@@ -74,22 +74,22 @@ func (o *Session) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 }
 
-// SessionOKBody session o k body
+// ShellOKBody shell o k body
 //
-// swagger:model SessionOKBody
-type SessionOKBody struct {
+// swagger:model ShellOKBody
+type ShellOKBody struct {
 
 	// uri
 	URI string `json:"uri,omitempty"`
 }
 
-// Validate validates this session o k body
-func (o *SessionOKBody) Validate(formats strfmt.Registry) error {
+// Validate validates this shell o k body
+func (o *ShellOKBody) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (o *SessionOKBody) MarshalBinary() ([]byte, error) {
+func (o *ShellOKBody) MarshalBinary() ([]byte, error) {
 	if o == nil {
 		return nil, nil
 	}
@@ -97,8 +97,8 @@ func (o *SessionOKBody) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (o *SessionOKBody) UnmarshalBinary(b []byte) error {
-	var res SessionOKBody
+func (o *ShellOKBody) UnmarshalBinary(b []byte) error {
+	var res ShellOKBody
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

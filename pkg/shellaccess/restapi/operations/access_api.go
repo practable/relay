@@ -42,8 +42,8 @@ func NewAccessAPI(spec *loads.Document) *AccessAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		SessionHandler: SessionHandlerFunc(func(params SessionParams, principal interface{}) middleware.Responder {
-			return middleware.NotImplemented("operation Session has not yet been implemented")
+		ShellHandler: ShellHandlerFunc(func(params ShellParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation Shell has not yet been implemented")
 		}),
 
 		// Applies when the "Authorization" header is set
@@ -93,8 +93,8 @@ type AccessAPI struct {
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
 
-	// SessionHandler sets the operation handler for the session operation
-	SessionHandler SessionHandler
+	// ShellHandler sets the operation handler for the shell operation
+	ShellHandler ShellHandler
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
 	ServeError func(http.ResponseWriter, *http.Request, error)
@@ -175,8 +175,8 @@ func (o *AccessAPI) Validate() error {
 		unregistered = append(unregistered, "AuthorizationAuth")
 	}
 
-	if o.SessionHandler == nil {
-		unregistered = append(unregistered, "SessionHandler")
+	if o.ShellHandler == nil {
+		unregistered = append(unregistered, "ShellHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -278,7 +278,7 @@ func (o *AccessAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/shell/{session_id}"] = NewSession(o.context, o.SessionHandler)
+	o.handlers["POST"]["/shell/{shell_id}"] = NewShell(o.context, o.ShellHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

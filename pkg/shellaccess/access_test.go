@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"sync"
 	"testing"
@@ -67,7 +68,7 @@ func TestAPI(t *testing.T) {
 	client := &http.Client{}
 
 	// Start tests
-	req, err := http.NewRequest("POST", audience+"/session/123", nil)
+	req, err := http.NewRequest("POST", audience+"/shell/123", nil)
 
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
@@ -82,8 +83,8 @@ func TestAPI(t *testing.T) {
 	claims.ExpiresAt = time.Now().Unix() + 5
 	claims.Audience = audience
 	claims.Topic = "123"
-	claims.ConnectionType = "session"
-	claims.Scopes = []string{"read", "write"}
+	claims.ConnectionType = "shell"
+	claims.Scopes = []string{"read", "write"} //Wrong scopes for shell, deliberately....
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
@@ -91,23 +92,110 @@ func TestAPI(t *testing.T) {
 	bearer, err := token.SignedString([]byte(secret))
 	assert.NoError(t, err)
 
-	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	req, err = http.NewRequest("POST", audience+"/shell/123", nil)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	body, _ = ioutil.ReadAll(resp.Body)
 
-	var p operations.SessionOKBody
-	err = json.Unmarshal(body, &p)
+	assert.Equal(t, "\"Missing Client or Host Scope\"\n", string(body))
+
+	// now try with correct scopes :-)
+	claims.Scopes = []string{"host"}
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	bearer, err = token.SignedString([]byte(secret))
 	assert.NoError(t, err)
 
-	t.Log(p.URI)
-	t.Log(len("wss://relay.example.io/session/123?code="))
+	req, err = http.NewRequest("POST", audience+"/shell/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
 
-	expected := "wss://relay.example.io/session/123?code="
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
 
-	assert.Equal(t, expected, p.URI[0:len(expected)])
+	var p operations.ShellOKBody
+
+	err = json.Unmarshal(body, &p)
+	assert.NoError(t, err)
+	if err != nil {
+		t.Log(string(body))
+	}
+
+	expected := "wss://relay.example.io/shell/123?code="
+
+	if len(p.URI) < len(expected) {
+		t.Fatal("URI too short")
+	} else {
+		assert.Equal(t, expected, p.URI[0:len(expected)])
+	}
+
+	// Now repeat with client, expecting to get a connectionID added to the uri ...
+
+	claims.Scopes = []string{"client"}
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	bearer, err = token.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	req, err = http.NewRequest("POST", audience+"/shell/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &p)
+	assert.NoError(t, err)
+	if err != nil {
+		t.Log(string(body))
+	}
+
+	expected = "wss://relay.example.io/shell/123/"
+
+	if len(p.URI) < len(expected) {
+		t.Fatal("URI too short")
+	} else {
+		assert.Equal(t, expected, p.URI[0:len(expected)])
+	}
+
+	re := regexp.MustCompile("wss:\\/\\/relay\\.example\\.io\\/shell\\/123\\/([\\w-\\%]*)\\?code=.*")
+	matches := re.FindStringSubmatch(p.URI)
+	assert.Equal(t, 36, len(matches[1])) //length of a UUID
+
+	uniqueConnection0 := matches[1]
+
+	// repeat the request, and check we get a different connection id
+
+	req, err = http.NewRequest("POST", audience+"/shell/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &p)
+	assert.NoError(t, err)
+	if err != nil {
+		t.Log(string(body))
+	}
+
+	expected = "wss://relay.example.io/shell/123/"
+
+	if len(p.URI) < len(expected) {
+		t.Fatal("URI too short")
+	} else {
+		assert.Equal(t, expected, p.URI[0:len(expected)])
+	}
+
+	matches = re.FindStringSubmatch(p.URI)
+	assert.Equal(t, 36, len(matches[1])) //length of a UUID
+
+	assert.NotEqual(t, uniqueConnection0, matches[1])
 
 	// End tests
 	close(closed)
