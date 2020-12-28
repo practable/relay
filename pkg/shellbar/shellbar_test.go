@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"reflect"
 	"strconv"
@@ -51,10 +50,6 @@ func TestShellbar(t *testing.T) {
 		log.SetOutput(logignore)
 	}
 
-	// Setup shellbar
-
-	http.DefaultServeMux = new(http.ServeMux)
-
 	// setup shellbar on local (free) port
 	closed := make(chan struct{})
 	var wg sync.WaitGroup
@@ -92,7 +87,7 @@ func TestShellbar(t *testing.T) {
 	session := "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 	scopes := []string{"read", "write"} //host, client scopes are known only to access
 
-	tokenHost := MakeTestToken(audience, ct, session, scopes, 5)
+	tokenHost := MakeTestToken(audience, ct, session, scopes, 30)
 	codeHost := cs.SubmitToken(tokenHost)
 
 	h := reconws.New()
@@ -103,7 +98,7 @@ func TestShellbar(t *testing.T) {
 	clientTopic := session + "/" + connectionID
 	topicSalt := "42f3b247-2632-40b3-8aeb-ce2218cbf26d"
 	topicInHub := clientTopic + topicSalt
-	tokenClient := MakeTestToken(audience, ct, clientTopic, scopes, 5)
+	tokenClient := MakeTestToken(audience, ct, clientTopic, scopes, 30)
 	permission.SetTopicSalt(&tokenClient, topicSalt)
 	permission.SetAlertHost(&tokenClient, true)
 
@@ -117,6 +112,7 @@ func TestShellbar(t *testing.T) {
 	var ca ConnectionAction
 
 	var c0UUID string
+
 	select {
 
 	case <-time.After(time.Second):
@@ -141,6 +137,7 @@ func TestShellbar(t *testing.T) {
 	}
 
 	// Host now dials the unqiue connection
+
 	h1 := reconws.New()
 	go h1.Dial(ctx, ca.URI)
 
@@ -255,92 +252,40 @@ func TestShellbar(t *testing.T) {
 
 	time.Sleep(timeout)
 	cancel()
-	// Teardown crossbar
-	time.Sleep(timeout)
-	close(closed)
-	wg.Wait()
+	<-ctx.Done()
+	// *** TestMultiple ***
 
-}
-
-func TestMultipleClients(t *testing.T) {
-
-	// Setup logging
-
-	debug := true
-	if debug {
-		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
-		defer log.SetOutput(os.Stdout)
-
-	} else {
-		var ignore bytes.Buffer
-		logignore := bufio.NewWriter(&ignore)
-		log.SetOutput(logignore)
-	}
-
-	// Setup shellbar
-
-	// setup shellbar on local (free) port
-	closed := make(chan struct{})
-	var wg sync.WaitGroup
-
-	port, err := freeport.GetFreePort()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
-	secret := "somesecret"
-	cs := ttlcode.NewDefaultCodeStore()
-	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-		Secret:    secret,
-	}
-
-	wg.Add(1)
-	go Shellbar(config, closed, &wg)
-	// safety margin to get shellbar running
-	time.Sleep(time.Second)
-
-	var timeout = 100 * time.Millisecond
-
-	// Start tests
-
-	// *** TestConnectUniquely ***
-
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel = context.WithCancel(context.Background())
 
 	// construct host token & connect
-	ct := "shell"
-	session := "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
-	scopes := []string{"read", "write"} //host, client scopes are known only to access
+	ct = "shell"
+	session = "C0fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	scopes = []string{"read", "write"} //host, client scopes are known only to access
 
-	tokenHost := MakeTestToken(audience, ct, session, scopes, 30)
-	codeHost := cs.SubmitToken(tokenHost)
+	tokenHost = MakeTestToken(audience, ct, session, scopes, 30)
+	codeHost = cs.SubmitToken(tokenHost)
 
-	h := reconws.New()
+	h = reconws.New()
 	go h.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
 
 	// construct client token & connect
-	connectionID := "607109e7-3841-4d0f-ba6a-91e8b817f3f5"
-	clientTopic := session + "/" + connectionID
-	topicSalt := "42f3b247-2632-40b3-8aeb-ce2218cbf26d"
-	tokenClient := MakeTestToken(audience, ct, clientTopic, scopes, 30)
+	connectionID = "A607109e7-3841-4d0f-ba6a-91e8b817f3f"
+	clientTopic = session + "/" + connectionID
+	topicSalt = "A2f3b247-2632-40b3-8aeb-ce2218cbf26d"
+	tokenClient = MakeTestToken(audience, ct, clientTopic, scopes, 30)
 	permission.SetTopicSalt(&tokenClient, topicSalt)
 	permission.SetAlertHost(&tokenClient, true)
 
-	codeClient0 := cs.SubmitToken(tokenClient)
-	c0 := reconws.New()
-	client0UniqueURI := audience + "/" + ct + "/" + clientTopic
+	codeClient0 = cs.SubmitToken(tokenClient)
+	c0 = reconws.New()
+	client0UniqueURI = audience + "/" + ct + "/" + clientTopic
 	c0uri := client0UniqueURI + "?code=" + codeClient0
 	go c0.Dial(ctx, c0uri)
 
 	// construct second client token & connect
-	connectionID = "af6380c7-c444-4e99-aec7-11272a690bc5"
+	connectionID = "Bf6380c7-c444-4e99-aec7-11272a690bc5"
 	clientTopic = session + "/" + connectionID
-	topicSalt = "f9638f36-9c20-4d8d-84e9-65d4e0410126"
+	topicSalt = "B9638f36-9c20-4d8d-84e9-65d4e0410126"
 	tokenClient = MakeTestToken(audience, ct, clientTopic, scopes, 30)
 	permission.SetTopicSalt(&tokenClient, topicSalt)
 	permission.SetAlertHost(&tokenClient, true)
@@ -353,12 +298,32 @@ func TestMultipleClients(t *testing.T) {
 	c1uri := client1UniqueURI + "?code=" + codeClient1
 	go c1.Dial(ctx, c1uri)
 
-	t.Log(c0uri)
-	t.Log(c1uri)
+	log.Debug(c0uri)
+	log.Debug(c1uri)
 
-	var ca ConnectionAction
+	select {
 
-	time.Sleep(timeout)
+	case <-time.After(time.Second):
+		t.Error("TestHostAdminGetsConnectAction...FAIL (timeout)\n")
+
+	case msg, ok := <-h.In:
+
+		assert.True(t, ok)
+
+		err = json.Unmarshal(msg.Data, &ca)
+		assert.NoError(t, err)
+		assert.Equal(t, "connect", ca.Action)
+
+		base := strings.Split(ca.URI, "?")[0]
+
+		assert.Equal(t, client0UniqueURI, base)
+		if client0UniqueURI == base {
+			t.Logf("TestHostAdminGetsConnectAction...PASS\n")
+		} else {
+			t.Error("TestHostAdminGetsConnectAction...FAIL (wrong)\n")
+		}
+	}
+
 	time.Sleep(timeout)
 	time.Sleep(timeout)
 	time.Sleep(timeout)
@@ -376,7 +341,7 @@ func TestMultipleClients(t *testing.T) {
 	select {
 
 	case <-time.After(time.Second):
-		t.Fatal("TestHostAdminGetsConnectAction...FAIL\n")
+		t.Error("TestHostAdminGetsConnectAction2...FAIL (timeout)\n")
 
 	case msg, ok := <-h.In:
 
@@ -388,100 +353,20 @@ func TestMultipleClients(t *testing.T) {
 
 		base := strings.Split(ca.URI, "?")[0]
 
-		assert.Equal(t, client0UniqueURI, base)
-		if client0UniqueURI == base {
-			t.Logf("TestHostAdminGetsConnectAction...PASS\n")
+		assert.Equal(t, client1UniqueURI, base)
+		if client1UniqueURI == base {
+			t.Logf("TestHostAdminGetsConnectAction2...PASS\n")
 		} else {
-			t.Fatal("TestHostAdminGetsConnectAction...FAIL\n")
+			t.Error("TestHostAdminGetsConnectAction2...FAIL (wrong base)\n")
 		}
-	}
-
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-TRYTHIS:
-	for {
-		select {
-
-		case <-time.After(time.Second):
-			t.Error("TestHostAdminGetsConnectAction2...FAIL (timeout)\n")
-
-		case msg, ok := <-h.In:
-
-			assert.True(t, ok)
-
-			err = json.Unmarshal(msg.Data, &ca)
-			assert.NoError(t, err)
-			assert.Equal(t, "connect", ca.Action)
-
-			base := strings.Split(ca.URI, "?")[0]
-
-			assert.Equal(t, client1UniqueURI, base)
-			if client1UniqueURI == base {
-				t.Logf("TestHostAdminGetsConnectAction2...PASS\n")
-				break TRYTHIS
-			} else {
-				t.Error("TestHostAdminGetsConnectAction2...FAIL (wrong base)\n")
-			}
-		}
-	}
-
-	// Host now dials the unqiue connection
-	h1 := reconws.New()
-	go h1.Dial(ctx, ca.URI)
-
-	time.Sleep(timeout)
-
-	data := []byte("ping")
-
-	h1.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-
-	select {
-	case msg := <-c0.In:
-		assert.Equal(t, data, msg.Data)
-		if reflect.DeepEqual(data, msg.Data) {
-			t.Logf("TestHostConnectsToUniqueSession...PASS\n")
-		} else {
-			t.Fatal("TestHostConnectsToUniqueSession...FAIL")
-		}
-	case <-time.After(timeout):
-		t.Fatal("TestHostConnectsToUniqueSession...FAIL")
-	}
-
-	data = []byte("pong")
-
-	c0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-	select {
-	case msg := <-h1.In:
-		assert.Equal(t, data, msg.Data)
-		if reflect.DeepEqual(data, msg.Data) {
-			t.Logf("TestHostReceivesDataFromUniqueSession...PASS\n")
-		} else {
-			t.Fatal("TestHostReceivesDataFromUniqueSession...FAIL (wrong message)")
-		}
-	case <-time.After(timeout):
-		t.Fatal("TestHostReceivesDataFromUniqueSession...FAIL")
 	}
 
 	// let tests finish before concelling the clients
-	t.Log("starting 5 sec countdown to cancel")
-	time.Sleep(5 * time.Second)
-	t.Log("cancelling clients")
+	time.Sleep(timeout)
 	cancel()
 	// Teardown crossbar
 	time.Sleep(timeout)
 	close(closed)
-	t.Log("awaiting wg.Wait")
 	wg.Wait()
 
 }

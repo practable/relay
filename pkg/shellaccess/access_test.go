@@ -99,7 +99,7 @@ func TestAPI(t *testing.T) {
 	assert.NoError(t, err)
 	body, _ = ioutil.ReadAll(resp.Body)
 
-	assert.Equal(t, "\"Missing Client or Host Scope\"\n", string(body))
+	assert.Equal(t, "\"Missing client, host or stats Scope\"\n", string(body))
 
 	// now try with correct scopes :-)
 	claims.Scopes = []string{"host"}
@@ -200,5 +200,4 @@ func TestAPI(t *testing.T) {
 	// End tests
 	close(closed)
 	wg.Wait()
-
 }
