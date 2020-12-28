@@ -124,20 +124,8 @@ func TestShellhost(t *testing.T) {
 	c0 = reconws.New()
 	go c0.ReconnectAuth(ctx, clientURI, clientBearer)
 
-	//c1 = reconws.New()
-	//go c1.ReconnectAuth(ctx, clientURI, clientBearer)
-
-	/*
-		ctx1, cancel1 := context.WithCancel(context.Background())
-
-
-			c1 := reconws.New()
-			go func() {
-				fmt.Printf("ReconnectAuth connecting to  %s with bearer %s\n", clientURI, clientBearer)
-				c1.ReconnectAuth(ctx1, clientURI, clientBearer)
-				fmt.Printf("DONE WITH RECONNECT AUTH to %s\n", clientURI)
-			}()
-	*/
+	c1 := reconws.New()
+	go c1.ReconnectAuth(ctx, clientURI, clientBearer)
 
 	// Send messages, get echos...
 
@@ -241,7 +229,7 @@ func TestShellhost(t *testing.T) {
 				sessionCount = sessionCount + count
 			}
 		}
-		expectedCount := 2
+		expectedCount := 4
 		assert.Equal(t, expectedCount, sessionCount)
 
 		//TODO we can't know this because salted, so search for partial match to session

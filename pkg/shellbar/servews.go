@@ -200,10 +200,8 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 				return
 			}
 
-			time.Sleep(100 * time.Millisecond)
 			hub.broadcast <- message{sender: *adminClient, data: camsg, mt: websocket.TextMessage}
 			log.WithField("uri", hostAlertURI).Trace("Sent connect to host management channel")
-			time.Sleep(time.Second)
 			hub.unregister <- adminClient
 
 		}
