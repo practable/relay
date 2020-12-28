@@ -30,6 +30,7 @@ type TCPconnect struct {
 	In            chan []byte
 	Out           chan []byte
 	MaxFrameBytes int
+	Listeners     []*TCPconnect
 }
 
 func New() *TCPconnect {
@@ -79,6 +80,58 @@ func (c *TCPconnect) Dial(ctx context.Context, uri string) error {
 	log.WithField("To", u).Info("Connected")
 
 	return c.handleConn(ctx, conn)
+}
+
+// Echo primarily provided to help with testing packages which use
+// TCPconnect
+func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
+
+	lc := &net.ListenConfig{}
+
+	l, err := lc.Listen(ctx, "tcp", uri)
+
+	if err != nil {
+		return err
+	}
+
+	defer l.Close()
+
+	go func(l net.Listener) {
+
+		for {
+			// Wait for a connection.
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			// Handle the connection in a new goroutine.
+			// The loop then returns to accepting, so that
+			// multiple connections may be served concurrently.
+			listener := New()
+			c.Listeners = append(c.Listeners, listener)
+
+			go listener.handleConn(ctx, conn)
+
+			go func(ctx context.Context, c *TCPconnect) {
+
+				for {
+					select {
+					case <-ctx.Done():
+					case msg, ok := <-listener.In:
+						if !ok {
+							return
+						}
+						listener.Out <- msg
+					}
+
+				}
+
+			}(ctx, c)
+		}
+
+	}(l)
+	<-ctx.Done()
+	return nil
 }
 
 func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
