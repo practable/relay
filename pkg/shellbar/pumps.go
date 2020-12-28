@@ -1,8 +1,11 @@
 package shellbar
 
 import (
+	"encoding/json"
 	"time"
 
+	"github.com/eclesh/welford"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 )
@@ -15,9 +18,42 @@ import (
 func (c *Client) readPump() {
 
 	defer func() {
+
+		// Tell the host that we have gone ...
+
+		// initialise statistics (avoid nil pointer in stats routines)
+		tx := &Frames{size: welford.New(), ns: welford.New()}
+		rx := &Frames{size: welford.New(), ns: welford.New()}
+		stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
+
+		// alert SSH host agent to make a new connection to relay at the same address
+		adminClient := &Client{
+			topic: getHostTopicFromUniqueTopic(c.topic),
+			name:  uuid.New().String(),
+			stats: stats,
+		}
+
+		c.hub.register <- adminClient
+		ca := ConnectionAction{
+			Action: "disconnect",
+			URI:    c.hostAlertURI,
+		}
+
+		camsg, err := json.Marshal(ca)
+
+		if err != nil {
+			log.WithFields(log.Fields{"error": err, "uri": c.hostAlertURI}).Error("Failed to make connectionAction message")
+			return
+		}
+
+		time.Sleep(time.Second)
+		c.hub.broadcast <- message{sender: *adminClient, data: camsg, mt: websocket.TextMessage}
+		time.Sleep(time.Second)
+		c.hub.unregister <- adminClient
 		c.hub.unregister <- c
 		c.conn.Close()
 		log.Trace("readpump closed")
+
 	}()
 
 	c.conn.SetReadLimit(maxMessageSize)

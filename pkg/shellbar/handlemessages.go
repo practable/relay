@@ -36,7 +36,6 @@ func (h *Hub) run() {
 		case client := <-h.unregister:
 			if _, ok := h.clients[client.topic]; ok {
 				delete(h.clients[client.topic], client)
-				close(client.send)
 			}
 		case message := <-h.broadcast:
 			topic := message.sender.topic
@@ -46,8 +45,6 @@ func (h *Hub) run() {
 					case client.send <- message:
 					default:
 						h.unregister <- client
-						//close(client.send)
-						//delete(h.clients[topic], client)
 					}
 				}
 			}

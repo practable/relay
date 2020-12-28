@@ -83,6 +83,10 @@ type Client struct {
 
 	// existence of scopes to read, write
 	canRead, canWrite bool
+
+	// hostAlertURI is the path we sent to the host for our unique connection
+	// store it so we can tell it which connection we are closing.
+	hostAlertURI string
 }
 
 type RxTx struct {

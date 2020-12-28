@@ -163,7 +163,6 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		go client.readPump()
 
 		if token.AlertHost {
-			fmt.Println("***Alerting Host***")
 			// initialise statistics
 			tx := &Frames{size: welford.New(), ns: welford.New()}
 			rx := &Frames{size: welford.New(), ns: welford.New()}
@@ -177,32 +176,30 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 			}
 
 			hub.register <- adminClient
-			log.WithField("Topic", adminClient.topic).Trace("*** Registering Temporary AdminClient***")
+
 			permission.SetAlertHost(&token, false) //turn off host alert
 			code = config.CodeStore.SubmitToken(token)
 			log.WithField("token", token).Trace("Submitting token for host")
 
 			// same URL as client used, but different code (and leave out the salt)
-			uri := token.Audience + "/" + token.ConnectionType + "/" + token.Topic + "?code=" + code
-
+			hostAlertURI := token.Audience + "/" + token.ConnectionType + "/" + token.Topic + "?code=" + code
+			client.hostAlertURI = hostAlertURI
 			ca := ConnectionAction{
 				Action: "connect",
-				URI:    uri,
+				URI:    hostAlertURI,
 			}
 
 			camsg, err := json.Marshal(ca)
 
 			if err != nil {
-				log.WithFields(log.Fields{"error": err, "uri": uri}).Error("Failed to make connectionAction message")
+				log.WithFields(log.Fields{"error": err, "uri": hostAlertURI}).Error("Failed to make connectionAction message")
 				return
 			}
 
-			go func() { // send connectionAction then deregister client
-				time.Sleep(100 * time.Millisecond)
-				hub.broadcast <- message{sender: *adminClient, data: camsg, mt: websocket.TextMessage}
-				time.Sleep(30 * time.Second)
-				hub.unregister <- adminClient
-			}()
+			time.Sleep(100 * time.Millisecond)
+			hub.broadcast <- message{sender: *adminClient, data: camsg, mt: websocket.TextMessage}
+			time.Sleep(100 * time.Millisecond)
+			hub.unregister <- adminClient
 
 		}
 

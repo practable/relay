@@ -225,15 +225,16 @@ func TestShellbar(t *testing.T) {
 		t.Fatalf("TestGetStats...FAIL")
 	}
 
-	cancel()
 	time.Sleep(timeout)
 
-	t.Log("Disconnect not implemented")
+	cancel0()
 
-	cancel0() //disconnect the client
-
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
 	select {
-	case <-time.After(timeout):
+	case <-time.After(time.Second):
 		t.Fatal("No disconnect message")
 	case msg, ok := <-h.In:
 		assert.True(t, ok)
@@ -253,9 +254,8 @@ func TestShellbar(t *testing.T) {
 
 	}
 
-	cancel()
 	time.Sleep(timeout)
-
+	cancel()
 	// Teardown crossbar
 	time.Sleep(timeout)
 	close(closed)
