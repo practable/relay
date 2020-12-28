@@ -138,7 +138,7 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 		alertHost := false
 
 		if hasClientScope { //need a new unique connection
-			topic = uriTopic + "/" + uuid.New().String()
+			topic = topic + "/" + uuid.New().String()
 			topicSalt = uuid.New().String()
 			alertHost = true
 		}
