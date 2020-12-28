@@ -83,6 +83,10 @@ func TestShellhost(t *testing.T) {
 	go echo.Echo(ctx, sshduri)
 
 	time.Sleep(time.Second)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
 
 	// setup shellhost
 	ct := "shell"
@@ -99,6 +103,10 @@ func TestShellhost(t *testing.T) {
 	go Shellhost(ctx, "localhost"+sshduri, shellaccessURI+"/shell/"+session, hostBearer)
 
 	time.Sleep(time.Second)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
 
 	// ============================= START  TESTS ======================================
 
@@ -128,34 +136,31 @@ func TestShellhost(t *testing.T) {
 	*/
 
 	// Send messages, get echos...
-	time.Sleep(timeout)
+
 	time.Sleep(timeout)
 	time.Sleep(timeout)
 	time.Sleep(timeout)
 
 	data0 := []byte("ping")
-	time.Sleep(1 * time.Second)
+
 	select {
 	case <-time.After(timeout):
 		t.Fatal("timeout")
 	case c0.Out <- reconws.WsMessage{Data: data0, Type: websocket.BinaryMessage}:
-		t.Log("TestConnectToLocalShell...PASS")
+
 	}
 
 	time.Sleep(timeout)
 	time.Sleep(timeout)
 	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
+
 	select {
 	case <-time.After(10 * time.Second):
 		t.Fatal("timeout")
 	case msg, ok := <-c0.In:
 		assert.True(t, ok)
 		assert.Equal(t, data0, msg.Data)
+		t.Log("TestConnectToLocalShell...PASS")
 	}
 
 	/*
@@ -225,20 +230,20 @@ func TestShellhost(t *testing.T) {
 		sessionCount := 0
 		for topic, count := range agents {
 			log.Debug(topic)
-			if strings.HasPrefix(topic, session) {
+			if strings.HasPrefix(topic, session+"/") {
 				sessionCount = sessionCount + count
 			}
 		}
-
-		assert.Equal(t, 3, sessionCount)
+		expectedCount := 2
+		assert.Equal(t, expectedCount, sessionCount)
 
 		//TODO we can't know this because salted, so search for partial match to session
-		if sessionCount == 3 {
+		if sessionCount == expectedCount {
 			t.Log("TestGetStats...PASS")
 		} else {
 			pretty, err := json.MarshalIndent(reports, "", "\t")
 			assert.NoError(t, err)
-			log.Debug(string(pretty))
+			t.Log(string(pretty))
 			t.Fatalf("TestGetStats...FAIL (wrong agent count)")
 		}
 
