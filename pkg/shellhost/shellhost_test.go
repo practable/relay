@@ -118,10 +118,14 @@ func TestShellhost(t *testing.T) {
 	clientBearer, err := clientToken.SignedString([]byte(secret))
 
 	clientURI := shellaccessURI + "/shell/" + session
-	ctx0, cancel0 := context.WithCancel(context.Background())
 
-	c0 := reconws.New()
-	go c0.ReconnectAuth(ctx0, clientURI, clientBearer)
+	var c0 *reconws.ReconWs
+
+	c0 = reconws.New()
+	go c0.ReconnectAuth(ctx, clientURI, clientBearer)
+
+	//c1 = reconws.New()
+	//go c1.ReconnectAuth(ctx, clientURI, clientBearer)
 
 	/*
 		ctx1, cancel1 := context.WithCancel(context.Background())
@@ -137,6 +141,9 @@ func TestShellhost(t *testing.T) {
 
 	// Send messages, get echos...
 
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
 	time.Sleep(timeout)
 	time.Sleep(timeout)
 	time.Sleep(timeout)
@@ -251,46 +258,8 @@ func TestShellhost(t *testing.T) {
 		t.Fatalf("TestGetStats...FAIL (timeout)")
 	}
 
-	time.Sleep(timeout)
-
-	cancel0()
-
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-
-	// test timeout by checking send channel is dead on unique host connection ...??
-
-	/*
-
-
-		select {
-		case <-time.After(time.Second):
-			t.Fatal("No disconnect message")
-		case msg, ok := <-h.In:
-			assert.True(t, ok)
-
-			err = json.Unmarshal(msg.Data, &ca)
-			assert.NoError(t, err)
-			assert.Equal(t, "disconnect", ca.Action)
-
-			base := strings.Split(ca.URI, "?")[0]
-
-			assert.Equal(t, client0UniqueURI, base)
-			if client0UniqueURI == base {
-				t.Logf("TestHostAdminGetsDisconnectAction...PASS\n")
-			} else {
-				t.Fatal("TestHostAdminGetsDisconnectAction...FAIL\n")
-			}
-
-		}
-	*/
-	time.Sleep(timeout)
+	// ================================== Teardown  ===============================================
 	cancel()
-	//cancel1()
-
-	// ================================== Teardown crossbar ===============================================
 	time.Sleep(timeout)
 	close(closed)
 	wg.Wait()

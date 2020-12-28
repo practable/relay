@@ -36,13 +36,13 @@ func (c *Client) readPump() {
 		c.hub.register <- adminClient
 		ca := ConnectionAction{
 			Action: "disconnect",
-			URI:    c.hostAlertURI,
+			UUID:   c.hostAlertUUID,
 		}
 
 		camsg, err := json.Marshal(ca)
 
 		if err != nil {
-			log.WithFields(log.Fields{"error": err, "uri": c.hostAlertURI}).Error("Failed to make connectionAction message")
+			log.WithFields(log.Fields{"error": err, "uuid": c.hostAlertUUID}).Error("Failed to make disconnect connectionAction message")
 			return
 		}
 

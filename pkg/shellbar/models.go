@@ -51,6 +51,7 @@ func (c *Config) WithCodeStoreTTL(ttl int64) *Config {
 type ConnectionAction struct {
 	Action string `json:"action"`
 	URI    string `json:"uri"`
+	UUID   string `json:"uuid"`
 }
 
 // Client is a middleperson between the websocket connection and the hub.
@@ -84,9 +85,9 @@ type Client struct {
 	// existence of scopes to read, write
 	canRead, canWrite bool
 
-	// hostAlertURI is the path we sent to the host for our unique connection
+	// hostAlertUUID is the reference we sent to the host for our unique connection
 	// store it so we can tell it which connection we are closing.
-	hostAlertURI string
+	hostAlertUUID string
 }
 
 type RxTx struct {

@@ -144,16 +144,17 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
 
 		client := &Client{hub: hub,
-			conn:       conn,
-			send:       make(chan message, 256),
-			topic:      topic + token.TopicSalt,
-			stats:      stats,
-			name:       uuid.New().String(),
-			userAgent:  r.UserAgent(),
-			remoteAddr: r.Header.Get("X-Forwarded-For"),
-			audience:   config.Audience,
-			canRead:    canRead,
-			canWrite:   canWrite,
+			conn:          conn,
+			send:          make(chan message, 256),
+			topic:         topic + token.TopicSalt,
+			stats:         stats,
+			name:          uuid.New().String(),
+			userAgent:     r.UserAgent(),
+			remoteAddr:    r.Header.Get("X-Forwarded-For"),
+			audience:      config.Audience,
+			canRead:       canRead,
+			canWrite:      canWrite,
+			hostAlertUUID: uuid.New().String(),
 		}
 		client.hub.register <- client
 
@@ -186,10 +187,10 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 			// same URL as client used, but different code (and leave out the salt)
 			hostAlertURI := token.Audience + "/" + token.ConnectionType + "/" + token.Topic + "?code=" + code
-			client.hostAlertURI = hostAlertURI
 			ca := ConnectionAction{
 				Action: "connect",
 				URI:    hostAlertURI,
+				UUID:   client.hostAlertUUID,
 			}
 
 			camsg, err := json.Marshal(ca)

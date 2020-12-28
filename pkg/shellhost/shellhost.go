@@ -65,13 +65,13 @@ func Shellhost(ctx context.Context, local, remote, token string) {
 			switch ca.Action {
 			case "connect":
 				uCtx, uCancel := context.WithCancel(ctx)
-				connections[ca.URI] = uCancel
+				connections[ca.UUID] = uCancel
 				log.WithField("uri", ca.URI).Debug("shellhost started new connection")
 				go newConnection(uCtx, local, ca.URI)
 
 			case "disconnect":
 				log.WithField("uri", ca.URI).Debug("shellhost disconnecting")
-				uCancel, ok := connections[ca.URI]
+				uCancel, ok := connections[ca.UUID]
 				if !ok {
 					continue
 				}

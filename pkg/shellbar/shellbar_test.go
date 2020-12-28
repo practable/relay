@@ -116,6 +116,7 @@ func TestShellbar(t *testing.T) {
 
 	var ca ConnectionAction
 
+	var c0UUID string
 	select {
 
 	case <-time.After(time.Second):
@@ -130,7 +131,7 @@ func TestShellbar(t *testing.T) {
 		assert.Equal(t, "connect", ca.Action)
 
 		base := strings.Split(ca.URI, "?")[0]
-
+		c0UUID = ca.UUID
 		assert.Equal(t, client0UniqueURI, base)
 		if client0UniqueURI == base {
 			t.Logf("TestHostAdminGetsConnectAction...PASS\n")
@@ -242,11 +243,9 @@ func TestShellbar(t *testing.T) {
 		err = json.Unmarshal(msg.Data, &ca)
 		assert.NoError(t, err)
 		assert.Equal(t, "disconnect", ca.Action)
+		assert.Equal(t, c0UUID, ca.UUID)
 
-		base := strings.Split(ca.URI, "?")[0]
-
-		assert.Equal(t, client0UniqueURI, base)
-		if client0UniqueURI == base {
+		if c0UUID == ca.UUID {
 			t.Logf("TestHostAdminGetsDisconnectAction...PASS\n")
 		} else {
 			t.Fatal("TestHostAdminGetsDisconnectAction...FAIL\n")
