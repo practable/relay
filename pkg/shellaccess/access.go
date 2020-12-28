@@ -125,8 +125,8 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 			return operations.NewShellUnauthorized().WithPayload("Path Not Valid Without Stats Scope")
 		}
 
-		if !(hasClientScope || hasHostScope) {
-			return operations.NewShellUnauthorized().WithPayload("Missing Client or Host Scope")
+		if !(hasClientScope || hasHostScope || hasStatsScope) {
+			return operations.NewShellUnauthorized().WithPayload("Missing client, host or stats Scope")
 		}
 
 		if hasClientScope && hasHostScope {

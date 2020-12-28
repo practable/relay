@@ -121,6 +121,8 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 
 				w.Write(message.data)
 
+				log.WithFields(log.Fields{"topic": c.topic, "length": len(message.data)}).Trace("Writepump wrote bytes on topic")
+
 				size := len(message.data)
 
 				// Add queued chunks to the current websocket message, without delimiter.

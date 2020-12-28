@@ -170,7 +170,8 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 			err = json.Unmarshal(body, &session)
 
 			if err != nil {
-				log.WithField("error", err).Debug("failed marshalling access response into struct")
+
+				log.WithFields(log.Fields{"error": err, "body": string(body)}).Debug("failed marshalling access response into struct")
 				continue
 			}
 

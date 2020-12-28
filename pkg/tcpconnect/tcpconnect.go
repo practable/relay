@@ -99,9 +99,12 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
 	go func(l net.Listener) {
 
 		for {
+			log.WithField("uri", uri).Trace("tcpconnect.Echo awaiting connection")
 			// Wait for a connection.
 			conn, err := l.Accept()
+			log.WithField("uri", uri).Trace("tcpconnect.Echo got a connection")
 			if err != nil {
+				log.WithFields(log.Fields{"uri": uri, "err": err.Error()}).Error("Failed to accept connection")
 				return
 			}
 			// Handle the connection in a new goroutine.
@@ -118,6 +121,7 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
 					select {
 					case <-ctx.Done():
 					case msg, ok := <-listener.In:
+						log.WithFields(log.Fields{"uri": uri, "msg": string(msg)}).Trace("tcpconnect.Echo got a message")
 						if !ok {
 							return
 						}

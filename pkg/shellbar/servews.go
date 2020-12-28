@@ -24,7 +24,7 @@ const (
 
 // serveWs handles websocket requests from clients.
 func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Request, config Config) {
-
+	log.WithField("path", r.URL.Path).Trace("shellrelay received connection")
 	// check if topic is of a supported type before we go any further
 	ct := Unsupported
 
@@ -162,7 +162,10 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		go client.writePump(closed, cancelled)
 		go client.readPump()
 
+		log.WithField("topic", topic+token.TopicSalt).Trace("started shellrelay client on topic")
+
 		if token.AlertHost {
+			log.WithField("topic", topic+token.TopicSalt).Trace("shellrelay alerting host to connect too")
 			// initialise statistics
 			tx := &Frames{size: welford.New(), ns: welford.New()}
 			rx := &Frames{size: welford.New(), ns: welford.New()}
@@ -198,7 +201,8 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 			time.Sleep(100 * time.Millisecond)
 			hub.broadcast <- message{sender: *adminClient, data: camsg, mt: websocket.TextMessage}
-			time.Sleep(100 * time.Millisecond)
+			log.WithField("uri", hostAlertURI).Trace("Sent connect to host management channel")
+			time.Sleep(time.Second)
 			hub.unregister <- adminClient
 
 		}
