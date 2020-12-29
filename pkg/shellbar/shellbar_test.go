@@ -19,8 +19,8 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/reconws"
 	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/timdrysdale/relay/pkg/reconws"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
@@ -38,10 +38,11 @@ func TestShellbar(t *testing.T) {
 
 	// Setup logging
 
-	debug := false
+	debug := true
 	if debug {
+		log.SetReportCaller(true)
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: false, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -84,7 +85,7 @@ func TestShellbar(t *testing.T) {
 
 	// construct host token & connect
 	ct := "shell"
-	session := "20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	session := "abc"
 	scopes := []string{"read", "write"} //host, client scopes are known only to access
 
 	tokenHost := MakeTestToken(audience, ct, session, scopes, 30)
@@ -93,10 +94,15 @@ func TestShellbar(t *testing.T) {
 	h := reconws.New()
 	go h.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
 
+	// ensure we connect first by pausing until a dummy message sends
+	//  not needed in production - shellbar would be alive long before a client connects
+
+	h.Out <- reconws.WsMessage{Type: websocket.BinaryMessage}
+
 	// construct client token & connect
-	connectionID := "607109e7-3841-4d0f-ba6a-91e8b817f3f5"
+	connectionID := "def"
 	clientTopic := session + "/" + connectionID
-	topicSalt := "42f3b247-2632-40b3-8aeb-ce2218cbf26d"
+	topicSalt := "ghi"
 	topicInHub := clientTopic + topicSalt
 	tokenClient := MakeTestToken(audience, ct, clientTopic, scopes, 30)
 	permission.SetTopicSalt(&tokenClient, topicSalt)
@@ -116,7 +122,7 @@ func TestShellbar(t *testing.T) {
 	select {
 
 	case <-time.After(time.Second):
-		t.Fatal("TestHostAdminGetsConnectAction...FAIL\n")
+		t.Error("TestHostAdminGetsConnectAction...FAIL\n")
 
 	case msg, ok := <-h.In:
 
@@ -259,7 +265,7 @@ func TestShellbar(t *testing.T) {
 
 	// construct host token & connect
 	ct = "shell"
-	session = "C0fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	session = "rst"
 	scopes = []string{"read", "write"} //host, client scopes are known only to access
 
 	tokenHost = MakeTestToken(audience, ct, session, scopes, 30)
@@ -269,9 +275,9 @@ func TestShellbar(t *testing.T) {
 	go h.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
 
 	// construct client token & connect
-	connectionID = "A607109e7-3841-4d0f-ba6a-91e8b817f3f"
+	connectionID = "uvw"
 	clientTopic = session + "/" + connectionID
-	topicSalt = "A2f3b247-2632-40b3-8aeb-ce2218cbf26d"
+	topicSalt = "xyz"
 	tokenClient = MakeTestToken(audience, ct, clientTopic, scopes, 30)
 	permission.SetTopicSalt(&tokenClient, topicSalt)
 	permission.SetAlertHost(&tokenClient, true)

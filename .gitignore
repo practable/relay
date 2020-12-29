@@ -12,7 +12,8 @@ TODO.md
 
 # Test binary, built with `go test -c`
 *.test
-
+# Files with example testing outputs (manually created)
+*.debug
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 

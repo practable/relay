@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/eclesh/welford"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
@@ -17,23 +16,19 @@ import (
 // reads from this goroutine.
 func (c *Client) readPump() {
 
-	defer func() {
+	id := "shellbar.readPump(" + c.topic + "/" + c.name + ")"
 
+	defer func() {
+		log.Tracef("%s.defer(): about to disconnect", id)
 		// Tell the host that we have gone ...
 
-		// initialise statistics (avoid nil pointer in stats routines)
-		tx := &Frames{size: welford.New(), ns: welford.New()}
-		rx := &Frames{size: welford.New(), ns: welford.New()}
-		stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
-
 		// alert SSH host agent to make a new connection to relay at the same address
+		// No stats needed because we are not registering to receive messages
 		adminClient := &Client{
 			topic: getHostTopicFromUniqueTopic(c.topic),
 			name:  uuid.New().String(),
-			stats: stats,
 		}
 
-		c.hub.register <- adminClient
 		ca := ConnectionAction{
 			Action: "disconnect",
 			UUID:   c.hostAlertUUID,
@@ -42,17 +37,18 @@ func (c *Client) readPump() {
 		camsg, err := json.Marshal(ca)
 
 		if err != nil {
-			log.WithFields(log.Fields{"error": err, "uuid": c.hostAlertUUID}).Error("Failed to make disconnect connectionAction message")
+			log.WithFields(log.Fields{"error": err, "uuid": c.hostAlertUUID}).Errorf("%s.defer(): Failed to make disconnect connectionAction message because %s", id, err.Error())
 			return
 		}
 
-		time.Sleep(time.Second)
 		c.hub.broadcast <- message{sender: *adminClient, data: camsg, mt: websocket.TextMessage}
-		time.Sleep(time.Second)
-		c.hub.unregister <- adminClient
+		log.Tracef("%s.defer(): broadcast disconnect of UUID %s", id, c.hostAlertUUID)
+
 		c.hub.unregister <- c
+		log.Tracef("%s.defer(): client unregistered", id)
+
 		c.conn.Close()
-		log.Trace("readpump closed")
+		log.Tracef("%s.defer(): DONE", id)
 
 	}()
 
@@ -71,9 +67,13 @@ func (c *Client) readPump() {
 			break
 		}
 
+		size := len(data)
+
 		if c.canWrite {
 
 			c.hub.broadcast <- message{sender: *c, data: data, mt: mt}
+
+			log.WithFields(log.Fields{"topic": c.topic, "size": size}).Tracef("%s: broadacast %d-byte message to topic %s", id, size, c.topic)
 
 			t := time.Now()
 			if c.stats.tx.ns.Count() > 0 {
@@ -83,6 +83,9 @@ func (c *Client) readPump() {
 			}
 			c.stats.tx.last = t
 			c.stats.tx.size.Add(float64(len(data)))
+
+		} else {
+			log.WithFields(log.Fields{"topic": c.topic, "size": size}).Tracef("%s: ignored %d-byte message intended for broadcast to topic %s", id, size, c.topic)
 
 		}
 	}
@@ -94,14 +97,18 @@ func (c *Client) readPump() {
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
 func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
+
+	id := "shellbar.writePump(" + c.topic + "/" + c.name + ")"
+
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
-		log.Debug("write pump dead")
+		log.Tracef("%s: done", id)
 	}()
+	log.Tracef("%s: starting", id)
 	for {
-		log.Debug("Write pump alive")
+
 		select {
 
 		case message, ok := <-c.send:
@@ -120,10 +127,9 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				}
 
 				w.Write(message.data)
-
-				log.WithFields(log.Fields{"topic": c.topic, "length": len(message.data)}).Trace("Writepump wrote bytes on topic")
-
 				size := len(message.data)
+
+				log.WithFields(log.Fields{"topic": c.topic, "size": size}).Tracef("%s: wrote %d-byte message from topic %s", id, size, c.topic)
 
 				// Add queued chunks to the current websocket message, without delimiter.
 				// TODO check what impact, if any, this has on jsmpeg memory requirements
@@ -152,11 +158,14 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Warnf("%s: done because conn error %s", id, err.Error())
 				return
 			}
 		case <-closed:
+			log.Tracef("%s: done because closed channel closed", id)
 			return
 		case <-cancelled:
+			log.Tracef("%s: done because cancelled channel closed", id)
 			return
 		}
 	}

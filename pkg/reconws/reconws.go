@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/jpillora/backoff"
 	log "github.com/sirupsen/logrus"
@@ -51,6 +52,7 @@ type ReconWs struct {
 	Retry           RetryConfig
 	Stats           *chanstats.ChanStats
 	Url             string
+	ID              string
 }
 
 type RetryConfig struct {
@@ -72,6 +74,7 @@ func New() *ReconWs {
 			Timeout: 1 * time.Second,
 			Jitter:  false},
 		Stats: chanstats.New(),
+		ID:    uuid.New().String()[0:6],
 	}
 	return r
 }
@@ -118,6 +121,8 @@ func (r *ReconWs) Reconnect(ctx context.Context, url string) {
 // ended from where it was initialised, by close((* ReconWs).Stop)
 func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 
+	id := "reconws.ReconnectAuth(" + r.ID + ")"
+
 	boff := &backoff.Backoff{
 		Min:    r.Retry.Min,
 		Max:    r.Retry.Max,
@@ -154,14 +159,14 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 			resp, err := client.Do(req)
 
 			if err != nil {
-				log.WithField("error", err).Debug("failed request to access endpoint")
+				log.WithField("error", err).Warnf("%s: failed request to access endpoint", id)
 				continue
 			}
 
 			body, err := ioutil.ReadAll(resp.Body)
 
 			if err != nil {
-				log.WithField("error", err).Debug("failed reading access response body")
+				log.WithField("error", err).Warnf("%s: failed reading access response body", id)
 				continue
 			}
 
@@ -171,21 +176,25 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 
 			if err != nil {
 
-				log.WithFields(log.Fields{"error": err, "body": string(body)}).Debug("failed marshalling access response into struct")
+				log.WithFields(log.Fields{"error": err, "body": string(body)}).Debugf("%s: failed marshalling access response into struct", id)
 				continue
 			}
+
+			log.Infof("%s: successful relay access request", id)
 
 			dialCtx, cancel := context.WithCancel(ctx)
 
 			err = r.Dial(dialCtx, session.URI)
 			cancel()
 
-			log.WithField("error", err).Debug("Dial finished")
 			if err == nil {
 				boff.Reset()
 				waitBeforeDial = false
+				log.Debugf("%s: dial finished successfully, resetting timeout to zero", id)
+			} else {
+				log.WithField("error", err).Debugf("%s: Dial finished with error, increasing timeout", id)
 			}
-			//TODO immediate return if cancelled....
+			//TODO immediate return if cancelled....?
 		}
 	}
 }
@@ -196,10 +205,12 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 // the context is cancelled
 func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 
+	id := "reconws.Dial(" + r.ID + ")"
+
 	var err error
 
 	if urlStr == "" {
-		log.Error("Can't dial an empty Url")
+		log.Errorf("%s: Can't dial an empty Url", id)
 		return errors.New("Can't dial an empty Url")
 	}
 
@@ -207,30 +218,30 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 	u, err := url.Parse(urlStr)
 
 	if err != nil {
-		log.Error("Url:", err)
+		log.Errorf("%s: error with url because %s:", id, err.Error())
 		return err
 	}
 
 	if u.Scheme != "ws" && u.Scheme != "wss" {
-		log.Error("Url needs to start with ws or wss")
+		log.Errorf("%s: Url needs to start with ws or wss", id)
 		return errors.New("Url needs to start with ws or wss")
 	}
 
 	if u.User != nil {
-		log.Error("Url can't contain user name and password")
+		log.Errorf("%s: Url can't contain user name and password", id)
 		return errors.New("Url can't contain user name and password")
 	}
 
 	// start dialing ....
 
-	log.WithField("To", u).Debug("Connecting")
+	log.WithField("To", u).Tracef("%s: connecting to %s", id, u)
 
 	//assume our context has been given a deadline if needed
 	c, _, err := websocket.DefaultDialer.DialContext(ctx, urlStr, nil)
 	//	defer c.Close()
 
 	if err != nil {
-		log.WithField("error", err).Error("Dialing")
+		log.WithField("error", err).Errorf("%s: dialing error because %s", id, err.Error())
 		return err
 	}
 
@@ -238,8 +249,7 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 	r.Stats.ConnectedAt = time.Now()
 	//close(r.connected) //signal that we've connected
 
-	log.WithField("To", u).Info("Connected")
-
+	log.WithField("To", u).Tracef("%s: connected to %s", id, u)
 	// handle our reading tasks
 
 	readClosed := make(chan struct{})
@@ -258,17 +268,21 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 			// because we've been instructed to exit
 			// log as info since we expect an error here on a normal exit
 			if err != nil {
-				log.WithField("info", err).Info("Reading")
+				log.WithField("error", err).Infof("%s: error reading from conn; closing", id)
 				close(readClosed)
 				break LOOP
 			}
+
 			// optionally forward messages
 			if r.ForwardIncoming {
 				r.In <- WsMessage{Data: data, Type: mt}
+				log.Debugf("%s: received %d-byte message", id, len(data))
 				//update stats
 				r.Stats.Rx.Bytes.Add(float64(len(data)))
 				r.Stats.Rx.Dt.Add(time.Since(r.Stats.Rx.Last).Seconds())
 				r.Stats.Rx.Last = time.Now()
+			} else {
+				log.Debugf("%s: ignored %d-byte message", id, len(data))
 			}
 		}
 	}()
@@ -284,9 +298,10 @@ LOOPWRITING:
 
 			err := c.WriteMessage(msg.Type, msg.Data)
 			if err != nil {
-				log.WithField("error", err).Error("Writing")
+				log.WithField("error", err).Infof("%s: error writing to conn; closing", id)
 				break LOOPWRITING
 			}
+			log.Debugf("%s: sent %d-byte message", id, len(msg.Data))
 			//update stats
 			r.Stats.Tx.Bytes.Add(float64(len(msg.Data)))
 			r.Stats.Tx.Dt.Add(time.Since(r.Stats.Tx.Last).Seconds())
@@ -297,15 +312,15 @@ LOOPWRITING:
 			// Cleanly close the connection by sending a close message
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				log.WithField("error", err).Error("Closing")
+				log.WithField("error", err).Infof("%s: error sending close message; closing", id)
 			} else {
-				log.Info("Closed")
+				log.Infof("%s: connection closed", id)
 			}
 			c.Close()
 			break LOOPWRITING
 		}
 	}
-
+	log.Debugf("%s: done", id)
 	return err
 
 }
