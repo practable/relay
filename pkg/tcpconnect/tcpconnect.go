@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,10 +28,23 @@ type mutexBuffer struct {
 }
 
 type TCPconnect struct {
-	In            chan []byte
-	Out           chan []byte
+	// In channel carries messages FROM TCP conn
+	In chan []byte
+
+	//Out channel carries messages TO TCP conn
+	Out chan []byte
+
+	// MaxFrameBytes represents the maximum size of a single message
 	MaxFrameBytes int
-	Listeners     []*TCPconnect
+
+	// Listeners is a list of connections when in listening mode
+	Listeners []*TCPconnect
+
+	// ID identifies the instance, useful for logging
+	ID string
+
+	// Conn holds a pointer to the net.conn
+	Conn *net.Conn
 }
 
 func New() *TCPconnect {
@@ -38,6 +52,7 @@ func New() *TCPconnect {
 		In:            make(chan []byte),
 		Out:           make(chan []byte),
 		MaxFrameBytes: 1024 * 1024,
+		ID:            uuid.New().String()[0:6],
 	}
 }
 
@@ -45,46 +60,115 @@ func (c *TCPconnect) WithMaxFrameBytes(max int) *TCPconnect {
 	c.MaxFrameBytes = max
 	return c
 }
+func (c *TCPconnect) WithConn(conn *net.Conn) *TCPconnect {
+	c.Conn = conn
+	return c
+}
 
 func (c *TCPconnect) Dial(ctx context.Context, uri string) error {
+
+	id := "tcpconnect.Dial(" + c.ID + ")"
 
 	var err error
 
 	if uri == "" {
-		log.Error("Can't dial an empty Url")
+		log.Errorf("%s: Can't dial an empty Url", id)
 		return errors.New("Can't dial an empty Url")
 	}
 
 	// parse to check, dial with original string
-	u, err := url.Parse(uri)
+	_, err = url.Parse(uri)
 
 	if err != nil {
-		log.Error("Url:", err)
+		log.Errorf("%s: error with url %s of %s", id, uri, err.Error())
 		return err
 	}
 
 	// start dialing ....
 
-	log.WithField("To", u).Debug("Connecting")
+	log.WithField("To", uri).Tracef("%s: connecting to %s", id, uri)
 
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, "tcp", uri)
 
 	if err != nil {
-		log.WithFields(log.Fields{"uri": uri, "error": err.Error()}).Error("Failed to dial")
+		log.WithFields(log.Fields{"uri": uri, "error": err.Error()}).Errorf("%s: failed to dial %s because %s", id, uri, err.Error())
 		return err
 	}
 
 	defer conn.Close()
 
-	log.WithField("To", u).Info("Connected")
+	log.WithField("To", uri).Debugf("%s: connected to %s", id, uri)
 
 	return c.handleConn(ctx, conn)
 }
 
-// Echo primarily provided to help with testing packages which use
-// TCPconnect
+// Listen returns new conns over a channel for use by other handlers
+func (c *TCPconnect) Listen(ctx context.Context, uri string, handler func(context.Context, *TCPconnect)) error {
+
+	id := "tcpconnect.Listen(" + c.ID + ")"
+
+	lc := &net.ListenConfig{}
+
+	l, err := lc.Listen(ctx, "tcp", uri)
+
+	if err != nil {
+		log.WithField("uri", uri).Debugf("%s: error connecting to %s because %s", id, uri, err.Error())
+		return err
+	}
+
+	defer l.Close()
+
+	log.WithField("uri", uri).Debugf("%s: awaiting connections at %s", id, uri)
+
+	for {
+
+		// Wait for a connection.
+		conn, err := l.Accept()
+
+		if err != nil {
+			log.WithFields(log.Fields{"uri": uri, "err": err.Error()}).Warnf("%s: failed to accept connection because %s", id, err.Error())
+			continue
+		}
+		// Handle the connection in a new goroutine.
+		// The loop then returns to accepting, so that
+		// multiple connections may be served concurrently.
+		listener := New().WithConn(&conn)
+		go handler(ctx, listener)
+		log.WithField("uri", uri).Debugf("%s: got a new connection (%s)", id, listener.ID)
+	}
+
+}
+
+func EchoHandler(ctx context.Context, c *TCPconnect) {
+
+	id := "tcpconnect.EchoHandler(" + c.ID + ")"
+
+	go c.handleConn(ctx, *c.Conn)
+
+	go func(ctx context.Context, c *TCPconnect) {
+
+		for {
+			select {
+			case <-ctx.Done():
+			case msg, ok := <-c.In:
+				if !ok {
+					log.WithFields(log.Fields{"msg": string(msg)}).Debugf("%s: channel error, closing", id)
+					return
+				}
+				c.Out <- msg
+				log.WithFields(log.Fields{"msg": string(msg)}).Debugf("%s: echo'd a %d-byte message", id, len(msg))
+			}
+
+		}
+
+	}(ctx, c)
+
+}
+
 func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
+
+	id := "tcpconnect.Echo(" + c.ID + ")"
 
 	lc := &net.ListenConfig{}
 
@@ -98,47 +182,56 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
 
 	go func(l net.Listener) {
 
+		log.WithField("uri", uri).Debugf("%s: awaiting connections at %s", id, uri)
+
 		for {
-			log.WithField("uri", uri).Trace("tcpconnect.Echo awaiting connection")
+
 			// Wait for a connection.
 			conn, err := l.Accept()
-			log.WithField("uri", uri).Trace("tcpconnect.Echo got a connection")
+
 			if err != nil {
-				log.WithFields(log.Fields{"uri": uri, "err": err.Error()}).Error("Failed to accept connection")
-				return
+				log.WithFields(log.Fields{"uri": uri, "err": err.Error()}).Warnf("%s: failed to accept connection because %s", id, err.Error())
+				continue
 			}
 			// Handle the connection in a new goroutine.
 			// The loop then returns to accepting, so that
 			// multiple connections may be served concurrently.
+
 			listener := New()
 			c.Listeners = append(c.Listeners, listener)
+
+			log.WithField("uri", uri).Debugf("%s: got a new connection (%s)", id, listener.ID)
 
 			go listener.handleConn(ctx, conn)
 
 			go func(ctx context.Context, c *TCPconnect) {
-
+				id := "tcpconnect.Echo.Connector(" + c.ID + ")"
 				for {
 					select {
 					case <-ctx.Done():
 					case msg, ok := <-listener.In:
-						log.WithFields(log.Fields{"uri": uri, "msg": string(msg)}).Trace("tcpconnect.Echo got a message")
 						if !ok {
+							log.WithFields(log.Fields{"uri": uri, "msg": string(msg)}).Debugf("%s: channel error, closing", id)
 							return
 						}
 						listener.Out <- msg
+						log.WithFields(log.Fields{"uri": uri, "msg": string(msg)}).Debugf("%s: echo'd a %d-byte message", id, len(msg))
 					}
 
 				}
 
-			}(ctx, c)
+			}(ctx, listener)
 		}
 
 	}(l)
 	<-ctx.Done()
+
 	return nil
 }
 
 func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
+
+	id := "tcpconnect.handleConn(" + c.ID + ")"
 
 	var frameBuffer mutexBuffer
 
@@ -158,7 +251,9 @@ func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
 			select {
 			case data := <-c.Out:
 				conn.Write(data)
+				log.Debugf("%s: wrote %d-byte message to conn", id, len(data))
 			case <-ctx.Done():
+				log.Debugf("%s: write pump context cancelled", id)
 				//put this option here to avoid spinning our wheels
 			}
 		}
@@ -172,7 +267,7 @@ func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
 			tCh <- 0 //tell the monitoring routine we're alive
 
 			n, err := io.ReadAtLeast(reader, glob, 1)
-			log.WithField("Count", n).Trace("Read from buffer")
+
 			if err == nil {
 
 				frameBuffer.mux.Lock()
@@ -187,7 +282,7 @@ func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
 				}
 
 			} else {
-				log.Error("Read/FrameBuffer issue")
+				log.Warnf("%s: error conn writing into frame buffer  %s", id, err.Error())
 				return // avoid spinning our wheels
 
 			}
@@ -221,10 +316,13 @@ func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
 
 			if err == nil && n > 0 {
 				c.In <- frame
+				log.Debugf("%s: wrote %d-byte message to channel", id, n)
+			} else {
+				log.Warnf("%s: error writing frame buffer to channel %s", id, err.Error())
 			}
 
 		case <-ctx.Done():
-			log.Debug("Read Pump Done")
+			log.Debugf("%s: read pump context cancelled", id)
 			return nil
 		}
 	}
