@@ -80,7 +80,7 @@ func TestCompareAgainstNoMux(t *testing.T) {
 	}
 
 	if nmExpected == nmGot {
-		t.Error("non-muxed method did not experience an error - that's weird!")
+		t.Logf("non-muxed method did not experience an error - even a stopped clock is right twice day, but don't bank on it being right at other times!")
 	}
 
 }

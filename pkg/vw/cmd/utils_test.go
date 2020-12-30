@@ -1,12 +1,7 @@
 package cmd
 
 import (
-	"bufio"
-	"bytes"
-	"crypto/rand"
-	"io/ioutil"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/timdrysdale/relay/pkg/agg"
@@ -27,17 +22,6 @@ func TestUtilsClean(t *testing.T) {
 	}
 }
 
-func writeDataFile(size int, name string) ([]byte, error) {
-
-	data := make([]byte, size)
-	rand.Read(data)
-
-	err := ioutil.WriteFile(name, data, 0644)
-
-	return data, err
-
-}
-
 func testApp(running bool) *App {
 	a := &App{Hub: agg.New(), Closed: make(chan struct{})}
 	a.Websocket = rwc.New(a.Hub)
@@ -46,14 +30,4 @@ func testApp(running bool) *App {
 		go a.Websocket.Run(a.Closed)
 	}
 	return a
-}
-
-func suppressLog() {
-	var ignore bytes.Buffer
-	logignore := bufio.NewWriter(&ignore)
-	log.SetOutput(logignore)
-}
-
-func displayLog() {
-	log.SetOutput(os.Stdout)
 }

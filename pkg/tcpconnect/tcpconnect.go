@@ -140,6 +140,36 @@ func (c *TCPconnect) Listen(ctx context.Context, uri string, handler func(contex
 
 }
 
+func SpeakThenEchoHandler(ctx context.Context, c *TCPconnect) {
+
+	id := "tcpconnect.SpeakThenEchoHandler(" + c.ID + ")"
+
+	go c.HandleConn(ctx, *c.Conn)
+
+	go func(ctx context.Context, c *TCPconnect) {
+
+		greeting := []byte("Echo Service")
+		c.Out <- greeting
+		log.WithFields(log.Fields{"size": len(greeting)}).Debugf("%s: spoke first with a %d-byte message", id, len(greeting))
+
+		for {
+			select {
+			case <-ctx.Done():
+			case msg, ok := <-c.In:
+				if !ok {
+					log.WithFields(log.Fields{"msg": string(msg)}).Debugf("%s: channel error, closing", id)
+					return
+				}
+				c.Out <- msg
+				log.WithFields(log.Fields{"msg": string(msg)}).Debugf("%s: echo'd a %d-byte message", id, len(msg))
+			}
+
+		}
+
+	}(ctx, c)
+
+}
+
 func EchoHandler(ctx context.Context, c *TCPconnect) {
 
 	id := "tcpconnect.EchoHandler(" + c.ID + ")"

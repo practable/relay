@@ -88,7 +88,7 @@ func TestShellClient(t *testing.T) {
 	sshduri := ":" + strconv.Itoa(shellport)
 
 	echo := tcpconnect.New()
-	go echo.Echo(ctx, sshduri)
+	go echo.Listen(ctx, sshduri, tcpconnect.SpeakThenEchoHandler)
 
 	time.Sleep(time.Second)
 	time.Sleep(timeout)
@@ -142,11 +142,40 @@ func TestShellClient(t *testing.T) {
 	go c1.Dial(ctx, clientURI)
 
 	// Send messages, get echos...
-	time.Sleep(3 * time.Second) //give shellhost a chance to make new connections
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+
+	// get greetings
+
+	greeting := []byte("Echo Service")
+
+	select {
+	case <-time.After(timeout):
+		t.Error("timeout on greeting")
+	case msg, ok := <-c0.In:
+		assert.True(t, ok)
+		assert.Equal(t, greeting, msg)
+	}
 
 	time.Sleep(timeout)
 	time.Sleep(timeout)
 	time.Sleep(timeout)
+
+	select {
+	case <-time.After(timeout):
+		t.Error("timeout on greeting")
+	case msg, ok := <-c1.In:
+		assert.True(t, ok)
+		assert.Equal(t, greeting, msg)
+	}
+
 	time.Sleep(timeout)
 	time.Sleep(timeout)
 	time.Sleep(timeout)

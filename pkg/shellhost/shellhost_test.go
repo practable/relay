@@ -29,7 +29,7 @@ import (
 
 func init() {
 
-	debug := true
+	debug := false
 	if debug {
 		log.SetReportCaller(true)
 		log.SetLevel(log.TraceLevel)
@@ -84,7 +84,7 @@ func TestShellHost(t *testing.T) {
 	sshduri := ":" + strconv.Itoa(shellport)
 
 	echo := tcpconnect.New()
-	go echo.Echo(ctx, sshduri)
+	go echo.Listen(ctx, sshduri, tcpconnect.SpeakThenEchoHandler)
 
 	time.Sleep(time.Second)
 	time.Sleep(timeout)
@@ -154,20 +154,48 @@ func TestShellHost(t *testing.T) {
 	time.Sleep(timeout)
 	time.Sleep(timeout)
 
+	// get greetings
+
+	greeting := []byte("Echo Service")
+
 	select {
 	case <-time.After(timeout):
-		t.Fatal("timeout")
+		t.Error("timeout on greeting")
+	case msg, ok := <-c0.In:
+		assert.True(t, ok)
+		assert.Equal(t, greeting, msg.Data)
+	}
+
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+	time.Sleep(timeout)
+
+	select {
+	case <-time.After(timeout):
+		t.Error("timeout on greeting")
+	case msg, ok := <-c1.In:
+		assert.True(t, ok)
+		assert.Equal(t, greeting, msg.Data)
+	}
+
+	// get echo
+	select {
+	case <-time.After(timeout):
+		t.Error("timeout")
 	case msg, ok := <-c0.In:
 		assert.True(t, ok)
 		assert.Equal(t, data0, msg.Data)
 		t.Log("TestConnectToLocalShell...PASS")
 	}
 
+	// get nothing as planned
 	select {
 	case <-time.After(timeout):
 	case <-c1.In:
 		t.Fatal("unexpected")
 	}
+
+	// send on other client c1
 
 	data1 := []byte("foo")
 	select {
@@ -176,6 +204,7 @@ func TestShellHost(t *testing.T) {
 	case c1.Out <- reconws.WsMessage{Data: data1, Type: websocket.BinaryMessage}:
 	}
 
+	// get echo
 	select {
 	case <-time.After(timeout):
 		t.Fatal("timeout")
@@ -184,6 +213,7 @@ func TestShellHost(t *testing.T) {
 		assert.Equal(t, data1, msg.Data)
 	}
 
+	// get nothing on other client c0 as expected
 	select {
 	case <-time.After(timeout):
 	case <-c0.In:

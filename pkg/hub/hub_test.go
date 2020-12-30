@@ -1,20 +1,15 @@
 package hub
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/rand"
 	"fmt"
 	"math"
 	"math/big"
-	"os"
 	"reflect"
 	"testing"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/counter"
 )
 
@@ -619,110 +614,5 @@ func compareFloat64(a float64, b float64) int {
 	bb := big.NewFloat(b)
 
 	return aa.Cmp(bb)
-
-}
-
-func testDelayedReceive(t *testing.T) {
-	//check that buffered channels will survive until the buffer gets full
-
-	// hook to let us see what got logged
-	hook := test.NewGlobal()
-	// keep the console tidy, since we know we're throwing an error
-	var ignore bytes.Buffer
-	logignore := bufio.NewWriter(&ignore)
-	log.SetOutput(logignore)
-	defer log.SetOutput(os.Stdout) //return logger to stdout for any following tests
-
-	for i := 0; i < 2; i++ {
-
-		h := New()
-		closed := make(chan struct{})
-		if i == 0 {
-			go h.Run(closed)
-		} else {
-			go h.RunWithStats(closed)
-		}
-
-		topicA := "/videoA"
-		c1 := &Client{Hub: h, Name: "1", Topic: topicA, Send: make(chan Message, 1), Stats: NewClientStats()}
-		c2 := &Client{Hub: h, Name: "2", Topic: topicA, Send: make(chan Message, 1), Stats: NewClientStats()}
-
-		h.Register <- c1
-		h.Register <- c2
-
-		content := []byte{'t', 'e', 's', 't'}
-
-		m := &Message{Data: content, Sender: *c1, Sent: time.Now(), Type: 0}
-
-		var start time.Time
-
-		rxCount := 0
-
-		time.Sleep(time.Millisecond)
-
-		start = time.Now()
-
-		h.Broadcast <- *m
-
-		time.Sleep(100 * time.Millisecond)
-
-		timer := time.NewTimer(5 * time.Millisecond)
-	COLLECT:
-		for {
-			select {
-			case msg := <-c2.Send:
-				elapsed := time.Since(start)
-				if elapsed < (50 * time.Millisecond) {
-					t.Error("Message received sooner than expected, check test setup, ", elapsed)
-				}
-				rxCount++
-				if bytes.Compare(msg.Data, content) != 0 {
-					t.Error("Wrong data in message")
-				}
-			case <-timer.C:
-				break COLLECT
-			}
-		}
-
-		if rxCount != 1 {
-			t.Error("Receiver did not receive message in correct quantity, wanted 1 got ", rxCount)
-		}
-
-		h.Broadcast <- *m
-		h.Broadcast <- *m
-
-		time.Sleep(100 * time.Millisecond)
-
-		rxCount = 0
-
-		timer = time.NewTimer(5 * time.Millisecond)
-	COLLECT2:
-		for {
-			select {
-			case <-c2.Send:
-				elapsed := time.Since(start)
-				if elapsed < (50 * time.Millisecond) {
-					t.Error("Message received sooner than expected, check test setup, ", elapsed)
-				}
-				rxCount++
-				break COLLECT2
-			case <-timer.C:
-				break COLLECT2
-			}
-		}
-
-		if rxCount > 1 {
-			t.Error("Receiver read from channel too many times, wanted 0 or 1 got ", rxCount)
-		}
-
-		assert.Equal(t, 1, len(hook.Entries))
-		assert.Equal(t, log.ErrorLevel, hook.LastEntry().Level)
-		assert.Equal(t, "Unregistering unresponsive client", hook.LastEntry().Message)
-
-		hook.Reset()
-		assert.Nil(t, hook.LastEntry())
-
-		close(closed)
-	}
 
 }

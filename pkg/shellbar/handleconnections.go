@@ -26,11 +26,6 @@ const (
 	maxMessageSize = 1024 * 1024 * 10
 )
 
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-)
-
 // TODO
 // - per ip throttling with github.com/didip/tollbooth
 // - package stats.html with

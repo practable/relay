@@ -166,26 +166,3 @@ type topicDirectory struct {
 	sync.Mutex
 	directory map[string][]clientDetails
 }
-
-// gobwas/ws
-type readClientDataReturns struct {
-	msg []byte
-	mt  int
-	err error
-}
-
-type summaryStats struct {
-	topic map[string]topicStats
-}
-
-type topicStats struct {
-	audience *welford.Stats
-	size     *welford.Stats
-	rx       map[string]int
-}
-
-type messageStats struct {
-	topic string
-	rx    []string
-	size  int
-}

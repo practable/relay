@@ -19,7 +19,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -32,11 +31,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var bufferSize int64
-var host *url.URL
-var audience, cfgFile, cpuprofile, listen, logFile, secret string
-var development bool
 
 /* configuration
 
