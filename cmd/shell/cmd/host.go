@@ -42,6 +42,10 @@ shell host
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
+
+		viper.SetEnvPrefix("SHELLHOST")
+		viper.AutomaticEnv()
+
 		viper.SetDefault("localport", 22)
 		localPort := viper.GetInt("localport")
 		relaySession := viper.GetString("relaysession")
@@ -52,8 +56,9 @@ shell host
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
 			fmt.Printf("Local port: %d for %s with %d-byte token\n", localPort, relaySession, len(token))
+			log.SetReportCaller(true)
 			log.SetFormatter(&log.TextFormatter{})
-			log.SetLevel(log.DebugLevel)
+			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)
 
 		} else {
@@ -95,7 +100,7 @@ shell host
 			}
 		}()
 
-		local := ":" + strconv.Itoa(localPort)
+		local := "localhost:" + strconv.Itoa(localPort)
 
 		go shellhost.Host(ctx, local, relaySession, token)
 
@@ -107,6 +112,4 @@ shell host
 
 func init() {
 	rootCmd.AddCommand(hostCmd)
-	viper.SetEnvPrefix("SHELLHOST")
-	viper.AutomaticEnv()
 }

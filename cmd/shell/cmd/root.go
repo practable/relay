@@ -21,14 +21,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
-	"github.com/spf13/viper"
 )
 
 var development bool
-var listenPort, accessPort, relayPort int
-var bufferSize int64
-var audience, local, logFile, remote, secret, target, token string
+var logFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -43,8 +39,6 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-
-		fmt.Println(viper.AllKeys())
 	},
 }
 
@@ -66,8 +60,4 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-
-	viper.SetEnvPrefix("SHELL")
-	viper.AutomaticEnv() // read in environment variables that match
-
 }

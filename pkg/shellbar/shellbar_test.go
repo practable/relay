@@ -36,6 +36,7 @@ func init() {
 		defer log.SetOutput(os.Stdout)
 
 	} else {
+		log.SetLevel(log.WarnLevel)
 		var ignore bytes.Buffer
 		logignore := bufio.NewWriter(&ignore)
 		log.SetOutput(logignore)
@@ -302,71 +303,75 @@ func TestShellbar(t *testing.T) {
 	c1 := reconws.New()
 	client1UniqueURI := audience + "/" + ct + "/" + clientTopic
 
-	time.Sleep(timeout) // enforce request order to simplify checking of connectionAction
 	c1uri := client1UniqueURI + "?code=" + codeClient1
 	go c1.Dial(ctx, c1uri)
 
 	log.Debug(c0uri)
 	log.Debug(c1uri)
 
-	select {
+	// make a list of connectionActions we receive, so that we don't have to
+	// rely on them coming in order - a sleep between dials does not
+	// guarantee order.
 
-	case <-time.After(time.Second):
-		t.Error("TestHostAdminGetsConnectAction...FAIL (timeout)\n")
+	timeout = 10 * time.Millisecond
 
-	case msg, ok := <-h.In:
+	var cas []ConnectionAction
 
-		assert.True(t, ok)
+	timeout = 10 * time.Millisecond
 
-		err = json.Unmarshal(msg.Data, &ca)
-		assert.NoError(t, err)
-		assert.Equal(t, "connect", ca.Action)
+	for n := 0; n < 100; n++ {
 
-		base := strings.Split(ca.URI, "?")[0]
+		// test intermittently fails depending on the timing
+		// employed in this loop
+		// this is considered a test artefact
+		// since many goros running in this thread
+		// does not fail in >10 attempts with -race
 
-		assert.Equal(t, client0UniqueURI, base)
-		if client0UniqueURI == base {
-			t.Logf("TestHostAdminGetsConnectAction...PASS\n")
-		} else {
-			t.Error("TestHostAdminGetsConnectAction...FAIL (wrong)\n")
+		select {
+
+		case <-time.After(timeout):
+
+		case msg, ok := <-h.In:
+
+			assert.True(t, ok)
+
+			err = json.Unmarshal(msg.Data, &ca)
+			assert.NoError(t, err)
+
+			cas = append(cas, ca)
 		}
+
+		if len(cas) >= 2 {
+			break
+		}
+
 	}
 
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
-	time.Sleep(timeout)
+	var cac0, cac1 int
 
-	select {
+	for _, ca := range cas {
 
-	case <-time.After(time.Second):
-		t.Error("TestHostAdminGetsConnectAction2...FAIL (timeout)\n")
-
-	case msg, ok := <-h.In:
-
-		assert.True(t, ok)
-
-		err = json.Unmarshal(msg.Data, &ca)
-		assert.NoError(t, err)
 		assert.Equal(t, "connect", ca.Action)
 
 		base := strings.Split(ca.URI, "?")[0]
 
-		assert.Equal(t, client1UniqueURI, base)
-		if client1UniqueURI == base {
-			t.Logf("TestHostAdminGetsConnectAction2...PASS\n")
-		} else {
-			t.Error("TestHostAdminGetsConnectAction2...FAIL (wrong base)\n")
+		if client0UniqueURI == base {
+			cac0 = cac0 + 1
 		}
+		if client1UniqueURI == base {
+			cac1 = cac1 + 1
+		}
+
+	}
+
+	assert.Equal(t, 1, cac0)
+	assert.Equal(t, 1, cac1)
+
+	if cac0 == 1 && cac1 == 1 {
+		t.Logf("TestHostAdminGetsMultipleConnectActions...PASS\n")
+	} else {
+		t.Errorf("TestHostAdminGetsMultipleConnectActions...FAIL\n")
+		fmt.Println(pretty(cas))
 	}
 
 	// let tests finish before concelling the clients
@@ -377,4 +382,14 @@ func TestShellbar(t *testing.T) {
 	close(closed)
 	wg.Wait()
 
+}
+
+func pretty(t interface{}) string {
+
+	json, err := json.MarshalIndent(t, "", "\t")
+	if err != nil {
+		return ""
+	}
+
+	return string(json)
 }

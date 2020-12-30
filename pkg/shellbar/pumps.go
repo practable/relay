@@ -69,6 +69,10 @@ func (c *Client) readPump() {
 
 		size := len(data)
 
+		if c.mustWaitToSend {
+			<-c.clearToSend
+		}
+
 		if c.canWrite {
 
 			c.hub.broadcast <- message{sender: *c, data: data, mt: mt}
@@ -108,11 +112,20 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 		log.Tracef("%s: done", id)
 	}()
 	log.Tracef("%s: starting", id)
+
+	awaitingFirstMessage := true
+
 	for {
 
 		select {
 
 		case message, ok := <-c.send:
+
+			if awaitingFirstMessage {
+				close(c.clearToSend)
+				awaitingFirstMessage = false
+			}
+
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.

@@ -35,10 +35,10 @@ var relayCmd = &cobra.Command{
 	Short: "shell relay connects shell clients to shell hosts",
 	Long: `Set the operating paramters with environment variables, for example
 
+export SHELLRELAY_ACCESSPORT=10001
+export SHELLRELAY_ACCESSFQDN=https://access.example.io
 export SHELLRELAY_RELAYPORT=10000
 export SHELLRELAY_RELAYFQDN=wss://relay-access.example.io
-export SHELLRELAY_ACCESSPORT=10001
-export SHELLRELAY_RELAYFQDN=https://access.example.io
 export SHELLRELAY_SECRET=$your_secret
 export SHELLRELAY_DEVELOPMENT=true
 shell relay
@@ -56,6 +56,10 @@ handled the access (see comment above on setting target FQDN to be distinct, so 
 websocket connections are reverse proxied to the correct instance).
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		viper.SetEnvPrefix("SHELLRELAY")
+		viper.AutomaticEnv()
+
 		viper.SetDefault("accessport", 8080)
 		viper.SetDefault("relayport", 8081)
 
@@ -68,10 +72,12 @@ websocket connections are reverse proxied to the correct instance).
 
 		if development {
 			// development environment
+
 			fmt.Println("Development mode - logging output to stdout")
 			fmt.Printf("Access port: %d for %s\nRelay port: %d for %s\n", accessPort, audience, relayPort, target)
+			log.SetReportCaller(true)
 			log.SetFormatter(&log.TextFormatter{})
-			log.SetLevel(log.DebugLevel)
+			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)
 
 		} else {
@@ -130,7 +136,4 @@ websocket connections are reverse proxied to the correct instance).
 
 func init() {
 	rootCmd.AddCommand(relayCmd)
-	viper.SetEnvPrefix("SHELLRELAY")
-	viper.AutomaticEnv()
-
 }
