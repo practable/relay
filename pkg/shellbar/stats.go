@@ -15,8 +15,8 @@ import (
 // StatsClient starts a routine which sends stats reports on demand.
 func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, hub *Hub, config Config) {
 
-	tx := &Frames{size: welford.New(), ns: welford.New()}
-	rx := &Frames{size: welford.New(), ns: welford.New()}
+	tx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
+	rx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
 	stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
 
 	client := &Client{hub: hub,
@@ -25,7 +25,7 @@ func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, hub *Hub, config Co
 		stats:      stats,
 		name:       "stats-generator-" + uuid.New().String(),
 		audience:   config.Audience,
-		userAgent:  "crossbar",
+		userAgent:  "shellbar",
 		remoteAddr: "internal",
 		canRead:    true,
 		canWrite:   true,
@@ -107,8 +107,11 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 
 		var reports []*ClientReport
 
+		c.hub.mu.RLock()
 		for _, topic := range c.hub.clients {
 			for client, _ := range topic {
+
+				client.stats.tx.mu.RLock()
 
 				var tx ReportStats
 
@@ -126,6 +129,9 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 					}
 				}
 
+				client.stats.tx.mu.RUnlock()
+
+				client.stats.rx.mu.RLock()
 				var rx ReportStats
 
 				if client.stats.rx.size.Count() > 0 {
@@ -141,6 +147,8 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 						Fps:  0,
 					}
 				}
+
+				client.stats.rx.mu.RUnlock()
 
 				report := &ClientReport{
 					Topic:      client.topic,
@@ -159,7 +167,7 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 
 			} //for client in topic
 		} // for topic in hub
-
+		c.hub.mu.RUnlock()
 		reportsData, err := json.Marshal(reports)
 		if err != nil {
 			log.WithField("error", err).Error("statsReporter marshalling JSON")

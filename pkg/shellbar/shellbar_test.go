@@ -27,18 +27,8 @@ import (
 // NOTE don't use reconws.Reconnect for production clients anymore;
 // it does NOT understand the use of auth codes
 // use Dial instead.
-
-func MakeTestToken(audience, connectionType, topic string, scopes []string, lifetime int64) permission.Token {
-	begin := time.Now().Unix() - 1 //ensure it's in the past
-	end := begin + lifetime
-	return permission.NewToken(audience, connectionType, topic, scopes, begin, begin, end)
-}
-
-func TestShellbar(t *testing.T) {
-
-	// Setup logging
-
-	debug := true
+func init() {
+	debug := false
 	if debug {
 		log.SetReportCaller(true)
 		log.SetLevel(log.TraceLevel)
@@ -50,6 +40,18 @@ func TestShellbar(t *testing.T) {
 		logignore := bufio.NewWriter(&ignore)
 		log.SetOutput(logignore)
 	}
+
+}
+
+func MakeTestToken(audience, connectionType, topic string, scopes []string, lifetime int64) permission.Token {
+	begin := time.Now().Unix() - 1 //ensure it's in the past
+	end := begin + lifetime
+	return permission.NewToken(audience, connectionType, topic, scopes, begin, begin, end)
+}
+
+func TestShellbar(t *testing.T) {
+
+	// Setup logging
 
 	// setup shellbar on local (free) port
 	closed := make(chan struct{})

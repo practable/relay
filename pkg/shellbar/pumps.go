@@ -74,7 +74,7 @@ func (c *Client) readPump() {
 			c.hub.broadcast <- message{sender: *c, data: data, mt: mt}
 
 			log.WithFields(log.Fields{"topic": c.topic, "size": size}).Tracef("%s: broadacast %d-byte message to topic %s", id, size, c.topic)
-
+			c.stats.tx.mu.Lock()
 			t := time.Now()
 			if c.stats.tx.ns.Count() > 0 {
 				c.stats.tx.ns.Add(float64(t.UnixNano() - c.stats.tx.last.UnixNano()))
@@ -83,6 +83,7 @@ func (c *Client) readPump() {
 			}
 			c.stats.tx.last = t
 			c.stats.tx.size.Add(float64(len(data)))
+			c.stats.tx.mu.Unlock()
 
 		} else {
 			log.WithFields(log.Fields{"topic": c.topic, "size": size}).Tracef("%s: ignored %d-byte message intended for broadcast to topic %s", id, size, c.topic)
@@ -133,6 +134,8 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 
 				// don't queue chunks; makes reading JSON objects on the host connectAction channel fail if two connects happen together
 
+				c.stats.rx.mu.Lock()
+
 				t := time.Now()
 				if c.stats.rx.ns.Count() > 0 {
 					c.stats.rx.ns.Add(float64(t.UnixNano() - c.stats.rx.last.UnixNano()))
@@ -141,6 +144,8 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				}
 				c.stats.rx.last = t
 				c.stats.rx.size.Add(float64(size))
+
+				c.stats.rx.mu.Unlock()
 
 				if err := w.Close(); err != nil {
 					return

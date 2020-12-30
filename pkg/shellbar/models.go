@@ -138,6 +138,8 @@ type Frames struct {
 	size *welford.Stats
 
 	ns *welford.Stats
+
+	mu *sync.RWMutex
 }
 
 // messages will be wrapped in this struct for muxing
