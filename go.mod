@@ -3,6 +3,7 @@ module github.com/timdrysdale/relay
 go 1.14
 
 require (
+	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/eclesh/welford v0.0.0-20150116075914-eec62615b1f0
@@ -13,13 +14,13 @@ require (
 	github.com/go-openapi/spec v0.20.0
 	github.com/go-openapi/strfmt v0.19.11
 	github.com/go-openapi/swag v0.19.12
-	github.com/go-openapi/validate v0.19.15
+	github.com/go-openapi/validate v0.20.0
 	github.com/gobuffalo/packr v1.30.1 // indirect
 	github.com/gobuffalo/packr/v2 v2.5.1
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.0.4
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.1.3
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/jessevdk/go-flags v1.4.0
@@ -43,7 +44,7 @@ require (
 	github.com/timdrysdale/crossbar v0.2.1
 	github.com/timdrysdale/reconws v0.0.0-20191012131359-34f25fee9e0e
 	github.com/timdrysdale/vw v0.0.1
-	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
+	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 )
