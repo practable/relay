@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: apt update -y -qq && apt install -y -qq libsnmp-dev gcc libc-dev
+        run: sudo apt update -y -qq && sudo apt install -y -qq libsnmp-dev gcc libc-dev
       - name: Install Go
         uses: actions/setup-go@v2.1.3
         with:
