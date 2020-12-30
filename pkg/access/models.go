@@ -1,7 +1,6 @@
 package access
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/timdrysdale/relay/pkg/ttlcode"
@@ -40,37 +39,6 @@ func getScopesForPrefix(prefix string) []string {
 	}
 
 	return scopes
-}
-
-// isValidScopesFor returns true if one or more of the supplied
-// scopes is an allowed scope for paths with the prefix
-func isValidScopesFor(prefix string, scopes []string) bool {
-
-	allowedScopes := getScopesForPrefix(prefix)
-
-	for _, scope := range scopes {
-		for _, allowed := range allowedScopes {
-			if scope == allowed {
-				return true
-			}
-		}
-	}
-
-	return false
-
-}
-
-func checkScopesForPath(path string, scopes []string) error {
-
-	prefix := getPrefixFromPath(path)
-
-	allowedScopes := getScopesForPrefix(prefix)
-
-	if !isValidScopesFor(prefix, scopes) {
-		return fmt.Errorf("path %s has prefix %s allowing scopes %v but none found in %v", path, prefix, allowedScopes, scopes)
-	}
-
-	return nil
 }
 
 func getPrefixFromPath(path string) string {

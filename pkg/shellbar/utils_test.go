@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -58,22 +57,6 @@ func suppressLog() {
 
 func displayLog() {
 	log.SetOutput(os.Stdout)
-}
-
-func traceLog() {
-	log.SetLevel(log.TraceLevel)
-	log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
-}
-
-func debug(debug bool) func() {
-
-	if debug {
-		traceLog()
-		return func() {}
-	} else {
-		suppressLog()
-		return displayLog
-	}
 }
 
 func TestGetConnectionTypeFromPath(t *testing.T) {

@@ -27,14 +27,6 @@ import (
 	"github.com/timdrysdale/relay/pkg/relay"
 )
 
-var testAuthToken string = "some.test.token"
-
-func init() {
-
-	log.SetLevel(log.PanicLevel)
-
-}
-
 func makeTestToken(audience, secret string, ttl int64) (string, error) {
 
 	var claims permission.Token

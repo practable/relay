@@ -16,7 +16,6 @@
 package shellaccess
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"sync"
@@ -243,14 +242,4 @@ func Token(audience, ct, topic, secret string, scopes []string, iat, nbf, exp in
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
 
-}
-
-func pretty(t interface{}) string {
-
-	json, err := json.MarshalIndent(t, "", "\t")
-	if err != nil {
-		return ""
-	}
-
-	return string(json)
 }

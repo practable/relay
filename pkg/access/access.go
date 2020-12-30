@@ -1,7 +1,6 @@
 package access
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"sync"
@@ -154,14 +153,4 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 
 		return token, nil
 	}
-}
-
-func pretty(t interface{}) string {
-
-	json, err := json.MarshalIndent(t, "", "\t")
-	if err != nil {
-		return ""
-	}
-
-	return string(json)
 }
