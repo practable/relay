@@ -111,13 +111,13 @@ func newConnection(ctx context.Context, local, remote string) {
 			case <-ctx.Done():
 				return
 			case data, ok := <-shell.In:
-				log.WithFields(log.Fields{"to": local, "from": remote, "msg": string(data)}).Debugf("%s: GOT %d-byte message FROM SHELL", id, len(data))
+				log.WithFields(log.Fields{"to": local, "from": remote, "size": len(data)}).Debugf("%s: GOT %d-byte message FROM SHELL", id, len(data))
 				if !ok {
 					return
 				}
 				select {
 				case unique.Out <- reconws.WsMessage{Data: data, Type: websocket.BinaryMessage}:
-					log.WithFields(log.Fields{"to": remote, "from": local, "msg": string(data)}).Debugf("%s: SENT %d-byte message TO RELAY", id, len(data))
+					log.WithFields(log.Fields{"to": remote, "from": local, "size": len(data)}).Debugf("%s: SENT %d-byte message TO RELAY", id, len(data))
 				case <-time.After(timeout):
 					log.Error("timeout sending message ")
 					return
@@ -136,13 +136,13 @@ func newConnection(ctx context.Context, local, remote string) {
 			case <-ctx.Done():
 				return
 			case msg, ok := <-unique.In:
-				log.WithFields(log.Fields{"to": local, "from": remote, "msg": string(msg.Data)}).Debugf("%s: GOT %d-byte message FROM RELAY", id, len(msg.Data))
+				log.WithFields(log.Fields{"to": local, "from": remote, "size": len(msg.Data)}).Debugf("%s: GOT %d-byte message FROM RELAY", id, len(msg.Data))
 				if !ok {
 					return
 				}
 				select {
 				case shell.Out <- msg.Data:
-					log.WithFields(log.Fields{"to": local, "from": remote, "msg": string(msg.Data)}).Debugf("%s: SENT %d-byte Message TO SHELL", id, len(msg.Data))
+					log.WithFields(log.Fields{"to": local, "from": remote, "size": len(msg.Data)}).Debugf("%s: SENT %d-byte Message TO SHELL", id, len(msg.Data))
 				case <-time.After(timeout):
 
 					log.Error("timeout sending message ")

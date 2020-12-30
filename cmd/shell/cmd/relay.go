@@ -77,7 +77,7 @@ websocket connections are reverse proxied to the correct instance).
 			fmt.Printf("Access port: %d for %s\nRelay port: %d for %s\n", accessPort, audience, relayPort, target)
 			log.SetReportCaller(true)
 			log.SetFormatter(&log.TextFormatter{})
-			log.SetLevel(log.TraceLevel)
+			log.SetLevel(log.InfoLevel)
 			log.SetOutput(os.Stdout)
 
 		} else {
