@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/eclesh/welford v0.0.0-20150116075914-eec62615b1f0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-openapi/errors v0.19.9
@@ -27,6 +28,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/ory/viper v1.7.5
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/satori/go.uuid v1.2.0
