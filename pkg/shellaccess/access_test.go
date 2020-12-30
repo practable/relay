@@ -30,6 +30,26 @@ func TestGetPrefixFromPath(t *testing.T) {
 
 }
 
+func TestTokenGeneration(t *testing.T) {
+
+	iat := int64(1609329233)
+	nbf := int64(1609329233)
+	exp := int64(1609330233)
+	audience := "https://relay-access.example.io"
+	ct := "shell"
+	topic := "f7558de0-cb0d-4cb5-9518-ac71d044800b"
+	scopes := []string{"host"}
+	secret := "somesecret"
+
+	expected := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b3BpYyI6ImY3NTU4ZGUwLWNiMGQtNGNiNS05NTE4LWFjNzFkMDQ0ODAwYiIsInByZWZpeCI6InNoZWxsIiwic2NvcGVzIjpbImhvc3QiXSwiYXVkIjoiaHR0cHM6Ly9yZWxheS1hY2Nlc3MuZXhhbXBsZS5pbyIsImV4cCI6MTYwOTMzMDIzMywiaWF0IjoxNjA5MzI5MjMzLCJuYmYiOjE2MDkzMjkyMzN9.fAuyD3buu1XWV8qLojEDTImZf_IrJXEu5g3oziKbZbY"
+
+	bearer, err := Token(audience, ct, topic, secret, scopes, iat, nbf, exp)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, bearer)
+
+}
+
 func TestAPI(t *testing.T) {
 
 	debug := true

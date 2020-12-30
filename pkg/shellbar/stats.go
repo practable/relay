@@ -101,7 +101,7 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 				continue
 			}
 
-		case <-time.After(5 * time.Second):
+		case <-time.After(60 * time.Second):
 			log.Trace("StatsReporter routine send...")
 		}
 
