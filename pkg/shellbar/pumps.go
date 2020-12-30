@@ -131,16 +131,7 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 
 				log.WithFields(log.Fields{"topic": c.topic, "size": size}).Tracef("%s: wrote %d-byte message from topic %s", id, size, c.topic)
 
-				// Add queued chunks to the current websocket message, without delimiter.
-				// TODO check what impact, if any, this has on jsmpeg memory requirements
-				// when crossbar is loaded enough to cause message queuing
-				// TODO benchmark effect of loading on message queuing
-				n := len(c.send)
-				for i := 0; i < n; i++ {
-					followOnMessage := <-c.send
-					w.Write(followOnMessage.data)
-					size += len(followOnMessage.data)
-				}
+				// don't queue chunks; makes reading JSON objects on the host connectAction channel fail if two connects happen together
 
 				t := time.Now()
 				if c.stats.rx.ns.Count() > 0 {

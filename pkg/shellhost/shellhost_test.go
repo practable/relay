@@ -27,12 +27,11 @@ import (
 	"github.com/timdrysdale/relay/pkg/tcpconnect"
 )
 
-func TestShellhost(t *testing.T) {
+func init() {
 
-	// Setup logging
-
-	debug := false
+	debug := true
 	if debug {
+		log.SetReportCaller(true)
 		log.SetLevel(log.TraceLevel)
 		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
@@ -42,6 +41,11 @@ func TestShellhost(t *testing.T) {
 		logignore := bufio.NewWriter(&ignore)
 		log.SetOutput(logignore)
 	}
+}
+
+func TestShellhost(t *testing.T) {
+
+	// Setup logging
 
 	timeout := 100 * time.Millisecond
 
@@ -128,6 +132,7 @@ func TestShellhost(t *testing.T) {
 	go c1.ReconnectAuth(ctx, clientURI, clientBearer)
 
 	// Send messages, get echos...
+	time.Sleep(3 * time.Second) //give shellhost a chance to make new connections
 
 	time.Sleep(timeout)
 	time.Sleep(timeout)
@@ -150,7 +155,7 @@ func TestShellhost(t *testing.T) {
 	time.Sleep(timeout)
 
 	select {
-	case <-time.After(10 * time.Second):
+	case <-time.After(timeout):
 		t.Fatal("timeout")
 	case msg, ok := <-c0.In:
 		assert.True(t, ok)
@@ -158,33 +163,32 @@ func TestShellhost(t *testing.T) {
 		t.Log("TestConnectToLocalShell...PASS")
 	}
 
-	/*
-		select {
-		case <-time.After(timeout):
-		case <-c1.In:
-			t.Fatal("unexpected")
-		}
+	select {
+	case <-time.After(timeout):
+	case <-c1.In:
+		t.Fatal("unexpected")
+	}
 
-		data1 := []byte("foo")
-		select {
-		case <-time.After(timeout):
-			t.Fatal("timeout")
-		case c1.Out <- reconws.WsMessage{Data: data1, Type: websocket.BinaryMessage}:
-		}
+	data1 := []byte("foo")
+	select {
+	case <-time.After(timeout):
+		t.Fatal("timeout")
+	case c1.Out <- reconws.WsMessage{Data: data1, Type: websocket.BinaryMessage}:
+	}
 
-		select {
-		case <-time.After(timeout):
-			t.Fatal("timeout")
-		case msg, ok := <-c1.In:
-			assert.True(t, ok)
-			assert.Equal(t, data1, msg)
-		}
+	select {
+	case <-time.After(timeout):
+		t.Fatal("timeout")
+	case msg, ok := <-c1.In:
+		assert.True(t, ok)
+		assert.Equal(t, data1, msg.Data)
+	}
 
-		select {
-		case <-time.After(timeout):
-		case <-c0.In:
-			t.Fatal("unexpected")
-		}*/
+	select {
+	case <-time.After(timeout):
+	case <-c0.In:
+		t.Fatal("unexpected")
+	}
 
 	// while connected, get stats
 	scopes = []string{"stats"}

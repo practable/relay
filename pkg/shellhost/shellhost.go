@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/reconws"
@@ -25,6 +26,10 @@ import (
 // connection by a shellbar.ConnectionAction
 func Shellhost(ctx context.Context, local, remote, token string) {
 
+	id := "shellhost.Shellhost()"
+
+	log.WithFields(log.Fields{"local": local, "remote": remote}).Infof("%s: STARTING", id)
+
 	manager := reconws.New()
 	go manager.ReconnectAuth(ctx, remote, token)
 
@@ -34,21 +39,22 @@ func Shellhost(ctx context.Context, local, remote, token string) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Trace("parent context cancelled; shellhost shutting down")
+			log.Tracef("%s: about to shut down because context cancelled", id)
 			for _, cancel := range connections {
 				cancel()
 			}
-			log.Debug("shellhost done")
+			log.Debugf("%s: shutdown because context cancelled", id)
 			return
 
 		case msg, ok := <-manager.In:
-			log.WithField("msg", string(msg.Data)).Trace("shellhost received manage message")
+			log.WithField("msg", string(msg.Data)).Debugf("%s: message received on manager.In", id)
+
 			if !ok {
-				log.Fatal("manager.In closed unexpectedly; shellhost shutting down")
+				log.Fatalf("%s: channel manager.In closed unexpectedly - shutting down", id)
 				for _, cancel := range connections {
 					cancel()
 				}
-				log.Debug("shellhost done")
+				log.Debugf("%s: shutdown because manager.In closed unexpectedly", id)
 				return
 			}
 
@@ -66,30 +72,38 @@ func Shellhost(ctx context.Context, local, remote, token string) {
 			case "connect":
 				uCtx, uCancel := context.WithCancel(ctx)
 				connections[ca.UUID] = uCancel
-				log.WithField("uri", ca.URI).Debug("shellhost started new connection")
+				log.WithFields(log.Fields{"local": local, "uri": ca.URI, "uuid": ca.UUID}).Infof("%s: started new connection", id)
 				go newConnection(uCtx, local, ca.URI)
 
 			case "disconnect":
-				log.WithField("uri", ca.URI).Debug("shellhost disconnecting")
 				uCancel, ok := connections[ca.UUID]
 				if !ok {
+					log.WithFields(log.Fields{"local": local, "uri": ca.URI, "uuid": ca.UUID}).Warnf("%s: can't stop non-existent connection; ignoring", id)
 					continue
 				}
+				log.WithFields(log.Fields{"local": local, "uri": ca.URI, "uuid": ca.UUID}).Infof("%s: stopping existing connection", id)
 				uCancel()
 			}
 		}
 	}
+
 }
 
 func newConnection(ctx context.Context, local, remote string) {
 
 	timeout := 1 * time.Second
 
+	id := "shellhost.newConnection(" + uuid.New().String()[0:6] + ")"
+
+	log.WithFields(log.Fields{"local": local, "remote": remote}).Infof("%s: STARTING", id)
+
 	unique := reconws.New()
 	go unique.Dial(ctx, remote)
+	log.WithFields(log.Fields{"to": remote}).Debugf("%s: started unique connection to relay", id)
 
 	shell := tcpconnect.New()
 	go shell.Dial(ctx, local)
+	log.WithFields(log.Fields{"to": local}).Debugf("%s: started unique connection to sshd", id)
 
 	go func() {
 		for {
@@ -97,11 +111,13 @@ func newConnection(ctx context.Context, local, remote string) {
 			case <-ctx.Done():
 				return
 			case data, ok := <-shell.In:
+				log.WithFields(log.Fields{"to": local, "from": remote, "msg": string(data)}).Debugf("%s: GOT %d-byte message FROM SHELL", id, len(data))
 				if !ok {
 					return
 				}
 				select {
 				case unique.Out <- reconws.WsMessage{Data: data, Type: websocket.BinaryMessage}:
+					log.WithFields(log.Fields{"to": remote, "from": local, "msg": string(data)}).Debugf("%s: SENT %d-byte message TO RELAY", id, len(data))
 				case <-time.After(timeout):
 					log.Error("timeout sending message ")
 					return
@@ -120,12 +136,13 @@ func newConnection(ctx context.Context, local, remote string) {
 			case <-ctx.Done():
 				return
 			case msg, ok := <-unique.In:
-				log.WithFields(log.Fields{"uri": local, "len": len(msg.Data)}).Trace("newConnection got message from relay")
+				log.WithFields(log.Fields{"to": local, "from": remote, "msg": string(msg.Data)}).Debugf("%s: GOT %d-byte message FROM RELAY", id, len(msg.Data))
 				if !ok {
 					return
 				}
 				select {
 				case shell.Out <- msg.Data:
+					log.WithFields(log.Fields{"to": local, "from": remote, "msg": string(msg.Data)}).Debugf("%s: SENT %d-byte Message TO SHELL", id, len(msg.Data))
 				case <-time.After(timeout):
 
 					log.Error("timeout sending message ")
@@ -137,5 +154,5 @@ func newConnection(ctx context.Context, local, remote string) {
 	}()
 
 	<-ctx.Done()
-	log.WithField("uri", local).Trace("newConnection is done")
+	log.WithFields(log.Fields{"local": local, "remote": remote}).Infof("%s: DONE", id)
 }

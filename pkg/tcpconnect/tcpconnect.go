@@ -191,7 +191,7 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
 
 			if err != nil {
 				log.WithFields(log.Fields{"uri": uri, "err": err.Error()}).Warnf("%s: failed to accept connection because %s", id, err.Error())
-				continue
+				return //the context is probably cancelled.
 			}
 			// Handle the connection in a new goroutine.
 			// The loop then returns to accepting, so that
@@ -254,6 +254,7 @@ func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
 				log.Debugf("%s: wrote %d-byte message to conn", id, len(data))
 			case <-ctx.Done():
 				log.Debugf("%s: write pump context cancelled", id)
+				return
 				//put this option here to avoid spinning our wheels
 			}
 		}
@@ -317,9 +318,8 @@ func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
 			if err == nil && n > 0 {
 				c.In <- frame
 				log.Debugf("%s: wrote %d-byte message to channel", id, n)
-			} else {
-				log.Warnf("%s: error writing frame buffer to channel %s", id, err.Error())
 			}
+			// don't report errors - just an empty buffer which is not a problem....
 
 		case <-ctx.Done():
 			log.Debugf("%s: read pump context cancelled", id)
