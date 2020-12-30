@@ -3,6 +3,7 @@ package crossbar
 import (
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/eclesh/welford"
@@ -140,8 +141,8 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	if ct == Session {
 		// initialise statistics
-		tx := &Frames{size: welford.New(), ns: welford.New()}
-		rx := &Frames{size: welford.New(), ns: welford.New()}
+		tx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
+		rx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
 		stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
 
 		client := &Client{hub: hub,

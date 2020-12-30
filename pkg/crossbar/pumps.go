@@ -38,7 +38,7 @@ func (c *Client) readPump() {
 		if c.canWrite {
 
 			c.hub.broadcast <- message{sender: *c, data: data, mt: mt}
-
+			c.stats.tx.mu.Lock()
 			t := time.Now()
 			if c.stats.tx.ns.Count() > 0 {
 				c.stats.tx.ns.Add(float64(t.UnixNano() - c.stats.tx.last.UnixNano()))
@@ -47,7 +47,7 @@ func (c *Client) readPump() {
 			}
 			c.stats.tx.last = t
 			c.stats.tx.size.Add(float64(len(data)))
-
+			c.stats.tx.mu.Unlock()
 		}
 	}
 }
@@ -97,7 +97,7 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 					w.Write(followOnMessage.data)
 					size += len(followOnMessage.data)
 				}
-
+				c.stats.rx.mu.Lock()
 				t := time.Now()
 				if c.stats.rx.ns.Count() > 0 {
 					c.stats.rx.ns.Add(float64(t.UnixNano() - c.stats.rx.last.UnixNano()))
@@ -106,7 +106,7 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				}
 				c.stats.rx.last = t
 				c.stats.rx.size.Add(float64(size))
-
+				c.stats.rx.mu.Unlock()
 				if err := w.Close(); err != nil {
 					return
 				}
