@@ -1,4 +1,4 @@
-1/*
+/*
    Crossbar is a websocket relay
    Copyright (C) 2019 Timothy Drysdale <timothy.d.drysdale@gmail.com>
 
@@ -22,10 +22,12 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"runtime/pprof"
+	"strconv"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/timdrysdale/relay/pkg/access"
+	"github.com/timdrysdale/relay/pkg/relay"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -45,21 +47,40 @@ clientBufferLength (for each client's outgoing channel)
 */
 
 // rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "crossbar",
+var relayCmd = &cobra.Command{
+	Use:   "relay",
 	Short: "websocket relay with topics",
-	Long: `Crossbar is a websocket relay with topics set by the URL path, 
-and can handle binary and text messages.`,
+	Long: `Relay is a websocket relay with topics set by the URL path, 
+and can handle binary and text messages. Set parameters with environment
+variables, for example:
 
+export RELAY_ACCESSPORT=10002
+export RELAY_ACCESSFQDN=https://access.example.io
+export RELAY_RELAYPORT=10003
+export RELAY_RELAYFQDN=wss://relay-access.example.io
+export RELAY_SECRET=somesecret
+export RELAY_DEVELOPMENT=true
+shell relay
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		addr := viper.GetString("listen")
+		viper.SetEnvPrefix("RELAY")
+		viper.AutomaticEnv()
+
+		viper.SetDefault("accessport", 8082)
+		viper.SetDefault("relayport", 8083)
+
+		accessPort := viper.GetInt("accessport")
+		relayPort := viper.GetInt("relayport")
 		development := viper.GetBool("development")
+		secret := viper.GetString("secret")
+		accessFQDN := viper.GetString("accessfqdn")
+		relayFQDN := viper.GetString("relayfqdn")
 
 		if development {
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
-			fmt.Printf("Listening on %v\n", addr)
+			fmt.Printf("Access port: %d for %s\nRelay port: %d for %s\n", accessPort, accessFQDN, relayPort, relayFQDN)
 			log.SetFormatter(&log.TextFormatter{})
 			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)
@@ -79,15 +100,6 @@ and can handle binary and text messages.`,
 
 		}
 
-		if cpuprofile != "" {
-			f, err := os.Create(cpuprofile)
-			if err != nil {
-				log.Fatal(err)
-			}
-			pprof.StartCPUProfile(f)
-			defer pprof.StopCPUProfile()
-		}
-
 		var wg sync.WaitGroup
 
 		closed := make(chan struct{})
@@ -104,44 +116,18 @@ and can handle binary and text messages.`,
 			}
 		}()
 
-		config := Config{
-			Addr:     viper.GetString("listen"),
-			Secret:   viper.GetString("secret"),
-			Audience: viper.GetString("audience"),
-		}
+		audience := accessFQDN + ":" + strconv.Itoa(accessPort)
+		target := relayFQDN + ":" + strconv.Itoa(relayPort)
 
 		wg.Add(1)
 
-		go crossbar(config, closed, &wg)
+		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
 
 		wg.Wait()
 
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-// init - specify args/flags
 func init() {
-	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&listen, "listen", "127.0.0.1:8080", "<ip>:<port> to listen on (default is 127.0.0.1:8080)")
-	rootCmd.PersistentFlags().Int64Var(&bufferSize, "buffer", 32768, "bufferSize in bytes (default is 32,768)")
-	rootCmd.PersistentFlags().StringVar(&logFile, "log", "", "log file (default is STDOUT)")
-	rootCmd.PersistentFlags().StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to file")
-	rootCmd.PersistentFlags().BoolVar(&development, "dev", false, "development environment")
-	rootCmd.PersistentFlags().StringVar(&secret, "secret", "", "set a secret to enable jwt authentication")
-	rootCmd.PersistentFlags().StringVar(&audience, "https://localhost", "", "set the root FQDN we use to check the jwt audience (n.b. aud must contain the routing too)")
-}
-
-// initConfig - no config file; use ENV variables where available e.g. export CROSSBAR_LISTEN=127.0.0.1:8081
-func initConfig() {
-	viper.SetEnvPrefix("CROSSBAR")
-	viper.AutomaticEnv() // read in environment variables that match
+	rootCmd.AddCommand(relayCmd)
 }

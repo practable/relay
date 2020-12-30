@@ -18,7 +18,9 @@ TODO.md
 *.out
 
 # binaries
-/cmd/shell/shell
+cmd/shell/shell
+cmd/session/session
+
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
