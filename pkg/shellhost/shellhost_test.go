@@ -43,7 +43,7 @@ func init() {
 	}
 }
 
-func TestShellhost(t *testing.T) {
+func TestShellHost(t *testing.T) {
 
 	// Setup logging
 
@@ -104,7 +104,7 @@ func TestShellhost(t *testing.T) {
 	hostBearer, err := hostToken.SignedString([]byte(secret))
 	assert.NoError(t, err)
 
-	go Shellhost(ctx, "localhost"+sshduri, shellaccessURI+"/shell/"+session, hostBearer)
+	go Host(ctx, "localhost"+sshduri, shellaccessURI+"/shell/"+session, hostBearer)
 
 	time.Sleep(time.Second)
 	time.Sleep(timeout)

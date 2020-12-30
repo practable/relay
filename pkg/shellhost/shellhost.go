@@ -24,7 +24,7 @@ import (
 // Shellhost connects to remote relay, and makes a new connection
 // to local (localhost:{port}) every time it is alerted to a new
 // connection by a shellbar.ConnectionAction
-func Shellhost(ctx context.Context, local, remote, token string) {
+func Host(ctx context.Context, local, remote, token string) {
 
 	id := "shellhost.Shellhost()"
 
