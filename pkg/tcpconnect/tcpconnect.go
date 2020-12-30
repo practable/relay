@@ -100,7 +100,7 @@ func (c *TCPconnect) Dial(ctx context.Context, uri string) error {
 
 	log.WithField("To", uri).Debugf("%s: connected to %s", id, uri)
 
-	return c.handleConn(ctx, conn)
+	return c.HandleConn(ctx, conn)
 }
 
 // Listen returns new conns over a channel for use by other handlers
@@ -144,7 +144,7 @@ func EchoHandler(ctx context.Context, c *TCPconnect) {
 
 	id := "tcpconnect.EchoHandler(" + c.ID + ")"
 
-	go c.handleConn(ctx, *c.Conn)
+	go c.HandleConn(ctx, *c.Conn)
 
 	go func(ctx context.Context, c *TCPconnect) {
 
@@ -202,7 +202,7 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
 
 			log.WithField("uri", uri).Debugf("%s: got a new connection (%s)", id, listener.ID)
 
-			go listener.handleConn(ctx, conn)
+			go listener.HandleConn(ctx, conn)
 
 			go func(ctx context.Context, c *TCPconnect) {
 				id := "tcpconnect.Echo.Connector(" + c.ID + ")"
@@ -229,7 +229,7 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
 	return nil
 }
 
-func (c *TCPconnect) handleConn(ctx context.Context, conn net.Conn) error {
+func (c *TCPconnect) HandleConn(ctx context.Context, conn net.Conn) error {
 
 	id := "tcpconnect.handleConn(" + c.ID + ")"
 
