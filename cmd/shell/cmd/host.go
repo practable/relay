@@ -58,7 +58,7 @@ shell host
 			fmt.Printf("Local port: %d for %s with %d-byte token\n", localPort, relaySession, len(token))
 			log.SetReportCaller(true)
 			log.SetFormatter(&log.TextFormatter{})
-			log.SetLevel(log.TraceLevel)
+			log.SetLevel(log.InfoLevel)
 			log.SetOutput(os.Stdout)
 
 		} else {

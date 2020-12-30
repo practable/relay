@@ -58,7 +58,7 @@ shell client
 			fmt.Println("Development mode - logging output to stdout")
 			fmt.Printf("Local port: %d for %s with %d-byte token\n", localPort, relaySession, len(token))
 			log.SetFormatter(&log.TextFormatter{})
-			log.SetLevel(log.DebugLevel)
+			log.SetLevel(log.InfoLevel)
 			log.SetOutput(os.Stdout)
 
 		} else {
