@@ -41,6 +41,9 @@ shell client
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		viper.SetEnvPrefix("SHELLCLIENT")
+		viper.AutomaticEnv()
+
 		viper.SetDefault("localport", 8082)
 		localPort := viper.GetInt("localport")
 
@@ -107,6 +110,4 @@ shell client
 
 func init() {
 	rootCmd.AddCommand(clientCmd)
-	viper.SetEnvPrefix("SHELLCLLIENT")
-	viper.AutomaticEnv()
 }

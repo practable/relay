@@ -43,6 +43,10 @@ bearer=$(shell token)
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
+
+		viper.SetEnvPrefix("SHELLTOKEN")
+		viper.AutomaticEnv()
+
 		lifetime := viper.GetInt64("lifetime")
 		role := viper.GetString("role")
 		audience := viper.GetString("audience")
@@ -123,6 +127,5 @@ bearer=$(shell token)
 
 func init() {
 	rootCmd.AddCommand(tokenCmd)
-	viper.SetEnvPrefix("SHELLTOKEN")
-	viper.AutomaticEnv()
+
 }

@@ -205,7 +205,7 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 		})
 
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Info(err.Error())
+			log.WithFields(log.Fields{"error": err, "token": bearerToken}).Info(err.Error())
 			return nil, fmt.Errorf("error reading token was %s", err.Error())
 		}
 

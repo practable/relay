@@ -88,6 +88,16 @@ type Client struct {
 	// hostAlertUUID is the reference we sent to the host for our unique connection
 	// store it so we can tell it which connection we are closing.
 	hostAlertUUID string
+
+	// prevent clients from sending before host has sent something, which
+	// is what you need for server speaks first
+	// some clients rush ahead and send their ssh identification before
+	// receiving the hosts, so the host never gets it because they are
+	// still connecting ....
+	mustWaitToSend bool
+
+	// closed once we've received something, or immediately if !mustWaitToSend
+	clearToSend chan struct{}
 }
 
 type RxTx struct {

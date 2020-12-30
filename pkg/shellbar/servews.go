@@ -135,17 +135,19 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
 
 		client := &Client{hub: hub,
-			conn:          conn,
-			send:          make(chan message, 256),
-			topic:         topic + token.TopicSalt,
-			stats:         stats,
-			name:          uuid.New().String(),
-			userAgent:     r.UserAgent(),
-			remoteAddr:    r.Header.Get("X-Forwarded-For"),
-			audience:      config.Audience,
-			canRead:       canRead,
-			canWrite:      canWrite,
-			hostAlertUUID: uuid.New().String(),
+			conn:           conn,
+			send:           make(chan message, 256),
+			topic:          topic + token.TopicSalt,
+			stats:          stats,
+			name:           uuid.New().String(),
+			userAgent:      r.UserAgent(),
+			remoteAddr:     r.Header.Get("X-Forwarded-For"),
+			audience:       config.Audience,
+			canRead:        canRead,
+			canWrite:       canWrite,
+			hostAlertUUID:  uuid.New().String(),
+			mustWaitToSend: token.AlertHost,
+			clearToSend:    make(chan struct{}),
 		}
 		client.hub.register <- client
 
