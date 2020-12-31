@@ -102,7 +102,10 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 
 	go func() {
 		<-closed
-		server.Shutdown()
+		err := server.Shutdown()
+		if err != nil {
+			log.Errorf("Server shudown error %s", err.Error())
+		}
 	}()
 
 	//serve API

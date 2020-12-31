@@ -31,7 +31,7 @@ func TestGetPrefixFromPath(t *testing.T) {
 
 func TestAPI(t *testing.T) {
 
-	debug := true
+	debug := false
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -101,9 +101,6 @@ func TestAPI(t *testing.T) {
 	var p operations.SessionOKBody
 	err = json.Unmarshal(body, &p)
 	assert.NoError(t, err)
-
-	t.Log(p.URI)
-	t.Log(len("wss://relay.example.io/session/123?code="))
 
 	expected := "wss://relay.example.io/session/123?code="
 

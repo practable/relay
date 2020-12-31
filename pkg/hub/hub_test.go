@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/counter"
 )
 
@@ -198,7 +199,9 @@ func TestSendLargeMessage(t *testing.T) {
 
 	content := make([]byte, 1024)
 
-	rand.Read(content)
+	n, err := rand.Read(content)
+	assert.NoError(t, err)
+	assert.Equal(t, len(content), n)
 
 	m := &Message{Data: content, Sender: *c1, Sent: time.Now(), Type: 0}
 
@@ -303,10 +306,21 @@ func TestSendManyMessages(t *testing.T) {
 	contentC := make([]byte, 1024*1024*10)
 	contentD := make([]byte, 1024*1024*10)
 
-	rand.Read(contentA)
-	rand.Read(contentB)
-	rand.Read(contentC)
-	rand.Read(contentD)
+	n, err := rand.Read(contentA)
+	assert.NoError(t, err)
+	assert.Equal(t, len(contentA), n)
+
+	n, err = rand.Read(contentB)
+	assert.NoError(t, err)
+	assert.Equal(t, len(contentB), n)
+
+	n, err = rand.Read(contentC)
+	assert.NoError(t, err)
+	assert.Equal(t, len(contentC), n)
+
+	n, err = rand.Read(contentD)
+	assert.NoError(t, err)
+	assert.Equal(t, len(contentD), n)
 
 	mA := &Message{Data: contentA, Sender: *ca1, Sent: time.Now(), Type: 0}
 	mB := &Message{Data: contentB, Sender: *cb1, Sent: time.Now(), Type: 0}
@@ -413,10 +427,21 @@ func TestStats(t *testing.T) {
 	contentC := make([]byte, msgSize*2)
 	contentD := make([]byte, msgSize*1)
 
-	rand.Read(contentA)
-	rand.Read(contentB)
-	rand.Read(contentC)
-	rand.Read(contentD)
+	n, err := rand.Read(contentA)
+	assert.NoError(t, err)
+	assert.Equal(t, len(contentA), n)
+
+	n, err = rand.Read(contentB)
+	assert.NoError(t, err)
+	assert.Equal(t, len(contentB), n)
+
+	n, err = rand.Read(contentC)
+	assert.NoError(t, err)
+	assert.Equal(t, len(contentC), n)
+
+	n, err = rand.Read(contentD)
+	assert.NoError(t, err)
+	assert.Equal(t, len(contentD), n)
 
 	// note that we'd update time.Now() on each send in production
 	//mA := &Message{Data: contentA, Sender: *ca1, Sent: time.Now(), Type: 0}

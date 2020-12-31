@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"io"
 	"net"
 	"net/url"
@@ -65,7 +64,7 @@ func (c *TCPconnect) WithConn(conn *net.Conn) *TCPconnect {
 	return c
 }
 
-func (c *TCPconnect) Dial(ctx context.Context, uri string) error {
+func (c *TCPconnect) Dial(ctx context.Context, uri string) {
 
 	id := "tcpconnect.Dial(" + c.ID + ")"
 
@@ -73,7 +72,7 @@ func (c *TCPconnect) Dial(ctx context.Context, uri string) error {
 
 	if uri == "" {
 		log.Errorf("%s: Can't dial an empty Url", id)
-		return errors.New("Can't dial an empty Url")
+		return
 	}
 
 	// parse to check, dial with original string
@@ -81,7 +80,7 @@ func (c *TCPconnect) Dial(ctx context.Context, uri string) error {
 
 	if err != nil {
 		log.Errorf("%s: error with url %s of %s", id, uri, err.Error())
-		return err
+		return
 	}
 
 	// start dialing ....
@@ -93,18 +92,18 @@ func (c *TCPconnect) Dial(ctx context.Context, uri string) error {
 
 	if err != nil {
 		log.WithFields(log.Fields{"uri": uri, "error": err.Error()}).Errorf("%s: failed to dial %s because %s", id, uri, err.Error())
-		return err
+		return
 	}
 
 	defer conn.Close()
 
 	log.WithField("To", uri).Debugf("%s: connected to %s", id, uri)
 
-	return c.HandleConn(ctx, conn)
+	c.HandleConn(ctx, conn)
 }
 
 // Listen returns new conns over a channel for use by other handlers
-func (c *TCPconnect) Listen(ctx context.Context, uri string, handler func(context.Context, *TCPconnect)) error {
+func (c *TCPconnect) Listen(ctx context.Context, uri string, handler func(context.Context, *TCPconnect)) {
 
 	id := "tcpconnect.Listen(" + c.ID + ")"
 
@@ -114,7 +113,7 @@ func (c *TCPconnect) Listen(ctx context.Context, uri string, handler func(contex
 
 	if err != nil {
 		log.WithField("uri", uri).Debugf("%s: error connecting to %s because %s", id, uri, err.Error())
-		return err
+		return
 	}
 
 	defer l.Close()
@@ -196,7 +195,7 @@ func EchoHandler(ctx context.Context, c *TCPconnect) {
 
 }
 
-func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
+func (c *TCPconnect) Echo(ctx context.Context, uri string) {
 
 	id := "tcpconnect.Echo(" + c.ID + ")"
 
@@ -205,7 +204,8 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
 	l, err := lc.Listen(ctx, "tcp", uri)
 
 	if err != nil {
-		return err
+		log.WithFields(log.Fields{"uri": uri, "err": err.Error()}).Warnf("%s: failed to listener because %s", id, err.Error())
+		return
 	}
 
 	defer l.Close()
@@ -256,10 +256,9 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) error {
 	}(l)
 	<-ctx.Done()
 
-	return nil
 }
 
-func (c *TCPconnect) HandleConn(ctx context.Context, conn net.Conn) error {
+func (c *TCPconnect) HandleConn(ctx context.Context, conn net.Conn) {
 
 	id := "tcpconnect.handleConn(" + c.ID + ")"
 
@@ -280,7 +279,15 @@ func (c *TCPconnect) HandleConn(ctx context.Context, conn net.Conn) error {
 		for {
 			select {
 			case data := <-c.Out:
-				conn.Write(data)
+				n, err := conn.Write(data)
+
+				if err != nil {
+					log.Warnf("%s: error writing  %d-byte message to conn because %s", id, len(data), err.Error())
+				}
+				if n == len(data) {
+					log.Warnf("%s: wrote %d of %d byte message to conn", id, n, len(data))
+				}
+
 				log.Debugf("%s: wrote %d-byte message to conn", id, len(data))
 			case <-ctx.Done():
 				log.Debugf("%s: write pump context cancelled", id)
@@ -353,7 +360,7 @@ func (c *TCPconnect) HandleConn(ctx context.Context, conn net.Conn) error {
 
 		case <-ctx.Done():
 			log.Debugf("%s: read pump context cancelled", id)
-			return nil
+			return
 		}
 	}
 }

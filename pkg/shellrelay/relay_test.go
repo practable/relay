@@ -72,7 +72,7 @@ func TestRelay(t *testing.T) {
 
 	claims.IssuedAt = time.Now().Unix() - 1
 	claims.NotBefore = time.Now().Unix() - 1
-	claims.ExpiresAt = time.Now().Unix() + 5
+	claims.ExpiresAt = time.Now().Unix() + 30
 	claims.Audience = audience
 	claims.Topic = "123"
 	claims.ConnectionType = "shell"
@@ -89,6 +89,9 @@ func TestRelay(t *testing.T) {
 
 	h := reconws.New()
 	go h.ReconnectAuth(ctx, hostURI, hostBearer)
+
+	//hold until connected
+	h.Out <- reconws.WsMessage{Type: websocket.TextMessage}
 
 	// now connect a client
 	claims.Scopes = []string{"client"}
@@ -113,7 +116,11 @@ func TestRelay(t *testing.T) {
 	}
 
 	h1 := reconws.New()
-	go h1.Dial(ctx, ca.URI)
+
+	go func() {
+		err := h1.Dial(ctx, ca.URI)
+		assert.NoError(t, err)
+	}()
 
 	data := []byte("ping")
 	h1.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
@@ -141,7 +148,11 @@ func TestRelay(t *testing.T) {
 	}
 
 	h2 := reconws.New()
-	go h2.Dial(ctx, ca.URI)
+
+	go func() {
+		err := h2.Dial(ctx, ca.URI)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
