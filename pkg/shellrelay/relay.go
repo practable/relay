@@ -13,9 +13,7 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPo
 
 	var wg sync.WaitGroup
 
-	var cs *ttlcode.CodeStore
-
-	cs = ttlcode.NewDefaultCodeStore()
+	cs := ttlcode.NewDefaultCodeStore()
 
 	config := shellbar.Config{
 		Listen:    relayPort,

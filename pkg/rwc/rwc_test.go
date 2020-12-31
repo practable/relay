@@ -1030,13 +1030,13 @@ func TestSendMessageToChangingDestination(t *testing.T) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		for _ = range reply0 {
+		for range reply0 {
 		}
 
 	}()
 	go func() {
 		defer wg.Done()
-		for _ = range reply1 {
+		for range reply1 {
 		}
 
 	}()

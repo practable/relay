@@ -6,7 +6,7 @@ import (
 
 func getPrefixFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/([\\w\\%-]*)\\/")
+	re := regexp.MustCompile(`^\/([\w\%-]*)\/`)
 
 	matches := re.FindStringSubmatch(path)
 	if len(matches) < 2 {

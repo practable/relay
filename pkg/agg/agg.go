@@ -111,7 +111,7 @@ func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
 			}
 			// unregister clients from old feeds, if any
 			if _, ok := h.Rules[rule.Stream]; ok {
-				for client, _ := range h.Streams[rule.Stream] {
+				for client := range h.Streams[rule.Stream] {
 					for subClient := range h.SubClients[client] {
 						h.Hub.Unregister <- subClient.Client
 						close(subClient.Stopped)
@@ -122,7 +122,7 @@ func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
 			h.Rules[rule.Stream] = rule.Feeds
 			// register the clients to any feeds currently set by stream rule
 			if feeds, ok := h.Rules[rule.Stream]; ok {
-				for client, _ := range h.Streams[rule.Stream] {
+				for client := range h.Streams[rule.Stream] {
 					h.SubClients[client] = make(map[*SubClient]bool)
 					for _, feed := range feeds {
 						// create and store the subclients we will register with the hub
@@ -158,7 +158,7 @@ func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
 
 				// unregister clients from old feeds, if any
 				if _, ok := h.Rules[stream]; ok {
-					for client, _ := range h.Streams[stream] {
+					for client := range h.Streams[stream] {
 						for subClient := range h.SubClients[client] {
 							h.Hub.Unregister <- subClient.Client
 							close(subClient.Stopped)

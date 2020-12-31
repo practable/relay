@@ -90,7 +90,7 @@ var streamCmd = &cobra.Command{
 		channelSignal := make(chan os.Signal, 1)
 		signal.Notify(channelSignal, os.Interrupt)
 		go func() {
-			for _ = range channelSignal {
+			for range channelSignal {
 				close(app.Closed)
 				app.WaitGroup.Wait()
 				os.Exit(1)
