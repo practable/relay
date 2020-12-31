@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/agg"
 	"github.com/timdrysdale/relay/pkg/hub"
 	"github.com/timdrysdale/relay/pkg/rwc"
@@ -108,6 +109,10 @@ func (app *App) handleAdminMessage(msg []byte) ([]byte, error) {
 			case "add":
 				var rule rwc.Rule
 				err = json.Unmarshal(*cmd.Rule, &rule)
+				if err != nil {
+					log.WithField("rule", *cmd.Rule).Errorf("error adding destination because json error %s", err.Error())
+					break
+				}
 				rule.Stream = strings.TrimPrefix(rule.Stream, "/") //to match trimming we do in handleStreamAdd
 				app.Websocket.Add <- rule
 				reply, err = json.Marshal(rule)
@@ -132,8 +137,6 @@ func (app *App) handleAdminMessage(msg []byte) ([]byte, error) {
 				}
 			case "list":
 				switch cmd.Which {
-				case "":
-					err = errBadCommand
 				case "all":
 					reply, err = json.Marshal(app.Websocket.Rules)
 				default:
@@ -147,13 +150,15 @@ func (app *App) handleAdminMessage(msg []byte) ([]byte, error) {
 			case "add":
 				var rule agg.Rule
 				err = json.Unmarshal(*cmd.Rule, &rule)
+				if err != nil {
+					log.WithField("rule", *cmd.Rule).Errorf("error adding stream because json error %s", err.Error())
+					break
+				}
 				rule.Stream = strings.TrimPrefix(rule.Stream, "/") //to match trimming we do in handleStreamAdd
 				app.Hub.Add <- rule
 				reply, err = json.Marshal(rule)
 			case "delete":
 				switch cmd.Which {
-				case "":
-					err = errBadCommand
 				case "all":
 					app.Hub.Delete <- "deleteAll"
 					reply = []byte(`{"deleted":"deleteAll"}`)

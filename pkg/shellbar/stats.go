@@ -109,7 +109,7 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 
 		c.hub.mu.RLock()
 		for _, topic := range c.hub.clients {
-			for client, _ := range topic {
+			for client := range topic {
 
 				client.stats.tx.mu.RLock()
 

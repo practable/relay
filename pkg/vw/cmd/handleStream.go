@@ -36,7 +36,10 @@ func (app *App) handleStreamShow(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("content-type", "application/json")
-		w.Write(output)
+		_, err = w.Write(output)
+		if err != nil {
+			log.Errorln(err)
+		}
 	} else {
 		http.Error(w, "Stream not found", 404)
 		return
@@ -81,7 +84,10 @@ func (app *App) handleStreamAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorln(err)
+	}
 }
 
 func (app *App) handleStreamDelete(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +102,10 @@ func (app *App) handleStreamDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorln(err)
+	}
 }
 
 func (app *App) handleStreamDeleteAll(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +120,8 @@ func (app *App) handleStreamDeleteAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
-
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorln(err)
+	}
 }

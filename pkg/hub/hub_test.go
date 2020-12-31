@@ -159,7 +159,7 @@ func TestSendMessage(t *testing.T) {
 					t.Error("Message took longer than 1 millisecond, ", elapsed)
 				}
 				rxCount++
-				if bytes.Compare(msg.Data, content) != 0 {
+				if !bytes.Equal(msg.Data, content) {
 					t.Error("Wrong data in message")
 				}
 			case <-c3.Send:
@@ -228,7 +228,7 @@ COLLECT:
 				t.Error("Message took longer than 1 millisecond, size was ", len(msg.Data))
 			}
 			rxCount.Increment()
-			if bytes.Compare(msg.Data, content) != 0 {
+			if !bytes.Equal(msg.Data, content) {
 				t.Error("Wrong data in message")
 			}
 		case <-c3.Send:
@@ -622,7 +622,7 @@ COLLECT:
 	for {
 		select {
 		case msg := <-client.Send:
-			if bytes.Compare(msg.Data, content) != 0 {
+			if !bytes.Equal(msg.Data, content) {
 				t.Error("Wrong data in message", len(msg.Data), len(content))
 			} else {
 				counter.Increment()

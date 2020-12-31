@@ -90,6 +90,7 @@ func TestRelay(t *testing.T) {
 
 	// clientPing gets uri with code
 	req, err := http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err := client.Do(req)
@@ -103,6 +104,7 @@ func TestRelay(t *testing.T) {
 
 	// clientPong gets uri with code
 	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err = client.Do(req)
@@ -122,10 +124,17 @@ func TestRelay(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, ping.URI)
+	go func() {
+		err := s0.Dial(ctx, ping.URI)
+		assert.NoError(t, err)
+	}()
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, pong.URI)
+
+	go func() {
+		err := s1.Dial(ctx, pong.URI)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -160,6 +169,7 @@ func TestRelay(t *testing.T) {
 
 	// clientPing gets uri with code
 	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err = client.Do(req)
@@ -172,6 +182,7 @@ func TestRelay(t *testing.T) {
 
 	// clientPong gets uri with code
 	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err = client.Do(req)
@@ -187,9 +198,16 @@ func TestRelay(t *testing.T) {
 	time.Sleep(timeout)
 
 	ctx, cancel = context.WithCancel(context.Background())
-	go s0.Dial(ctx, strings.Replace(ping.URI, "123", "456", 1))
 
-	go s1.Dial(ctx, strings.Replace(pong.URI, "123", "456", 1))
+	go func() {
+		err := s0.Dial(ctx, strings.Replace(ping.URI, "123", "456", 1))
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		err := s1.Dial(ctx, strings.Replace(pong.URI, "123", "456", 1))
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 

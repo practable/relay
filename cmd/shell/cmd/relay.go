@@ -117,7 +117,7 @@ websocket connections are reverse proxied to the correct instance).
 		signal.Notify(c, os.Interrupt)
 
 		go func() {
-			for _ = range c {
+			for range c {
 				close(closed)
 				wg.Wait()
 				os.Exit(0)

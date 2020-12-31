@@ -154,6 +154,11 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 			}
 
 			req, err := http.NewRequest("POST", url, nil)
+			if err != nil {
+				log.WithField("error", err).Warnf("%s: failed to create request", id)
+				continue
+			}
+
 			req.Header.Add("Authorization", token)
 
 			resp, err := client.Do(req)

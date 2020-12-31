@@ -113,6 +113,7 @@ func TestAPI(t *testing.T) {
 	assert.NoError(t, err)
 
 	req, err = http.NewRequest("POST", audience+"/shell/123", nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err = client.Do(req)
@@ -182,7 +183,7 @@ func TestAPI(t *testing.T) {
 		assert.Equal(t, expected, p.URI[0:len(expected)])
 	}
 
-	re := regexp.MustCompile("wss:\\/\\/relay\\.example\\.io\\/shell\\/123\\/([\\w-\\%]*)\\?code=.*")
+	re := regexp.MustCompile(`wss:\/\/relay\.example\.io\/shell\/123\/([\w-\%]*)\?code=.*`)
 	matches := re.FindStringSubmatch(p.URI)
 	assert.Equal(t, 36, len(matches[1])) //length of a UUID
 

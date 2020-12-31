@@ -99,7 +99,7 @@ func (c *WsHandlerClient) readPump() {
 		mt, data, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Errorf("error: %v", err)
+				log.Tracef("unexpected error: %v", err)
 			}
 			break
 		}
@@ -156,8 +156,14 @@ func (c *WsHandlerClient) writePump(closed <-chan struct{}) {
 			m := len(c.Messages.Send)
 			for i := 0; i < m; i++ {
 				followOnMessage := <-c.Messages.Send
-				w.Write(followOnMessage.Data)
-				size += len(followOnMessage.Data)
+				n, err := w.Write(followOnMessage.Data)
+				if err != nil {
+					log.Errorf("writePump writing error: %v", err)
+				}
+				size += n
+				if n != size {
+					log.Errorf("writePump incomplete write %d of %d", n, size)
+				}
 			}
 
 			if err := w.Close(); err != nil {

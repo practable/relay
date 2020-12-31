@@ -121,6 +121,7 @@ func TestShellClient(t *testing.T) {
 	claims = permission.NewToken(shellaccessURI, "shell", session, scopes, begin, begin, end)
 	clientToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	clientBearer, err := clientToken.SignedString([]byte(secret))
+	assert.NoError(t, err)
 
 	go Client(ctx, clientPort, shellaccessURI+"/shell/"+session, clientBearer)
 
@@ -233,6 +234,7 @@ func TestShellClient(t *testing.T) {
 	claims = permission.NewToken(shellaccessURI, "shell", "stats", scopes, begin, begin, end)
 	statsToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	statsBearer, err := statsToken.SignedString([]byte(secret))
+	assert.NoError(t, err)
 
 	stats := reconws.New()
 	go stats.ReconnectAuth(ctx, shellaccessURI+"/shell/stats", statsBearer)
