@@ -96,10 +96,17 @@ func TestCrossbar(t *testing.T) {
 	code1 := cs.SubmitToken(token)
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(t, err)
+	}()
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -119,7 +126,10 @@ func TestCrossbar(t *testing.T) {
 	statsToken := MakeTestToken(audience, ct, "stats", scopes, 5)
 	statsCode := cs.SubmitToken(statsToken)
 	stats := reconws.New()
-	go stats.Dial(ctx, audience+"/"+ct+"/stats?code="+statsCode)
+	go func() {
+		err := stats.Dial(ctx, audience+"/"+ct+"/stats?code="+statsCode)
+		assert.NoError(t, err)
+	}()
 
 	//TODO send message, receive stats
 
@@ -170,8 +180,15 @@ func TestCrossbar(t *testing.T) {
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -195,8 +212,15 @@ func TestCrossbar(t *testing.T) {
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -233,8 +257,15 @@ func TestCrossbar(t *testing.T) {
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -272,8 +303,15 @@ func TestCrossbar(t *testing.T) {
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1) //connects to correct audience
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -298,8 +336,15 @@ func TestCrossbar(t *testing.T) {
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+"/"+ct+"/"+"notMySession?code="+code0) //connects to wrong session
-	go s1.Dial(ctx, audience+"/"+ct+"/"+"notMySession?code="+code1) //connects to (same) wrong session
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/notMySession?code="+code0)
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/notMySession?code="+code1)
+		assert.NoError(t, err)
+	}()
 
 	data = []byte("notgoingtogetthis")
 	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
@@ -326,8 +371,15 @@ func TestCrossbar(t *testing.T) {
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -423,10 +475,17 @@ func BenchmarkSmallMessage(b *testing.B) {
 	code1 := cs.SubmitToken(token)
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(b, err)
+	}()
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(b, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -521,15 +580,24 @@ func BenchmarkLargeMessage(b *testing.B) {
 	code1 := cs.SubmitToken(token)
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(b, err)
+	}()
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(b, err)
+	}()
 
 	time.Sleep(timeout)
 
 	data := make([]byte, 1024*1024)
-	rand.Read(data)
+
+	_, err = rand.Read(data)
+	assert.NoError(b, err)
 
 	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 
@@ -565,7 +633,8 @@ func BenchmarkLargeRandomPacketGeneration(b *testing.B) {
 	bar := make(chan reconws.WsMessage, 2)
 	for n := 0; n < b.N; n++ {
 		for m := 0; m < 100; m++ {
-			rand.Read(data)
+			_, err := rand.Read(data)
+			assert.NoError(b, err)
 			ping = reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 			bar <- ping
 			pong = <-bar
@@ -636,10 +705,17 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 	code1 := cs.SubmitToken(token)
 
 	s0 := reconws.New()
-	go s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+	go func() {
+		err := s0.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code0)
+		assert.NoError(b, err)
+	}()
 
 	s1 := reconws.New()
-	go s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+
+	go func() {
+		err := s1.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+code1)
+		assert.NoError(b, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -651,7 +727,8 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for m := 0; m < 100; m++ {
-			rand.Read(data)
+			_, err := rand.Read(data)
+			assert.NoError(b, err)
 			msgOut = reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 			s0.Out <- msgOut
 			// always record the result to prevent

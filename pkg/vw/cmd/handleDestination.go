@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/rwc"
 )
 
@@ -19,8 +20,10 @@ func (app *App) handleDestinationShowAll(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
-
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorf("writing error %s", err.Error())
+	}
 }
 
 // curl -X GET http://localhost:8888/api/destinations/01
@@ -34,7 +37,10 @@ func (app *App) handleDestinationShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorf("writing error %s", err.Error())
+	}
 
 }
 
@@ -74,7 +80,11 @@ func (app *App) handleDestinationAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorf("writing error %s", err.Error())
+	}
+
 }
 
 // curl -X DELETE http://localhost:8888/api/destinations/00

@@ -95,7 +95,10 @@ func TestShellbar(t *testing.T) {
 	codeHost := cs.SubmitToken(tokenHost)
 
 	h := reconws.New()
-	go h.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
+	go func() {
+		err := h.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
+		assert.NoError(t, err)
+	}()
 
 	// ensure we connect first by pausing until a dummy message sends
 	//  not needed in production - shellbar would be alive long before a client connects
@@ -116,7 +119,11 @@ func TestShellbar(t *testing.T) {
 	client0UniqueURI := audience + "/" + ct + "/" + clientTopic
 
 	ctx0, cancel0 := context.WithCancel(context.Background())
-	go c0.Dial(ctx0, client0UniqueURI+"?code="+codeClient0)
+
+	go func() {
+		err := c0.Dial(ctx0, client0UniqueURI+"?code="+codeClient0)
+		assert.NoError(t, err)
+	}()
 
 	var ca ConnectionAction
 
@@ -148,7 +155,10 @@ func TestShellbar(t *testing.T) {
 	// Host now dials the unqiue connection
 
 	h1 := reconws.New()
-	go h1.Dial(ctx, ca.URI)
+	go func() {
+		err := h1.Dial(ctx, ca.URI)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(timeout)
 
@@ -188,7 +198,11 @@ func TestShellbar(t *testing.T) {
 	statsToken := MakeTestToken(audience, ct, "stats", scopes, 30)
 	statsCode := cs.SubmitToken(statsToken)
 	stats := reconws.New()
-	go stats.Dial(ctx, audience+"/"+ct+"/stats?code="+statsCode)
+
+	go func() {
+		err := stats.Dial(ctx, audience+"/"+ct+"/stats?code="+statsCode)
+		assert.NoError(t, err)
+	}()
 
 	cmd, err := json.Marshal(StatsCommand{Command: "update"})
 
@@ -270,7 +284,10 @@ func TestShellbar(t *testing.T) {
 	codeHost = cs.SubmitToken(tokenHost)
 
 	hh := reconws.New()
-	go hh.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
+	go func() {
+		err := hh.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
+		assert.NoError(t, err)
+	}()
 
 	// ensure host connects first by pausing until a dummy message sends
 	//  not needed in production - shellbar would be alive long before a client connects
@@ -289,7 +306,10 @@ func TestShellbar(t *testing.T) {
 	c2 := reconws.New()
 	client2UniqueURI := audience + "/" + ct + "/" + clientTopic
 	c2uri := client2UniqueURI + "?code=" + codeClient2
-	go c2.Dial(ctx, c2uri)
+	go func() {
+		err := c2.Dial(ctx, c2uri)
+		assert.NoError(t, err)
+	}()
 
 	// construct second client token & connect
 	connectionID = "Bf6380c7-c444-4e99-aec7-11272a690bc5"
@@ -304,7 +324,10 @@ func TestShellbar(t *testing.T) {
 	client3UniqueURI := audience + "/" + ct + "/" + clientTopic
 
 	c3uri := client3UniqueURI + "?code=" + codeClient3
-	go c3.Dial(ctx, c3uri)
+	go func() {
+		err := c3.Dial(ctx, c3uri)
+		assert.NoError(t, err)
+	}()
 
 	log.Debug(c2uri)
 	log.Debug(c3uri)

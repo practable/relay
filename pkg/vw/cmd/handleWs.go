@@ -83,8 +83,18 @@ func (c *WsHandlerClient) readPump() {
 		c.Conn.Close()
 	}()
 	c.Conn.SetReadLimit(maxMessageSize)
-	c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+
+	err := c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		log.Errorf("readPump deadline error: %v", err)
+		return
+	}
+
+	c.Conn.SetPongHandler(func(string) error {
+		err := c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+		return err
+	})
+
 	for {
 		mt, data, err := c.Conn.ReadMessage()
 		if err != nil {
@@ -114,10 +124,18 @@ func (c *WsHandlerClient) writePump(closed <-chan struct{}) {
 	for {
 		select {
 		case message, ok := <-c.Messages.Send:
-			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Errorf(" writePump deadline error: %s", err.Error())
+				return
+			}
+
 			if !ok {
 				// The hub closed the channel.
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err := c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					log.Errorf("writePump closeMessage error: %s", err.Error())
+				}
 				return
 			}
 
@@ -126,13 +144,17 @@ func (c *WsHandlerClient) writePump(closed <-chan struct{}) {
 				return
 			}
 
-			w.Write(message.Data)
-
+			n, err := w.Write(message.Data)
+			if err != nil {
+				log.Errorf("writePump writing error: %v", err)
+			}
 			size := len(message.Data)
-
+			if n != size {
+				log.Errorf("writePump incomplete write %d of %d", n, size)
+			}
 			// Add queued chunks to the current websocket message, without delimiter.
-			n := len(c.Messages.Send)
-			for i := 0; i < n; i++ {
+			m := len(c.Messages.Send)
+			for i := 0; i < m; i++ {
 				followOnMessage := <-c.Messages.Send
 				w.Write(followOnMessage.Data)
 				size += len(followOnMessage.Data)

@@ -53,8 +53,16 @@ func (c *Client) readPump() {
 	}()
 
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		log.Errorf("readPump deadline error: %v", err)
+		return
+	}
+
+	c.conn.SetPongHandler(func(string) error {
+		err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return err
+	})
 
 	for {
 
@@ -62,7 +70,7 @@ func (c *Client) readPump() {
 
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Errorf("error: %v", err)
+				log.Tracef("Unexpected websocket close: %v", err)
 			}
 			break
 		}
@@ -126,10 +134,18 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				awaitingFirstMessage = false
 			}
 
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Errorf("%s: writePump deadline error: %s", id, err.Error())
+				return
+			}
+
 			if !ok {
 				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err := c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					log.Errorf("%s: writePump closeMessage error: %s", id, err.Error())
+				}
 				return
 			}
 
@@ -140,8 +156,17 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 					return
 				}
 
-				w.Write(message.data)
+				n, err := w.Write(message.data)
+
+				if err != nil {
+					log.Errorf("writePump writing error: %v", err)
+				}
+
 				size := len(message.data)
+
+				if n != size {
+					log.Errorf("writePump incomplete write %d of %d", n, size)
+				}
 
 				log.WithFields(log.Fields{"topic": c.topic, "size": size}).Tracef("%s: wrote %d-byte message from topic %s", id, size, c.topic)
 
@@ -165,7 +190,11 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				}
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Errorf("%s: writePump ping deadline error: %s", id, err.Error())
+				return
+			}
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Warnf("%s: done because conn error %s", id, err.Error())
 				return

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/jinzhu/copier"
+	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/hub"
 )
 
@@ -62,7 +63,11 @@ func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
 					for _, feed := range feeds {
 						// create and store the subclients we will register with the hub
 						subClient := &SubClient{Client: &hub.Client{}}
-						copier.Copy(&subClient.Client, client)
+
+						err := copier.Copy(&subClient.Client, client)
+						if err != nil {
+							log.Errorf("subclient copy error %s", err.Error())
+						}
 						subClient.Client.Topic = feed
 						subClient.Client.Send = make(chan hub.Message)
 						subClient.Stopped = make(chan struct{})
@@ -122,7 +127,10 @@ func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
 					for _, feed := range feeds {
 						// create and store the subclients we will register with the hub
 						subClient := &SubClient{Client: &hub.Client{}}
-						copier.Copy(&subClient.Client, client)
+						err := copier.Copy(&subClient.Client, client)
+						if err != nil {
+							log.Errorf("subclient copy error %s", err.Error())
+						}
 						subClient.Client.Topic = feed
 						subClient.Client.Send = make(chan hub.Message)
 						subClient.Stopped = make(chan struct{})

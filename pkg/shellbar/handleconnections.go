@@ -79,7 +79,10 @@ func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, clientA
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	h.Shutdown(ctx)
+	err := h.Shutdown(ctx)
+	if err != nil {
+		log.Infof("ListenAndServe.Shutdown(): %s", err.Error())
+	}
 	wg.Wait()
 	parentwg.Done()
 	log.Trace("handleConnections is done")

@@ -27,6 +27,12 @@ import (
 	"github.com/timdrysdale/relay/pkg/relay"
 )
 
+func init() {
+
+	log.SetLevel(log.TraceLevel)
+
+}
+
 func makeTestToken(audience, secret string, ttl int64) (string, error) {
 
 	var claims permission.Token

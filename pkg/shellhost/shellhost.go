@@ -98,7 +98,13 @@ func newConnection(ctx context.Context, local, remote string) {
 	log.WithFields(log.Fields{"local": local, "remote": remote}).Infof("%s: STARTING", id)
 
 	unique := reconws.New()
-	go unique.Dial(ctx, remote)
+	go func() {
+		err := unique.Dial(ctx, remote)
+		if err != nil {
+			log.WithFields(log.Fields{"to": remote}).Errorf("%s: dialling error", id)
+		}
+	}()
+
 	log.WithFields(log.Fields{"to": remote}).Debugf("%s: started unique connection to relay", id)
 
 	shell := tcpconnect.New()

@@ -21,8 +21,18 @@ func (c *Client) readPump() {
 	}()
 
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+
+	err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+
+	if err != nil {
+		log.Errorf("readPump deadline error: %v", err)
+		return
+	}
+
+	c.conn.SetPongHandler(func(string) error {
+		err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return err
+	})
 
 	for {
 
@@ -69,10 +79,18 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 		select {
 
 		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Errorf("writePump deadline error: %s", err.Error())
+				return
+			}
+
 			if !ok {
 				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err := c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					log.Errorf("writePump closeMessage error: %s", err.Error())
+				}
 				return
 			}
 
@@ -83,19 +101,36 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 					return
 				}
 
-				w.Write(message.data)
+				n, err := w.Write(message.data)
+
+				if err != nil {
+					log.Errorf("writePump writing error: %v", err)
+				}
 
 				size := len(message.data)
+
+				if n != size {
+					log.Errorf("writePump incomplete write %d of %d", n, size)
+				}
 
 				// Add queued chunks to the current websocket message, without delimiter.
 				// TODO check what impact, if any, this has on jsmpeg memory requirements
 				// when crossbar is loaded enough to cause message queuing
 				// TODO benchmark effect of loading on message queuing
-				n := len(c.send)
-				for i := 0; i < n; i++ {
+				m := len(c.send)
+				for i := 0; i < m; i++ {
 					followOnMessage := <-c.send
-					w.Write(followOnMessage.data)
-					size += len(followOnMessage.data)
+
+					n, err := w.Write(followOnMessage.data)
+					if err != nil {
+						log.Errorf("writePump writing error: %v", err)
+					}
+
+					if n != len(followOnMessage.data) {
+						log.Errorf("writePump incomplete write %d of %d", n, size)
+					}
+
+					size += n
 				}
 				c.stats.rx.mu.Lock()
 				t := time.Now()
@@ -112,7 +147,11 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				}
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Errorf("writePump ping deadline error: %v", err)
+				return
+			}
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
