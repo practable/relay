@@ -93,7 +93,7 @@ shell client
 		signal.Notify(c, os.Interrupt)
 
 		go func() {
-			for _ = range c {
+			for range c {
 				cancel()
 				<-ctx.Done()
 				os.Exit(0)

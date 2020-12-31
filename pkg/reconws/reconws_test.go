@@ -22,7 +22,6 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/relay"
 )
@@ -114,7 +113,7 @@ func TestReconnectAuth(t *testing.T) {
 	startTime := time.Now().Unix()
 	go func() {
 		time.Sleep(2 * time.Second)
-		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
+		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
 	}()
 
 	// We can't start, stop and restart the relay.Relay without causing mux issues due to net/http
@@ -172,7 +171,7 @@ func TestReconnectAuth(t *testing.T) {
 	assert.True(t, startTime+2 > time.Now().Unix())
 
 	// now ensure relay is running
-	time.Sleep(3)
+	time.Sleep(1 * time.Second)
 
 	data = []byte("ping")
 
@@ -224,7 +223,7 @@ func TestWsEcho(t *testing.T) {
 
 	reply := <-r.In
 
-	if bytes.Compare(reply.Data, payload) != 0 {
+	if !bytes.Equal(reply.Data, payload) {
 		t.Errorf("Got unexpected response: %s, wanted %s\n", reply.Data, payload)
 	}
 

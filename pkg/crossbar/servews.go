@@ -63,9 +63,8 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 	// which contains expiry time, route, and permissions
 
 	// Get the first code query param, lowercase only
-	var code string
 
-	code = r.URL.Query().Get("code")
+	code := r.URL.Query().Get("code")
 
 	log.WithField("code", code).Trace()
 

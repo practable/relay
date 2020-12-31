@@ -2,18 +2,7 @@ package access
 
 import (
 	"regexp"
-
-	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
-
-type Options struct {
-	disableAuth bool //not stable part of API
-
-}
-
-func NewOptions(cs *ttlcode.CodeStore) *Options {
-	return &Options{}
-}
 
 // GetScopes returns a map of the scopes allowed for each
 // path, with the path prefix as map key
@@ -22,7 +11,7 @@ func NewOptions(cs *ttlcode.CodeStore) *Options {
 
 func getPrefixFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/([\\w\\%-]*)\\/")
+	re := regexp.MustCompile(`^\/([\w\%-]*)\/`)
 
 	matches := re.FindStringSubmatch(path)
 	if len(matches) < 2 {

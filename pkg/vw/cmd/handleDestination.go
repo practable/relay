@@ -100,7 +100,10 @@ func (app *App) handleDestinationDelete(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorln(err)
+	}
 }
 
 func (app *App) handleDestinationDeleteAll(w http.ResponseWriter, r *http.Request) {
@@ -115,5 +118,8 @@ func (app *App) handleDestinationDeleteAll(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorln(err)
+	}
 }

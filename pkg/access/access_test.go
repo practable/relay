@@ -60,7 +60,7 @@ func TestAPI(t *testing.T) {
 
 	wg.Add(1)
 
-	go API(closed, &wg, port, audience, secret, target, cs, Options{})
+	go API(closed, &wg, port, audience, secret, target, cs)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -68,7 +68,7 @@ func TestAPI(t *testing.T) {
 
 	// Start tests
 	req, err := http.NewRequest("POST", audience+"/session/123", nil)
-
+	assert.NoError(t, err)
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -92,6 +92,7 @@ func TestAPI(t *testing.T) {
 	assert.NoError(t, err)
 
 	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err = client.Do(req)

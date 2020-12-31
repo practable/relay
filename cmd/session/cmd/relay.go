@@ -25,7 +25,6 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/relay"
 
 	"github.com/spf13/cobra"
@@ -103,7 +102,7 @@ shell relay
 		signal.Notify(c, os.Interrupt)
 
 		go func() {
-			for _ = range c {
+			for range c {
 				close(closed)
 				wg.Wait()
 				os.Exit(0)
@@ -115,7 +114,7 @@ shell relay
 
 		wg.Add(1)
 
-		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
+		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
 
 		wg.Wait()
 

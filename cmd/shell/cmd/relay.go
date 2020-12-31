@@ -25,7 +25,6 @@ import (
 	"github.com/ory/viper"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/timdrysdale/relay/pkg/shellaccess"
 	"github.com/timdrysdale/relay/pkg/shellrelay"
 )
 
@@ -127,7 +126,7 @@ websocket connections are reverse proxied to the correct instance).
 
 		wg.Add(1)
 
-		go shellrelay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, shellaccess.Options{})
+		go shellrelay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
 
 		wg.Wait()
 

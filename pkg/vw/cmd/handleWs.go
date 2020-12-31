@@ -164,8 +164,13 @@ func (c *WsHandlerClient) writePump(closed <-chan struct{}) {
 				return
 			}
 		case <-ticker.C:
-			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Errorf("writePump ping deadline error: %s", err.Error())
+				return
+			}
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Warnf("done because conn error %s", err.Error())
 				return
 			}
 		case <-closed:

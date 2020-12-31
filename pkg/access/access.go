@@ -27,7 +27,7 @@ import (
 // @secret- HMAC shared secret which incoming tokens will be signed with
 // @cs - pointer to the CodeStore this API shares with the crossbar websocket relay
 // @options - for future backwards compatibility (no options currently available)
-func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore, options Options) {
+func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore) {
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {

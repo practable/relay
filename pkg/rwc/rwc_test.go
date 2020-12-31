@@ -22,7 +22,6 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/agg"
 	"github.com/timdrysdale/relay/pkg/hub"
 	"github.com/timdrysdale/relay/pkg/permission"
@@ -550,7 +549,7 @@ func TestConnectAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
+	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
 
 	// allow relay to start up
 	time.Sleep(time.Second)
@@ -681,7 +680,7 @@ func TestWriteToFile(t *testing.T) {
 
 	select {
 	case msg := <-reply:
-		if bytes.Compare(msg.Data, shoutedPayload) != 0 {
+		if !bytes.Equal(msg.Data, shoutedPayload) {
 			t.Error("Got wrong message")
 		}
 	case <-time.After(10 * time.Millisecond):
@@ -696,7 +695,7 @@ func TestWriteToFile(t *testing.T) {
 
 	select {
 	case msg := <-reply:
-		if bytes.Compare(msg.Data, shoutedPayload) != 0 {
+		if !bytes.Equal(msg.Data, shoutedPayload) {
 			t.Error("Got wrong message")
 		}
 	case <-time.After(10 * time.Millisecond):
@@ -765,7 +764,7 @@ func TestSendMessageTopic(t *testing.T) {
 
 	select {
 	case msg := <-reply:
-		if bytes.Compare(msg.Data, shoutedPayload) != 0 {
+		if !bytes.Equal(msg.Data, shoutedPayload) {
 			t.Error("Got wrong message")
 		}
 	case <-time.After(10 * time.Millisecond):

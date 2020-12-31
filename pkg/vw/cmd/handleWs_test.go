@@ -44,7 +44,7 @@ func TestHandleWsSendMessageViaClient(t *testing.T) {
 	case <-time.After(10 * time.Millisecond):
 	case msg, ok := <-crx.Send:
 		if ok {
-			if bytes.Compare(msg.Data, greeting) != 0 {
+			if !bytes.Equal(msg.Data, greeting) {
 				t.Errorf("Greeting content unexpected; got/wanted %v/%v\n", string(msg.Data), string(greeting))
 			}
 		}
@@ -131,7 +131,7 @@ func TestHandleWsSendMessageViaWs(t *testing.T) {
 			t.Error("timed out")
 		case msg, ok := <-crx.Send:
 			if ok {
-				if bytes.Compare(msg.Data, greeting) != 0 {
+				if !bytes.Equal(msg.Data, greeting) {
 					t.Errorf("Greeting content unexpected; got/wanted %v/%v\n", string(msg.Data), string(greeting))
 				}
 				//reply
@@ -148,7 +148,7 @@ func TestHandleWsSendMessageViaWs(t *testing.T) {
 			t.Error("timed out")
 		case msg, ok := <-r.In:
 			if ok {
-				if bytes.Compare(msg.Data, reply) != 0 {
+				if !bytes.Equal(msg.Data, reply) {
 					t.Errorf("Reply content unexpected; got/wanted %v/%v\n", string(msg.Data), string(reply))
 				}
 			} else {
@@ -192,7 +192,7 @@ func TestHandleWsEcho(t *testing.T) {
 
 	reply := <-r.In
 
-	if bytes.Compare(reply.Data, payload) != 0 {
+	if !bytes.Equal(reply.Data, payload) {
 		t.Errorf("Got unexpected response: %s, wanted %s\n", reply.Data, payload)
 	}
 

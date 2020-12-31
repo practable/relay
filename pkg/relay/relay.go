@@ -9,13 +9,11 @@ import (
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
-func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPort int, audience, secret, target string, options access.Options) {
+func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPort int, audience, secret, target string) {
 
 	var wg sync.WaitGroup
 
-	var cs *ttlcode.CodeStore
-
-	cs = ttlcode.NewDefaultCodeStore()
+	cs := ttlcode.NewDefaultCodeStore()
 
 	config := crossbar.Config{
 		Listen:    relayPort,
@@ -27,7 +25,7 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPo
 	go crossbar.Crossbar(config, closed, &wg)
 
 	wg.Add(1)
-	go access.API(closed, &wg, accessPort, audience, secret, target, cs, options)
+	go access.API(closed, &wg, accessPort, audience, secret, target, cs)
 
 	wg.Wait()
 	parentwg.Done()
