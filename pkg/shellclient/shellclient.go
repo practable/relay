@@ -34,7 +34,6 @@ func Client(ctx context.Context, listen int, remote, token string) {
 
 	<-ctx.Done()
 	log.Infof("%s: done listening at %d", id, listen)
-	return
 }
 
 func relayHandlerWithArgs(remote, token string) func(context.Context, *tcpconnect.TCPconnect) {

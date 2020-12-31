@@ -466,7 +466,7 @@ func BenchmarkSmallMessage(b *testing.B) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	ct := "session"
-	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	session := "session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 	scopes := []string{"read", "write"}
 
 	token := MakeTestToken(audience, ct, session, scopes, 5)
@@ -696,7 +696,7 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	ct := "session"
-	session := "/session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
+	session := "session/20fd9a71-2248-4f60-89e3-5d5bb2e78e09"
 	scopes := []string{"read", "write"}
 
 	token := MakeTestToken(audience, ct, session, scopes, 5)
@@ -721,16 +721,13 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 	data := make([]byte, 1024*1024)
 
-	msgOut := reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-
 	var msg reconws.WsMessage
 
 	for n := 0; n < b.N; n++ {
 		for m := 0; m < 100; m++ {
 			_, err := rand.Read(data)
 			assert.NoError(b, err)
-			msgOut = reconws.WsMessage{Data: data, Type: websocket.TextMessage}
-			s0.Out <- msgOut
+			s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 			// always record the result to prevent
 			// the compiler eliminating the function call.
 			msg = <-s1.In

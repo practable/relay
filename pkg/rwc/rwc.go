@@ -53,15 +53,11 @@ func (h *Hub) Run(closed chan struct{}) {
 			// Delete any pre-existing client for this rule.Id
 			// because it just became superseded
 			if client, ok := h.Clients[rule.Id]; ok {
-				client = h.Clients[rule.Id]
 				h.Messages.Unregister <- client.Messages
 				client.Cancel() //stop RelayIn() & RelayOut()
 				delete(h.Clients, rule.Id)
 			}
-			if _, ok := h.Rules[rule.Id]; ok {
-				delete(h.Rules, rule.Id)
-
-			}
+			delete(h.Rules, rule.Id)
 
 			//record the new rule for later convenience in reporting
 			h.Rules[rule.Id] = rule
@@ -123,9 +119,9 @@ func (h *Hub) Run(closed chan struct{}) {
 					client.Cancel() //stop RelayIn() & RelayOut()
 					delete(h.Clients, ruleId)
 				}
-				if _, ok := h.Rules[ruleId]; ok {
-					delete(h.Rules, ruleId)
-				}
+
+				delete(h.Rules, ruleId)
+
 			}
 		}
 	}

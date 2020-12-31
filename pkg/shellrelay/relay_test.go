@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/reconws"
-	"github.com/timdrysdale/relay/pkg/shellaccess"
 	"github.com/timdrysdale/relay/pkg/shellbar"
 )
 
@@ -60,7 +59,7 @@ func TestRelay(t *testing.T) {
 
 	wg.Add(1)
 
-	go Relay(closed, &wg, accessPort, relayPort, audience, secret, target, shellaccess.Options{})
+	go Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
 
 	time.Sleep(time.Second) // big safety margin to get crossbar running
 

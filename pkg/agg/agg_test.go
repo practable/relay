@@ -128,7 +128,7 @@ func TestSendMessage(t *testing.T) {
 					t.Error("Message took longer than 1 millisecond, ", elapsed)
 				}
 				rxCount++
-				if bytes.Compare(msg.Data, content) != 0 {
+				if !bytes.Equal(msg.Data, content) {
 					t.Error("Wrong data in message")
 				}
 			case <-c3.Send:
@@ -569,7 +569,7 @@ func TestStreamGetsFeedMessges(t *testing.T) {
 					t.Error("Message took longer than 1 millisecond, ", elapsed)
 				}
 				rxCount++
-				if bytes.Compare(msg.Data, content) != 0 {
+				if !bytes.Equal(msg.Data, content) {
 					t.Error("Wrong data in message")
 				}
 				if msg.Sender == *c1 {
@@ -670,7 +670,7 @@ func TestStreamWithRuleChange(t *testing.T) {
 					t.Error("Message took longer than 5 millisecond, ", elapsed)
 				}
 				rxCount++
-				if bytes.Compare(msg.Data, content) != 0 {
+				if !bytes.Equal(msg.Data, content) {
 					t.Error("Wrong data in message", msg.Sender.Topic, len(msg.Data))
 				}
 				if msg.Sender == *c1 {

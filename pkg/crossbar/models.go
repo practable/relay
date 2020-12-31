@@ -61,12 +61,7 @@ type Client struct {
 	// string representing the path the client connected to
 	topic string
 
-	secret string
-
 	audience string
-
-	//is client allowed to receive data?
-	authorised bool
 
 	stats *Stats
 

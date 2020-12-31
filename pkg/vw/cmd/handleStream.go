@@ -18,7 +18,10 @@ func (app *App) handleStreamShowAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	w.Write(output)
+	_, err = w.Write(output)
+	if err != nil {
+		log.Errorln(err)
+	}
 }
 
 func (app *App) handleStreamShow(w http.ResponseWriter, r *http.Request) {

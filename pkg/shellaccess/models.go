@@ -2,18 +2,7 @@ package shellaccess
 
 import (
 	"regexp"
-
-	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
-
-type Options struct {
-	disableAuth bool //not stable part of API
-
-}
-
-func NewOptions(cs *ttlcode.CodeStore) *Options {
-	return &Options{}
-}
 
 func getPrefixFromPath(path string) string {
 

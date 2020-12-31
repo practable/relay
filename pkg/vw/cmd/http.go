@@ -38,7 +38,6 @@ func (app *App) startHttp() {
 
 	log.Debug("Stopped http.Server")
 
-	return
 } // startHttp
 
 func (app *App) startHttpServer(port int) *http.Server {

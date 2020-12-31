@@ -23,7 +23,6 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/access"
 	"github.com/timdrysdale/relay/pkg/agg"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/reconws"
@@ -332,7 +331,7 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, access.Options{})
+	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
 
 	go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
 

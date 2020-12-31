@@ -21,7 +21,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/reconws"
-	"github.com/timdrysdale/relay/pkg/shellaccess"
 	"github.com/timdrysdale/relay/pkg/shellbar"
 	"github.com/timdrysdale/relay/pkg/shellrelay"
 	"github.com/timdrysdale/relay/pkg/tcpconnect"
@@ -69,7 +68,7 @@ func TestShellHost(t *testing.T) {
 
 	wg.Add(1)
 
-	go shellrelay.Relay(closed, &wg, accessPort, relayPort, shellaccessURI, secret, shellrelayURI, shellaccess.Options{})
+	go shellrelay.Relay(closed, &wg, accessPort, relayPort, shellaccessURI, secret, shellrelayURI)
 
 	// setup mock sshd
 	ctx, cancel := context.WithCancel(context.Background())
@@ -123,9 +122,7 @@ func TestShellHost(t *testing.T) {
 
 	clientURI := shellaccessURI + "/shell/" + session
 
-	var c0 *reconws.ReconWs
-
-	c0 = reconws.New()
+	c0 := reconws.New()
 	go c0.ReconnectAuth(ctx, clientURI, clientBearer)
 
 	c1 := reconws.New()

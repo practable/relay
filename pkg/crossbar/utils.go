@@ -31,7 +31,7 @@ func slashify(path string) string {
 
 func getConnectionTypeFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/([\\w\\%-]*)")
+	re := regexp.MustCompile(`^\/([\w\%-]*)`)
 
 	matches := re.FindStringSubmatch(path)
 
@@ -46,7 +46,7 @@ func getConnectionTypeFromPath(path string) string {
 
 func getTopicFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/[\\w\\%-]*\\/([\\w\\%-\\/]*)")
+	re := regexp.MustCompile(`^\/[\w\%-]*\/([\w\%-\/]*)`)
 	matches := re.FindStringSubmatch(path)
 
 	if len(matches) < 2 {
@@ -58,7 +58,7 @@ func getTopicFromPath(path string) string {
 
 func getSessionIDFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/[\\w\\%-]*\\/([\\w\\%-]*)")
+	re := regexp.MustCompile(`^\/[\w\%-]*\/([\w\%-]*)`)
 	matches := re.FindStringSubmatch(path)
 
 	if len(matches) < 2 {
@@ -70,7 +70,7 @@ func getSessionIDFromPath(path string) string {
 
 func getConnectionIDFromPath(path string) string {
 
-	re := regexp.MustCompile("^\\/(?:([\\w\\%-]*)\\/){2}([\\w\\%-]*)")
+	re := regexp.MustCompile(`^\/(?:([\w\%-]*)\/){2}([\w\%-]*)`)
 	matches := re.FindStringSubmatch(path)
 
 	if len(matches) < 2 {
