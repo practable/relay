@@ -185,7 +185,7 @@ func TestShellbar(t *testing.T) {
 
 	// while connected, get stats
 	scopes = []string{"read", "write"}
-	statsToken := MakeTestToken(audience, ct, "stats", scopes, 5)
+	statsToken := MakeTestToken(audience, ct, "stats", scopes, 30)
 	statsCode := cs.SubmitToken(statsToken)
 	stats := reconws.New()
 	go stats.Dial(ctx, audience+"/"+ct+"/stats?code="+statsCode)
@@ -260,11 +260,6 @@ func TestShellbar(t *testing.T) {
 	}
 
 	time.Sleep(timeout)
-	cancel()
-	<-ctx.Done()
-	// *** TestMultiple ***
-
-	ctx, cancel = context.WithCancel(context.Background())
 
 	// construct host token & connect
 	ct = "shell"
@@ -274,8 +269,13 @@ func TestShellbar(t *testing.T) {
 	tokenHost = MakeTestToken(audience, ct, session, scopes, 30)
 	codeHost = cs.SubmitToken(tokenHost)
 
-	h = reconws.New()
-	go h.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
+	hh := reconws.New()
+	go hh.Dial(ctx, audience+"/"+ct+"/"+session+"?code="+codeHost)
+
+	// ensure host connects first by pausing until a dummy message sends
+	//  not needed in production - shellbar would be alive long before a client connects
+
+	hh.Out <- reconws.WsMessage{Type: websocket.BinaryMessage}
 
 	// construct client token & connect
 	connectionID = "uvw"
@@ -285,11 +285,11 @@ func TestShellbar(t *testing.T) {
 	permission.SetTopicSalt(&tokenClient, topicSalt)
 	permission.SetAlertHost(&tokenClient, true)
 
-	codeClient0 = cs.SubmitToken(tokenClient)
-	c0 = reconws.New()
-	client0UniqueURI = audience + "/" + ct + "/" + clientTopic
-	c0uri := client0UniqueURI + "?code=" + codeClient0
-	go c0.Dial(ctx, c0uri)
+	codeClient2 := cs.SubmitToken(tokenClient)
+	c2 := reconws.New()
+	client2UniqueURI := audience + "/" + ct + "/" + clientTopic
+	c2uri := client2UniqueURI + "?code=" + codeClient2
+	go c2.Dial(ctx, c2uri)
 
 	// construct second client token & connect
 	connectionID = "Bf6380c7-c444-4e99-aec7-11272a690bc5"
@@ -299,25 +299,25 @@ func TestShellbar(t *testing.T) {
 	permission.SetTopicSalt(&tokenClient, topicSalt)
 	permission.SetAlertHost(&tokenClient, true)
 
-	codeClient1 := cs.SubmitToken(tokenClient)
-	c1 := reconws.New()
-	client1UniqueURI := audience + "/" + ct + "/" + clientTopic
+	codeClient3 := cs.SubmitToken(tokenClient)
+	c3 := reconws.New()
+	client3UniqueURI := audience + "/" + ct + "/" + clientTopic
 
-	c1uri := client1UniqueURI + "?code=" + codeClient1
-	go c1.Dial(ctx, c1uri)
+	c3uri := client3UniqueURI + "?code=" + codeClient3
+	go c3.Dial(ctx, c3uri)
 
-	log.Debug(c0uri)
-	log.Debug(c1uri)
+	log.Debug(c2uri)
+	log.Debug(c3uri)
 
 	// make a list of connectionActions we receive, so that we don't have to
 	// rely on them coming in order - a sleep between dials does not
 	// guarantee order.
 
-	timeout = 10 * time.Millisecond
+	time.Sleep(1 * time.Second)
 
 	var cas []ConnectionAction
 
-	timeout = 10 * time.Millisecond
+	timeout = 50 * time.Millisecond
 
 	for n := 0; n < 100; n++ {
 
@@ -331,7 +331,7 @@ func TestShellbar(t *testing.T) {
 
 		case <-time.After(timeout):
 
-		case msg, ok := <-h.In:
+		case msg, ok := <-hh.In:
 
 			assert.True(t, ok)
 
@@ -342,12 +342,13 @@ func TestShellbar(t *testing.T) {
 		}
 
 		if len(cas) >= 2 {
+			log.Debugf("Got connections after %d loops", n)
 			break
 		}
 
 	}
 
-	var cac0, cac1 int
+	var cac2, cac3 int
 
 	for _, ca := range cas {
 
@@ -355,19 +356,19 @@ func TestShellbar(t *testing.T) {
 
 		base := strings.Split(ca.URI, "?")[0]
 
-		if client0UniqueURI == base {
-			cac0 = cac0 + 1
+		if client2UniqueURI == base {
+			cac2 = cac2 + 1
 		}
-		if client1UniqueURI == base {
-			cac1 = cac1 + 1
+		if client3UniqueURI == base {
+			cac3 = cac3 + 1
 		}
 
 	}
 
-	assert.Equal(t, 1, cac0)
-	assert.Equal(t, 1, cac1)
+	assert.Equal(t, 1, cac2)
+	assert.Equal(t, 1, cac3)
 
-	if cac0 == 1 && cac1 == 1 {
+	if cac2 == 1 && cac3 == 1 {
 		t.Logf("TestHostAdminGetsMultipleConnectActions...PASS\n")
 	} else {
 		t.Errorf("TestHostAdminGetsMultipleConnectActions...FAIL\n")
