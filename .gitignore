@@ -7,6 +7,8 @@
 .#*
 *#
 *.log
+#draft stuff
+tmp
 # private notes
 TODO.md
 
