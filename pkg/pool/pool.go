@@ -2,6 +2,7 @@ package pool
 
 import (
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,8 +12,205 @@ import (
 func NewPoolStore() *PoolStore {
 	return &PoolStore{
 		&sync.RWMutex{},
+		make(map[string]*Group),
 		make(map[string]*Pool),
+		"",
 	}
+}
+
+func (p *PoolStore) WithSecret(secret string) *PoolStore {
+	p.Lock()
+	defer p.Unlock()
+	p.Secret = secret
+	return p
+}
+func (p *PoolStore) GetSecret() string {
+	p.RLock()
+	defer p.RUnlock()
+	return p.Secret
+}
+
+func (p *PoolStore) GetGroupByID(id string) (*Group, error) {
+	p.RLock()
+	defer p.RUnlock()
+
+	group, ok := p.Groups[id]
+	if !ok {
+		return nil, errors.New("not found")
+	}
+	return group, nil
+}
+
+func (p *PoolStore) GetGroupsByNamePrefix(prefix string) ([]*Group, error) {
+	p.RLock()
+	defer p.RUnlock()
+
+	groups := []*Group{}
+
+	for _, v := range p.Groups {
+		if strings.HasPrefix(v.Name, prefix) {
+			groups = append(groups, v)
+		}
+	}
+
+	if len(groups) == 0 {
+		return groups, errors.New("not found")
+	}
+
+	return groups, nil
+}
+
+func (p *PoolStore) GetGroupsByName(name string) ([]*Group, error) {
+	p.RLock()
+	defer p.RUnlock()
+
+	groups := []*Group{}
+
+	for _, v := range p.Groups {
+		if v.Name == name {
+			groups = append(groups, v)
+		}
+	}
+
+	if len(groups) == 0 {
+		return groups, errors.New("not found")
+	}
+
+	return groups, nil
+}
+
+func (p *PoolStore) GetPoolByID(id string) (*Pool, error) {
+	p.RLock()
+	defer p.RUnlock()
+
+	pool, ok := p.Pools[id]
+	if !ok {
+		return nil, errors.New("not found")
+	}
+	return pool, nil
+}
+
+func (p *PoolStore) GetPoolsByNamePrefix(prefix string) ([]*Pool, error) {
+	p.RLock()
+	defer p.RUnlock()
+
+	pools := []*Pool{}
+
+	for _, v := range p.Pools {
+		if strings.HasPrefix(v.Name, prefix) {
+			pools = append(pools, v)
+		}
+	}
+
+	if len(pools) == 0 {
+		return pools, errors.New("not found")
+	}
+
+	return pools, nil
+}
+
+func (p *PoolStore) GetPoolsByName(name string) ([]*Pool, error) {
+	p.RLock()
+	defer p.RUnlock()
+
+	pools := []*Pool{}
+
+	for _, v := range p.Pools {
+		if v.Name == name {
+			pools = append(pools, v)
+		}
+	}
+
+	if len(pools) == 0 {
+		return pools, errors.New("not found")
+	}
+
+	return pools, nil
+}
+
+func (p *PoolStore) AddPool(pool *Pool) {
+	p.Lock()
+	defer p.Unlock()
+	pools := p.Pools
+	pools[pool.ID] = pool
+	p.Pools = pools
+}
+
+func (p *PoolStore) AddGroup(group *Group) {
+	p.Lock()
+	defer p.Unlock()
+	groups := p.Groups
+	groups[group.ID] = group
+	p.Groups = groups
+}
+
+func (p *PoolStore) SetSecret(secret string) {
+	p.Lock()
+	defer p.Unlock()
+	p.Secret = secret
+}
+
+func NewGroup(name string) *Group {
+
+	group := &Group{
+		&sync.RWMutex{},
+		*NewDescription(name),
+		[]*Pool{},
+	}
+	return group
+}
+
+func (g *Group) WithID(id string) *Group {
+	g.Lock()
+	defer g.Unlock()
+	g.ID = id
+	return g
+}
+
+func (g *Group) GetID() string {
+	g.Lock()
+	defer g.Unlock()
+	return g.ID
+}
+
+func (g *Group) WithPool(pool *Pool) *Group {
+	g.Lock()
+	defer g.Unlock()
+	p := g.Pools
+	p = append(p, pool)
+	g.Pools = p
+	return g
+}
+
+func (g *Group) WithPools(pools []*Pool) *Group {
+	g.Lock()
+	defer g.Unlock()
+	p := g.Pools
+	p = append(p, pools...)
+	g.Pools = p
+	return g
+}
+
+func (g *Group) AddPool(pool *Pool) {
+	g.Lock()
+	defer g.Unlock()
+	p := g.Pools
+	p = append(p, pool)
+	g.Pools = p
+
+}
+
+func (g *Group) AddPools(pools []*Pool) {
+	g.Lock()
+	defer g.Unlock()
+	p := g.Pools
+	p = append(p, pools...)
+	g.Pools = p
+}
+func (g *Group) GetPools() []*Pool {
+	g.Lock()
+	defer g.Unlock()
+	return g.Pools
 }
 
 func NewPool(name string) *Pool {
@@ -48,6 +246,12 @@ func (p *Pool) WithID(id string) *Pool {
 	return p
 }
 
+func (p *Pool) GetID() string {
+	p.Lock()
+	defer p.Unlock()
+	return p.ID
+}
+
 func NewDescription(name string) *Description {
 	return &Description{
 		Name: name,
@@ -66,6 +270,7 @@ func NewActivity(name string, expires int64) *Activity {
 		*NewDescription(name),
 		expires,
 		make(map[string]*Stream),
+		Permission{},
 	}
 }
 
@@ -76,10 +281,35 @@ func (a *Activity) WithID(id string) *Activity {
 	return a
 }
 
+func (a *Activity) WithPermission(p Permission) *Activity {
+	a.Lock()
+	defer a.Unlock()
+	a.Permission = p
+	return a
+}
+
+func (a *Activity) GetPermission() Permission  {
+	a.RLock()
+	defer a.RUnlock()
+	return a.Permission
+}
+
 func (a *Activity) SetID(id string) {
 	a.Lock()
 	defer a.Unlock()
 	a.ID = id
+}
+
+func (a *Activity) GetID() string {
+	a.Lock()
+	defer a.Unlock()
+	return a.ID
+}
+
+func (a *Activity) SetPermission(p Permission) {
+	a.Lock()
+	defer a.Unlock()
+	a.Permission = p
 }
 
 func (a *Activity) AddID() string {

@@ -6,7 +6,21 @@ import (
 
 type PoolStore struct {
 	*sync.RWMutex
+
+	// Groups represent non-exclusive combinations of pools
+	Groups map[string]*Group
+
+	// Pools maps all pools in the store
 	Pools map[string]*Pool
+
+	// Secret for generating tokens - assume one PoolStore per relay
+	Secret string
+}
+
+type Group struct {
+	*sync.RWMutex
+	Description
+	Pools []*Pool
 }
 
 type Pool struct {
@@ -24,11 +38,18 @@ type Description struct {
 	DisplayInfo
 }
 
+type Permission struct {
+	Topic          string
+	Audience       string
+	ConnectionType string
+}
+
 type Activity struct {
 	*sync.RWMutex
 	Description
-	ExpiresAt int64
-	Streams   map[string]*Stream
+	ExpiresAt  int64
+	Streams    map[string]*Stream
+	Permission Permission
 }
 
 // Stream represents a data or video stream from a relay
