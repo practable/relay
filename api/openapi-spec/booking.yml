@@ -1,0 +1,287 @@
+swagger: '2.0'
+info:
+  version: '0.1'
+  title: Booking
+  description: User API for booking experiments
+  contact:
+    email: timothy.d.drysdale@gmail.com
+    name: Tim Drysdale
+    url: https://practable.io
+host: book.practable.io
+basePath: /
+securityDefinitions: {}
+schemes: []
+consumes:
+- application/json
+produces:
+- application/json
+paths:
+  /pool:
+    get:
+      description: Get a list of descriptions of all pools available to the user
+      summary: pool
+      tags:
+      - pool
+      operationId: pool
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        default: Bearer {token}
+        type: string
+      - name: name
+        in: query
+        required: false
+        type: string
+        description: Search by name
+      - name: category
+        in: query
+        required: false
+        type: string
+        description: Search by category
+      responses:
+        200:
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/description'
+          headers: {}
+  /pool/{pool_id}/request:
+    post:
+      description: Request an activity from the pool
+      summary: pool
+      tags:
+      - pool
+      operationId: Postpool
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        default: Bearer {token}
+        type: string
+      - name: duration
+        in: query
+        required: true
+        type: integer
+        format: int64
+        description: duration of requested booking in seconds
+      - name: pool_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/activity'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Available
+          schema: {}
+  /login:
+    post:
+      description: Login with a class token to get an individual booking token, usable for a finite period.
+      summary: login
+      tags:
+      - login
+      operationId: login
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        default: Bearer {token}
+        type: string
+      responses:
+        200:
+          description: ''
+          schema:
+            type: object
+            properties:
+              token:
+                description: login token
+                example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                type: string
+          examples:
+            application/json: {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"}
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+definitions:
+  stream:
+    title: stream
+    description: Represents an assigned, valid booking slot for an individual piece of equipment
+    example:
+      for: video
+      url: https://relay-access.practable.io/session/abc123
+      token: ey....
+    type: object
+    properties:
+      for:
+        description: Describes the stream, and doubles as template key in the URL
+        example: video
+        type: string
+      url:
+        description: URL at which to obtain access to the stream (getting a redirect URL containing a one time code)
+        example: https://relay-access.practable.io/session/abc123
+        type: string
+      token:
+        description: JWT bearer token for submitting in the header when making the request at the URL
+        type: string
+      verb:
+        description: HTPP verb to use when making request to the URL
+        example: POST
+        type: string
+        default: POST
+      iat:
+        description: Issued At
+        type: number
+        format: unix-timestamp
+      nbf:
+        description: Not Before
+        type: number
+        format: unix-timestamp
+      exp:
+        description: Expires At
+        type: number
+        format: unix-timestamp
+    required:
+    - for
+    - url
+    - token
+  activity:
+    title: activity
+    description: An activity represents connection details to instances of pre-agreed resource types such as video, data streams and user interfaces.
+    type: object
+    properties:
+      streams:
+        description: A list of streams
+        type: array
+        items:
+          $ref: '#/definitions/stream'
+      uis:
+        description: User interfaces
+        type: array
+        items:
+          $ref: '#/definitions/userInterface'
+      description:
+        $ref: '#/definitions/description'
+      iat:
+        description: Issued At
+        type: number
+        format: unix-timestamp
+      nbf:
+        description: Not before
+        type: number
+        format: unix-timestamp
+      exp:
+        description: Expires At
+        type: number
+        format: unix-timestamp
+      aud:
+        description: Audience
+        type: string
+      sub:
+        description: Subject
+        type: string
+      Iss:
+        description: Issuer
+        type: string
+    required:
+    - nbf
+    - exp
+    - aud
+    - sub
+    - Iss
+  userInterface:
+    title: userInterface
+    description: User interface
+    type: object
+    properties:
+      url:
+        description: URL of the user interface
+        example: https://static.practable.io/ui/penduino-basic.html?video={{video}}&data={{data}}
+        type: string
+      id:
+        description: ID of the user interface
+        example: e76f4f42-b4e6-4436-8bcd-70ac74baabfb
+        type: string
+      name:
+        description: Display name of the user interface
+        example: Penduino (basic)
+        type: string
+      description:
+        description: Description
+        type: string
+    required:
+    - url
+    - name
+    - description
+  description:
+    title: description
+    description: Description of a resource e.g. pool, activity, user interface 
+    example:
+      name: Penduino (basic)
+      type: pool
+      id: 8ed0e445-70d8-43ab-97ac-ebc00491b337
+      short: Penduino electromagnetic pendulums with pulsed drive and braking
+      long: Some longer description
+      further: https://static.practable.io/descriptions/pools/penduino/index.html
+      thumb: https://assets.practable.io/images/pools/penduino/thumb.png
+      image: https://assets.practable.io/images/pools/penduino/image.png
+    type: object
+    properties:
+      name:
+        description: Display name
+        example: Penduino (basic)
+        type: string
+      short:
+        description: 140 char max description of the interface in plain text
+        example: Interface to the penduino electromagnetic pendulum with variable drive, active braking, short and open circuit loading.
+        type: string
+      long:
+        description: 280 char additional description of the interface in plain text
+        type: string
+      further:
+        description: URL for further information
+        example: https://static.practable.io/info/penduino/ui.html
+        type: string
+      thumb:
+        description: URL of thumbnail image (150x150)
+        example: https://assets.practable.io/images/penduino-150x150.png
+        type: string
+      image:
+        description: URL of main image (500x500)
+        example: https://assets.practable.io/images/penduino-500x500.png
+        type: string
+      id:
+        description: unique identifier
+        example: 7e0daf54-4c0c-499b-8ed5-67337e741332
+        type: string
+      type:
+        description: Type of resource being described, e.g. pool, activity, userinterface
+        example: userinterface
+        type: string
+    required:
+    - name
+    - id
+    - type
+tags:
+- name: pool
+  description: ''
+- name: login
+  description: ''
