@@ -5,7 +5,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
-	"github.com/timdrysdale/relay/pkg/permission"
+	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
@@ -22,108 +22,69 @@ func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) m
 
 		token, ok := principal.(*jwt.Token)
 		if !ok {
-			return operations.NewLoginnauthorized().WithPayload("Token Not JWT")
+			return login.NewLoginUnauthorized().WithPayload("Token Not JWT")
 		}
 
 		// save checking for key existence individually by checking all at once
-		claims, ok := token.Claims.(*login.Token)
+		claims, ok := token.Claims.(*lit.Token)
 
 		if !ok {
-			return operations.NewLoginUnauthorized().WithPayload("Token Claims Incorrect Type")
+			return login.NewLoginUnauthorized().WithPayload("Token Claims Incorrect Type")
 		}
 
-		if !permission.HasRequiredClaims(*claims) {
-			return operations.NewLoginUnauthorized().WithPayload("Token Missing Required Claims")
+		if !lit.HasRequiredClaims(*claims) {
+			return login.NewLoginUnauthorized().WithPayload("Token Missing Required Claims")
 		}
 
-		if params.ShellID == "" {
-			return operations.NewShellUnauthorized().WithPayload("Path Missing ShellID")
-		}
+		hasLoginScope := false
 
-		if claims.Topic != params.ShellID {
-			return operations.NewShellUnauthorized().WithPayload("ShellID Does Not Match Token")
-		}
-
-		// Now we check the scopes ....
-		// If "host" is present, then we connect to the base session
-		// If "client" is present, then we connect to a unique sub-session
-		//  Scopes are modified to be read, write
-		// If both scopes are offered, then the behaviour depends on the routing
-		// default to treating as a host
-		// unless a ConnectionID present in query e.g.
-		// &connection_id=134234234324
-		// in which case, distinguishing between host and client is irrelevant
-
-		hasClientScope := false
-		hasHostScope := false
-		hasStatsScope := false
+		scopes := []string{"booking"}
 
 		for _, scope := range claims.Scopes {
-			if scope == "host" {
-				hasHostScope = true
-			}
-			if scope == "client" {
-				hasClientScope = true
-			}
-			if scope == "stats" {
-				hasStatsScope = true
+			if scope == "login" {
+				hasLoginScope = true
+			} else {
+				scopes = append(scopes, scope)
 			}
 		}
 
-		if hasStatsScope && params.ShellID != "stats" {
-			return operations.NewShellUnauthorized().WithPayload("Path Not Valid for Stats Scope")
+		if !hasLoginScope {
+			return login.NewLoginUnauthorized().WithPayload("Missing login Scope")
 		}
 
-		if !hasStatsScope && params.ShellID == "stats" {
-			return operations.NewShellUnauthorized().WithPayload("Path Not Valid Without Stats Scope")
+		// make a new uuid for the user so we can manage their booked sessions
+		subject := uuid.New().String()
+
+		// keep uuid from previous booking token if we received it in the body of the request
+		// code in the login pages needs to look for this in cache and add to body if found
+		if params.Token != nil {
+			subject = *(params.Token.Sub)
 		}
 
-		if !(hasClientScope || hasHostScope || hasStatsScope) {
-			return operations.NewShellUnauthorized().WithPayload("Missing client, host or stats Scope")
+		bookingClaims := claims
+		//keep groups and any other fields added
+		bookingClaims.Scopes = scopes //update scopes
+		bookingClaims.IssuedAt = ps.GetTime() - 1
+		bookingClaims.NotBefore = ps.GetTime() - 1
+		bookingClaims.ExpiresAt = bookingClaims.NotBefore + ps.BookingTokenDuration
+		bookingClaims.Subject = subject
+
+		// sign user token
+		// Create a new token object, specifying signing method and the claims
+		// you would like it to contain.
+
+		bookingToken := jwt.NewWithClaims(jwt.SigningMethodHS256, bookingClaims)
+
+		// Sign and get the complete encoded token as a string using the secret
+		tokenString, err := bookingToken.SignedString(ps.Secret)
+
+		if err != nil {
+			return login.NewLoginInternalServerError().WithPayload("Could Not Generate Booking Token")
 		}
 
-		if hasClientScope && hasHostScope {
-			return operations.NewShellUnauthorized().WithPayload("Can only have Client Or Host Scope, Not Both")
-		}
-
-		topic := claims.Topic
-		topicSalt := ""
-		alertHost := false
-
-		if hasClientScope { //need a new unique connection
-			topic = topic + "/" + uuid.New().String()
-			topicSalt = uuid.New().String()
-			alertHost = true
-		}
-
-		// Shellbar will take care of alerting the admin channel of
-		// the new connection for protocol timing reasons
-		// Because ssh is "server speaks first", we want to bridge
-		// to the server only when client already in place and
-		// listening. There are no further hits on the access endpoint
-		// though - the rest is done via websockets
-		// hence no handler is needed for https://{access-host}/shell/{shell_id}/{connection_id}
-
-		pt := permission.NewToken(
-			target,
-			claims.ConnectionType,
-			topic,
-			[]string{"read", "write"}, // sanitise out of abundance of caution - all use cases are read+write only
-			claims.IssuedAt,
-			claims.NotBefore,
-			claims.ExpiresAt,
-		)
-
-		permission.SetTopicSalt(&pt, topicSalt)
-		permission.SetAlertHost(&pt, alertHost)
-
-		code := cs.SubmitToken(pt)
-
-		uri := target + "/" + claims.ConnectionType + "/" + topic + "?code=" + code
-
-		return operations.NewLoginOK().WithPayload(
-			&operations.LoginOKBody{
-				Token: userToken,
+		return login.NewLoginOK().WithPayload(
+			&login.LoginOKBody{
+				Token: tokenString,
 			})
 	}
 }
