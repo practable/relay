@@ -100,6 +100,8 @@ func (a *Activity) AddStream(key string, stream *Stream) {
 
 func (p *Pool) AddActivity(activity *Activity) error {
 
+	p.RemoveStaleEntries()
+
 	if activity == nil {
 		return errors.New("nil pointer to activity")
 	}
@@ -124,6 +126,9 @@ func (p *Pool) AddActivity(activity *Activity) error {
 }
 
 func (p *Pool) GetActivityIDs() []string {
+
+	p.RemoveStaleEntries()
+
 	p.RLock()
 	defer p.RUnlock()
 
@@ -138,6 +143,9 @@ func (p *Pool) GetActivityIDs() []string {
 }
 
 func (p *Pool) GetActivityByID(id string) (*Activity, error) {
+
+	p.RemoveStaleEntries()
+
 	p.RLock()
 	defer p.RUnlock()
 	a := p.Activities[id]
@@ -148,6 +156,8 @@ func (p *Pool) GetActivityByID(id string) (*Activity, error) {
 }
 
 func (p *Pool) ActivityExists(id string) bool {
+
+	p.RemoveStaleEntries()
 
 	p.RLock()
 	defer p.RUnlock()
@@ -181,7 +191,7 @@ func (p *Pool) ActivityNextAvailableTime(id string) (int64, error) {
 	t, ok := p.InUse[id]
 
 	if !ok {
-		return 0, nil
+		return p.Now(), nil
 	}
 
 	return t, nil
@@ -253,14 +263,17 @@ func (p *Pool) ActivityWaitDuration(duration uint64) (uint64, error) {
 	var id string
 	var waits []uint64
 
-	for k, v := range p.Available {
-		if v < until {
+	for k, expires := range p.Available {
+		if expires < until {
 			continue // won't be available long enough to fulfill desired session length
 		}
-		if v, ok := p.InUse[k]; ok {
-			delay := v - now
+		if ready, ok := p.InUse[k]; ok {
+			delay := ready - now
 			if delay < 0 {
 				continue // stale, should have been deleted
+			}
+			if (ready + int64(duration)) > expires {
+				continue
 			}
 			waits = append(waits, uint64(delay))
 			continue
