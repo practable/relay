@@ -19,16 +19,12 @@ import (
 // swagger:model userInterface
 type UserInterface struct {
 
-	// Description
+	// description
 	// Required: true
-	Description *string `json:"description"`
+	Description *Description `json:"description"`
 
-	// ID of the user interface
-	ID string `json:"id,omitempty"`
-
-	// Display name of the user interface
-	// Required: true
-	Name *string `json:"name"`
+	// list of names of required streams
+	StreamsRequired []string `json:"streamsRequired"`
 
 	// URL of the user interface
 	// Required: true
@@ -40,10 +36,6 @@ func (m *UserInterface) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDescription(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateName(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -63,13 +55,13 @@ func (m *UserInterface) validateDescription(formats strfmt.Registry) error {
 		return err
 	}
 
-	return nil
-}
-
-func (m *UserInterface) validateName(formats strfmt.Registry) error {
-
-	if err := validate.Required("name", "body", m.Name); err != nil {
-		return err
+	if m.Description != nil {
+		if err := m.Description.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("description")
+			}
+			return err
+		}
 	}
 
 	return nil

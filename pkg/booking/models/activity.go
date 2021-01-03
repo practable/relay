@@ -22,15 +22,15 @@ import (
 type Activity struct {
 
 	// Issuer
-	// Required: true
-	Iss *string `json:"Iss"`
+	Iss string `json:"Iss,omitempty"`
 
 	// Audience
 	// Required: true
 	Aud *string `json:"aud"`
 
 	// description
-	Description *Description `json:"description,omitempty"`
+	// Required: true
+	Description *Description `json:"description"`
 
 	// Expires At
 	// Required: true
@@ -44,23 +44,20 @@ type Activity struct {
 	Nbf *float64 `json:"nbf"`
 
 	// A list of streams
+	// Required: true
 	Streams []*Stream `json:"streams"`
 
 	// Subject
-	// Required: true
-	Sub *string `json:"sub"`
+	Sub string `json:"sub,omitempty"`
 
 	// User interfaces
+	// Required: true
 	Uis []*UserInterface `json:"uis"`
 }
 
 // Validate validates this activity
 func (m *Activity) Validate(formats strfmt.Registry) error {
 	var res []error
-
-	if err := m.validateIss(formats); err != nil {
-		res = append(res, err)
-	}
 
 	if err := m.validateAud(formats); err != nil {
 		res = append(res, err)
@@ -82,10 +79,6 @@ func (m *Activity) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateSub(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateUis(formats); err != nil {
 		res = append(res, err)
 	}
@@ -93,15 +86,6 @@ func (m *Activity) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *Activity) validateIss(formats strfmt.Registry) error {
-
-	if err := validate.Required("Iss", "body", m.Iss); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -116,8 +100,8 @@ func (m *Activity) validateAud(formats strfmt.Registry) error {
 
 func (m *Activity) validateDescription(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Description) { // not required
-		return nil
+	if err := validate.Required("description", "body", m.Description); err != nil {
+		return err
 	}
 
 	if m.Description != nil {
@@ -152,8 +136,8 @@ func (m *Activity) validateNbf(formats strfmt.Registry) error {
 
 func (m *Activity) validateStreams(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Streams) { // not required
-		return nil
+	if err := validate.Required("streams", "body", m.Streams); err != nil {
+		return err
 	}
 
 	for i := 0; i < len(m.Streams); i++ {
@@ -175,19 +159,10 @@ func (m *Activity) validateStreams(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Activity) validateSub(formats strfmt.Registry) error {
-
-	if err := validate.Required("sub", "body", m.Sub); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *Activity) validateUis(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Uis) { // not required
-		return nil
+	if err := validate.Required("uis", "body", m.Uis); err != nil {
+		return err
 	}
 
 	for i := 0; i < len(m.Uis); i++ {

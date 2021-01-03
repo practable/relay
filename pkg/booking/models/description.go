@@ -22,10 +22,6 @@ type Description struct {
 	// URL for further information
 	Further string `json:"further,omitempty"`
 
-	// unique identifier
-	// Required: true
-	ID *string `json:"id"`
-
 	// URL of main image (500x500)
 	Image string `json:"image,omitempty"`
 
@@ -51,10 +47,6 @@ type Description struct {
 func (m *Description) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateID(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateName(formats); err != nil {
 		res = append(res, err)
 	}
@@ -66,15 +58,6 @@ func (m *Description) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *Description) validateID(formats strfmt.Registry) error {
-
-	if err := validate.Required("id", "body", m.ID); err != nil {
-		return err
-	}
-
 	return nil
 }
 

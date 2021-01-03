@@ -33,13 +33,90 @@ func init() {
       "url": "https://practable.io",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.1"
+    "version": "0.2"
   },
   "host": "book.practable.io",
   "basePath": "/",
   "paths": {
+    "/groups": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets group id for a given group name",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "getGroupIDByName",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Search by group name",
+            "name": "name",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "description": "group id",
+                "type": "string",
+                "example": "3a834b55-07c8-cb39-a341-3a82b263e07c"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a description of a group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "getGroupDescriptionByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/description"
+            }
+          }
+        }
+      }
+    },
     "/login": {
       "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "description": "Login with a class token to get an individual booking token, usable for a finite period.",
         "produces": [
           "application/json"
@@ -49,14 +126,6 @@ func init() {
         ],
         "summary": "login",
         "operationId": "login",
-        "parameters": [
-          {
-            "type": "string",
-            "default": "Bearer {token}",
-            "name": "Authorization",
-            "in": "header"
-          }
-        ],
         "responses": {
           "200": {
             "schema": {
@@ -65,13 +134,13 @@ func init() {
                 "token": {
                   "description": "login token",
                   "type": "string",
-                  "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                  "example": "ey..."
                 }
               }
             },
             "examples": {
               "application/json": {
-                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                "token": "ey..."
               }
             }
           },
@@ -82,35 +151,29 @@ func init() {
         }
       }
     },
-    "/pool": {
+    "/pools": {
       "get": {
-        "description": "Get a list of descriptions of all pools available to the user",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a list of pool_ids associated with a group_id",
         "produces": [
           "application/json"
         ],
         "tags": [
-          "pool"
+          "pools"
         ],
-        "summary": "pool",
-        "operationId": "pool",
+        "summary": "get pool ids in a group",
+        "operationId": "getPoolsByGroupID",
         "parameters": [
           {
             "type": "string",
-            "default": "Bearer {token}",
-            "name": "Authorization",
-            "in": "header"
-          },
-          {
-            "type": "string",
-            "description": "Search by name",
-            "name": "name",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Search by category",
-            "name": "category",
-            "in": "query"
+            "description": "Search by group name",
+            "name": "group_id",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -118,31 +181,196 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/description"
+                "description": "pool id",
+                "type": "string",
+                "example": "5a834b5d-0758-4039-a044-6a82b263e079"
               }
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Add a pool to the poolstore, using details in body",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Add a new pool",
+        "operationId": "addNewPool",
+        "parameters": [
+          {
+            "name": "activity",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/activity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/id"
             }
           }
         }
       }
     },
-    "/pool/{pool_id}/request": {
+    "/pools/{pool_id}/activities": {
       "post": {
-        "description": "Request an activity from the pool",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Adds an activity to a pool (activty must include valid exp field)",
         "produces": [
           "application/json"
         ],
         "tags": [
-          "pool"
+          "pools"
         ],
-        "summary": "pool",
-        "operationId": "Postpool",
+        "summary": "Adds an activity to a pool",
+        "operationId": "addActivityByPoolID",
         "parameters": [
           {
             "type": "string",
-            "default": "Bearer {token}",
-            "name": "Authorization",
-            "in": "header"
+            "name": "pool_id",
+            "in": "path",
+            "required": true
           },
+          {
+            "name": "activity",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/activity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/id"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Available",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}/activities/{activity_id}": {
+      "put": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Updates an activity in a pool (or adds one with a specific ID if does not exist)",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Update an activity in a pool",
+        "operationId": "updateActivityByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "activity_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "activity",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/activity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {}
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}/description": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a description of the pool",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "pools",
+        "operationId": "getPoolDescriptionByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/id"
+            }
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}/sessions": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Request a session on an activity from the pool",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Requests a session from a pool",
+        "operationId": "requestSessionByPoolID",
+        "parameters": [
           {
             "type": "integer",
             "format": "int64",
@@ -168,9 +396,46 @@ func init() {
             "description": "Unauthorized",
             "schema": {}
           },
+          "402": {
+            "description": "Quota Exceeded",
+            "schema": {}
+          },
           "404": {
             "description": "Not Available",
             "schema": {}
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}/status": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets the status of pool's activities",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Gets the status of the pool's activities",
+        "operationId": "getPoolStatusByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/status"
+            }
           }
         }
       }
@@ -182,11 +447,12 @@ func init() {
       "type": "object",
       "title": "activity",
       "required": [
+        "streams",
+        "uis",
+        "description",
         "nbf",
         "exp",
-        "aud",
-        "sub",
-        "Iss"
+        "aud"
       ],
       "properties": {
         "Iss": {
@@ -241,7 +507,6 @@ func init() {
       "title": "description",
       "required": [
         "name",
-        "id",
         "type"
       ],
       "properties": {
@@ -249,11 +514,6 @@ func init() {
           "description": "URL for further information",
           "type": "string",
           "example": "https://static.practable.io/info/penduino/ui.html"
-        },
-        "id": {
-          "description": "unique identifier",
-          "type": "string",
-          "example": "7e0daf54-4c0c-499b-8ed5-67337e741332"
         },
         "image": {
           "description": "URL of main image (500x500)",
@@ -287,13 +547,63 @@ func init() {
       },
       "example": {
         "further": "https://static.practable.io/descriptions/pools/penduino/index.html",
-        "id": "8ed0e445-70d8-43ab-97ac-ebc00491b337",
         "image": "https://assets.practable.io/images/pools/penduino/image.png",
         "long": "Some longer description",
         "name": "Penduino (basic)",
         "short": "Penduino electromagnetic pendulums with pulsed drive and braking",
         "thumb": "https://assets.practable.io/images/pools/penduino/thumb.png",
         "type": "pool"
+      }
+    },
+    "id": {
+      "description": "id of a resource",
+      "type": "object",
+      "title": "id",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "identification",
+          "type": "string",
+          "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
+        }
+      },
+      "example": {
+        "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
+      }
+    },
+    "status": {
+      "description": "Status of a pool",
+      "type": "object",
+      "title": "status",
+      "required": [
+        "available"
+      ],
+      "properties": {
+        "available": {
+          "description": "Number of available kits",
+          "type": "number",
+          "format": "int",
+          "example": 3
+        },
+        "used": {
+          "description": "Number of kits in use",
+          "type": "number",
+          "format": "int",
+          "example": 5
+        },
+        "wait": {
+          "description": "Wait time in seconds until first available kit",
+          "type": "number",
+          "format": "int64",
+          "example": 3200
+        }
+      },
+      "example": {
+        "available": 3,
+        "inuse": 5,
+        "wait": 0
       }
     },
     "stream": {
@@ -354,23 +664,24 @@ func init() {
       "title": "userInterface",
       "required": [
         "url",
-        "name",
         "description"
       ],
       "properties": {
         "description": {
-          "description": "Description",
-          "type": "string"
+          "$ref": "#/definitions/description"
         },
-        "id": {
-          "description": "ID of the user interface",
-          "type": "string",
-          "example": "e76f4f42-b4e6-4436-8bcd-70ac74baabfb"
-        },
-        "name": {
-          "description": "Display name of the user interface",
-          "type": "string",
-          "example": "Penduino (basic)"
+        "streamsRequired": {
+          "description": "list of names of required streams",
+          "type": "array",
+          "items": {
+            "description": "stream name",
+            "type": "string",
+            "example": "video"
+          },
+          "example": [
+            "data",
+            "video"
+          ]
         },
         "url": {
           "description": "URL of the user interface",
@@ -380,9 +691,19 @@ func init() {
       }
     }
   },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
   "tags": [
     {
-      "name": "pool"
+      "name": "groups"
+    },
+    {
+      "name": "pools"
     },
     {
       "name": "login"
@@ -405,13 +726,90 @@ func init() {
       "url": "https://practable.io",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.1"
+    "version": "0.2"
   },
   "host": "book.practable.io",
   "basePath": "/",
   "paths": {
+    "/groups": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets group id for a given group name",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "getGroupIDByName",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Search by group name",
+            "name": "name",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "description": "group id",
+                "type": "string",
+                "example": "3a834b55-07c8-cb39-a341-3a82b263e07c"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a description of a group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "getGroupDescriptionByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/description"
+            }
+          }
+        }
+      }
+    },
     "/login": {
       "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "description": "Login with a class token to get an individual booking token, usable for a finite period.",
         "produces": [
           "application/json"
@@ -421,14 +819,6 @@ func init() {
         ],
         "summary": "login",
         "operationId": "login",
-        "parameters": [
-          {
-            "type": "string",
-            "default": "Bearer {token}",
-            "name": "Authorization",
-            "in": "header"
-          }
-        ],
         "responses": {
           "200": {
             "schema": {
@@ -437,13 +827,13 @@ func init() {
                 "token": {
                   "description": "login token",
                   "type": "string",
-                  "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                  "example": "ey..."
                 }
               }
             },
             "examples": {
               "application/json": {
-                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                "token": "ey..."
               }
             }
           },
@@ -454,35 +844,29 @@ func init() {
         }
       }
     },
-    "/pool": {
+    "/pools": {
       "get": {
-        "description": "Get a list of descriptions of all pools available to the user",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a list of pool_ids associated with a group_id",
         "produces": [
           "application/json"
         ],
         "tags": [
-          "pool"
+          "pools"
         ],
-        "summary": "pool",
-        "operationId": "pool",
+        "summary": "get pool ids in a group",
+        "operationId": "getPoolsByGroupID",
         "parameters": [
           {
             "type": "string",
-            "default": "Bearer {token}",
-            "name": "Authorization",
-            "in": "header"
-          },
-          {
-            "type": "string",
-            "description": "Search by name",
-            "name": "name",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Search by category",
-            "name": "category",
-            "in": "query"
+            "description": "Search by group name",
+            "name": "group_id",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -490,31 +874,196 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/description"
+                "description": "pool id",
+                "type": "string",
+                "example": "5a834b5d-0758-4039-a044-6a82b263e079"
               }
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Add a pool to the poolstore, using details in body",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Add a new pool",
+        "operationId": "addNewPool",
+        "parameters": [
+          {
+            "name": "activity",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/activity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/id"
             }
           }
         }
       }
     },
-    "/pool/{pool_id}/request": {
+    "/pools/{pool_id}/activities": {
       "post": {
-        "description": "Request an activity from the pool",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Adds an activity to a pool (activty must include valid exp field)",
         "produces": [
           "application/json"
         ],
         "tags": [
-          "pool"
+          "pools"
         ],
-        "summary": "pool",
-        "operationId": "Postpool",
+        "summary": "Adds an activity to a pool",
+        "operationId": "addActivityByPoolID",
         "parameters": [
           {
             "type": "string",
-            "default": "Bearer {token}",
-            "name": "Authorization",
-            "in": "header"
+            "name": "pool_id",
+            "in": "path",
+            "required": true
           },
+          {
+            "name": "activity",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/activity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/id"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Available",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}/activities/{activity_id}": {
+      "put": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Updates an activity in a pool (or adds one with a specific ID if does not exist)",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Update an activity in a pool",
+        "operationId": "updateActivityByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "activity_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "activity",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/activity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {}
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}/description": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a description of the pool",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "pools",
+        "operationId": "getPoolDescriptionByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/id"
+            }
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}/sessions": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Request a session on an activity from the pool",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Requests a session from a pool",
+        "operationId": "requestSessionByPoolID",
+        "parameters": [
           {
             "type": "integer",
             "format": "int64",
@@ -540,9 +1089,46 @@ func init() {
             "description": "Unauthorized",
             "schema": {}
           },
+          "402": {
+            "description": "Quota Exceeded",
+            "schema": {}
+          },
           "404": {
             "description": "Not Available",
             "schema": {}
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}/status": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets the status of pool's activities",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Gets the status of the pool's activities",
+        "operationId": "getPoolStatusByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/status"
+            }
           }
         }
       }
@@ -554,11 +1140,12 @@ func init() {
       "type": "object",
       "title": "activity",
       "required": [
+        "streams",
+        "uis",
+        "description",
         "nbf",
         "exp",
-        "aud",
-        "sub",
-        "Iss"
+        "aud"
       ],
       "properties": {
         "Iss": {
@@ -613,7 +1200,6 @@ func init() {
       "title": "description",
       "required": [
         "name",
-        "id",
         "type"
       ],
       "properties": {
@@ -621,11 +1207,6 @@ func init() {
           "description": "URL for further information",
           "type": "string",
           "example": "https://static.practable.io/info/penduino/ui.html"
-        },
-        "id": {
-          "description": "unique identifier",
-          "type": "string",
-          "example": "7e0daf54-4c0c-499b-8ed5-67337e741332"
         },
         "image": {
           "description": "URL of main image (500x500)",
@@ -659,13 +1240,63 @@ func init() {
       },
       "example": {
         "further": "https://static.practable.io/descriptions/pools/penduino/index.html",
-        "id": "8ed0e445-70d8-43ab-97ac-ebc00491b337",
         "image": "https://assets.practable.io/images/pools/penduino/image.png",
         "long": "Some longer description",
         "name": "Penduino (basic)",
         "short": "Penduino electromagnetic pendulums with pulsed drive and braking",
         "thumb": "https://assets.practable.io/images/pools/penduino/thumb.png",
         "type": "pool"
+      }
+    },
+    "id": {
+      "description": "id of a resource",
+      "type": "object",
+      "title": "id",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "identification",
+          "type": "string",
+          "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
+        }
+      },
+      "example": {
+        "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
+      }
+    },
+    "status": {
+      "description": "Status of a pool",
+      "type": "object",
+      "title": "status",
+      "required": [
+        "available"
+      ],
+      "properties": {
+        "available": {
+          "description": "Number of available kits",
+          "type": "number",
+          "format": "int",
+          "example": 3
+        },
+        "used": {
+          "description": "Number of kits in use",
+          "type": "number",
+          "format": "int",
+          "example": 5
+        },
+        "wait": {
+          "description": "Wait time in seconds until first available kit",
+          "type": "number",
+          "format": "int64",
+          "example": 3200
+        }
+      },
+      "example": {
+        "available": 3,
+        "inuse": 5,
+        "wait": 0
       }
     },
     "stream": {
@@ -726,23 +1357,24 @@ func init() {
       "title": "userInterface",
       "required": [
         "url",
-        "name",
         "description"
       ],
       "properties": {
         "description": {
-          "description": "Description",
-          "type": "string"
+          "$ref": "#/definitions/description"
         },
-        "id": {
-          "description": "ID of the user interface",
-          "type": "string",
-          "example": "e76f4f42-b4e6-4436-8bcd-70ac74baabfb"
-        },
-        "name": {
-          "description": "Display name of the user interface",
-          "type": "string",
-          "example": "Penduino (basic)"
+        "streamsRequired": {
+          "description": "list of names of required streams",
+          "type": "array",
+          "items": {
+            "description": "stream name",
+            "type": "string",
+            "example": "video"
+          },
+          "example": [
+            "data",
+            "video"
+          ]
         },
         "url": {
           "description": "URL of the user interface",
@@ -752,9 +1384,19 @@ func init() {
       }
     }
   },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
   "tags": [
     {
-      "name": "pool"
+      "name": "groups"
+    },
+    {
+      "name": "pools"
     },
     {
       "name": "login"

@@ -15,18 +15,10 @@ import (
 )
 
 // NewPoolParams creates a new PoolParams object
-// with the default values initialized.
+// no default values defined in spec.
 func NewPoolParams() PoolParams {
 
-	var (
-		// initialize parameters with default values
-
-		authorizationDefault = string("Bearer {token}")
-	)
-
-	return PoolParams{
-		Authorization: &authorizationDefault,
-	}
+	return PoolParams{}
 }
 
 // PoolParams contains all the bound params for the pool operation
@@ -38,11 +30,6 @@ type PoolParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*
-	  In: header
-	  Default: "Bearer {token}"
-	*/
-	Authorization *string
 	/*Search by category
 	  In: query
 	*/
@@ -64,10 +51,6 @@ func (o *PoolParams) BindRequest(r *http.Request, route *middleware.MatchedRoute
 
 	qs := runtime.Values(r.URL.Query())
 
-	if err := o.bindAuthorization(r.Header[http.CanonicalHeaderKey("Authorization")], true, route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	qCategory, qhkCategory, _ := qs.GetOK("category")
 	if err := o.bindCategory(qCategory, qhkCategory, route.Formats); err != nil {
 		res = append(res, err)
@@ -81,25 +64,6 @@ func (o *PoolParams) BindRequest(r *http.Request, route *middleware.MatchedRoute
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-// bindAuthorization binds and validates parameter Authorization from header.
-func (o *PoolParams) bindAuthorization(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: false
-
-	if raw == "" { // empty values pass all other validations
-		// Default values have been previously initialized by NewPoolParams()
-		return nil
-	}
-
-	o.Authorization = &raw
-
 	return nil
 }
 

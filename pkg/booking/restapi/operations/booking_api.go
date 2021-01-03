@@ -19,8 +19,9 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pool"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
 )
 
 // NewBookingAPI creates a new Booking instance
@@ -45,15 +46,43 @@ func NewBookingAPI(spec *loads.Document) *BookingAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		PoolPostpoolHandler: pool.PostpoolHandlerFunc(func(params pool.PostpoolParams) middleware.Responder {
-			return middleware.NotImplemented("operation pool.Postpool has not yet been implemented")
+		PoolsAddActivityByPoolIDHandler: pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.AddActivityByPoolID has not yet been implemented")
 		}),
-		LoginLoginHandler: login.LoginHandlerFunc(func(params login.LoginParams) middleware.Responder {
+		PoolsAddNewPoolHandler: pools.AddNewPoolHandlerFunc(func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.AddNewPool has not yet been implemented")
+		}),
+		GroupsGetGroupDescriptionByIDHandler: groups.GetGroupDescriptionByIDHandlerFunc(func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.GetGroupDescriptionByID has not yet been implemented")
+		}),
+		GroupsGetGroupIDByNameHandler: groups.GetGroupIDByNameHandlerFunc(func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.GetGroupIDByName has not yet been implemented")
+		}),
+		PoolsGetPoolDescriptionByIDHandler: pools.GetPoolDescriptionByIDHandlerFunc(func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetPoolDescriptionByID has not yet been implemented")
+		}),
+		PoolsGetPoolStatusByIDHandler: pools.GetPoolStatusByIDHandlerFunc(func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetPoolStatusByID has not yet been implemented")
+		}),
+		PoolsGetPoolsByGroupIDHandler: pools.GetPoolsByGroupIDHandlerFunc(func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetPoolsByGroupID has not yet been implemented")
+		}),
+		LoginLoginHandler: login.LoginHandlerFunc(func(params login.LoginParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation login.Login has not yet been implemented")
 		}),
-		PoolPoolHandler: pool.PoolHandlerFunc(func(params pool.PoolParams) middleware.Responder {
-			return middleware.NotImplemented("operation pool.Pool has not yet been implemented")
+		PoolsRequestSessionByPoolIDHandler: pools.RequestSessionByPoolIDHandlerFunc(func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.RequestSessionByPoolID has not yet been implemented")
 		}),
+		PoolsUpdateActivityByIDHandler: pools.UpdateActivityByIDHandlerFunc(func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.UpdateActivityByID has not yet been implemented")
+		}),
+
+		// Applies when the "Authorization" header is set
+		BearerAuth: func(token string) (interface{}, error) {
+			return nil, errors.NotImplemented("api key auth (Bearer) Authorization from header param [Authorization] has not yet been implemented")
+		},
+		// default authorizer is authorized meaning no requests are blocked
+		APIAuthorizer: security.Authorized(),
 	}
 }
 
@@ -88,12 +117,33 @@ type BookingAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
-	// PoolPostpoolHandler sets the operation handler for the postpool operation
-	PoolPostpoolHandler pool.PostpoolHandler
+	// BearerAuth registers a function that takes a token and returns a principal
+	// it performs authentication based on an api key Authorization provided in the header
+	BearerAuth func(string) (interface{}, error)
+
+	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
+	APIAuthorizer runtime.Authorizer
+
+	// PoolsAddActivityByPoolIDHandler sets the operation handler for the add activity by pool ID operation
+	PoolsAddActivityByPoolIDHandler pools.AddActivityByPoolIDHandler
+	// PoolsAddNewPoolHandler sets the operation handler for the add new pool operation
+	PoolsAddNewPoolHandler pools.AddNewPoolHandler
+	// GroupsGetGroupDescriptionByIDHandler sets the operation handler for the get group description by ID operation
+	GroupsGetGroupDescriptionByIDHandler groups.GetGroupDescriptionByIDHandler
+	// GroupsGetGroupIDByNameHandler sets the operation handler for the get group ID by name operation
+	GroupsGetGroupIDByNameHandler groups.GetGroupIDByNameHandler
+	// PoolsGetPoolDescriptionByIDHandler sets the operation handler for the get pool description by ID operation
+	PoolsGetPoolDescriptionByIDHandler pools.GetPoolDescriptionByIDHandler
+	// PoolsGetPoolStatusByIDHandler sets the operation handler for the get pool status by ID operation
+	PoolsGetPoolStatusByIDHandler pools.GetPoolStatusByIDHandler
+	// PoolsGetPoolsByGroupIDHandler sets the operation handler for the get pools by group ID operation
+	PoolsGetPoolsByGroupIDHandler pools.GetPoolsByGroupIDHandler
 	// LoginLoginHandler sets the operation handler for the login operation
 	LoginLoginHandler login.LoginHandler
-	// PoolPoolHandler sets the operation handler for the pool operation
-	PoolPoolHandler pool.PoolHandler
+	// PoolsRequestSessionByPoolIDHandler sets the operation handler for the request session by pool ID operation
+	PoolsRequestSessionByPoolIDHandler pools.RequestSessionByPoolIDHandler
+	// PoolsUpdateActivityByIDHandler sets the operation handler for the update activity by ID operation
+	PoolsUpdateActivityByIDHandler pools.UpdateActivityByIDHandler
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
 	ServeError func(http.ResponseWriter, *http.Request, error)
@@ -170,14 +220,39 @@ func (o *BookingAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.PoolPostpoolHandler == nil {
-		unregistered = append(unregistered, "pool.PostpoolHandler")
+	if o.BearerAuth == nil {
+		unregistered = append(unregistered, "AuthorizationAuth")
+	}
+
+	if o.PoolsAddActivityByPoolIDHandler == nil {
+		unregistered = append(unregistered, "pools.AddActivityByPoolIDHandler")
+	}
+	if o.PoolsAddNewPoolHandler == nil {
+		unregistered = append(unregistered, "pools.AddNewPoolHandler")
+	}
+	if o.GroupsGetGroupDescriptionByIDHandler == nil {
+		unregistered = append(unregistered, "groups.GetGroupDescriptionByIDHandler")
+	}
+	if o.GroupsGetGroupIDByNameHandler == nil {
+		unregistered = append(unregistered, "groups.GetGroupIDByNameHandler")
+	}
+	if o.PoolsGetPoolDescriptionByIDHandler == nil {
+		unregistered = append(unregistered, "pools.GetPoolDescriptionByIDHandler")
+	}
+	if o.PoolsGetPoolStatusByIDHandler == nil {
+		unregistered = append(unregistered, "pools.GetPoolStatusByIDHandler")
+	}
+	if o.PoolsGetPoolsByGroupIDHandler == nil {
+		unregistered = append(unregistered, "pools.GetPoolsByGroupIDHandler")
 	}
 	if o.LoginLoginHandler == nil {
 		unregistered = append(unregistered, "login.LoginHandler")
 	}
-	if o.PoolPoolHandler == nil {
-		unregistered = append(unregistered, "pool.PoolHandler")
+	if o.PoolsRequestSessionByPoolIDHandler == nil {
+		unregistered = append(unregistered, "pools.RequestSessionByPoolIDHandler")
+	}
+	if o.PoolsUpdateActivityByIDHandler == nil {
+		unregistered = append(unregistered, "pools.UpdateActivityByIDHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -194,12 +269,21 @@ func (o *BookingAPI) ServeErrorFor(operationID string) func(http.ResponseWriter,
 
 // AuthenticatorsFor gets the authenticators for the specified security schemes
 func (o *BookingAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]runtime.Authenticator {
-	return nil
+	result := make(map[string]runtime.Authenticator)
+	for name := range schemes {
+		switch name {
+		case "Bearer":
+			scheme := schemes[name]
+			result[name] = o.APIKeyAuthenticator(scheme.Name, scheme.In, o.BearerAuth)
+
+		}
+	}
+	return result
 }
 
 // Authorizer returns the registered authorizer
 func (o *BookingAPI) Authorizer() runtime.Authorizer {
-	return nil
+	return o.APIAuthorizer
 }
 
 // ConsumersFor gets the consumers for the specified media types.
@@ -270,15 +354,43 @@ func (o *BookingAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/pool/{pool_id}/request"] = pool.NewPostpool(o.context, o.PoolPostpoolHandler)
+	o.handlers["POST"]["/pools/{pool_id}/activities"] = pools.NewAddActivityByPoolID(o.context, o.PoolsAddActivityByPoolIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/pools"] = pools.NewAddNewPool(o.context, o.PoolsAddNewPoolHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/groups/{group_id}"] = groups.NewGetGroupDescriptionByID(o.context, o.GroupsGetGroupDescriptionByIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/groups"] = groups.NewGetGroupIDByName(o.context, o.GroupsGetGroupIDByNameHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/pools/{pool_id}/description"] = pools.NewGetPoolDescriptionByID(o.context, o.PoolsGetPoolDescriptionByIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/pools/{pool_id}/status"] = pools.NewGetPoolStatusByID(o.context, o.PoolsGetPoolStatusByIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/pools"] = pools.NewGetPoolsByGroupID(o.context, o.PoolsGetPoolsByGroupIDHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/login"] = login.NewLogin(o.context, o.LoginLoginHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/pool"] = pool.NewPool(o.context, o.PoolPoolHandler)
+	o.handlers["POST"]["/pools/{pool_id}/sessions"] = pools.NewRequestSessionByPoolID(o.context, o.PoolsRequestSessionByPoolIDHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/pools/{pool_id}/activities/{activity_id}"] = pools.NewUpdateActivityByID(o.context, o.PoolsUpdateActivityByIDHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP
