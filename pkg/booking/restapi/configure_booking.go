@@ -11,8 +11,9 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pool"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
 )
 
 //go:generate swagger generate server --target ../../booking --name Booking --spec ../../../api/openapi-spec/booking.yml --principal interface{} --exclude-main
@@ -39,19 +40,66 @@ func configureAPI(api *operations.BookingAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	if api.PoolPostpoolHandler == nil {
-		api.PoolPostpoolHandler = pool.PostpoolHandlerFunc(func(params pool.PostpoolParams) middleware.Responder {
-			return middleware.NotImplemented("operation pool.Postpool has not yet been implemented")
+	// Applies when the "Authorization" header is set
+	if api.BearerAuth == nil {
+		api.BearerAuth = func(token string) (interface{}, error) {
+			return nil, errors.NotImplemented("api key auth (Bearer) Authorization from header param [Authorization] has not yet been implemented")
+		}
+	}
+
+	// Set your custom authorizer if needed. Default one is security.Authorized()
+	// Expected interface runtime.Authorizer
+	//
+	// Example:
+	// api.APIAuthorizer = security.Authorized()
+	if api.PoolsAddActivityByPoolIDHandler == nil {
+		api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.AddActivityByPoolID has not yet been implemented")
+		})
+	}
+	if api.PoolsAddNewPoolHandler == nil {
+		api.PoolsAddNewPoolHandler = pools.AddNewPoolHandlerFunc(func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.AddNewPool has not yet been implemented")
+		})
+	}
+	if api.GroupsGetGroupDescriptionByIDHandler == nil {
+		api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.GetGroupDescriptionByID has not yet been implemented")
+		})
+	}
+	if api.GroupsGetGroupIDByNameHandler == nil {
+		api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.GetGroupIDByName has not yet been implemented")
+		})
+	}
+	if api.PoolsGetPoolDescriptionByIDHandler == nil {
+		api.PoolsGetPoolDescriptionByIDHandler = pools.GetPoolDescriptionByIDHandlerFunc(func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetPoolDescriptionByID has not yet been implemented")
+		})
+	}
+	if api.PoolsGetPoolStatusByIDHandler == nil {
+		api.PoolsGetPoolStatusByIDHandler = pools.GetPoolStatusByIDHandlerFunc(func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetPoolStatusByID has not yet been implemented")
+		})
+	}
+	if api.PoolsGetPoolsByGroupIDHandler == nil {
+		api.PoolsGetPoolsByGroupIDHandler = pools.GetPoolsByGroupIDHandlerFunc(func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetPoolsByGroupID has not yet been implemented")
 		})
 	}
 	if api.LoginLoginHandler == nil {
-		api.LoginLoginHandler = login.LoginHandlerFunc(func(params login.LoginParams) middleware.Responder {
+		api.LoginLoginHandler = login.LoginHandlerFunc(func(params login.LoginParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation login.Login has not yet been implemented")
 		})
 	}
-	if api.PoolPoolHandler == nil {
-		api.PoolPoolHandler = pool.PoolHandlerFunc(func(params pool.PoolParams) middleware.Responder {
-			return middleware.NotImplemented("operation pool.Pool has not yet been implemented")
+	if api.PoolsRequestSessionByPoolIDHandler == nil {
+		api.PoolsRequestSessionByPoolIDHandler = pools.RequestSessionByPoolIDHandlerFunc(func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.RequestSessionByPoolID has not yet been implemented")
+		})
+	}
+	if api.PoolsUpdateActivityByIDHandler == nil {
+		api.PoolsUpdateActivityByIDHandler = pools.UpdateActivityByIDHandlerFunc(func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.UpdateActivityByID has not yet been implemented")
 		})
 	}
 
