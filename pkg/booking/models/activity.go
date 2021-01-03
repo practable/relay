@@ -21,9 +21,6 @@ import (
 // swagger:model activity
 type Activity struct {
 
-	// Issuer
-	Iss string `json:"Iss,omitempty"`
-
 	// Audience
 	// Required: true
 	Aud *string `json:"aud"`
@@ -38,6 +35,9 @@ type Activity struct {
 
 	// Issued At
 	Iat float64 `json:"iat,omitempty"`
+
+	// Issuer
+	Iss string `json:"iss,omitempty"`
 
 	// Not before
 	// Required: true

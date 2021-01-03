@@ -15,6 +15,12 @@ type PoolStore struct {
 
 	// Secret for generating tokens - assume one PoolStore per relay
 	Secret string
+
+	// How long to grant booking tokens for
+	BookingTokenDuration int64
+
+	// Now is a function for getting the time - useful for mocking in test
+	Now func() int64
 }
 
 type Group struct {

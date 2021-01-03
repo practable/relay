@@ -15,6 +15,8 @@ func NewPoolStore() *PoolStore {
 		make(map[string]*Group),
 		make(map[string]*Pool),
 		"",
+		3600,
+		func() int64 { return time.Now().Unix() },
 	}
 }
 
@@ -24,6 +26,27 @@ func (p *PoolStore) WithSecret(secret string) *PoolStore {
 	p.Secret = secret
 	return p
 }
+
+func (p *PoolStore) WithNow(now func() int64) *PoolStore {
+	p.Lock()
+	defer p.Unlock()
+	p.Now = now
+	return p
+}
+
+func (p *PoolStore) WithBookingTokenDuration(duration int64) *PoolStore {
+	p.Lock()
+	defer p.Unlock()
+	p.BookingTokenDuration = duration
+	return p
+}
+
+// GetTime allows flexibility in choosing clock source
+// default is internal clock of the server
+func (p *PoolStore) GetTime() int64 {
+	return p.Now()
+}
+
 func (p *PoolStore) GetSecret() string {
 	p.RLock()
 	defer p.RUnlock()
@@ -265,7 +288,7 @@ func (d *Description) WithID(id string) *Description {
 }
 
 func NewActivity(name string, expires int64) *Activity {
-	return &Activity{
+	return &Activity{ 
 		&sync.RWMutex{},
 		*NewDescription(name),
 		expires,
@@ -288,7 +311,7 @@ func (a *Activity) WithPermission(p Permission) *Activity {
 	return a
 }
 
-func (a *Activity) GetPermission() Permission  {
+func (a *Activity) GetPermission() Permission {
 	a.RLock()
 	defer a.RUnlock()
 	return a.Permission

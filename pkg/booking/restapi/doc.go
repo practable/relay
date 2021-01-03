@@ -6,8 +6,8 @@
 //  Schemes:
 //    http
 //  Host: book.practable.io
-//  BasePath: /
-//  Version: 0.2
+//  BasePath: /api/v1
+//  Version: 0.3
 //  Contact: Tim Drysdale<timothy.d.drysdale@gmail.com> https://practable.io
 //
 //  Consumes:
