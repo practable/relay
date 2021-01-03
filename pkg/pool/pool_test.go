@@ -153,3 +153,115 @@ func TestAddRequestActivity(t *testing.T) {
 	assert.True(t, p.ActivityExists(b.ID))
 
 }
+
+func TestAddGetPools(t *testing.T) {
+
+	ps := NewPoolStore().WithSecret("foo")
+
+	assert.Equal(t, "foo", ps.GetSecret())
+
+	p0 := NewPool("stuff0")
+	p1 := NewPool("stuff1")
+	p2 := NewPool("things")
+
+	ps.AddPool(p0)
+	ps.AddPool(p1)
+	ps.AddPool(p2)
+
+	pool, err := ps.GetPoolByID("definitelyNotAPoolIDBecauseNotAUUID")
+
+	assert.Error(t, err)
+
+	assert.Equal(t, "not found", err.Error())
+
+	pool, err = ps.GetPoolByID(p0.ID)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, p0.Name, pool.Name)
+
+	pools, err := ps.GetPoolsByName("stuff1")
+
+	assert.Equal(t, 1, len(pools))
+
+	assert.Equal(t, p1.Name, (pools[0]).Name)
+
+	pools, err = ps.GetPoolsByNamePrefix("stuff")
+
+	assert.Equal(t, 2, len(pools))
+
+}
+
+func TestAddGetGroups(t *testing.T) {
+
+	ps := NewPoolStore().WithSecret("bar")
+
+	assert.Equal(t, "bar", ps.GetSecret())
+
+	g0 := NewGroup("stuff0")
+	g1 := NewGroup("stuff1")
+	g2 := NewGroup("things")
+
+	ps.AddGroup(g0)
+	ps.AddGroup(g1)
+	ps.AddGroup(g2)
+
+	group, err := ps.GetGroupByID("definitelyNotAGroupIDBecauseNotAUUID")
+
+	assert.Error(t, err)
+
+	assert.Equal(t, "not found", err.Error())
+
+	group, err = ps.GetGroupByID(g0.ID)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, g0.Name, group.Name)
+
+	groups, err := ps.GetGroupsByName("stuff1")
+
+	assert.Equal(t, 1, len(groups))
+
+	assert.Equal(t, g1.Name, (groups[0]).Name)
+
+	groups, err = ps.GetGroupsByNamePrefix("stuff")
+
+	assert.Equal(t, 2, len(groups))
+
+}
+
+func TestAddGetPoolInGroup(t *testing.T) {
+
+	g0 := NewGroup("stuff")
+	g1 := NewGroup("things")
+
+	p0 := NewPool("stuff0")
+	p1 := NewPool("stuff1")
+	p2 := NewPool("things0")
+	p3 := NewPool("things1")
+
+	g0.AddPool(p0)
+	g0.AddPool(p1)
+	g1.AddPools([]*Pool{p2, p3})
+
+	pools0 := g0.GetPools()
+	assert.Equal(t, 2, len(pools0))
+
+	pools1 := g1.GetPools()
+	assert.Equal(t, 2, len(pools1))
+
+}
+
+func TestAddPermissionsToActivity(t *testing.T) {
+
+	p := Permission{
+		Audience:       "https://relay-access.example.io",
+		ConnectionType: "session",
+		Topic:          "123",
+	}
+
+	a := NewActivity("pend00", time.Now().Unix()+1000).WithPermission(p)
+
+	assert.Equal(t, p, a.GetPermission())
+
+}
