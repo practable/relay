@@ -530,8 +530,13 @@ definitions:
         example: 3
         type: number
         format: int
+      later:  
+        description: Number of available kits later
+        example: 4
+        type: number
+        format: int 
       wait:
-        description: Wait time in seconds until first available kit
+        description: Wait time in seconds until first kit available later
         example: 3200
         type: number
         format: int64
