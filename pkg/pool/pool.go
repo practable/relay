@@ -151,6 +151,22 @@ func (p *PoolStore) GetPoolsByName(name string) ([]*Pool, error) {
 	return pools, nil
 }
 
+func (p *PoolStore) DeletePool(pool *Pool) {
+	p.Lock()
+	defer p.Unlock()
+	pools := p.Pools
+	delete(pools, pool.ID)
+	p.Pools = pools
+}
+
+func (p *PoolStore) DeleteGroup(group *Group) {
+	p.Lock()
+	defer p.Unlock()
+	groups := p.Groups
+	delete(groups, group.ID)
+	p.Groups = groups
+}
+
 func (p *PoolStore) AddPool(pool *Pool) {
 	p.Lock()
 	defer p.Unlock()
@@ -220,7 +236,20 @@ func (g *Group) AddPool(pool *Pool) {
 	p := g.Pools
 	p = append(p, pool)
 	g.Pools = p
+}
 
+func (g *Group) DeletePool(pool *Pool) {
+	g.Lock()
+	defer g.Unlock()
+
+	// groups are small so performance optimisation not required
+	pools := []*Pool{}
+	for _, p := range g.Pools {
+		if p != pool {
+			pools = append(pools, p)
+		}
+	}
+	g.Pools = pools
 }
 
 func (g *Group) AddPools(pools []*Pool) {
@@ -259,7 +288,7 @@ func (p *Pool) WithNow(now func() int64) *Pool {
 	p.Lock()
 	defer p.Unlock()
 	p.Now = now
-	return p
+	return p 
 }
 
 func (p *Pool) WithID(id string) *Pool {
@@ -288,7 +317,7 @@ func (d *Description) WithID(id string) *Description {
 }
 
 func NewActivity(name string, expires int64) *Activity {
-	return &Activity{ 
+	return &Activity{
 		&sync.RWMutex{},
 		*NewDescription(name),
 		expires,

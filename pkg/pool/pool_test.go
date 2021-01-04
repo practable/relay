@@ -154,7 +154,7 @@ func TestAddRequestActivity(t *testing.T) {
 
 }
 
-func TestAddGetPools(t *testing.T) {
+func TestAddGetDeletePools(t *testing.T) {
 
 	ps := NewPoolStore().WithSecret("foo")
 
@@ -190,9 +190,18 @@ func TestAddGetPools(t *testing.T) {
 
 	assert.Equal(t, 2, len(pools))
 
+	ps.DeletePool(p0)
+	pools, err = ps.GetPoolsByNamePrefix("stuff")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(pools))
+	ps.DeletePool(p1)
+	pools, err = ps.GetPoolsByNamePrefix("stuff")
+	assert.Error(t, err)
+	assert.Equal(t, "not found", err.Error())
+
 }
 
-func TestAddGetGroups(t *testing.T) {
+func TestAddGetDeleteGroups(t *testing.T) {
 
 	ps := NewPoolStore().WithSecret("bar")
 
@@ -228,6 +237,18 @@ func TestAddGetGroups(t *testing.T) {
 
 	assert.Equal(t, 2, len(groups))
 
+	ps.DeleteGroup(g0)
+
+	groups, err = ps.GetGroupsByNamePrefix("stuff")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(groups))
+
+	ps.DeleteGroup(g1)
+
+	groups, err = ps.GetGroupsByNamePrefix("stuff")
+	assert.Error(t, err)
+	assert.Equal(t, "not found", err.Error())
+
 }
 
 func TestAddGetPoolInGroup(t *testing.T) {
@@ -249,6 +270,19 @@ func TestAddGetPoolInGroup(t *testing.T) {
 
 	pools1 := g1.GetPools()
 	assert.Equal(t, 2, len(pools1))
+
+	g1.DeletePool(p2)
+	pools1 = g1.GetPools()
+	assert.Equal(t, 1, len(pools1))
+
+	// delete deleted item causes no change
+	g1.DeletePool(p2)
+	pools1 = g1.GetPools()
+	assert.Equal(t, 1, len(pools1))
+
+	g1.DeletePool(p3)
+	pools1 = g1.GetPools()
+	assert.Equal(t, 0, len(pools1))
 
 }
 
