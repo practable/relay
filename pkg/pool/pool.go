@@ -407,6 +407,17 @@ func (p *Pool) AddActivity(activity *Activity) error {
 
 }
 
+func (p *Pool) DeleteActivity(activity *Activity) {
+	p.Lock()
+	defer p.Unlock()
+	act := p.Activities
+	delete(act, activity.ID)
+	p.Activities = act
+	av := p.Available
+	delete(av, activity.ID)
+	p.Available = av
+}
+
 func (p *Pool) GetActivityIDs() []string {
 
 	p.RemoveStaleEntries()
@@ -422,6 +433,20 @@ func (p *Pool) GetActivityIDs() []string {
 
 	return ids
 
+}
+
+func (p *Pool) CountInUse() int {
+	p.RemoveStaleEntries()
+	p.RLock()
+	defer p.RUnlock()
+	return len(p.InUse)
+}
+
+func (p *Pool) CountAvailable() int {
+	p.RemoveStaleEntries()
+	p.RLock()
+	defer p.RUnlock()
+	return len(p.Available)
 }
 
 func (p *Pool) GetActivityByID(id string) (*Activity, error) {
@@ -496,7 +521,6 @@ func (p *Pool) RemoveStaleEntries() {
 			ids = append(ids, k)
 		}
 	}
-
 	inUse := p.InUse
 
 	for _, id := range ids {

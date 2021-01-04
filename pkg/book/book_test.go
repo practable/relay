@@ -22,7 +22,7 @@ import (
 
 var ps *pool.PoolStore
 var host, secret string
-var bookingDuration int64
+var bookingDuration, mocktime, startime int64
 
 func TestMain(m *testing.M) {
 
@@ -32,9 +32,13 @@ func TestMain(m *testing.M) {
 	secret = "somesecret"
 	bookingDuration = int64(180)
 
+	mocktime = time.Now().Unix()
+	startime = mocktime
+
 	ps = pool.NewPoolStore().
 		WithSecret(secret).
-		WithBookingTokenDuration(bookingDuration)
+		WithBookingTokenDuration(bookingDuration).
+		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
 
 	port, err := freeport.GetFreePort()
 	if err != nil {
@@ -310,7 +314,7 @@ func TestGetPoolsByID(t *testing.T) {
 
 }
 
-func TestGetPoolsAtLoginGetPoolDescriptionByID(t *testing.T) {
+func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 
 	// add groups, pools
 
@@ -321,7 +325,7 @@ func TestGetPoolsAtLoginGetPoolDescriptionByID(t *testing.T) {
 	ps.AddGroup(g0)
 	defer ps.DeleteGroup(g0)
 
-	p0 := pool.NewPool("stuff0")
+	p0 := pool.NewPool("stuff0").WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
 
 	p0.DisplayInfo = pool.DisplayInfo{
 		Short:   "The Good Stuff - Pool 0",
@@ -388,8 +392,6 @@ func TestGetPoolsAtLoginGetPoolDescriptionByID(t *testing.T) {
 	assert.Equal(t, []string{p0.ID, p1.ID}, claims.Pools)
 
 	// Check we can get a description of a pool
-	client = &http.Client{}
-
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/description", nil)
 	assert.NoError(t, err)
 	req.Header.Add("Authorization", bookingBearer)
@@ -406,5 +408,154 @@ func TestGetPoolsAtLoginGetPoolDescriptionByID(t *testing.T) {
 	assert.Equal(t, "https://example.com/thumb.png", d.Thumb)
 	assert.Equal(t, "https://example.com/img.png", d.Image)
 	assert.Equal(t, p0.ID, d.ID)
+
+	// get status with no activities registered to check this doesn't break anything
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	s := models.Status{}
+	err = json.Unmarshal(body, &s)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), *s.Available)
+	assert.Equal(t, int64(0), s.Wait)
+	assert.Equal(t, false, s.Later)
+	assert.Equal(t, int64(0), s.Used)
+
+	// Add some activities
+	a := pool.NewActivity("a", ps.Now()+3600)
+	b := pool.NewActivity("b", ps.Now()+7200)
+	c := pool.NewActivity("b", ps.Now()+7200)
+	p0.AddActivity(a)
+	defer p0.DeleteActivity(a)
+	p0.AddActivity(b)
+	defer p0.DeleteActivity(b)
+	p0.AddActivity(c)
+	defer p0.DeleteActivity(c)
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &s)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(3), *s.Available)
+	assert.Equal(t, int64(0), s.Wait)
+	assert.Equal(t, true, s.Later)
+	assert.Equal(t, int64(0), s.Used)
+
+	aid, err := p0.ActivityRequestAny(2000)
+	assert.NoError(t, err)
+	assert.True(t, a.ID == aid || b.ID == aid || c.ID == aid)
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &s)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(3), *s.Available)
+	assert.Equal(t, int64(0), s.Wait)
+	assert.Equal(t, true, s.Later)
+	assert.Equal(t, int64(1), s.Used)
+
+	aid, err = p0.ActivityRequestAny(2000)
+	assert.NoError(t, err)
+	assert.True(t, a.ID == aid || b.ID == aid || c.ID == aid)
+
+	aid, err = p0.ActivityRequestAny(2000)
+	assert.NoError(t, err)
+	assert.True(t, a.ID == aid || b.ID == aid || c.ID == aid)
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &s)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(3), *s.Available)
+	assert.Equal(t, int64(2000), s.Wait)
+	assert.Equal(t, true, s.Later)
+	assert.Equal(t, int64(3), s.Used)
+
+	mocktime = startime + 2002
+	assert.Equal(t, mocktime, ps.GetTime())
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	s = models.Status{}
+	err = json.Unmarshal(body, &s)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(3), *s.Available)
+	assert.Equal(t, int64(0), s.Wait)
+	assert.Equal(t, true, s.Later)
+	assert.Equal(t, int64(0), s.Used)
+
+	mocktime = startime + 3601
+
+	aid, err = p0.ActivityRequestAny(2000)
+	assert.NoError(t, err)
+	assert.True(t, b.ID == aid || c.ID == aid)
+
+	aid, err = p0.ActivityRequestAny(2000)
+	assert.NoError(t, err)
+	assert.True(t, b.ID == aid || c.ID == aid)
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	s = models.Status{}
+	err = json.Unmarshal(body, &s)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(2), *s.Available)
+	assert.Equal(t, int64(2000), s.Wait)
+	assert.Equal(t, true, s.Later)
+	assert.Equal(t, int64(2), s.Used)
+
+	// now try again but checking status for a longer requested duration
+	// which is longer than they are available
+	// become available at 5601, expire at 7200
+
+	mocktime = startime + 5300
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	q := req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	s = models.Status{}
+	err = json.Unmarshal(body, &s)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(2), *s.Available)
+	assert.Equal(t, int64(0), s.Wait)
+	assert.Equal(t, false, s.Later)
+	assert.Equal(t, int64(2), s.Used)
 
 }

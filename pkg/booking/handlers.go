@@ -12,6 +12,74 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
+func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
+	return func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Token Not JWT")
+		}
+
+		// save checking for key existence individually by checking all at once
+		claims, ok := token.Claims.(*lit.Token)
+
+		if !ok {
+			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Token Claims Incorrect Type")
+		}
+
+		if !lit.HasRequiredClaims(*claims) {
+			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Token Missing Required Claims")
+		}
+
+		hasBookingScope := false
+
+		for _, scope := range claims.Scopes {
+			if scope == "booking" {
+				hasBookingScope = true
+			}
+		}
+
+		if !hasBookingScope {
+			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Missing booking Scope")
+		}
+
+		// is this user allowed to access this pool? i.e. is this pool in our of our authorised groups?
+		hasPool := false
+
+		for _, pool := range claims.Pools {
+			if pool != params.PoolID {
+				continue
+			}
+			hasPool = true
+			break
+		}
+
+		if !hasPool {
+			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Pool Not In Authorized Groups")
+		}
+
+		p, err := ps.GetPoolByID(params.PoolID)
+		if err != nil {
+			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Pool Does Not Exist")
+		}
+
+		s := models.Status{}
+
+		duration := uint64(300)
+		if params.Duration != nil {
+			duration = uint64(*params.Duration)
+		}
+
+		wait, err := p.ActivityWaitDuration(duration)
+		s.Later = (err == nil) //err means no kit avail later
+		s.Wait = int64(wait)
+		avail := int64(p.CountAvailable())
+		s.Available = &avail
+		s.Used = int64(p.CountInUse())
+
+		return pools.NewGetPoolStatusByIDOK().WithPayload(&s)
+	}
+}
+
 func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
 		token, ok := principal.(*jwt.Token)

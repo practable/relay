@@ -27,7 +27,7 @@ func TestNewPool(t *testing.T) {
 
 }
 
-func TestAddRequestActivity(t *testing.T) {
+func TestAddRequestCountActivity(t *testing.T) {
 
 	time := time.Now().Unix()
 	starttime := time
@@ -105,12 +105,18 @@ func TestAddRequestActivity(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(0), wait)
 
+	assert.Equal(t, 2, p.CountAvailable())
+	assert.Equal(t, 0, p.CountInUse())
+
 	id, err := p.ActivityRequestAny(5000) //rules out a
 	assert.NoError(t, err)
 	assert.Equal(t, b.ID, id)
 
 	assert.False(t, p.ActivityInUse(a.ID))
 	assert.True(t, p.ActivityInUse(b.ID))
+
+	assert.Equal(t, 2, p.CountAvailable())
+	assert.Equal(t, 1, p.CountInUse())
 
 	at, err = p.ActivityNextAvailableTime(a.ID)
 	assert.NoError(t, err)
@@ -151,6 +157,10 @@ func TestAddRequestActivity(t *testing.T) {
 
 	assert.False(t, p.ActivityExists(a.ID))
 	assert.True(t, p.ActivityExists(b.ID))
+
+	assert.Equal(t, 1, p.CountAvailable())
+	p.DeleteActivity(b)
+	assert.Equal(t, 0, p.CountAvailable())
 
 }
 

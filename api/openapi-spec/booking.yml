@@ -194,6 +194,12 @@ paths:
         required: true
         type: string
         description: ''
+      - name: duration
+        in: query
+        required: false
+        type: number
+        format: float64
+        description: ''       
       security:
         - Bearer: []  
       responses:
@@ -531,10 +537,9 @@ definitions:
         type: number
         format: int
       later:  
-        description: Number of available kits later
-        example: 4
-        type: number
-        format: int 
+        description: Kit available later?
+        example: true
+        type: boolean
       wait:
         description: Wait time in seconds until first kit available later
         example: 3200
