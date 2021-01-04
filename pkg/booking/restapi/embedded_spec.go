@@ -485,6 +485,12 @@ func init() {
             "name": "pool_id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "number",
+            "format": "float64",
+            "name": "duration",
+            "in": "query"
           }
         ],
         "responses": {
@@ -724,10 +730,9 @@ func init() {
           "example": 3
         },
         "later": {
-          "description": "Number of available kits later",
-          "type": "number",
-          "format": "int",
-          "example": 4
+          "description": "Kit available later?",
+          "type": "boolean",
+          "example": true
         },
         "used": {
           "description": "Number of kits in use",
@@ -1320,6 +1325,12 @@ func init() {
             "name": "pool_id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "number",
+            "format": "float64",
+            "name": "duration",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1559,10 +1570,9 @@ func init() {
           "example": 3
         },
         "later": {
-          "description": "Number of available kits later",
-          "type": "number",
-          "format": "int",
-          "example": 4
+          "description": "Kit available later?",
+          "type": "boolean",
+          "example": true
         },
         "used": {
           "description": "Number of kits in use",

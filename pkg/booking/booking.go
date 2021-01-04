@@ -65,6 +65,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore)
 	api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(getGroupDescriptionByIDHandlerFunc(ps))
 	api.PoolsGetPoolsByGroupIDHandler = pools.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupIDHandler(ps))
 	api.PoolsGetPoolDescriptionByIDHandler = pools.GetPoolDescriptionByIDHandlerFunc(getPoolDescriptionByIDHandler(ps))
+	api.PoolsGetPoolStatusByIDHandler = pools.GetPoolStatusByIDHandlerFunc(getPoolStatusByIDHandler(ps))
 
 	/*
 	   api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
@@ -73,12 +74,8 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore)
 	   PoolsAddNewPoolHandler: pools.AddNewPoolHandlerFunc(func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 	   	return middleware.NotImplemented("operation pools.AddNewPool has not yet been implemented")
 	   }),
-	   PoolsGetPoolDescriptionByIDHandler: pools.GetPoolDescriptionByIDHandlerFunc(func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
-	   	return middleware.NotImplemented("operation pools.GetPoolDescriptionByID has not yet been implemented")
-	   }),
-	   PoolsGetPoolStatusByIDHandler: pools.GetPoolStatusByIDHandlerFunc(func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
-	   	return middleware.NotImplemented("operation pools.GetPoolStatusByID has not yet been implemented")
-	   }),
+
+
 	   PoolsRequestSessionByPoolIDHandler: pools.RequestSessionByPoolIDHandlerFunc(func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 	   	return middleware.NotImplemented("operation pools.RequestSessionByPoolID has not yet been implemented")
 	   }),
