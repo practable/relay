@@ -105,35 +105,3 @@ func (o *LoginBody) UnmarshalBinary(b []byte) error {
 	*o = res
 	return nil
 }
-
-// LoginOKBody login o k body
-//
-// swagger:model LoginOKBody
-type LoginOKBody struct {
-
-	// login token
-	Token string `json:"token,omitempty"`
-}
-
-// Validate validates this login o k body
-func (o *LoginOKBody) Validate(formats strfmt.Registry) error {
-	return nil
-}
-
-// MarshalBinary interface implementation
-func (o *LoginOKBody) MarshalBinary() ([]byte, error) {
-	if o == nil {
-		return nil, nil
-	}
-	return swag.WriteJSON(o)
-}
-
-// UnmarshalBinary interface implementation
-func (o *LoginOKBody) UnmarshalBinary(b []byte) error {
-	var res LoginOKBody
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
-	}
-	*o = res
-	return nil
-}

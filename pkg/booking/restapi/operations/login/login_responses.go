@@ -9,6 +9,8 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime"
+
+	"github.com/timdrysdale/relay/pkg/booking/models"
 )
 
 // LoginOKCode is the HTTP code returned for type LoginOK
@@ -23,7 +25,7 @@ type LoginOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *LoginOKBody `json:"body,omitempty"`
+	Payload *models.Bookingtoken `json:"body,omitempty"`
 }
 
 // NewLoginOK creates LoginOK with default headers values
@@ -33,13 +35,13 @@ func NewLoginOK() *LoginOK {
 }
 
 // WithPayload adds the payload to the login o k response
-func (o *LoginOK) WithPayload(payload *LoginOKBody) *LoginOK {
+func (o *LoginOK) WithPayload(payload *models.Bookingtoken) *LoginOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the login o k response
-func (o *LoginOK) SetPayload(payload *LoginOKBody) {
+func (o *LoginOK) SetPayload(payload *models.Bookingtoken) {
 	o.Payload = payload
 }
 
