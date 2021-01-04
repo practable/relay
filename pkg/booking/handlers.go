@@ -7,9 +7,71 @@ import (
 	"github.com/timdrysdale/relay/pkg/booking/models"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
+
+func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+	return func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Token Not JWT")
+		}
+
+		// save checking for key existence individually by checking all at once
+		claims, ok := token.Claims.(*lit.Token)
+
+		if !ok {
+			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Token Claims Incorrect Type")
+		}
+
+		if !lit.HasRequiredClaims(*claims) {
+			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Token Missing Required Claims")
+		}
+
+		hasBookingScope := false
+
+		for _, scope := range claims.Scopes {
+			if scope == "booking" {
+				hasBookingScope = true
+			}
+		}
+
+		if !hasBookingScope {
+			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Missing booking Scope")
+		}
+
+		gp, err := ps.GetGroupByID(params.GroupID)
+
+		if err != nil {
+			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload(err.Error())
+		}
+
+		isAllowedGroup := false
+
+		for _, name := range claims.Groups {
+			if name != gp.Name {
+				continue
+			}
+			isAllowedGroup = true
+			break
+		}
+
+		if !isAllowedGroup {
+			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Missing Group Name in Groups Claim")
+		}
+
+		ids := []string{}
+
+		for _, p := range gp.GetPools() {
+			ids = append(ids, p.ID)
+		}
+
+		return pools.NewGetPoolsByGroupIDOK().WithPayload(ids)
+	}
+}
 
 func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupDescriptionByIDParams, interface{}) middleware.Responder {
 	return func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {

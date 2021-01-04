@@ -254,3 +254,49 @@ func TestGetGroupDescriptionByID(t *testing.T) {
 	assert.Equal(t, g0.ID, d.ID)
 
 }
+
+func TestGetPoolsByID(t *testing.T) {
+
+	name := "stuff"
+
+	g0 := pool.NewGroup(name)
+
+	ps.AddGroup(g0)
+	defer ps.DeleteGroup(g0)
+
+	p0 := pool.NewPool("stuff0")
+	p1 := pool.NewPool("stuff1")
+	g0.AddPools([]*pool.Pool{p0, p1})
+
+	claims := &lit.Token{}
+	claims.Audience = host
+	claims.Groups = []string{name}
+	claims.Scopes = []string{"booking", "user"}
+	claims.IssuedAt = ps.GetTime() - 1
+	claims.NotBefore = ps.GetTime() - 1
+	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+
+	// sign user token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// Sign and get the complete encoded token as a string using the secret
+	bearer, err := token.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", host+"/api/v1/pools/", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+	q := req.URL.Query()
+	q.Add("group_id", g0.ID)
+	req.URL.RawQuery = q.Encode()
+	assert.NoError(t, err)
+	resp, err := client.Do(req)
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	r := []string{}
+
+	err = json.Unmarshal(body, &r)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{p0.ID, p1.ID}, r)
+
+}

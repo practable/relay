@@ -23,10 +23,13 @@ type Status struct {
 	// Required: true
 	Available *int64 `json:"available"`
 
+	// Number of available kits later
+	Later int64 `json:"later,omitempty"`
+
 	// Number of kits in use
 	Used int64 `json:"used,omitempty"`
 
-	// Wait time in seconds until first available kit
+	// Wait time in seconds until first kit available later
 	Wait int64 `json:"wait,omitempty"`
 }
 

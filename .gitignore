@@ -12,6 +12,9 @@ tmp
 # private notes
 TODO.md
 
+#local actions
+.github/workflows/golocal.yml
+
 # Test binary, built with `go test -c`
 *.test
 # Files with example testing outputs (manually created)

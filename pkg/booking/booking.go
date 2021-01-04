@@ -25,6 +25,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
@@ -63,6 +64,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore)
 
 	api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(getGroupIDByNameHandlerFunc(ps))
 	api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(getGroupDescriptionByIDHandlerFunc(ps))
+	api.PoolsGetPoolsByGroupIDHandler = pools.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupIDHandler(ps))
 
 	/*
 		api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
@@ -73,12 +75,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore)
 				PoolsAddNewPoolHandler: pools.AddNewPoolHandlerFunc(func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 					return middleware.NotImplemented("operation pools.AddNewPool has not yet been implemented")
 				}),
-				GroupsGetGroupDescriptionByIDHandler: groups.GetGroupDescriptionByIDHandlerFunc(func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
-					return middleware.NotImplemented("operation groups.GetGroupDescriptionByID has not yet been implemented")
-				}),
-				GroupsGetGroupIDByNameHandler: groups.GetGroupIDByNameHandlerFunc(func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
-					return middleware.NotImplemented("operation groups.GetGroupIDByName has not yet been implemented")
-				}),
+
 				PoolsGetPoolDescriptionByIDHandler: pools.GetPoolDescriptionByIDHandlerFunc(func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
 					return middleware.NotImplemented("operation pools.GetPoolDescriptionByID has not yet been implemented")
 				}),

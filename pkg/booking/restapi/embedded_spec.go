@@ -715,6 +715,12 @@ func init() {
           "format": "int",
           "example": 3
         },
+        "later": {
+          "description": "Number of available kits later",
+          "type": "number",
+          "format": "int",
+          "example": 4
+        },
         "used": {
           "description": "Number of kits in use",
           "type": "number",
@@ -722,7 +728,7 @@ func init() {
           "example": 5
         },
         "wait": {
-          "description": "Wait time in seconds until first available kit",
+          "description": "Wait time in seconds until first kit available later",
           "type": "number",
           "format": "int64",
           "example": 3200
@@ -1536,6 +1542,12 @@ func init() {
           "format": "int",
           "example": 3
         },
+        "later": {
+          "description": "Number of available kits later",
+          "type": "number",
+          "format": "int",
+          "example": 4
+        },
         "used": {
           "description": "Number of kits in use",
           "type": "number",
@@ -1543,7 +1555,7 @@ func init() {
           "example": 5
         },
         "wait": {
-          "description": "Wait time in seconds until first available kit",
+          "description": "Wait time in seconds until first kit available later",
           "type": "number",
           "format": "int64",
           "example": 3200
