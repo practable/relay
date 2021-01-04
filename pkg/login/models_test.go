@@ -2,7 +2,6 @@ package login
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -12,7 +11,7 @@ func TestNewTokenValidate(t *testing.T) {
 	audience := "some.host.io"
 	scopes := []string{"login", "user"}
 	groups := []string{"somecourse", "everyone"}
-	nbf := time.Now().Unix()
+	nbf := int64(1609721410)
 	iat := nbf
 	exp := nbf + 10
 
@@ -30,4 +29,21 @@ func TestNewTokenValidate(t *testing.T) {
 
 	assert.Equal(t, "someuser", token.Subject)
 
+	pretty := `{
+	"groups": [
+		"somecourse",
+		"everyone"
+	],
+	"scopes": [
+		"login",
+		"user"
+	],
+	"aud": "some.host.io",
+	"exp": 1609721420,
+	"iat": 1609721410,
+	"nbf": 1609721410,
+	"sub": "someuser"
+}`
+
+	assert.Equal(t, pretty, token.String())
 }

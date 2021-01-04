@@ -1,6 +1,9 @@
 package login
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -15,6 +18,21 @@ type Token struct {
 	Scopes []string `json:"scopes"`
 
 	jwt.StandardClaims
+}
+
+type TokenInBody struct {
+	Token string `json:"token"`
+}
+
+func (t *Token) String() string {
+
+	pretty, err := json.MarshalIndent(*t, "", "\t")
+
+	if err != nil {
+		return fmt.Sprintf("%+v", *t)
+	}
+
+	return string(pretty)
 }
 
 func NewToken(audience string, groups, scopes []string, iat, nbf, exp int64) Token {
