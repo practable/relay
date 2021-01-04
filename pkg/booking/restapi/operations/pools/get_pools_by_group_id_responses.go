@@ -57,3 +57,87 @@ func (o *GetPoolsByGroupIDOK) WriteResponse(rw http.ResponseWriter, producer run
 		panic(err) // let the recovery middleware deal with this
 	}
 }
+
+// GetPoolsByGroupIDUnauthorizedCode is the HTTP code returned for type GetPoolsByGroupIDUnauthorized
+const GetPoolsByGroupIDUnauthorizedCode int = 401
+
+/*GetPoolsByGroupIDUnauthorized Unauthorized
+
+swagger:response getPoolsByGroupIdUnauthorized
+*/
+type GetPoolsByGroupIDUnauthorized struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewGetPoolsByGroupIDUnauthorized creates GetPoolsByGroupIDUnauthorized with default headers values
+func NewGetPoolsByGroupIDUnauthorized() *GetPoolsByGroupIDUnauthorized {
+
+	return &GetPoolsByGroupIDUnauthorized{}
+}
+
+// WithPayload adds the payload to the get pools by group Id unauthorized response
+func (o *GetPoolsByGroupIDUnauthorized) WithPayload(payload interface{}) *GetPoolsByGroupIDUnauthorized {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get pools by group Id unauthorized response
+func (o *GetPoolsByGroupIDUnauthorized) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetPoolsByGroupIDUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(401)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
+// GetPoolsByGroupIDInternalServerErrorCode is the HTTP code returned for type GetPoolsByGroupIDInternalServerError
+const GetPoolsByGroupIDInternalServerErrorCode int = 500
+
+/*GetPoolsByGroupIDInternalServerError get pools by group Id internal server error
+
+swagger:response getPoolsByGroupIdInternalServerError
+*/
+type GetPoolsByGroupIDInternalServerError struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewGetPoolsByGroupIDInternalServerError creates GetPoolsByGroupIDInternalServerError with default headers values
+func NewGetPoolsByGroupIDInternalServerError() *GetPoolsByGroupIDInternalServerError {
+
+	return &GetPoolsByGroupIDInternalServerError{}
+}
+
+// WithPayload adds the payload to the get pools by group Id internal server error response
+func (o *GetPoolsByGroupIDInternalServerError) WithPayload(payload interface{}) *GetPoolsByGroupIDInternalServerError {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get pools by group Id internal server error response
+func (o *GetPoolsByGroupIDInternalServerError) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetPoolsByGroupIDInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(500)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}

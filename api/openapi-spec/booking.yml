@@ -73,11 +73,17 @@ paths:
       security:
         - Bearer: []  
       responses:
-         200:
+        200:
           description: ''
           schema:
             $ref: '#/definitions/description'
-          headers: {}  
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {} 
   /pools:
     get:
       description: Gets a list of pool_ids associated with a group_id
@@ -106,6 +112,12 @@ paths:
               description: pool id
               example: 5a834b5d-0758-4039-a044-6a82b263e079
           headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {} 
     post:
       description: Add a pool to the poolstore, using details in body 
       summary: Add a new pool
@@ -128,7 +140,13 @@ paths:
           description: ''
           schema:
             $ref: '#/definitions/id'
-          headers: {}       
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {} 
         
   /pools/{pool_id}/description:
     get:
@@ -154,6 +172,12 @@ paths:
           schema:
             $ref: '#/definitions/id'
           headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: Internal Error
+          schema: {} 
   /pools/{pool_id}/status:
     get:
       description: Gets the status of pool's activities
@@ -177,7 +201,13 @@ paths:
           description: ''
           schema:
             $ref: '#/definitions/status'
-          headers: {}          
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: Internal Error
+          schema: {}
   /pools/{pool_id}/sessions:
     post:
       description: Request a session on an activity from the pool
@@ -217,6 +247,9 @@ paths:
         404:
           description: Not Available
           schema: {}
+        500:
+          description: Internal Error
+          schema: {}
   /pools/{pool_id}/activities/{activity_id}:
     put:
       description: Updates an activity in a pool (or adds one with a specific ID if does not exist)
@@ -252,6 +285,9 @@ paths:
         401:
           description: Unauthorized
           schema: {}
+        500:
+          description: Internal Error
+          schema: {}
   /pools/{pool_id}/activities:
     post:
       description:  Adds an activity to a pool (activty must include valid exp field)
@@ -286,7 +322,10 @@ paths:
           schema: {}
         404:
           description: Not Available
-          schema: {}          
+          schema: {}
+        500:
+          description: Internal Error
+          schema: {}
   /login:
     post:
       description: Login with a class token to get an individual booking token, usable for a finite period.
@@ -471,6 +510,9 @@ definitions:
         description: Type of resource being described, e.g. pool, activity, userinterface
         example: userinterface
         type: string
+      id:
+        description: Identification used in PoolStore
+        type: string             
     required:
     - name
     - type

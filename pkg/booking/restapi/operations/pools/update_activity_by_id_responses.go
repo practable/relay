@@ -94,3 +94,45 @@ func (o *UpdateActivityByIDUnauthorized) WriteResponse(rw http.ResponseWriter, p
 		panic(err) // let the recovery middleware deal with this
 	}
 }
+
+// UpdateActivityByIDInternalServerErrorCode is the HTTP code returned for type UpdateActivityByIDInternalServerError
+const UpdateActivityByIDInternalServerErrorCode int = 500
+
+/*UpdateActivityByIDInternalServerError Internal Error
+
+swagger:response updateActivityByIdInternalServerError
+*/
+type UpdateActivityByIDInternalServerError struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewUpdateActivityByIDInternalServerError creates UpdateActivityByIDInternalServerError with default headers values
+func NewUpdateActivityByIDInternalServerError() *UpdateActivityByIDInternalServerError {
+
+	return &UpdateActivityByIDInternalServerError{}
+}
+
+// WithPayload adds the payload to the update activity by Id internal server error response
+func (o *UpdateActivityByIDInternalServerError) WithPayload(payload interface{}) *UpdateActivityByIDInternalServerError {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the update activity by Id internal server error response
+func (o *UpdateActivityByIDInternalServerError) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *UpdateActivityByIDInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(500)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}

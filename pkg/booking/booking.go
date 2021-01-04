@@ -62,6 +62,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore)
 	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandlerFunc(ps))
 
 	api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(getGroupIDByNameHandlerFunc(ps))
+	api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(getGroupDescriptionByIDHandlerFunc(ps))
 
 	/*
 		api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {

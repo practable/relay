@@ -140,3 +140,45 @@ func (o *AddActivityByPoolIDNotFound) WriteResponse(rw http.ResponseWriter, prod
 		panic(err) // let the recovery middleware deal with this
 	}
 }
+
+// AddActivityByPoolIDInternalServerErrorCode is the HTTP code returned for type AddActivityByPoolIDInternalServerError
+const AddActivityByPoolIDInternalServerErrorCode int = 500
+
+/*AddActivityByPoolIDInternalServerError Internal Error
+
+swagger:response addActivityByPoolIdInternalServerError
+*/
+type AddActivityByPoolIDInternalServerError struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewAddActivityByPoolIDInternalServerError creates AddActivityByPoolIDInternalServerError with default headers values
+func NewAddActivityByPoolIDInternalServerError() *AddActivityByPoolIDInternalServerError {
+
+	return &AddActivityByPoolIDInternalServerError{}
+}
+
+// WithPayload adds the payload to the add activity by pool Id internal server error response
+func (o *AddActivityByPoolIDInternalServerError) WithPayload(payload interface{}) *AddActivityByPoolIDInternalServerError {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the add activity by pool Id internal server error response
+func (o *AddActivityByPoolIDInternalServerError) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *AddActivityByPoolIDInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(500)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
