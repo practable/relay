@@ -392,7 +392,7 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/id"
+              "$ref": "#/definitions/description"
             }
           },
           "401": {
@@ -589,11 +589,11 @@ func init() {
           "format": "unix-timestamp"
         },
         "groups": {
-          "description": "List of groups",
+          "description": "List of group names (not ID)",
           "type": "array",
           "items": {
             "type": "string",
-            "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
+            "example": "stuff"
           }
         },
         "iat": {
@@ -605,6 +605,14 @@ func init() {
           "description": "Not before",
           "type": "number",
           "format": "unix-timestamp"
+        },
+        "pools": {
+          "description": "List of pool IDs (not name)",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
+          }
         },
         "scopes": {
           "description": "List of scopes",
@@ -1219,7 +1227,7 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/id"
+              "$ref": "#/definitions/description"
             }
           },
           "401": {
@@ -1416,11 +1424,11 @@ func init() {
           "format": "unix-timestamp"
         },
         "groups": {
-          "description": "List of groups",
+          "description": "List of group names (not ID)",
           "type": "array",
           "items": {
             "type": "string",
-            "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
+            "example": "stuff"
           }
         },
         "iat": {
@@ -1432,6 +1440,14 @@ func init() {
           "description": "Not before",
           "type": "number",
           "format": "unix-timestamp"
+        },
+        "pools": {
+          "description": "List of pool IDs (not name)",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
+          }
         },
         "scopes": {
           "description": "List of scopes",

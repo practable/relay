@@ -27,7 +27,7 @@ type Bookingtoken struct {
 	// Required: true
 	Exp *float64 `json:"exp"`
 
-	// List of groups
+	// List of group names (not ID)
 	// Required: true
 	Groups []string `json:"groups"`
 
@@ -37,6 +37,9 @@ type Bookingtoken struct {
 	// Not before
 	// Required: true
 	Nbf *float64 `json:"nbf"`
+
+	// List of pool IDs (not name)
+	Pools []string `json:"pools"`
 
 	// List of scopes
 	// Required: true

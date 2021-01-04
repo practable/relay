@@ -25,7 +25,7 @@ type GetPoolDescriptionByIDOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ID `json:"body,omitempty"`
+	Payload *models.Description `json:"body,omitempty"`
 }
 
 // NewGetPoolDescriptionByIDOK creates GetPoolDescriptionByIDOK with default headers values
@@ -35,13 +35,13 @@ func NewGetPoolDescriptionByIDOK() *GetPoolDescriptionByIDOK {
 }
 
 // WithPayload adds the payload to the get pool description by Id o k response
-func (o *GetPoolDescriptionByIDOK) WithPayload(payload *models.ID) *GetPoolDescriptionByIDOK {
+func (o *GetPoolDescriptionByIDOK) WithPayload(payload *models.Description) *GetPoolDescriptionByIDOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get pool description by Id o k response
-func (o *GetPoolDescriptionByIDOK) SetPayload(payload *models.ID) {
+func (o *GetPoolDescriptionByIDOK) SetPayload(payload *models.Description) {
 	o.Payload = payload
 }
 
