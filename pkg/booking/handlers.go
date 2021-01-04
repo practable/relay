@@ -57,8 +57,22 @@ func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) m
 
 		// keep uuid from previous booking token if we received it in the body of the request
 		// code in the login pages needs to look for this in cache and add to body if found
-		if params.Token != nil {
-			subject = *(params.Token.Sub)
+		if params.Expired.Token != "" {
+
+			// decode token
+			ebt, err := jwt.ParseWithClaims(params.Expired.Token,
+				&lit.Token{},
+				func(token *jwt.Token) (interface{}, error) {
+					return []byte(ps.Secret), nil
+				})
+			if err == nil {
+				claims, ok = ebt.Claims.(*lit.Token)
+				if ok {
+					if claims.Subject != "" {
+						subject = claims.Subject //if subject is usable, use it
+					}
+				}
+			}
 		}
 
 		bookingClaims := claims

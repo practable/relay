@@ -128,10 +128,17 @@ func init() {
         "operationId": "login",
         "parameters": [
           {
-            "name": "token",
+            "name": "expired",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/bookingtoken"
+              "type": "object",
+              "properties": {
+                "token": {
+                  "description": "booking token",
+                  "type": "string",
+                  "example": "ey..."
+                }
+              }
             }
           }
         ],
@@ -511,60 +518,6 @@ func init() {
           "items": {
             "$ref": "#/definitions/userInterface"
           }
-        }
-      }
-    },
-    "bookingtoken": {
-      "description": "token with booking scope and subject",
-      "type": "object",
-      "title": "booking token",
-      "required": [
-        "nbf",
-        "exp",
-        "aud",
-        "sub",
-        "groups",
-        "scopes"
-      ],
-      "properties": {
-        "aud": {
-          "description": "Audience",
-          "type": "string"
-        },
-        "exp": {
-          "description": "Expires At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "groups": {
-          "description": "List of groups",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
-          }
-        },
-        "iat": {
-          "description": "Issued At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "nbf": {
-          "description": "Not before",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "scopes": {
-          "description": "List of scopes",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "example": "booking"
-          }
-        },
-        "sub": {
-          "description": "Subject",
-          "type": "string"
         }
       }
     },
@@ -888,10 +841,17 @@ func init() {
         "operationId": "login",
         "parameters": [
           {
-            "name": "token",
+            "name": "expired",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/bookingtoken"
+              "type": "object",
+              "properties": {
+                "token": {
+                  "description": "booking token",
+                  "type": "string",
+                  "example": "ey..."
+                }
+              }
             }
           }
         ],
@@ -1271,60 +1231,6 @@ func init() {
           "items": {
             "$ref": "#/definitions/userInterface"
           }
-        }
-      }
-    },
-    "bookingtoken": {
-      "description": "token with booking scope and subject",
-      "type": "object",
-      "title": "booking token",
-      "required": [
-        "nbf",
-        "exp",
-        "aud",
-        "sub",
-        "groups",
-        "scopes"
-      ],
-      "properties": {
-        "aud": {
-          "description": "Audience",
-          "type": "string"
-        },
-        "exp": {
-          "description": "Expires At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "groups": {
-          "description": "List of groups",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
-          }
-        },
-        "iat": {
-          "description": "Issued At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "nbf": {
-          "description": "Not before",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "scopes": {
-          "description": "List of scopes",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "example": "booking"
-          }
-        },
-        "sub": {
-          "description": "Subject",
-          "type": "string"
         }
       }
     },

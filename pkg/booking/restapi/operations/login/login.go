@@ -74,6 +74,38 @@ func (o *Login) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 }
 
+// LoginBody login body
+//
+// swagger:model LoginBody
+type LoginBody struct {
+
+	// booking token
+	Token string `json:"token,omitempty"`
+}
+
+// Validate validates this login body
+func (o *LoginBody) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *LoginBody) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *LoginBody) UnmarshalBinary(b []byte) error {
+	var res LoginBody
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
+}
+
 // LoginOKBody login o k body
 //
 // swagger:model LoginOKBody

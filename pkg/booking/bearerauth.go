@@ -7,7 +7,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/runtime/security"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/permission"
+	lit "github.com/timdrysdale/relay/pkg/login"
 )
 
 // ValidateHeader checks the bearer token.
@@ -16,7 +16,8 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 
 	return func(bearerToken string) (interface{}, error) {
 		// For apiKey security syntax see https://swagger.io/docs/specification/2-0/authentication/
-		claims := &permission.Token{}
+
+		claims := &lit.Token{}
 
 		token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
