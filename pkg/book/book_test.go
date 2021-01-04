@@ -74,7 +74,8 @@ func TestBooking(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
 	bodyStr := string([]byte(body))
 	assert.Equal(t, `{"code":401,"message":"unauthenticated for invalid credentials"}`, bodyStr)
 
@@ -83,14 +84,16 @@ func TestBooking(t *testing.T) {
 	req.Header.Add("Authorization", loginBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
-
-	btr := &models.Bookingtoken{}
-
-	err = json.Unmarshal(body, btr)
-
+	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
+	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
 	bookingTokenReturned := *(btr.Token)
 
 	token, err := jwt.ParseWithClaims(bookingTokenReturned, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
@@ -121,7 +124,8 @@ func TestBooking(t *testing.T) {
 	resp, err = client.Do(req)
 
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
 
 	btr = &models.Bookingtoken{}
 
@@ -182,7 +186,8 @@ func TestGetGroupIDByName(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
 
 	ids := []string{}
 	err = json.Unmarshal(body, &ids)
@@ -199,7 +204,8 @@ func TestGetGroupIDByName(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
 	assert.Equal(t, "\"Missing Group in Groups Claim\"\n", string(body))
 
 }
@@ -241,7 +247,8 @@ func TestGetGroupDescriptionByID(t *testing.T) {
 	req.Header.Add("Authorization", bearer)
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
 
 	d := models.Description{}
 	err = json.Unmarshal(body, &d)
@@ -260,6 +267,7 @@ func TestGetPoolsByID(t *testing.T) {
 	name := "stuff"
 
 	g0 := pool.NewGroup(name)
+	defer ps.DeleteGroup(g0)
 
 	ps.AddGroup(g0)
 	defer ps.DeleteGroup(g0)
@@ -291,12 +299,112 @@ func TestGetPoolsByID(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
 
 	r := []string{}
 
 	err = json.Unmarshal(body, &r)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{p0.ID, p1.ID}, r)
+
+}
+
+func TestGetPoolsAtLoginGetPoolDescriptionByID(t *testing.T) {
+
+	// add groups, pools
+
+	name := "stuff"
+	g0 := pool.NewGroup(name)
+	defer ps.DeleteGroup(g0)
+
+	ps.AddGroup(g0)
+	defer ps.DeleteGroup(g0)
+
+	p0 := pool.NewPool("stuff0")
+
+	p0.DisplayInfo = pool.DisplayInfo{
+		Short:   "The Good Stuff - Pool 0",
+		Long:    "This stuff has some good stuff in it",
+		Further: "https://example.com/further.html",
+		Thumb:   "https://example.com/thumb.png",
+		Image:   "https://example.com/img.png",
+	}
+
+	p1 := pool.NewPool("stuff1")
+	g0.AddPools([]*pool.Pool{p0, p1})
+
+	ps.AddPool(p0)
+	defer ps.DeletePool(p0)
+
+	ps.AddPool(p1)
+	defer ps.DeletePool(p1)
+
+	// login
+	loginClaims := &lit.Token{}
+	loginClaims.Audience = host
+	//check that missing group "everyone" in PoolStore does not stop login
+	loginClaims.Groups = []string{name, "everyone"}
+	loginClaims.Scopes = []string{"login", "user"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	// sign user token
+	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	// Sign and get the complete encoded token as a string using the secret
+	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	bookingBearer := *(btr.Token)
+
+	token, err := jwt.ParseWithClaims(bookingBearer, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	assert.NoError(t, err)
+
+	claims, ok := token.Claims.(*lit.Token)
+
+	assert.True(t, ok)
+	assert.True(t, token.Valid)
+
+	assert.Equal(t, []string{p0.ID, p1.ID}, claims.Pools)
+
+	// Check we can get a description of a pool
+	client = &http.Client{}
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/description", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	d := models.Description{}
+	err = json.Unmarshal(body, &d)
+	assert.NoError(t, err)
+	assert.Equal(t, "The Good Stuff - Pool 0", d.Short)
+	assert.Equal(t, "This stuff has some good stuff in it", d.Long)
+	assert.Equal(t, "https://example.com/further.html", d.Further)
+	assert.Equal(t, "https://example.com/thumb.png", d.Thumb)
+	assert.Equal(t, "https://example.com/img.png", d.Image)
+	assert.Equal(t, p0.ID, d.ID)
 
 }

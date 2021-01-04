@@ -12,6 +12,74 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
+func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
+	return func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Token Not JWT")
+		}
+
+		// save checking for key existence individually by checking all at once
+		claims, ok := token.Claims.(*lit.Token)
+
+		if !ok {
+			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Token Claims Incorrect Type")
+		}
+
+		if !lit.HasRequiredClaims(*claims) {
+			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Token Missing Required Claims")
+		}
+
+		hasBookingScope := false
+
+		for _, scope := range claims.Scopes {
+			if scope == "booking" {
+				hasBookingScope = true
+			}
+		}
+
+		if !hasBookingScope {
+			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Missing booking Scope")
+		}
+
+		// is this user allowed to access this pool? i.e. is this pool in our of our authorised groups?
+		hasPool := false
+
+		for _, pool := range claims.Pools {
+			if pool != params.PoolID {
+				continue
+			}
+			hasPool = true
+			break
+		}
+
+		if !hasPool {
+			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Pool Not In Authorized Groups")
+		}
+
+		p, err := ps.GetPoolByID(params.PoolID)
+
+		if err != nil {
+			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Pool Does Not Exist")
+		}
+
+		d := models.Description{}
+		pd := p.Description
+
+		d.Further = pd.Further
+		d.Image = pd.Image
+		d.Long = pd.Long
+		d.Name = &pd.Name
+		d.Short = pd.Short
+		d.Thumb = pd.Thumb
+		d.Type = &pd.Type
+		d.ID = pd.ID
+
+		return pools.NewGetPoolDescriptionByIDOK().WithPayload(&d)
+
+	}
+}
+
 func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 
@@ -268,6 +336,28 @@ func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) m
 		bookingClaims.ExpiresAt = bookingClaims.NotBefore + ps.BookingTokenDuration
 		bookingClaims.Subject = subject
 
+		// Get a list of all the pool_ids that can be booked
+
+		pids := bookingClaims.Pools
+
+		for _, group_name := range bookingClaims.Groups {
+
+			gps, err := ps.GetGroupsByName(group_name)
+			if err != nil {
+				// don't throw error in case other groups are valid
+				continue
+			}
+			for _, g := range gps {
+				pls := g.GetPools()
+				for _, p := range pls {
+					pids = append(pids, p.ID)
+				}
+			}
+
+		}
+
+		bookingClaims.Pools = pids
+
 		// sign user token
 		// Create a new token object, specifying signing method and the claims
 		// you would like it to contain.
@@ -295,6 +385,7 @@ func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) m
 				Scopes: bookingClaims.Scopes,
 				Sub:    &bookingClaims.Subject,
 				Token:  &tokenString,
+				Pools:  bookingClaims.Pools,
 			})
 	}
 }

@@ -10,12 +10,16 @@ import (
 // Permission represents claims required in the apiKey JWT
 type Token struct {
 
-	// Groups represent the sets of pools that a user can access
+	// Groups represent the group names for the sets of pools
+	// which a user can access
 	Groups []string `json:"groups"`
 
 	// Scopes controlling access to relay;
 	// either ["login"],["user"], or ["login","admin"]
 	Scopes []string `json:"scopes"`
+
+	// Pools is a list of pool_id for the pools in the groups
+	Pools []string `json:"pools"`
 
 	jwt.StandardClaims
 }
