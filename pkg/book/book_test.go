@@ -14,7 +14,7 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/booking"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
+	"github.com/timdrysdale/relay/pkg/booking/models"
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
@@ -73,13 +73,13 @@ func TestLogin(t *testing.T) {
 	assert.NoError(t, err)
 	body, _ = ioutil.ReadAll(resp.Body)
 
-	btr := &login.LoginOKBody{}
+	btr := &models.Bookingtoken{}
 
 	err = json.Unmarshal(body, btr)
 
 	assert.NoError(t, err)
 
-	bookingTokenReturned := btr.Token
+	bookingTokenReturned := *(btr.Token)
 
 	token, err := jwt.ParseWithClaims(bookingTokenReturned, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
@@ -111,12 +111,12 @@ func TestLogin(t *testing.T) {
 	assert.NoError(t, err)
 	body, _ = ioutil.ReadAll(resp.Body)
 
-	btr = &login.LoginOKBody{}
+	btr = &models.Bookingtoken{}
 
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	token, err = jwt.ParseWithClaims(btr.Token, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+	token, err = jwt.ParseWithClaims(*(btr.Token), &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	assert.NoError(t, err)

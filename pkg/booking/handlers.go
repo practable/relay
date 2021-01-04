@@ -4,18 +4,20 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
+	"github.com/timdrysdale/relay/pkg/booking/models"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-//func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) middleware.Responder {
-//	return func(params login.LoginParams, principal interface{}) middleware.Responder {
-//
-//		return middleware.NotImplemented("operation login.Login has not yet been implemented")
-//
-//	}
-//}
+func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
+	return func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
+
+		//	groups :=	ps.GetGroupsByName(name string) ([]*Group, error)
+		return middleware.NotImplemented("operation pools.AddActivityByPoolID has not yet been implemented")
+	}
+}
 
 func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) middleware.Responder {
 	return func(params login.LoginParams, principal interface{}) middleware.Responder {
@@ -78,6 +80,7 @@ func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) m
 		bookingClaims := claims
 		//keep groups and any other fields added
 		bookingClaims.Scopes = scopes //update scopes
+
 		bookingClaims.IssuedAt = ps.GetTime() - 1
 		bookingClaims.NotBefore = ps.GetTime() - 1
 		bookingClaims.ExpiresAt = bookingClaims.NotBefore + ps.BookingTokenDuration
@@ -96,9 +99,20 @@ func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) m
 			return login.NewLoginInternalServerError().WithPayload("Could Not Generate Booking Token")
 		}
 
+		exp := float64(bookingClaims.ExpiresAt)
+		iat := float64(bookingClaims.ExpiresAt)
+		nbf := float64(bookingClaims.ExpiresAt)
+
 		return login.NewLoginOK().WithPayload(
-			&login.LoginOKBody{
-				Token: tokenString,
+			&models.Bookingtoken{
+				Aud:    &bookingClaims.Audience,
+				Exp:    &exp,
+				Groups: bookingClaims.Groups,
+				Iat:    iat,
+				Nbf:    &nbf,
+				Scopes: bookingClaims.Scopes,
+				Sub:    &bookingClaims.Subject,
+				Token:  &tokenString,
 			})
 	}
 }

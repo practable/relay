@@ -145,19 +145,7 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "token": {
-                  "description": "login token",
-                  "type": "string",
-                  "example": "ey..."
-                }
-              }
-            },
-            "examples": {
-              "application/json": {
-                "token": "ey..."
-              }
+              "$ref": "#/definitions/bookingtoken"
             }
           },
           "401": {
@@ -518,6 +506,66 @@ func init() {
           "items": {
             "$ref": "#/definitions/userInterface"
           }
+        }
+      }
+    },
+    "bookingtoken": {
+      "description": "contains token plus its details",
+      "type": "object",
+      "title": "booking token details",
+      "required": [
+        "token",
+        "nbf",
+        "exp",
+        "aud",
+        "sub",
+        "groups",
+        "scopes"
+      ],
+      "properties": {
+        "aud": {
+          "description": "Audience",
+          "type": "string"
+        },
+        "exp": {
+          "description": "Expires At",
+          "type": "number",
+          "format": "unix-timestamp"
+        },
+        "groups": {
+          "description": "List of groups",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
+          }
+        },
+        "iat": {
+          "description": "Issued At",
+          "type": "number",
+          "format": "unix-timestamp"
+        },
+        "nbf": {
+          "description": "Not before",
+          "type": "number",
+          "format": "unix-timestamp"
+        },
+        "scopes": {
+          "description": "List of scopes",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "booking"
+          }
+        },
+        "sub": {
+          "description": "Subject",
+          "type": "string"
+        },
+        "token": {
+          "description": "booking token",
+          "type": "string",
+          "example": "ey..."
         }
       }
     },
@@ -858,19 +906,7 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "token": {
-                  "description": "login token",
-                  "type": "string",
-                  "example": "ey..."
-                }
-              }
-            },
-            "examples": {
-              "application/json": {
-                "token": "ey..."
-              }
+              "$ref": "#/definitions/bookingtoken"
             }
           },
           "401": {
@@ -1231,6 +1267,66 @@ func init() {
           "items": {
             "$ref": "#/definitions/userInterface"
           }
+        }
+      }
+    },
+    "bookingtoken": {
+      "description": "contains token plus its details",
+      "type": "object",
+      "title": "booking token details",
+      "required": [
+        "token",
+        "nbf",
+        "exp",
+        "aud",
+        "sub",
+        "groups",
+        "scopes"
+      ],
+      "properties": {
+        "aud": {
+          "description": "Audience",
+          "type": "string"
+        },
+        "exp": {
+          "description": "Expires At",
+          "type": "number",
+          "format": "unix-timestamp"
+        },
+        "groups": {
+          "description": "List of groups",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "d220c320-eb88-456b-b1dd-b36dae840af2"
+          }
+        },
+        "iat": {
+          "description": "Issued At",
+          "type": "number",
+          "format": "unix-timestamp"
+        },
+        "nbf": {
+          "description": "Not before",
+          "type": "number",
+          "format": "unix-timestamp"
+        },
+        "scopes": {
+          "description": "List of scopes",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "booking"
+          }
+        },
+        "sub": {
+          "description": "Subject",
+          "type": "string"
+        },
+        "token": {
+          "description": "booking token",
+          "type": "string",
+          "example": "ey..."
         }
       }
     },

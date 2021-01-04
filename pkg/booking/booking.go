@@ -23,6 +23,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/booking/restapi"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
@@ -60,16 +61,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore)
 	// set the Handlers
 	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandlerFunc(ps))
 
-	//	api.LoginLoginHandler = login.LoginHandlerFunc(
-	//
-	//		func(ps *pool.PoolStore) func(login.LoginParams, interface{}) middleware.Responder {
-	//			return func(params login.LoginParams, principal interface{}) middleware.Responder {
-	//				return middleware.NotImplemented("operation login.Login has not yet been implemented")
-	//			}
-	//		}(ps)
-	//
-	//	)
-	//
+	api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(getGroupIDByNameHandlerFunc(ps))
 
 	/*
 		api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
