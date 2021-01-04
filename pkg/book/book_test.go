@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -19,28 +20,39 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func TestLogin(t *testing.T) {
+var ps *pool.PoolStore
+var host, secret string
+var bookingDuration int64
+
+func TestMain(m *testing.M) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	secret := "somesecret"
-	bookingDuration := int64(180)
+	secret = "somesecret"
+	bookingDuration = int64(180)
 
-	ps := pool.NewPoolStore().
+	ps = pool.NewPoolStore().
 		WithSecret(secret).
 		WithBookingTokenDuration(bookingDuration)
 
 	port, err := freeport.GetFreePort()
-	assert.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
 
-	host := "http://[::]:" + strconv.Itoa(port)
+	host = "http://[::]:" + strconv.Itoa(port)
 
 	go booking.API(ctx, port, host, secret, ps)
 
 	time.Sleep(time.Second)
 
-	// start tests
+	exitVal := m.Run()
+
+	os.Exit(exitVal)
+}
+
+func TestBooking(t *testing.T) {
 
 	loginClaims := &lit.Token{}
 	loginClaims.Audience = host
@@ -134,5 +146,60 @@ func TestLogin(t *testing.T) {
 
 	// key test
 	assert.Equal(t, subject, claims.Subject)
+
+}
+
+func TestGetGroupIDByName(t *testing.T) {
+
+	g0 := pool.NewGroup("stuff")
+	ps.AddGroup(g0)
+	defer ps.DeleteGroup(g0)
+
+	g1 := pool.NewGroup("things")
+	ps.AddGroup(g1)
+	defer ps.DeleteGroup(g1)
+
+	claims := &lit.Token{}
+	claims.Audience = host
+	claims.Groups = []string{"stuff"}
+	claims.Scopes = []string{"booking", "user"}
+	claims.IssuedAt = ps.GetTime() - 1
+	claims.NotBefore = ps.GetTime() - 1
+	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+
+	// sign user token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// Sign and get the complete encoded token as a string using the secret
+	bearer, err := token.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", host+"/api/v1/groups", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+	q := req.URL.Query()
+	q.Add("name", "stuff")
+	req.URL.RawQuery = q.Encode()
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	ids := []string{}
+	err = json.Unmarshal(body, &ids)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(ids))
+	assert.Equal(t, g0.ID, ids[0])
+
+	// check request fails if group not in groups
+	req, err = http.NewRequest("GET", host+"/api/v1/groups", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+	q = req.URL.Query()
+	q.Add("name", "things")
+	req.URL.RawQuery = q.Encode()
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+	assert.Equal(t, "\"Missing Group in Groups Claim\"\n", string(body))
 
 }

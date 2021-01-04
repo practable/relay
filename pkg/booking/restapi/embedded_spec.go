@@ -73,6 +73,13 @@ func init() {
                 "example": "3a834b55-07c8-cb39-a341-3a82b263e07c"
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
           }
         }
       }
@@ -834,6 +841,13 @@ func init() {
                 "example": "3a834b55-07c8-cb39-a341-3a82b263e07c"
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
           }
         }
       }
