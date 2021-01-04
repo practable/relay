@@ -158,7 +158,7 @@ func TestAddGetPools(t *testing.T) {
 
 	ps := NewPoolStore().WithSecret("foo")
 
-	assert.Equal(t, "foo", ps.GetSecret())
+	assert.Equal(t, []byte("foo"), ps.GetSecret())
 
 	p0 := NewPool("stuff0")
 	p1 := NewPool("stuff1")
@@ -196,7 +196,7 @@ func TestAddGetGroups(t *testing.T) {
 
 	ps := NewPoolStore().WithSecret("bar")
 
-	assert.Equal(t, "bar", ps.GetSecret())
+	assert.Equal(t, []byte("bar"), ps.GetSecret())
 
 	g0 := NewGroup("stuff0")
 	g1 := NewGroup("stuff1")
