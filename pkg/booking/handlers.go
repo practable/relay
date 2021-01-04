@@ -14,8 +14,61 @@ import (
 func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
 	return func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
 
-		//	groups :=	ps.GetGroupsByName(name string) ([]*Group, error)
-		return middleware.NotImplemented("operation pools.AddActivityByPoolID has not yet been implemented")
+		// check group name is in the token
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			return login.NewLoginUnauthorized().WithPayload("Token Not JWT")
+		}
+
+		// save checking for key existence individually by checking all at once
+		claims, ok := token.Claims.(*lit.Token)
+
+		if !ok {
+			return login.NewLoginUnauthorized().WithPayload("Token Claims Incorrect Type")
+		}
+
+		if !lit.HasRequiredClaims(*claims) {
+			return login.NewLoginUnauthorized().WithPayload("Token Missing Required Claims")
+		}
+
+		hasBookingScope := false
+
+		for _, scope := range claims.Scopes {
+			if scope == "booking" {
+				hasBookingScope = true
+			}
+		}
+
+		if !hasBookingScope {
+			return login.NewLoginUnauthorized().WithPayload("Missing booking Scope")
+		}
+
+		isAllowedGroup := false
+
+		for _, gp := range claims.Groups {
+			if gp != params.Name {
+				continue
+			}
+			isAllowedGroup = true
+			break
+		}
+
+		if !isAllowedGroup {
+			return login.NewLoginUnauthorized().WithPayload("Missing Group in Groups Claim")
+		}
+		gps, err := ps.GetGroupsByName(params.Name)
+
+		if err != nil {
+			return groups.NewGetGroupIDByNameInternalServerError().WithPayload(err.Error())
+		}
+
+		ids := []string{}
+
+		for _, gp := range gps {
+			ids = append(ids, gp.ID)
+		}
+
+		return groups.NewGetGroupIDByNameOK().WithPayload(ids)
 	}
 }
 

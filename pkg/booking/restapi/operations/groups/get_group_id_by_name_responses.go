@@ -57,3 +57,87 @@ func (o *GetGroupIDByNameOK) WriteResponse(rw http.ResponseWriter, producer runt
 		panic(err) // let the recovery middleware deal with this
 	}
 }
+
+// GetGroupIDByNameUnauthorizedCode is the HTTP code returned for type GetGroupIDByNameUnauthorized
+const GetGroupIDByNameUnauthorizedCode int = 401
+
+/*GetGroupIDByNameUnauthorized Unauthorized
+
+swagger:response getGroupIdByNameUnauthorized
+*/
+type GetGroupIDByNameUnauthorized struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewGetGroupIDByNameUnauthorized creates GetGroupIDByNameUnauthorized with default headers values
+func NewGetGroupIDByNameUnauthorized() *GetGroupIDByNameUnauthorized {
+
+	return &GetGroupIDByNameUnauthorized{}
+}
+
+// WithPayload adds the payload to the get group Id by name unauthorized response
+func (o *GetGroupIDByNameUnauthorized) WithPayload(payload interface{}) *GetGroupIDByNameUnauthorized {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get group Id by name unauthorized response
+func (o *GetGroupIDByNameUnauthorized) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetGroupIDByNameUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(401)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
+// GetGroupIDByNameInternalServerErrorCode is the HTTP code returned for type GetGroupIDByNameInternalServerError
+const GetGroupIDByNameInternalServerErrorCode int = 500
+
+/*GetGroupIDByNameInternalServerError get group Id by name internal server error
+
+swagger:response getGroupIdByNameInternalServerError
+*/
+type GetGroupIDByNameInternalServerError struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewGetGroupIDByNameInternalServerError creates GetGroupIDByNameInternalServerError with default headers values
+func NewGetGroupIDByNameInternalServerError() *GetGroupIDByNameInternalServerError {
+
+	return &GetGroupIDByNameInternalServerError{}
+}
+
+// WithPayload adds the payload to the get group Id by name internal server error response
+func (o *GetGroupIDByNameInternalServerError) WithPayload(payload interface{}) *GetGroupIDByNameInternalServerError {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get group Id by name internal server error response
+func (o *GetGroupIDByNameInternalServerError) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetGroupIDByNameInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(500)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}

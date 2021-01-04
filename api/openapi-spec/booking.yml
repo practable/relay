@@ -48,6 +48,12 @@ paths:
               description: group id
               example: 3a834b55-07c8-cb39-a341-3a82b263e07c
           headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {}
   /groups/{group_id}:
     get:
       description: Gets a description of a group
