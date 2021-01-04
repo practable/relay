@@ -14,7 +14,7 @@ func NewPoolStore() *PoolStore {
 		&sync.RWMutex{},
 		make(map[string]*Group),
 		make(map[string]*Pool),
-		"",
+		[]byte(""),
 		3600,
 		func() int64 { return time.Now().Unix() },
 	}
@@ -23,7 +23,7 @@ func NewPoolStore() *PoolStore {
 func (p *PoolStore) WithSecret(secret string) *PoolStore {
 	p.Lock()
 	defer p.Unlock()
-	p.Secret = secret
+	p.Secret = []byte(secret)
 	return p
 }
 
@@ -47,7 +47,7 @@ func (p *PoolStore) GetTime() int64 {
 	return p.Now()
 }
 
-func (p *PoolStore) GetSecret() string {
+func (p *PoolStore) GetSecret() []byte {
 	p.RLock()
 	defer p.RUnlock()
 	return p.Secret
@@ -170,7 +170,7 @@ func (p *PoolStore) AddGroup(group *Group) {
 func (p *PoolStore) SetSecret(secret string) {
 	p.Lock()
 	defer p.Unlock()
-	p.Secret = secret
+	p.Secret = []byte(secret)
 }
 
 func NewGroup(name string) *Group {

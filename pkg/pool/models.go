@@ -14,7 +14,7 @@ type PoolStore struct {
 	Pools map[string]*Pool
 
 	// Secret for generating tokens - assume one PoolStore per relay
-	Secret string
+	Secret []byte
 
 	// How long to grant booking tokens for
 	BookingTokenDuration int64
