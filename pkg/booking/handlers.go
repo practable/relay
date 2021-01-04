@@ -11,24 +11,23 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
-	return func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
+func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupDescriptionByIDParams, interface{}) middleware.Responder {
+	return func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
 
-		// check group name is in the token
 		token, ok := principal.(*jwt.Token)
 		if !ok {
-			return login.NewLoginUnauthorized().WithPayload("Token Not JWT")
+			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Token Not JWT")
 		}
 
 		// save checking for key existence individually by checking all at once
 		claims, ok := token.Claims.(*lit.Token)
 
 		if !ok {
-			return login.NewLoginUnauthorized().WithPayload("Token Claims Incorrect Type")
+			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Token Claims Incorrect Type")
 		}
 
 		if !lit.HasRequiredClaims(*claims) {
-			return login.NewLoginUnauthorized().WithPayload("Token Missing Required Claims")
+			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Token Missing Required Claims")
 		}
 
 		hasBookingScope := false
@@ -40,7 +39,75 @@ func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNam
 		}
 
 		if !hasBookingScope {
-			return login.NewLoginUnauthorized().WithPayload("Missing booking Scope")
+			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Missing booking Scope")
+		}
+
+		gp, err := ps.GetGroupByID(params.GroupID)
+
+		if err != nil {
+			return groups.NewGetGroupIDByNameInternalServerError().WithPayload(err.Error())
+		}
+
+		isAllowedGroup := false
+
+		for _, name := range claims.Groups {
+			if name != gp.Name {
+				continue
+			}
+			isAllowedGroup = true
+			break
+		}
+
+		if !isAllowedGroup {
+			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Missing Group Name in Groups Claim")
+		}
+
+		g := gp.Description
+		d := models.Description{}
+
+		d.Further = g.Further
+		d.Image = g.Image
+		d.Long = g.Long
+		d.Name = &g.Name
+		d.Short = g.Short
+		d.Thumb = g.Thumb
+		d.Type = &g.Type
+		d.ID = g.ID
+
+		return groups.NewGetGroupDescriptionByIDOK().WithPayload(&d)
+	}
+}
+
+func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
+	return func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
+
+		// check group name is in the token
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Token Not JWT")
+		}
+
+		// save checking for key existence individually by checking all at once
+		claims, ok := token.Claims.(*lit.Token)
+
+		if !ok {
+			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Token Claims Incorrect Type")
+		}
+
+		if !lit.HasRequiredClaims(*claims) {
+			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Token Missing Required Claims")
+		}
+
+		hasBookingScope := false
+
+		for _, scope := range claims.Scopes {
+			if scope == "booking" {
+				hasBookingScope = true
+			}
+		}
+
+		if !hasBookingScope {
+			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Missing booking Scope")
 		}
 
 		isAllowedGroup := false
@@ -54,7 +121,7 @@ func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNam
 		}
 
 		if !isAllowedGroup {
-			return login.NewLoginUnauthorized().WithPayload("Missing Group in Groups Claim")
+			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Missing Group in Groups Claim")
 		}
 		gps, err := ps.GetGroupsByName(params.Name)
 

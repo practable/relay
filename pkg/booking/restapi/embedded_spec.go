@@ -113,6 +113,13 @@ func init() {
             "schema": {
               "$ref": "#/definitions/description"
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
           }
         }
       }
@@ -201,6 +208,13 @@ func init() {
                 "example": "5a834b5d-0758-4039-a044-6a82b263e079"
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
           }
         }
       },
@@ -234,6 +248,13 @@ func init() {
             "schema": {
               "$ref": "#/definitions/id"
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
           }
         }
       }
@@ -282,6 +303,10 @@ func init() {
           },
           "404": {
             "description": "Not Available",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
             "schema": {}
           }
         }
@@ -332,6 +357,10 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
           }
         }
       }
@@ -365,6 +394,14 @@ func init() {
             "schema": {
               "$ref": "#/definitions/id"
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
           }
         }
       }
@@ -418,6 +455,10 @@ func init() {
           "404": {
             "description": "Not Available",
             "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
           }
         }
       }
@@ -451,6 +492,14 @@ func init() {
             "schema": {
               "$ref": "#/definitions/status"
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
           }
         }
       }
@@ -589,6 +638,10 @@ func init() {
           "description": "URL for further information",
           "type": "string",
           "example": "https://static.practable.io/info/penduino/ui.html"
+        },
+        "id": {
+          "description": "Identification used in PoolStore",
+          "type": "string"
         },
         "image": {
           "description": "URL of main image (500x500)",
@@ -881,6 +934,13 @@ func init() {
             "schema": {
               "$ref": "#/definitions/description"
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
           }
         }
       }
@@ -969,6 +1029,13 @@ func init() {
                 "example": "5a834b5d-0758-4039-a044-6a82b263e079"
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
           }
         }
       },
@@ -1002,6 +1069,13 @@ func init() {
             "schema": {
               "$ref": "#/definitions/id"
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
           }
         }
       }
@@ -1050,6 +1124,10 @@ func init() {
           },
           "404": {
             "description": "Not Available",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
             "schema": {}
           }
         }
@@ -1100,6 +1178,10 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
           }
         }
       }
@@ -1133,6 +1215,14 @@ func init() {
             "schema": {
               "$ref": "#/definitions/id"
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
           }
         }
       }
@@ -1186,6 +1276,10 @@ func init() {
           "404": {
             "description": "Not Available",
             "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
           }
         }
       }
@@ -1219,6 +1313,14 @@ func init() {
             "schema": {
               "$ref": "#/definitions/status"
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
           }
         }
       }
@@ -1357,6 +1459,10 @@ func init() {
           "description": "URL for further information",
           "type": "string",
           "example": "https://static.practable.io/info/penduino/ui.html"
+        },
+        "id": {
+          "description": "Identification used in PoolStore",
+          "type": "string"
         },
         "image": {
           "description": "URL of main image (500x500)",

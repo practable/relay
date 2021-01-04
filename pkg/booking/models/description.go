@@ -22,6 +22,9 @@ type Description struct {
 	// URL for further information
 	Further string `json:"further,omitempty"`
 
+	// Identification used in PoolStore
+	ID string `json:"id,omitempty"`
+
 	// URL of main image (500x500)
 	Image string `json:"image,omitempty"`
 

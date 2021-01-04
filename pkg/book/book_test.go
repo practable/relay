@@ -203,3 +203,54 @@ func TestGetGroupIDByName(t *testing.T) {
 	assert.Equal(t, "\"Missing Group in Groups Claim\"\n", string(body))
 
 }
+
+func TestGetGroupDescriptionByID(t *testing.T) {
+
+	name := "stuff"
+
+	g0 := pool.NewGroup(name)
+
+	g0.DisplayInfo = pool.DisplayInfo{
+		Short:   "Some Good Stuff",
+		Long:    "This stuff has some good stuff in it",
+		Further: "https://example.com/further.html",
+		Thumb:   "https://example.com/thumb.png",
+		Image:   "https://example.com/img.png",
+	}
+
+	ps.AddGroup(g0)
+	defer ps.DeleteGroup(g0)
+
+	claims := &lit.Token{}
+	claims.Audience = host
+	claims.Groups = []string{name}
+	claims.Scopes = []string{"booking", "user"}
+	claims.IssuedAt = ps.GetTime() - 1
+	claims.NotBefore = ps.GetTime() - 1
+	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+
+	// sign user token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// Sign and get the complete encoded token as a string using the secret
+	bearer, err := token.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", host+"/api/v1/groups/"+g0.ID, nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+	assert.NoError(t, err)
+	resp, err := client.Do(req)
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	d := models.Description{}
+	err = json.Unmarshal(body, &d)
+	assert.NoError(t, err)
+	assert.Equal(t, "Some Good Stuff", d.Short)
+	assert.Equal(t, "This stuff has some good stuff in it", d.Long)
+	assert.Equal(t, "https://example.com/further.html", d.Further)
+	assert.Equal(t, "https://example.com/thumb.png", d.Thumb)
+	assert.Equal(t, "https://example.com/img.png", d.Image)
+	assert.Equal(t, g0.ID, d.ID)
+
+}
