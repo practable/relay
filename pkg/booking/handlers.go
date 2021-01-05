@@ -8,11 +8,12 @@ import (
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
+	"github.com/timdrysdale/relay/pkg/limit"
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func requestSessionByPoolIDHandler(ps *pool.PoolStore) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
+func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
 	return func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
@@ -75,6 +76,19 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore) func(params pools.Request
 			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Requested duration too long")
 		}
 
+		// check for user name
+		if claims.Subject == "" {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("No subject in booking token")
+		}
+
+		exp := ps.Now() + int64(duration)
+		// Check we have concurrent booking quota left over, by making a provisional booking
+		confirm, err := l.ProvisionalRequest(claims.Subject, exp)
+
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDPaymentRequired().WithPayload("Maximum conconcurrent sessions already reached. Try again later.")
+		}
+
 		aid, err := p.ActivityRequestAny(duration)
 
 		if err != nil {
@@ -96,7 +110,6 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore) func(params pools.Request
 
 		iat := ps.Now() - 1
 		nbf := ps.Now() - 1
-		exp := ps.Now() + int64(duration)
 
 		for _, s := range a.Streams {
 
@@ -164,6 +177,7 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore) func(params pools.Request
 		ma.Description.Type = &a.Description.Type
 		ma.Description.ID = a.Description.ID
 
+		confirm() // confirm booking with Limit checker
 		return pools.NewRequestSessionByPoolIDOK().WithPayload(&ma)
 	}
 }
