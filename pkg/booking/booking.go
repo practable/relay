@@ -26,6 +26,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
+	"github.com/timdrysdale/relay/pkg/limit"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
@@ -39,7 +40,13 @@ import (
 // @secret- HMAC shared secret which incoming tokens will be signed with
 // @cs - pointer to the CodeStore this API shares with the shellbar websocket relay
 // @options - for future backwards compatibility (no options currently available)
-func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore) {
+func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore, l *limit.Limit) {
+
+	// TODO
+
+	// endpoints for checking how many bookings you have, retrieving those bookings,
+	// and for finding out whether you can make more bookings (would help to disable
+	// booking in the booking page if no bookings can be made)
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {
@@ -66,7 +73,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore)
 	api.PoolsGetPoolsByGroupIDHandler = pools.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupIDHandler(ps))
 	api.PoolsGetPoolDescriptionByIDHandler = pools.GetPoolDescriptionByIDHandlerFunc(getPoolDescriptionByIDHandler(ps))
 	api.PoolsGetPoolStatusByIDHandler = pools.GetPoolStatusByIDHandlerFunc(getPoolStatusByIDHandler(ps))
-	api.PoolsRequestSessionByPoolIDHandler = pools.RequestSessionByPoolIDHandlerFunc(requestSessionByPoolIDHandler(ps))
+	api.PoolsRequestSessionByPoolIDHandler = pools.RequestSessionByPoolIDHandlerFunc(requestSessionByPoolIDHandler(ps, l))
 
 	/*
 	   api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
