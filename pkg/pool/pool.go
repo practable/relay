@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/timdrysdale/relay/pkg/permission"
 )
 
 func NewPoolStore() *PoolStore {
@@ -273,6 +274,8 @@ func NewPool(name string) *Pool {
 		make(map[string]*Activity),
 		make(map[string]int64),
 		make(map[string]int64),
+		60,
+		7200,
 		func() int64 { return time.Now().Unix() },
 	}
 
@@ -288,7 +291,21 @@ func (p *Pool) WithNow(now func() int64) *Pool {
 	p.Lock()
 	defer p.Unlock()
 	p.Now = now
-	return p 
+	return p
+}
+
+func (p *Pool) WithMinSesssion(duration uint64) *Pool {
+	p.Lock()
+	defer p.Unlock()
+	p.MinSession = duration
+	return p
+}
+
+func (p *Pool) WithMaxSesssion(duration uint64) *Pool {
+	p.Lock()
+	defer p.Unlock()
+	p.MaxSession = duration
+	return p
 }
 
 func (p *Pool) WithID(id string) *Pool {
@@ -302,6 +319,17 @@ func (p *Pool) GetID() string {
 	p.Lock()
 	defer p.Unlock()
 	return p.ID
+}
+
+func (p *Pool) GetMinSession() uint64 {
+	p.Lock()
+	defer p.Unlock()
+	return p.MinSession
+}
+func (p *Pool) GetMaxSession() uint64 {
+	p.Lock()
+	defer p.Unlock()
+	return p.MaxSession
 }
 
 func NewDescription(name string) *Description {
@@ -322,8 +350,20 @@ func NewActivity(name string, expires int64) *Activity {
 		*NewDescription(name),
 		expires,
 		make(map[string]*Stream),
-		Permission{},
+		[]*UI{},
 	}
+}
+
+func NewStream(url string) *Stream {
+	s := &Stream{
+		&sync.RWMutex{},
+		"",
+		url,
+		"",
+		"",
+		permission.Token{},
+	}
+	return s
 }
 
 func (a *Activity) WithID(id string) *Activity {
@@ -333,17 +373,17 @@ func (a *Activity) WithID(id string) *Activity {
 	return a
 }
 
-func (a *Activity) WithPermission(p Permission) *Activity {
-	a.Lock()
-	defer a.Unlock()
-	a.Permission = p
-	return a
+func (s *Stream) WithPermission(p permission.Token) *Stream {
+	s.Lock()
+	defer s.Unlock()
+	s.Permission = p
+	return s
 }
 
-func (a *Activity) GetPermission() Permission {
-	a.RLock()
-	defer a.RUnlock()
-	return a.Permission
+func (s *Stream) GetPermission() permission.Token {
+	s.Lock()
+	defer s.Unlock()
+	return s.Permission
 }
 
 func (a *Activity) SetID(id string) {
@@ -358,10 +398,10 @@ func (a *Activity) GetID() string {
 	return a.ID
 }
 
-func (a *Activity) SetPermission(p Permission) {
-	a.Lock()
-	defer a.Unlock()
-	a.Permission = p
+func (s *Stream) SetPermission(p permission.Token) {
+	s.Lock()
+	defer s.Unlock()
+	s.Permission = p
 }
 
 func (a *Activity) AddID() string {
@@ -375,9 +415,30 @@ func (a *Activity) AddID() string {
 func (a *Activity) AddStream(key string, stream *Stream) {
 	a.Lock()
 	defer a.Unlock()
+	stream.For = key
 	s := a.Streams
 	s[key] = stream
 	a.Streams = s
+}
+
+func NewUI(url string) *UI {
+	return &UI{
+		URL: url,
+	}
+}
+
+func (u *UI) WithStreamsRequired(names []string) *UI {
+	u.StreamsRequired = names
+	return u
+}
+
+func (u *UI) WithDescription(d Description) *UI {
+	u.Description = d
+	return u
+}
+
+func (a *Activity) AddUI(ui *UI) {
+	a.UI = append(a.UI, ui)
 }
 
 func (p *Pool) AddActivity(activity *Activity) error {

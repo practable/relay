@@ -6,7 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/relay/pkg/permission"
 )
 
 func mockTime(now *int64) int64 {
@@ -296,16 +298,18 @@ func TestAddGetPoolInGroup(t *testing.T) {
 
 }
 
-func TestAddPermissionsToActivity(t *testing.T) {
+func TestAddPermissionsToStream(t *testing.T) {
 
-	p := Permission{
-		Audience:       "https://relay-access.example.io",
+	p := permission.Token{
 		ConnectionType: "session",
 		Topic:          "123",
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
 	}
 
-	a := NewActivity("pend00", time.Now().Unix()+1000).WithPermission(p)
+	s := NewStream("https://example.com/some/stream").WithPermission(p)
 
-	assert.Equal(t, p, a.GetPermission())
+	assert.Equal(t, p, s.GetPermission())
 
 }

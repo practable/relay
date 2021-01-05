@@ -2,6 +2,8 @@ package pool
 
 import (
 	"sync"
+
+	"github.com/timdrysdale/relay/pkg/permission"
 )
 
 type PoolStore struct {
@@ -35,6 +37,8 @@ type Pool struct {
 	Activities map[string]*Activity
 	Available  map[string]int64
 	InUse      map[string]int64
+	MinSession uint64
+	MaxSession uint64
 	Now        func() int64
 }
 
@@ -45,27 +49,44 @@ type Description struct {
 	DisplayInfo
 }
 
-type Permission struct {
-	Topic          string
-	Audience       string
-	ConnectionType string
-}
-
 type Activity struct {
 	*sync.RWMutex
 	Description
-	ExpiresAt  int64
-	Streams    map[string]*Stream
-	Permission Permission
+	ExpiresAt int64
+	Streams   map[string]*Stream
+	UI        []*UI
+}
+
+type UI struct {
+	// URL with moustache {{key}} templating for stream connections
+	Description
+	URL             string `json:"url"`
+	StreamsRequired []string
 }
 
 // Stream represents a data or video stream from a relay
 // typically accessed via POST with bearer token
 type Stream struct {
-	For   string `json:"for,omitempty"`
-	URL   string `json:"url"`
+	*sync.RWMutex
+
+	// For is the key in the UI's URL in which the client puts
+	// the relay (wss) address and code after getting them
+	// from the relay
+	For string `json:"for,omitempty"`
+
+	// URL of the relay access point for this stream
+	URL string `json:"url"`
+
+	// signed bearer token for accessing the stream
+	// submit token in the header
 	Token string `json:"token,omitempty"`
-	Verb  string `json:"verb,omitempty"`
+
+	// Verb is the HTTP method, typically post
+	Verb string `json:"verb,omitempty"`
+
+	// Permission is a prototype for the permission token that the booking system
+	// generates and puts into the Token field
+	Permission permission.Token `json:"permission,omitempty"`
 }
 
 type DisplayInfo struct {

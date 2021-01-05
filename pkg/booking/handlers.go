@@ -12,6 +12,162 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
+func requestSessionByPoolIDHandler(ps *pool.PoolStore) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
+
+	return func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
+
+		// usual checks
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Not JWT")
+		}
+
+		// save checking for key existence individually by checking all at once
+		claims, ok := token.Claims.(*lit.Token)
+
+		if !ok {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Claims Incorrect Type")
+		}
+
+		if !lit.HasRequiredClaims(*claims) {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Missing Required Claims")
+		}
+
+		hasBookingScope := false
+
+		for _, scope := range claims.Scopes {
+			if scope == "booking" {
+				hasBookingScope = true
+			}
+		}
+
+		if !hasBookingScope {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Missing booking Scope")
+		}
+
+		// is this user allowed to access this pool? i.e. is this pool in our of our authorised groups?
+		hasPool := false
+
+		for _, pool := range claims.Pools {
+			if pool != params.PoolID {
+				continue
+			}
+			hasPool = true
+			break
+		}
+
+		if !hasPool {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Pool Not In Authorized Groups")
+		}
+
+		p, err := ps.GetPoolByID(params.PoolID)
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Pool Does Not Exist")
+		}
+
+		duration := uint64(params.Duration)
+
+		if duration < p.GetMinSession() {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Requested duration too short")
+		}
+
+		if duration > p.GetMaxSession() {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Requested duration too long")
+		}
+
+		aid, err := p.ActivityRequestAny(duration)
+
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDNotFound().WithPayload(err.Error())
+		}
+
+		a, err := p.GetActivityByID(aid)
+
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDInternalServerError().WithPayload(err.Error())
+		}
+
+		// Make session tokens for each stream
+		// If permission token information is wrong
+		// let that be determined by the recipient
+		// we cannot really know
+
+		streams := []*models.Stream{}
+
+		iat := ps.Now() - 1
+		nbf := ps.Now() - 1
+		exp := ps.Now() + int64(duration)
+
+		for _, s := range a.Streams {
+
+			// copy token
+			claims := s.Permission
+			// update timing
+			claims.IssuedAt = iat
+			claims.NotBefore = nbf
+			claims.ExpiresAt = exp
+
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+			bearer, err := token.SignedString(ps.Secret)
+			if err != nil {
+				return pools.NewRequestSessionByPoolIDInternalServerError().WithPayload(err.Error())
+			}
+
+			// populate API stream type
+			stream := models.Stream{}
+			stream.Exp = float64(claims.ExpiresAt)
+			stream.For = &s.For
+			stream.Iat = float64(claims.IssuedAt)
+			stream.Nbf = float64(claims.NotBefore)
+			stream.Token = &bearer
+			stream.URL = &s.URL
+			stream.Verb = &s.Verb
+
+			streams = append(streams, &stream)
+		}
+
+		uis := []*models.UserInterface{}
+
+		for _, u := range a.UI {
+			ui := &models.UserInterface{}
+			ui.URL = &u.URL
+			ui.StreamsRequired = u.StreamsRequired
+			ui.Description = &models.Description{}
+			ui.Description.Further = u.Description.Further
+			ui.Description.Image = u.Description.Image
+			ui.Description.Long = u.Description.Long
+			ui.Description.Name = &u.Description.Name
+			ui.Description.Short = u.Description.Short
+			ui.Description.Thumb = u.Description.Thumb
+			ui.Description.Type = &u.Description.Type
+			ui.Description.ID = u.Description.ID
+
+			uis = append(uis, ui)
+		}
+
+		fnbf := float64(nbf)
+		fexp := float64(exp)
+
+		ma := models.Activity{}
+		ma.Iat = float64(iat)
+		ma.Nbf = &fnbf
+		ma.Exp = &fexp
+		ma.Streams = streams
+		ma.Uis = uis
+		ma.Description = &models.Description{}
+		ma.Description.Further = a.Description.Further
+		ma.Description.Image = a.Description.Image
+		ma.Description.Long = a.Description.Long
+		ma.Description.Name = &a.Description.Name
+		ma.Description.Short = a.Description.Short
+		ma.Description.Thumb = a.Description.Thumb
+		ma.Description.Type = &a.Description.Type
+		ma.Description.ID = a.Description.ID
+
+		return pools.NewRequestSessionByPoolIDOK().WithPayload(&ma)
+	}
+}
+
 func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
 		token, ok := principal.(*jwt.Token)
