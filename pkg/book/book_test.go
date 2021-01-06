@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -747,13 +748,25 @@ func TestRequestSessionByPoolID(t *testing.T) {
 
 	assert.Equal(t, pt0.Audience, stc.Audience)
 	assert.Equal(t, pt0.ConnectionType, stc.ConnectionType)
-	assert.Equal(t, pt0.Topic, stc.Topic)
+	assert.True(t, pt0.Topic == stc.Topic || pt1.Topic == stc.Topic)
 	assert.Equal(t, ps.Now()+2000, stc.ExpiresAt)
 
-	assert.Equal(t, "https://example.com/session/123data", *(ma.Streams[0].URL))
-	assert.Equal(t, "https://example.com/session/456video", *(ma.Streams[1].URL))
-	assert.Equal(t, "https://static.example.com/example.html?data={{data}}\u0026video={{video}}", *(ma.Uis[0].URL))
-	assert.Equal(t, []string{"data", "video"}, ma.Uis[0].StreamsRequired)
+	// streams could come in either order, so check each item matches one or other
+	// TODO: improve this test so it detects weird mistakes like mixing up stream data
+	url0 := "https://example.com/session/123data"
+	url1 := "https://example.com/session/456video"
+	got0 := *(ma.Streams[0].URL)
+	got1 := *(ma.Streams[1].URL)
+
+	urlmatch := (url0 == got0 && url1 == got1) || (url0 == got1 && url1 == got0)
+	assert.True(t, urlmatch)
+	uiurl := "https://static.example.com/example.html?data={{data}}\u0026video={{video}}"
+	uiurlmatch := *(ma.Uis[0].URL) == uiurl || *(ma.Uis[1].URL) == uiurl
+	assert.True(t, uiurlmatch)
+
+	scopematch := reflect.DeepEqual(ma.Uis[0].StreamsRequired, []string{"data", "video"}) ||
+		reflect.DeepEqual(ma.Uis[0].StreamsRequired, []string{"data"})
+	assert.True(t, scopematch)
 
 }
 
