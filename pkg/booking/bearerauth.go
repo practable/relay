@@ -1,6 +1,7 @@
 package booking
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,6 +10,101 @@ import (
 	log "github.com/sirupsen/logrus"
 	lit "github.com/timdrysdale/relay/pkg/login"
 )
+
+func claimsCheck(principal interface{}) (*lit.Token, error) {
+
+	token, ok := principal.(*jwt.Token)
+	if !ok {
+		return nil, errors.New("Token Not JWT")
+	}
+
+	// save checking for key existence individually by checking all at once
+	claims, ok := token.Claims.(*lit.Token)
+
+	if !ok {
+		return nil, errors.New("Token Claims Incorrect Type")
+	}
+
+	if !lit.HasRequiredClaims(*claims) {
+		return nil, errors.New("Token Missing Required Claims")
+	}
+
+	return claims, nil
+}
+
+// Function isBookingAdmin does in-handler validation for booking:admin tasks
+func isBookingAdmin(principal interface{}) (*lit.Token, error) {
+
+	claims, err := claimsCheck(principal)
+
+	if err != nil {
+		return nil, err
+	}
+
+	hasAdminScope := false
+
+	for _, scope := range claims.Scopes {
+		if scope == "booking:admin" {
+			hasAdminScope = true
+		}
+	}
+
+	if !hasAdminScope {
+		return nil, errors.New("Missing booking:admin Scope")
+	}
+
+	return claims, nil
+}
+
+func isBookingUser(principal interface{}) (*lit.Token, error) {
+
+	claims, err := claimsCheck(principal)
+
+	if err != nil {
+		return nil, err
+	}
+
+	hasUserScope := false
+
+	for _, scope := range claims.Scopes {
+		if scope == "booking:user" {
+			hasUserScope = true
+		}
+	}
+
+	if !hasUserScope {
+		return nil, errors.New("Missing booking:user Scope")
+	}
+
+	return claims, nil
+}
+
+func isBookingAdminOrUser(principal interface{}) (bool, *lit.Token, error) {
+
+	claims, err := claimsCheck(principal)
+
+	if err != nil {
+		return false, nil, err
+	}
+
+	hasAdminScope := false
+	hasUserScope := false
+
+	for _, scope := range claims.Scopes {
+		if scope == "booking:admin" {
+			hasAdminScope = true
+		}
+		if scope == "booking:user" {
+			hasUserScope = true
+		}
+	}
+
+	if !hasAdminScope && !hasUserScope {
+		return false, nil, errors.New("Missing booking:admin or booking:user Scope")
+	}
+
+	return hasAdminScope, claims, nil
+}
 
 // ValidateHeader checks the bearer token.
 // wrap the secret so we can get it at runtime without using global

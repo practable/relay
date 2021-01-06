@@ -74,15 +74,13 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 	api.PoolsGetPoolDescriptionByIDHandler = pools.GetPoolDescriptionByIDHandlerFunc(getPoolDescriptionByIDHandler(ps))
 	api.PoolsGetPoolStatusByIDHandler = pools.GetPoolStatusByIDHandlerFunc(getPoolStatusByIDHandler(ps))
 	api.PoolsRequestSessionByPoolIDHandler = pools.RequestSessionByPoolIDHandlerFunc(requestSessionByPoolIDHandler(ps, l))
-	api.PoolsAddNewPoolHandler = pools.AddNewPoolHandlerFunc(addNewPoolHandlerFunc(ps))
+	api.PoolsAddNewPoolHandler = pools.AddNewPoolHandlerFunc(addNewPoolHandler(ps))
+	api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(addActivityByPoolIDHandler(ps))
+
 	/*
 	   api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
 	   			return middleware.NotImplemented("operation pools.AddActivityByPoolID has not yet been implemented")
 	   })
-	   PoolsAddNewPoolHandler: pools.AddNewPoolHandlerFunc(func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
-	   	return middleware.NotImplemented("operation pools.AddNewPool has not yet been implemented")
-	   }),
-
 	   }),
 	   PoolsUpdateActivityByIDHandler: pools.UpdateActivityByIDHandlerFunc(func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
 	   	return middleware.NotImplemented("operation pools.UpdateActivityByID has not yet been implemented")
