@@ -68,7 +68,7 @@ func TestBooking(t *testing.T) {
 	loginClaims := &lit.Token{}
 	loginClaims.Audience = host
 	loginClaims.Groups = []string{"somecourse", "everyone"}
-	loginClaims.Scopes = []string{"login", "user"}
+	loginClaims.Scopes = []string{"login:user"}
 	loginClaims.IssuedAt = ps.GetTime() - 1
 	loginClaims.NotBefore = ps.GetTime() - 1
 	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
@@ -118,7 +118,7 @@ func TestBooking(t *testing.T) {
 	assert.True(t, token.Valid)
 
 	assert.Equal(t, []string{"somecourse", "everyone"}, claims.Groups)
-	assert.Equal(t, []string{"booking", "user"}, claims.Scopes)
+	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
 	assert.True(t, claims.ExpiresAt < ps.Now()+bookingDuration+15)
 	assert.True(t, claims.ExpiresAt > ps.Now()+bookingDuration-15)
 	assert.True(t, len(claims.Subject) >= 35)
@@ -154,7 +154,7 @@ func TestBooking(t *testing.T) {
 	assert.True(t, token.Valid)
 
 	assert.Equal(t, []string{"somecourse", "everyone"}, claims.Groups)
-	assert.Equal(t, []string{"booking", "user"}, claims.Scopes)
+	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
 	assert.True(t, claims.ExpiresAt < ps.Now()+bookingDuration+15)
 	assert.True(t, claims.ExpiresAt > ps.Now()+bookingDuration-15)
 	assert.True(t, len(claims.Subject) >= 35)
@@ -177,7 +177,7 @@ func TestGetGroupIDByName(t *testing.T) {
 	claims := &lit.Token{}
 	claims.Audience = host
 	claims.Groups = []string{"stuff"}
-	claims.Scopes = []string{"booking", "user"}
+	claims.Scopes = []string{"booking:user"}
 	claims.IssuedAt = ps.GetTime() - 1
 	claims.NotBefore = ps.GetTime() - 1
 	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
@@ -241,7 +241,7 @@ func TestGetGroupDescriptionByID(t *testing.T) {
 	claims := &lit.Token{}
 	claims.Audience = host
 	claims.Groups = []string{name}
-	claims.Scopes = []string{"booking", "user"}
+	claims.Scopes = []string{"booking:user"}
 	claims.IssuedAt = ps.GetTime() - 1
 	claims.NotBefore = ps.GetTime() - 1
 	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
@@ -290,7 +290,7 @@ func TestGetPoolsByID(t *testing.T) {
 	claims := &lit.Token{}
 	claims.Audience = host
 	claims.Groups = []string{name}
-	claims.Scopes = []string{"booking", "user"}
+	claims.Scopes = []string{"booking:user"}
 	claims.IssuedAt = ps.GetTime() - 1
 	claims.NotBefore = ps.GetTime() - 1
 	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
@@ -356,7 +356,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	loginClaims.Audience = host
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
-	loginClaims.Scopes = []string{"login", "user"}
+	loginClaims.Scopes = []string{"login:user"}
 	loginClaims.IssuedAt = ps.GetTime() - 1
 	loginClaims.NotBefore = ps.GetTime() - 1
 	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
@@ -658,7 +658,7 @@ func TestRequestSessionByPoolID(t *testing.T) {
 	loginClaims.Audience = host
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
-	loginClaims.Scopes = []string{"login", "user"}
+	loginClaims.Scopes = []string{"login:user"}
 	loginClaims.IssuedAt = ps.GetTime() - 1
 	loginClaims.NotBefore = ps.GetTime() - 1
 	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
@@ -855,7 +855,7 @@ func TestLimits(t *testing.T) {
 	loginClaims.Audience = host
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
-	loginClaims.Scopes = []string{"login", "user"}
+	loginClaims.Scopes = []string{"login:user"}
 	loginClaims.IssuedAt = ps.GetTime() - 1
 	loginClaims.NotBefore = ps.GetTime() - 1
 	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
