@@ -294,6 +294,13 @@ func (p *Pool) WithNow(now func() int64) *Pool {
 	return p
 }
 
+func (p *Pool) WithDescription(d Description) *Pool {
+	p.Lock()
+	defer p.Unlock()
+	p.Description = d
+	return p
+}
+
 func (p *Pool) WithMinSesssion(duration uint64) *Pool {
 	p.Lock()
 	defer p.Unlock()
@@ -306,6 +313,17 @@ func (p *Pool) WithMaxSesssion(duration uint64) *Pool {
 	defer p.Unlock()
 	p.MaxSession = duration
 	return p
+}
+
+func (p *Pool) SetMinSesssion(duration uint64) {
+	p.Lock()
+	defer p.Unlock()
+	p.MinSession = duration
+}
+func (p *Pool) SetMaxSesssion(duration uint64) {
+	p.Lock()
+	defer p.Unlock()
+	p.MaxSession = duration
 }
 
 func (p *Pool) WithID(id string) *Pool {
@@ -342,6 +360,32 @@ func NewDescription(name string) *Description {
 func (d *Description) WithID(id string) *Description {
 	d.ID = id
 	return d
+}
+
+func (d *Description) SetID(item string) {
+	d.ID = item
+}
+
+func (d *Description) SetType(item string) {
+	d.Type = item
+}
+
+func (d *Description) SetShort(item string) {
+	d.Short = item
+}
+func (d *Description) SetLong(item string) {
+	d.Long = item
+}
+func (d *Description) SetFurther(item string) {
+	d.Further = item
+}
+
+func (d *Description) SetThumb(item string) {
+	d.Thumb = item
+}
+
+func (d *Description) SetImage(item string) {
+	d.Image = item
 }
 
 func NewActivity(name string, expires int64) *Activity {

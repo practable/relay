@@ -99,6 +99,48 @@ func (o *AddNewPoolUnauthorized) WriteResponse(rw http.ResponseWriter, producer 
 	}
 }
 
+// AddNewPoolNotFoundCode is the HTTP code returned for type AddNewPoolNotFound
+const AddNewPoolNotFoundCode int = 404
+
+/*AddNewPoolNotFound Unauthorized
+
+swagger:response addNewPoolNotFound
+*/
+type AddNewPoolNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewAddNewPoolNotFound creates AddNewPoolNotFound with default headers values
+func NewAddNewPoolNotFound() *AddNewPoolNotFound {
+
+	return &AddNewPoolNotFound{}
+}
+
+// WithPayload adds the payload to the add new pool not found response
+func (o *AddNewPoolNotFound) WithPayload(payload interface{}) *AddNewPoolNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the add new pool not found response
+func (o *AddNewPoolNotFound) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *AddNewPoolNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
 // AddNewPoolInternalServerErrorCode is the HTTP code returned for type AddNewPoolInternalServerError
 const AddNewPoolInternalServerErrorCode int = 500
 
