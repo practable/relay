@@ -13,35 +13,30 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func addNewPoolHandlerFunc(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
+func addActivityByPoolIDHandler(ps *pool.PoolStore) func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
+	return func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
+
+		_, err := isBookingAdmin(principal)
+
+		if err != nil {
+			return pools.NewAddActivityByPoolIDUnauthorized().WithPayload(err.Error())
+		}
+
+		aid := "not implemented yet"
+		mid := &models.ID{
+			ID: &aid,
+		}
+		return pools.NewAddActivityByPoolIDOK().WithPayload(mid)
+	}
+}
+
+func addNewPoolHandler(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 	return func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
-		// usual checks
-		token, ok := principal.(*jwt.Token)
-		if !ok {
-			return pools.NewAddNewPoolUnauthorized().WithPayload("Token Not JWT")
-		}
 
-		// save checking for key existence individually by checking all at once
-		claims, ok := token.Claims.(*lit.Token)
+		_, err := isBookingAdmin(principal)
 
-		if !ok {
-			return pools.NewAddNewPoolUnauthorized().WithPayload("Token Claims Incorrect Type")
-		}
-
-		if !lit.HasRequiredClaims(*claims) {
-			return pools.NewAddNewPoolUnauthorized().WithPayload("Token Missing Required Claims")
-		}
-
-		hasAdminScope := false
-
-		for _, scope := range claims.Scopes {
-			if scope == "booking:admin" {
-				hasAdminScope = true
-			}
-		}
-
-		if !hasAdminScope {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Missing booking:admin Scope")
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload(err.Error())
 		}
 
 		pd := params.Pool.Description
@@ -89,33 +84,10 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 
 	return func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
-		// usual checks
-		token, ok := principal.(*jwt.Token)
-		if !ok {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Not JWT")
-		}
+		claims, err := isBookingUser(principal)
 
-		// save checking for key existence individually by checking all at once
-		claims, ok := token.Claims.(*lit.Token)
-
-		if !ok {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Claims Incorrect Type")
-		}
-
-		if !lit.HasRequiredClaims(*claims) {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Missing Required Claims")
-		}
-
-		hasBookingScope := false
-
-		for _, scope := range claims.Scopes {
-			if scope == "booking:user" {
-				hasBookingScope = true
-			}
-		}
-
-		if !hasBookingScope {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Missing booking:user Scope")
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload(err.Error())
 		}
 
 		// is this user allowed to access this pool? i.e. is this pool in our of our authorised groups?
@@ -256,37 +228,11 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 
 func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
-		token, ok := principal.(*jwt.Token)
-		if !ok {
-			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Token Not JWT")
-		}
 
-		// save checking for key existence individually by checking all at once
-		claims, ok := token.Claims.(*lit.Token)
+		isAdmin, claims, err := isBookingAdminOrUser(principal)
 
-		if !ok {
-			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Token Claims Incorrect Type")
-		}
-
-		if !lit.HasRequiredClaims(*claims) {
-			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Token Missing Required Claims")
-		}
-
-		hasBookingScope := false
-		isAdmin := false
-
-		for _, scope := range claims.Scopes {
-			if scope == "booking:user" {
-				hasBookingScope = true
-			}
-			if scope == "booking:admin" {
-				hasBookingScope = true
-				isAdmin = true
-			}
-		}
-
-		if !hasBookingScope {
-			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Missing booking Scope")
+		if err != nil {
+			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload(err.Error())
 		}
 
 		// is this user allowed to access this pool? i.e. is this pool in our of our authorised groups?
@@ -329,37 +275,11 @@ func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatu
 
 func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
-		token, ok := principal.(*jwt.Token)
-		if !ok {
-			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Token Not JWT")
-		}
 
-		// save checking for key existence individually by checking all at once
-		claims, ok := token.Claims.(*lit.Token)
+		isAdmin, claims, err := isBookingAdminOrUser(principal)
 
-		if !ok {
-			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Token Claims Incorrect Type")
-		}
-
-		if !lit.HasRequiredClaims(*claims) {
-			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Token Missing Required Claims")
-		}
-
-		hasBookingScope := false
-		isAdmin := false
-
-		for _, scope := range claims.Scopes {
-			if scope == "booking:user" {
-				hasBookingScope = true
-			}
-			if scope == "booking:admin" {
-				hasBookingScope = true
-				isAdmin = true
-			}
-		}
-
-		if !hasBookingScope {
-			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Missing booking Scope")
+		if err != nil {
+			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload(err.Error())
 		}
 
 		// is this user allowed to access this pool? i.e. is this pool in our of our authorised groups?
@@ -403,42 +323,16 @@ func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPool
 func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 
-		token, ok := principal.(*jwt.Token)
-		if !ok {
-			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Token Not JWT")
-		}
+		isAdmin, claims, err := isBookingAdminOrUser(principal)
 
-		// save checking for key existence individually by checking all at once
-		claims, ok := token.Claims.(*lit.Token)
-
-		if !ok {
-			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Token Claims Incorrect Type")
-		}
-
-		if !lit.HasRequiredClaims(*claims) {
-			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Token Missing Required Claims")
-		}
-
-		hasBookingScope := false
-		isAdmin := false
-
-		for _, scope := range claims.Scopes {
-			if scope == "booking:user" {
-				hasBookingScope = true
-			}
-			if scope == "booking:admin" {
-				hasBookingScope = true
-				isAdmin = true
-			}
-		}
-		if !hasBookingScope {
-			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Missing booking Scope")
+		if err != nil {
+			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload(err.Error())
 		}
 
 		gp, err := ps.GetGroupByID(params.GroupID)
 
 		if err != nil {
-			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload(err.Error())
+			return pools.NewGetPoolsByGroupIDNotFound().WithPayload(err.Error())
 		}
 
 		isAllowedGroup := false
@@ -468,37 +362,10 @@ func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGr
 func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupDescriptionByIDParams, interface{}) middleware.Responder {
 	return func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
 
-		token, ok := principal.(*jwt.Token)
-		if !ok {
-			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Token Not JWT")
-		}
+		isAdmin, claims, err := isBookingAdminOrUser(principal)
 
-		// save checking for key existence individually by checking all at once
-		claims, ok := token.Claims.(*lit.Token)
-
-		if !ok {
-			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Token Claims Incorrect Type")
-		}
-
-		if !lit.HasRequiredClaims(*claims) {
-			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Token Missing Required Claims")
-		}
-
-		hasBookingScope := false
-		isAdmin := false
-
-		for _, scope := range claims.Scopes {
-			if scope == "booking:user" {
-				hasBookingScope = true
-			}
-			if scope == "booking:admin" {
-				hasBookingScope = true
-				isAdmin = true
-			}
-		}
-
-		if !hasBookingScope {
-			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Missing booking Scope")
+		if err != nil {
+			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload(err.Error())
 		}
 
 		gp, err := ps.GetGroupByID(params.GroupID)
@@ -540,38 +407,10 @@ func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroup
 func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
 	return func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
 
-		// check group name is in the token
-		token, ok := principal.(*jwt.Token)
-		if !ok {
-			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Token Not JWT")
-		}
+		isAdmin, claims, err := isBookingAdminOrUser(principal)
 
-		// save checking for key existence individually by checking all at once
-		claims, ok := token.Claims.(*lit.Token)
-
-		if !ok {
-			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Token Claims Incorrect Type")
-		}
-
-		if !lit.HasRequiredClaims(*claims) {
-			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Token Missing Required Claims")
-		}
-
-		hasBookingScope := false
-		isAdmin := false
-
-		for _, scope := range claims.Scopes {
-			if scope == "booking:user" {
-				hasBookingScope = true
-			}
-			if scope == "booking:admin" {
-				hasBookingScope = true
-				isAdmin = true
-			}
-		}
-
-		if !hasBookingScope {
-			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Missing booking Scope")
+		if err != nil {
+			return groups.NewGetGroupIDByNameUnauthorized().WithPayload(err.Error())
 		}
 
 		isAllowedGroup := false

@@ -115,6 +115,9 @@ paths:
         401:
           description: Unauthorized
           schema: {}
+        404:
+          description: Unauthorized
+          schema: {}          
         500:
           description: ''
           schema: {} 

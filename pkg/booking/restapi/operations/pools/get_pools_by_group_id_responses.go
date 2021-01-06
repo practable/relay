@@ -100,6 +100,48 @@ func (o *GetPoolsByGroupIDUnauthorized) WriteResponse(rw http.ResponseWriter, pr
 	}
 }
 
+// GetPoolsByGroupIDNotFoundCode is the HTTP code returned for type GetPoolsByGroupIDNotFound
+const GetPoolsByGroupIDNotFoundCode int = 404
+
+/*GetPoolsByGroupIDNotFound Unauthorized
+
+swagger:response getPoolsByGroupIdNotFound
+*/
+type GetPoolsByGroupIDNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewGetPoolsByGroupIDNotFound creates GetPoolsByGroupIDNotFound with default headers values
+func NewGetPoolsByGroupIDNotFound() *GetPoolsByGroupIDNotFound {
+
+	return &GetPoolsByGroupIDNotFound{}
+}
+
+// WithPayload adds the payload to the get pools by group Id not found response
+func (o *GetPoolsByGroupIDNotFound) WithPayload(payload interface{}) *GetPoolsByGroupIDNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get pools by group Id not found response
+func (o *GetPoolsByGroupIDNotFound) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetPoolsByGroupIDNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
 // GetPoolsByGroupIDInternalServerErrorCode is the HTTP code returned for type GetPoolsByGroupIDInternalServerError
 const GetPoolsByGroupIDInternalServerErrorCode int = 500
 

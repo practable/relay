@@ -213,6 +213,10 @@ func init() {
             "description": "Unauthorized",
             "schema": {}
           },
+          "404": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
           "500": {
             "schema": {}
           }
@@ -1075,6 +1079,10 @@ func init() {
             }
           },
           "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
             "description": "Unauthorized",
             "schema": {}
           },
