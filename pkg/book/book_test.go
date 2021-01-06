@@ -1054,3 +1054,102 @@ func TestLimits(t *testing.T) {
 	statusCodes = append(statusCodes, resp.StatusCode)
 	assert.Equal(t, []int{200, 200, 404, 402}, statusCodes)
 }
+
+func TestAddNewPool(t *testing.T) {
+
+	// make an admin user login token, swap for booking token
+	loginClaims := &lit.Token{}
+	loginClaims.Audience = host
+	loginClaims.Groups = []string{"everything"} //not an actual group
+	loginClaims.Scopes = []string{"login:admin"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+	adminBearer := *(btr.Token)
+
+	// make a description, post in body
+
+	further := "https://example.io/further.html"
+	image := "https://example.io/image.png"
+	long := "some long long long description"
+	name := "red"
+	short := "short story"
+	thumb := "https://example.io/thumb.png"
+	thistype := "pool"
+
+	d := models.Description{
+		Further: further,
+		Image:   image,
+		Long:    long,
+		Name:    &name,
+		Short:   short,
+		Thumb:   thumb,
+		Type:    &thistype,
+	}
+
+	p := models.Pool{
+		Description: &d,
+		MinSession:  60,
+		MaxSession:  7201,
+	}
+	// Now login again with booking token in body and see that subject is retained
+
+	reqBody, err := json.Marshal(p)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	pid := models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+
+	assert.True(t, len(*pid.ID) > 35)
+
+	// get ID back, use ID to get description, and compare...
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID+"/description", nil)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	pd := models.Description{}
+	err = json.Unmarshal(body, &pd)
+	assert.NoError(t, err)
+
+	assert.Equal(t, name, *pd.Name)
+	assert.Equal(t, further, pd.Further)
+	assert.Equal(t, image, pd.Image)
+	assert.Equal(t, long, pd.Long)
+	assert.Equal(t, short, pd.Short)
+	assert.Equal(t, thumb, pd.Thumb)
+	assert.Equal(t, thistype, *pd.Type)
+
+}

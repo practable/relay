@@ -129,10 +129,10 @@ paths:
       - application/json
       parameters:
       - in: body
-        name: activity
+        name: pool
         required: true
         schema:
-          $ref: '#/definitions/activity'  
+          $ref: '#/definitions/pool'  
       security:
         - Bearer: []  
       responses:
@@ -144,10 +144,13 @@ paths:
         401:
           description: Unauthorized
           schema: {}
+        404:
+          description: Unauthorized
+          schema: {}          
         500:
           description: ''
           schema: {} 
-        
+       
   /pools/{pool_id}/description:
     get:
       description: Gets a description of the pool
@@ -368,6 +371,21 @@ paths:
           description: Internal Error
           schema: {}
 definitions:
+  pool:
+    title: pool
+    description: Represents a pool
+    type: object
+    properties:
+      description:
+        $ref: '#/definitions/description'
+      min_session:
+        type: number
+        format: int64
+      max_session:
+        type: number
+        format: int64
+    required:
+      - description
   stream:
     title: stream
     description: Represents an assigned, valid booking slot for an individual piece of equipment

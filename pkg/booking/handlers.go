@@ -1,8 +1,6 @@
 package booking
 
 import (
-	"fmt"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
@@ -20,18 +18,18 @@ func addNewPoolHandlerFunc(ps *pool.PoolStore) func(params pools.AddNewPoolParam
 		// usual checks
 		token, ok := principal.(*jwt.Token)
 		if !ok {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Not JWT")
+			return pools.NewAddNewPoolUnauthorized().WithPayload("Token Not JWT")
 		}
 
 		// save checking for key existence individually by checking all at once
 		claims, ok := token.Claims.(*lit.Token)
 
 		if !ok {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Claims Incorrect Type")
+			return pools.NewAddNewPoolUnauthorized().WithPayload("Token Claims Incorrect Type")
 		}
 
 		if !lit.HasRequiredClaims(*claims) {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Missing Required Claims")
+			return pools.NewAddNewPoolUnauthorized().WithPayload("Token Missing Required Claims")
 		}
 
 		hasAdminScope := false
@@ -41,9 +39,49 @@ func addNewPoolHandlerFunc(ps *pool.PoolStore) func(params pools.AddNewPoolParam
 				hasAdminScope = true
 			}
 		}
-		return middleware.NotImplemented(fmt.Sprintf("operation pools.AddNewPool has not yet been implemented; %v", hasAdminScope))
-		// admin has access to managing all pools, groups, activities
 
+		if !hasAdminScope {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Missing booking:admin Scope")
+		}
+
+		pd := params.Pool.Description
+		name := *pd.Name
+
+		if name == "" {
+			return pools.NewAddNewPoolNotFound().WithPayload("Pool Missing Name")
+		}
+
+		if pd.ID != "" {
+			return pools.NewAddNewPoolNotFound().WithPayload("Do Not Specify ID - Will Be Assigned")
+		}
+
+		d := pool.NewDescription(name)
+		d.SetFurther(pd.Further)
+		d.SetID(uuid.New().String())
+		d.SetImage(pd.Image)
+		d.SetLong(pd.Long)
+		d.SetShort(pd.Short)
+		d.SetThumb(pd.Thumb)
+		d.SetType(*pd.Type)
+
+		p := pool.NewPool(name).WithDescription(*d)
+
+		if params.Pool.MinSession != 0 {
+			p.SetMinSesssion(uint64(params.Pool.MinSession))
+		}
+
+		if params.Pool.MinSession != 0 {
+			p.SetMaxSesssion(uint64(params.Pool.MaxSession))
+		}
+
+		ps.AddPool(p)
+
+		id := p.GetID()
+		mid := &models.ID{
+			ID: &id,
+		}
+
+		return pools.NewAddNewPoolOK().WithPayload(mid)
 	}
 }
 
@@ -77,7 +115,7 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 		}
 
 		if !hasBookingScope {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Missing booking Scope")
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Missing booking:user Scope")
 		}
 
 		// is this user allowed to access this pool? i.e. is this pool in our of our authorised groups?
@@ -235,10 +273,15 @@ func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatu
 		}
 
 		hasBookingScope := false
+		isAdmin := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking:user" || scope == "booking:admin" {
+			if scope == "booking:user" {
 				hasBookingScope = true
+			}
+			if scope == "booking:admin" {
+				hasBookingScope = true
+				isAdmin = true
 			}
 		}
 
@@ -257,7 +300,7 @@ func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatu
 			break
 		}
 
-		if !hasPool {
+		if !hasPool && !isAdmin {
 			return pools.NewGetPoolStatusByIDUnauthorized().WithPayload("Pool Not In Authorized Groups")
 		}
 
@@ -303,10 +346,15 @@ func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPool
 		}
 
 		hasBookingScope := false
+		isAdmin := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking:user" || scope == "booking:admin" {
+			if scope == "booking:user" {
 				hasBookingScope = true
+			}
+			if scope == "booking:admin" {
+				hasBookingScope = true
+				isAdmin = true
 			}
 		}
 
@@ -325,7 +373,7 @@ func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPool
 			break
 		}
 
-		if !hasPool {
+		if !hasPool && !isAdmin {
 			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Pool Not In Authorized Groups")
 		}
 
@@ -372,13 +420,17 @@ func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGr
 		}
 
 		hasBookingScope := false
+		isAdmin := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking:user" || scope == "booking:admin" {
+			if scope == "booking:user" {
 				hasBookingScope = true
 			}
+			if scope == "booking:admin" {
+				hasBookingScope = true
+				isAdmin = true
+			}
 		}
-
 		if !hasBookingScope {
 			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Missing booking Scope")
 		}
@@ -399,7 +451,7 @@ func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGr
 			break
 		}
 
-		if !isAllowedGroup {
+		if !isAllowedGroup && !isAdmin {
 			return pools.NewGetPoolsByGroupIDUnauthorized().WithPayload("Missing Group Name in Groups Claim")
 		}
 
@@ -433,10 +485,15 @@ func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroup
 		}
 
 		hasBookingScope := false
+		isAdmin := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking:user" || scope == "booking:admin" {
+			if scope == "booking:user" {
 				hasBookingScope = true
+			}
+			if scope == "booking:admin" {
+				hasBookingScope = true
+				isAdmin = true
 			}
 		}
 
@@ -460,7 +517,7 @@ func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroup
 			break
 		}
 
-		if !isAllowedGroup {
+		if !isAllowedGroup && !isAdmin {
 			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Missing Group Name in Groups Claim")
 		}
 
@@ -501,10 +558,15 @@ func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNam
 		}
 
 		hasBookingScope := false
+		isAdmin := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking:user" || scope == "booking:admin" {
+			if scope == "booking:user" {
 				hasBookingScope = true
+			}
+			if scope == "booking:admin" {
+				hasBookingScope = true
+				isAdmin = true
 			}
 		}
 
@@ -522,7 +584,7 @@ func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNam
 			break
 		}
 
-		if !isAllowedGroup {
+		if !isAllowedGroup && !isAdmin {
 			return groups.NewGetGroupIDByNameUnauthorized().WithPayload("Missing Group in Groups Claim")
 		}
 		gps, err := ps.GetGroupsByName(params.Name)

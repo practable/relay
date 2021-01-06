@@ -235,11 +235,11 @@ func init() {
         "operationId": "addNewPool",
         "parameters": [
           {
-            "name": "activity",
+            "name": "pool",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/activity"
+              "$ref": "#/definitions/pool"
             }
           }
         ],
@@ -250,6 +250,10 @@ func init() {
             }
           },
           "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
             "description": "Unauthorized",
             "schema": {}
           },
@@ -713,6 +717,27 @@ func init() {
       },
       "example": {
         "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
+      }
+    },
+    "pool": {
+      "description": "Represents a pool",
+      "type": "object",
+      "title": "pool",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/description"
+        },
+        "max_session": {
+          "type": "number",
+          "format": "int64"
+        },
+        "min_session": {
+          "type": "number",
+          "format": "int64"
+        }
       }
     },
     "status": {
@@ -1075,11 +1100,11 @@ func init() {
         "operationId": "addNewPool",
         "parameters": [
           {
-            "name": "activity",
+            "name": "pool",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/activity"
+              "$ref": "#/definitions/pool"
             }
           }
         ],
@@ -1090,6 +1115,10 @@ func init() {
             }
           },
           "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
             "description": "Unauthorized",
             "schema": {}
           },
@@ -1553,6 +1582,27 @@ func init() {
       },
       "example": {
         "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
+      }
+    },
+    "pool": {
+      "description": "Represents a pool",
+      "type": "object",
+      "title": "pool",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/description"
+        },
+        "max_session": {
+          "type": "number",
+          "format": "int64"
+        },
+        "min_session": {
+          "type": "number",
+          "format": "int64"
+        }
       }
     },
     "status": {

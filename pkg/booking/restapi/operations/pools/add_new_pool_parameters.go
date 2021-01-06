@@ -36,7 +36,7 @@ type AddNewPoolParams struct {
 	  Required: true
 	  In: body
 	*/
-	Activity *models.Activity
+	Pool *models.Pool
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -50,12 +50,12 @@ func (o *AddNewPoolParams) BindRequest(r *http.Request, route *middleware.Matche
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.Activity
+		var body models.Pool
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("activity", "body", ""))
+				res = append(res, errors.Required("pool", "body", ""))
 			} else {
-				res = append(res, errors.NewParseError("activity", "body", "", err))
+				res = append(res, errors.NewParseError("pool", "body", "", err))
 			}
 		} else {
 			// validate body object
@@ -64,11 +64,11 @@ func (o *AddNewPoolParams) BindRequest(r *http.Request, route *middleware.Matche
 			}
 
 			if len(res) == 0 {
-				o.Activity = &body
+				o.Pool = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("activity", "body", ""))
+		res = append(res, errors.Required("pool", "body", ""))
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
