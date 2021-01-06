@@ -1,6 +1,8 @@
 package booking
 
 import (
+	"fmt"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
@@ -12,6 +14,38 @@ import (
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
+
+func addNewPoolHandlerFunc(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
+	return func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
+		// usual checks
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Not JWT")
+		}
+
+		// save checking for key existence individually by checking all at once
+		claims, ok := token.Claims.(*lit.Token)
+
+		if !ok {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Claims Incorrect Type")
+		}
+
+		if !lit.HasRequiredClaims(*claims) {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Token Missing Required Claims")
+		}
+
+		hasAdminScope := false
+
+		for _, scope := range claims.Scopes {
+			if scope == "booking:admin" {
+				hasAdminScope = true
+			}
+		}
+		return middleware.NotImplemented(fmt.Sprintf("operation pools.AddNewPool has not yet been implemented; %v", hasAdminScope))
+		// admin has access to managing all pools, groups, activities
+
+	}
+}
 
 func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
@@ -37,7 +71,7 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 		hasBookingScope := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking" {
+			if scope == "booking:user" {
 				hasBookingScope = true
 			}
 		}
@@ -203,7 +237,7 @@ func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatu
 		hasBookingScope := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking" {
+			if scope == "booking:user" || scope == "booking:admin" {
 				hasBookingScope = true
 			}
 		}
@@ -271,7 +305,7 @@ func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPool
 		hasBookingScope := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking" {
+			if scope == "booking:user" || scope == "booking:admin" {
 				hasBookingScope = true
 			}
 		}
@@ -340,7 +374,7 @@ func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGr
 		hasBookingScope := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking" {
+			if scope == "booking:user" || scope == "booking:admin" {
 				hasBookingScope = true
 			}
 		}
@@ -401,7 +435,7 @@ func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroup
 		hasBookingScope := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking" {
+			if scope == "booking:user" || scope == "booking:admin" {
 				hasBookingScope = true
 			}
 		}
@@ -469,7 +503,7 @@ func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNam
 		hasBookingScope := false
 
 		for _, scope := range claims.Scopes {
-			if scope == "booking" {
+			if scope == "booking:user" || scope == "booking:admin" {
 				hasBookingScope = true
 			}
 		}
@@ -526,20 +560,30 @@ func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) m
 			return login.NewLoginUnauthorized().WithPayload("Token Missing Required Claims")
 		}
 
-		hasLoginScope := false
+		hasLoginUserScope := false
+		hasLoginAdminScope := false
 
-		scopes := []string{"booking"}
+		scopes := []string{}
 
 		for _, scope := range claims.Scopes {
-			if scope == "login" {
-				hasLoginScope = true
+			if scope == "login:user" {
+				hasLoginUserScope = true
+			} else if scope == "login:admin" {
+				hasLoginAdminScope = true
 			} else {
 				scopes = append(scopes, scope)
 			}
 		}
 
-		if !hasLoginScope {
-			return login.NewLoginUnauthorized().WithPayload("Missing login Scope")
+		if !(hasLoginUserScope || hasLoginAdminScope) {
+			return login.NewLoginUnauthorized().WithPayload("Missing login:user or login:admin scope")
+		}
+
+		if hasLoginAdminScope {
+			scopes = append(scopes, "booking:admin")
+		}
+		if hasLoginUserScope {
+			scopes = append(scopes, "booking:user")
 		}
 
 		// make a new uuid for the user so we can manage their booked sessions
