@@ -261,19 +261,9 @@ func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPool
 			return pools.NewGetPoolDescriptionByIDUnauthorized().WithPayload("Pool Does Not Exist")
 		}
 
-		d := models.Description{}
-		pd := p.Description
+		d := p.Description.ConvertToModel()
 
-		d.Further = pd.Further
-		d.Image = pd.Image
-		d.Long = pd.Long
-		d.Name = &pd.Name
-		d.Short = pd.Short
-		d.Thumb = pd.Thumb
-		d.Type = &pd.Type
-		d.ID = pd.ID
-
-		return pools.NewGetPoolDescriptionByIDOK().WithPayload(&d)
+		return pools.NewGetPoolDescriptionByIDOK().WithPayload(d)
 
 	}
 }
@@ -346,19 +336,9 @@ func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroup
 			return groups.NewGetGroupDescriptionByIDUnauthorized().WithPayload("Missing Group Name in Groups Claim")
 		}
 
-		g := gp.Description
-		d := models.Description{}
+		d := gp.Description.ConvertToModel()
 
-		d.Further = g.Further
-		d.Image = g.Image
-		d.Long = g.Long
-		d.Name = &g.Name
-		d.Short = g.Short
-		d.Thumb = g.Thumb
-		d.Type = &g.Type
-		d.ID = g.ID
-
-		return groups.NewGetGroupDescriptionByIDOK().WithPayload(&d)
+		return groups.NewGetGroupDescriptionByIDOK().WithPayload(d)
 	}
 }
 
