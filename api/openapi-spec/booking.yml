@@ -19,7 +19,9 @@ consumes:
 - application/json
 produces:
 - application/json
+
 paths:
+
   /admin/poolstore:
     get:
       description: Export the current pool store including bookings 
@@ -54,10 +56,10 @@ paths:
       produces:
       - application/json
       parameters:
-      - poolstore
-      in: body
-      schema:
-        $ref: '#/definitions/poolstore'
+      - name: poolstore
+        in: body
+        schema:
+          $ref: '#/definitions/poolstore'
       security:
         - Bearer: []  
       responses:
@@ -72,6 +74,7 @@ paths:
         500:
           description: ''
           schema: {}
+
   /admin/status:
     get:
       description: Get the current status (number of groups, pools, bookings, time til last booking finished etc) 
@@ -96,6 +99,8 @@ paths:
         500:
           description: ''
           schema: {}
+
+
   /groups:
     get:
       description: Gets group id for a given group name
@@ -158,6 +163,8 @@ paths:
         500:
           description: ''
           schema: {}
+
+          
           
   /groups/{group_id}:
     get:
@@ -190,6 +197,11 @@ paths:
           description: ''
           schema: {}
           
+
+          
+
+
+
   /groups/{group_id}/pools:
     
     delete:
@@ -333,7 +345,43 @@ paths:
         500:
           description: ''
           schema: {}
-          
+
+  /login:
+    post:
+      description: Login with a class token to get an individual booking token, usable for a finite period.
+      summary: login
+      tags:
+      - login
+      operationId: login
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: expired
+        required: false
+        schema:
+          type: object
+          properties:
+            token:
+              type: string
+              description: booking token
+              example: ey...
+      security:
+        - Bearer: [] 
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/bookingtoken'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: Internal Error
+          schema: {}
+
   /pools:
     get:
       description: Gets a list of all pool_ids
@@ -345,11 +393,6 @@ paths:
       produces:
       - application/json
       parameters:
-      - name: pool_id
-        in: path
-        required: true
-        type: string
-        description: ''
       - name: name
         in: query
         required: false
@@ -360,7 +403,6 @@ paths:
         required: false
         type: boolean
         description: Limit search to pools with exact match to the name (meaningless on own)
-        
       security:
         - Bearer: []  
       responses:
@@ -469,7 +511,7 @@ paths:
           schema: {}          
         500:
           description: ''
-          schema: {}         
+          schema: {}
           
   /pools/{pool_id}/activities:
     post:
@@ -509,7 +551,8 @@ paths:
         500:
           description: Internal Error
           schema: {}
-          
+
+
   /pools/{pool_id}/activities/{activity_id}:
     delete:
       description: Delete activity by activity ID
@@ -626,7 +669,7 @@ paths:
         500:
           description: Internal Error
           schema: {}
-          
+
   /pools/{pool_id}/sessions:
     post:
       description: Request a session on an activity from the pool
@@ -669,7 +712,7 @@ paths:
         500:
           description: Internal Error
           schema: {}
-
+          
   /pools/{pool_id}/status:
     get:
       description: Gets the status of pool's activities
@@ -707,45 +750,6 @@ paths:
           description: Internal Error
           schema: {}
           
-
-
-          
-
-  /login:
-    post:
-      description: Login with a class token to get an individual booking token, usable for a finite period.
-      summary: login
-      tags:
-      - login
-      operationId: login
-      deprecated: false
-      produces:
-      - application/json
-      parameters:
-      - in: body
-        name: expired
-        required: false
-        schema:
-          type: object
-          properties:
-            token:
-              type: string
-              description: booking token
-              example: ey...
-      security:
-        - Bearer: [] 
-      responses:
-        200:
-          description: ''
-          schema:
-            $ref: '#/definitions/bookingtoken'
-          headers: {}
-        401:
-          description: Unauthorized
-          schema: {}
-        500:
-          description: Internal Error
-          schema: {}
 definitions:
   
   activity:
@@ -1067,6 +1071,8 @@ definitions:
     - description
 
 tags:
+- name: admin
+  description: ''
 - name: groups
   description: ''
 - name: pools
