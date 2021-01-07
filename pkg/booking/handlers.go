@@ -22,6 +22,8 @@ func addActivityByPoolIDHandler(ps *pool.PoolStore) func(params pools.AddActivit
 			return pools.NewAddActivityByPoolIDUnauthorized().WithPayload(err.Error())
 		}
 
+		//params.Activity
+
 		aid := "not implemented yet"
 		mid := &models.ID{
 			ID: &aid,
@@ -172,10 +174,7 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 
 			// populate API stream type
 			stream := models.Stream{}
-			stream.Exp = float64(claims.ExpiresAt)
 			stream.For = &s.For
-			stream.Iat = float64(claims.IssuedAt)
-			stream.Nbf = float64(claims.NotBefore)
 			stream.Token = &bearer
 			stream.URL = &s.URL
 			stream.Verb = &s.Verb
@@ -202,12 +201,9 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 			uis = append(uis, ui)
 		}
 
-		fnbf := float64(nbf)
 		fexp := float64(exp)
 
 		ma := models.Activity{}
-		ma.Iat = float64(iat)
-		ma.Nbf = &fnbf
 		ma.Exp = &fexp
 		ma.Streams = streams
 		ma.Uis = uis

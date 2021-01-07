@@ -5,6 +5,12 @@ import (
 )
 
 // Permission represents claims required in the apiKey JWT
+// When specifying a stream to pkg/booking, the required fields are
+// - Topic
+// - ConnectionType
+// - Scopes
+// - Audience
+
 type Token struct {
 
 	// Topic identifies the communication channel;

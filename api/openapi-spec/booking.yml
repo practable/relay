@@ -374,67 +374,18 @@ paths:
           description: Internal Error
           schema: {}
 definitions:
-  pool:
-    title: pool
-    description: Represents a pool
-    type: object
-    properties:
-      description:
-        $ref: '#/definitions/description'
-      min_session:
-        type: number
-        format: int64
-      max_session:
-        type: number
-        format: int64
-    required:
-      - description
-  stream:
-    title: stream
-    description: Represents an assigned, valid booking slot for an individual piece of equipment
-    example:
-      for: video
-      url: https://relay-access.practable.io/session/abc123
-      token: ey....
-    type: object
-    properties:
-      for:
-        description: Describes the stream, and doubles as template key in the URL
-        example: video
-        type: string
-      url:
-        description: URL at which to obtain access to the stream (getting a redirect URL containing a one time code)
-        example: https://relay-access.practable.io/session/abc123
-        type: string
-      token:
-        description: JWT bearer token for submitting in the header when making the request at the URL
-        type: string
-      verb:
-        description: HTPP verb to use when making request to the URL
-        example: POST
-        type: string
-        default: POST
-      iat:
-        description: Issued At
-        type: number
-        format: unix-timestamp
-      nbf:
-        description: Not Before
-        type: number
-        format: unix-timestamp
-      exp:
-        description: Expires At
-        type: number
-        format: unix-timestamp
-    required:
-    - for
-    - url
-    - token
+  
   activity:
     title: activity
     description: An activity represents connection details to instances of pre-agreed resource types such as video, data streams and user interfaces.
     type: object
     properties:
+      description:
+        $ref: '#/definitions/description'
+      exp:
+        description: Expires At
+        type: number
+        format: unix-timestamp
       streams:
         description: A list of streams
         type: array
@@ -445,147 +396,12 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/userInterface'
-      description:
-        $ref: '#/definitions/description'
-      iat:
-        description: Issued At
-        type: number
-        format: unix-timestamp
-      nbf:
-        description: Not before
-        type: number
-        format: unix-timestamp
-      exp:
-        description: Expires At
-        type: number
-        format: unix-timestamp
-      aud:
-        description: Audience
-        type: string
-      sub:
-        description: Subject
-        type: string
-      iss:
-        description: Issuer
-        type: string
     required:
+    - description
+    - exp
     - streams
     - uis
-    - description
-    - nbf
-    - exp
-    - aud
-  userInterface:
-    title: userInterface
-    description: User interface
-    type: object
-    properties:
-      url:
-        description: URL of the user interface
-        example: https://static.practable.io/ui/penduino-basic.html?video={{video}}&data={{data}}
-        type: string
-      streamsRequired:
-        description: list of names of required streams
-        example: ["data","video"]
-        type: array
-        items:
-          type: string
-          example: video
-          description: stream name
-      description:
-        $ref: '#/definitions/description'
-    required:
-    - url
-    - description
-  description:
-    title: description
-    description: Description of a resource e.g. pool, activity, user interface 
-    example:
-      name: Penduino (basic)
-      type: pool
-      short: Penduino electromagnetic pendulums with pulsed drive and braking
-      long: Some longer description
-      further: https://static.practable.io/descriptions/pools/penduino/index.html
-      thumb: https://assets.practable.io/images/pools/penduino/thumb.png
-      image: https://assets.practable.io/images/pools/penduino/image.png
-    type: object
-    properties:
-      name:
-        description: Display name
-        example: Penduino (basic)
-        type: string
-      short:
-        description: 140 char max description of the interface in plain text
-        example: Interface to the penduino electromagnetic pendulum with variable drive, active braking, short and open circuit loading.
-        type: string
-      long:
-        description: 280 char additional description of the interface in plain text
-        type: string
-      further:
-        description: URL for further information
-        example: https://static.practable.io/info/penduino/ui.html
-        type: string
-      thumb:
-        description: URL of thumbnail image (150x150)
-        example: https://assets.practable.io/images/penduino-150x150.png
-        type: string
-      image:
-        description: URL of main image (500x500)
-        example: https://assets.practable.io/images/penduino-500x500.png
-        type: string
-      type:
-        description: Type of resource being described, e.g. pool, activity, userinterface
-        example: userinterface
-        type: string
-      id:
-        description: Identification used in PoolStore
-        type: string             
-    required:
-    - name
-    - type
-  status:
-    title: status
-    description: Status of a pool
-    example:
-      available: 3
-      wait: 0
-      inuse: 5
-    type: object
-    properties:
-      available:
-        description: Number of available kits
-        example: 3
-        type: number
-        format: int
-      later:  
-        description: Kit available later?
-        example: true
-        type: boolean
-      wait:
-        description: Wait time in seconds until first kit available later
-        example: 3200
-        type: number
-        format: int64
-      used:
-        description: Number of kits in use
-        example: 5
-        type: number
-        format: int
-    required:
-    - available
-  id:
-    title: id
-    description: id of a resource
-    example:
-      id: d220c320-eb88-456b-b1dd-b36dae840af2
-    type: object
-    properties:
-      id:
-        description: identification
-        example: d220c320-eb88-456b-b1dd-b36dae840af2
-        type: string
-    required:
-    - id
+   
   bookingtoken:
     title: booking token details
     description: contains token plus its details
@@ -639,6 +455,190 @@ definitions:
     - sub
     - groups
     - scopes
+    
+  description:
+    title: description
+    description: Description of a resource e.g. pool, activity, user interface 
+    example:
+      name: Penduino (basic)
+      type: pool
+      short: Penduino electromagnetic pendulums with pulsed drive and braking
+      long: Some longer description
+      further: https://static.practable.io/descriptions/pools/penduino/index.html
+      thumb: https://assets.practable.io/images/pools/penduino/thumb.png
+      image: https://assets.practable.io/images/pools/penduino/image.png
+    type: object
+    properties:
+      name:
+        description: Display name
+        example: Penduino (basic)
+        type: string
+      short:
+        description: 140 char max description of the interface in plain text
+        example: Interface to the penduino electromagnetic pendulum with variable drive, active braking, short and open circuit loading.
+        type: string
+      long:
+        description: 280 char additional description of the interface in plain text
+        type: string
+      further:
+        description: URL for further information
+        example: https://static.practable.io/info/penduino/ui.html
+        type: string
+      thumb:
+        description: URL of thumbnail image (150x150)
+        example: https://assets.practable.io/images/penduino-150x150.png
+        type: string
+      image:
+        description: URL of main image (500x500)
+        example: https://assets.practable.io/images/penduino-500x500.png
+        type: string
+      type:
+        description: Type of resource being described, e.g. pool, activity, userinterface
+        example: userinterface
+        type: string
+      id:
+        description: Identification used in PoolStore
+        type: string             
+    required:
+    - name
+    - type
+  id:
+    title: id
+    description: id of a resource
+    example:
+      id: d220c320-eb88-456b-b1dd-b36dae840af2
+    type: object
+    properties:
+      id:
+        description: identification
+        example: d220c320-eb88-456b-b1dd-b36dae840af2
+        type: string
+    required:
+    - id
+
+  permission:
+    title: relay permission
+    description: Represents fields needed in relay permission tokens
+    type: object
+    properties:
+      audience:
+        type: string
+      connection_type:
+        type: string
+      scopes:
+        type: array
+        items:
+          type: string
+      topic:
+        type: string      
+    required:
+      - audience
+      - connection_type
+      - scopes
+      - topic
+      
+  pool:
+    title: pool
+    description: Represents a pool
+    type: object
+    properties:
+      description:
+        $ref: '#/definitions/description'
+      min_session:
+        type: number
+        format: int64
+      max_session:
+        type: number
+        format: int64
+    required:
+      - description
+      
+  status:
+    title: status
+    description: Status of a pool
+    example:
+      available: 3
+      wait: 0
+      inuse: 5
+    type: object
+    properties:
+      available:
+        description: Number of available kits
+        example: 3
+        type: number
+        format: int
+      later:  
+        description: Kit available later?
+        example: true
+        type: boolean
+      wait:
+        description: Wait time in seconds until first kit available later
+        example: 3200
+        type: number
+        format: int64
+      used:
+        description: Number of kits in use
+        example: 5
+        type: number
+        format: int
+    required:
+    - available
+    
+  stream:
+    title: stream
+    description: Represents an assigned, valid booking slot for an individual piece of equipment
+    example:
+      for: video
+      url: https://relay-access.practable.io/session/abc123
+      token: ey....
+    type: object
+    properties:
+      for:
+        description: Describes the stream, and doubles as template key in the URL
+        example: video
+        type: string
+      url:
+        description: URL at which to obtain access to the stream (getting a redirect URL containing a one time code)
+        example: https://relay-access.practable.io/session/abc123
+        type: string
+      token:
+        description: JWT bearer token for submitting in the header when making the request at the URL
+        type: string
+      verb:
+        description: HTPP verb to use when making request to the URL
+        example: POST
+        type: string
+        default: POST
+      permission:
+        $ref: '#/definitions/permission'
+    required:
+    - for
+    - url
+    - token
+    
+  userInterface:
+    title: userInterface
+    description: User interface
+    type: object
+    properties:
+      url:
+        description: URL of the user interface
+        example: https://static.practable.io/ui/penduino-basic.html?video={{video}}&data={{data}}
+        type: string
+      streamsRequired:
+        description: list of names of required streams
+        example: ["data","video"]
+        type: array
+        items:
+          type: string
+          example: video
+          description: stream name
+      description:
+        $ref: '#/definitions/description'
+    required:
+    - url
+    - description
+
 tags:
 - name: groups
   description: ''

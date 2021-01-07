@@ -21,10 +21,6 @@ import (
 // swagger:model activity
 type Activity struct {
 
-	// Audience
-	// Required: true
-	Aud *string `json:"aud"`
-
 	// description
 	// Required: true
 	Description *Description `json:"description"`
@@ -33,22 +29,9 @@ type Activity struct {
 	// Required: true
 	Exp *float64 `json:"exp"`
 
-	// Issued At
-	Iat float64 `json:"iat,omitempty"`
-
-	// Issuer
-	Iss string `json:"iss,omitempty"`
-
-	// Not before
-	// Required: true
-	Nbf *float64 `json:"nbf"`
-
 	// A list of streams
 	// Required: true
 	Streams []*Stream `json:"streams"`
-
-	// Subject
-	Sub string `json:"sub,omitempty"`
 
 	// User interfaces
 	// Required: true
@@ -59,19 +42,11 @@ type Activity struct {
 func (m *Activity) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAud(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateDescription(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateExp(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateNbf(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -86,15 +61,6 @@ func (m *Activity) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *Activity) validateAud(formats strfmt.Registry) error {
-
-	if err := validate.Required("aud", "body", m.Aud); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -119,15 +85,6 @@ func (m *Activity) validateDescription(formats strfmt.Registry) error {
 func (m *Activity) validateExp(formats strfmt.Registry) error {
 
 	if err := validate.Required("exp", "body", m.Exp); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *Activity) validateNbf(formats strfmt.Registry) error {
-
-	if err := validate.Required("nbf", "body", m.Nbf); err != nil {
 		return err
 	}
 

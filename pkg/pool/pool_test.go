@@ -8,11 +8,222 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/relay/pkg/booking/models"
 	"github.com/timdrysdale/relay/pkg/permission"
 )
 
 func mockTime(now *int64) int64 {
 	return *now
+}
+
+func TestTypeConversionWithNilPointers(t *testing.T) {
+
+	// These test are attempting to provoke
+	// nil pointer panics.
+	// no panic = pass
+
+	NewActivityFromModel(nil)
+
+	NewActivityFromModel(&models.Activity{})
+
+	ma := &models.Activity{
+		Description: nil,
+		Exp:         nil,
+		Streams:     []*models.Stream{nil, nil},
+		Uis:         []*models.UserInterface{nil, nil},
+	}
+	NewActivityFromModel(ma)
+
+	md := &models.Description{
+		Name: nil,
+		Type: nil,
+	}
+	NewDescriptionFromModel(md)
+
+	ms := &models.Stream{
+		For:        nil,
+		Permission: nil,
+		Token:      nil,
+		URL:        nil,
+		Verb:       nil,
+	}
+
+	NewSingleStreamFromModel(ms)
+
+	mui := &models.UserInterface{
+		Description: nil,
+		URL:         nil,
+	}
+	NewSingleUIFromModel(mui)
+
+}
+
+func TestTypeConversion(t *testing.T) {
+
+	debug := false
+
+	Further := "Further"
+	ID := "ID"
+	Image := "Image"
+	Long := "Long"
+	Short := "Short"
+	Name := "Name"
+	Thumb := "Thumb"
+	Type := "Type"
+
+	d := models.Description{
+		Further: Further,
+		ID:      ID,
+		Image:   Image,
+		Long:    Long,
+		Short:   Short,
+		Name:    &Name,
+		Thumb:   Thumb,
+		Type:    &Type,
+	}
+
+	Audience := "Audience"
+	ConnectionType := "ConnectionType"
+	Scopes := []string{"Sco", "pes"}
+	Topic := "Topic"
+
+	p := models.Permission{
+		Audience:       &Audience,
+		ConnectionType: &ConnectionType,
+		Scopes:         Scopes,
+		Topic:          &Topic,
+	}
+
+	For := "For"
+	Token := "Token"
+	URL := "URL"
+	Verb := "Verb"
+	Exp := float64(789)
+
+	s0 := models.Stream{
+		For:        &For,
+		Permission: &p,
+		Token:      &Token,
+		URL:        &URL,
+		Verb:       &Verb,
+	}
+
+	s1 := s0
+	roF := "roF"
+	s1.For = &roF
+
+	StreamsRequired := []string{"Streams", "Required"}
+
+	d1 := d
+	d2 := d
+
+	d1.ID = "someUI"
+	d2.ID = "anotherUI"
+
+	URL1 := "someURL"
+	URL2 := "anotherURL"
+
+	u0 := models.UserInterface{
+		Description:     &d1,
+		URL:             &URL1,
+		StreamsRequired: StreamsRequired,
+	}
+
+	u1 := models.UserInterface{
+		Description:     &d2,
+		URL:             &URL2,
+		StreamsRequired: StreamsRequired,
+	}
+
+	ma := &models.Activity{
+		Description: &d,
+		Exp:         &Exp,
+		Streams:     []*models.Stream{&s0, &s1},
+		Uis:         []*models.UserInterface{&u0, &u1},
+	}
+
+	a := NewActivityFromModel(ma)
+
+	if debug {
+		pretty, err := json.MarshalIndent(*a, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(pretty))
+	}
+
+	assert.Equal(t, ID, a.ID)
+	assert.Equal(t, int64(Exp), a.ExpiresAt)
+	assert.Equal(t, 2, len(a.Streams))
+	assert.Equal(t, 2, len(a.UI))
+
+	// check streams and UI are unique
+	hasFor := false
+	hasroF := false
+
+	for key, stream := range a.Streams {
+		if key == For {
+			hasFor = true
+			assert.Equal(t, For, stream.For)
+		}
+		if key == roF {
+			hasroF = true
+			assert.Equal(t, roF, stream.For)
+		}
+	}
+
+	if !(hasFor && hasroF) {
+		t.Error("missing one or both streams")
+	}
+
+	hasSome := false
+	hasAnother := false
+
+	for _, ui := range a.UI {
+		if ui.ID == "someUI" {
+			hasSome = true
+			assert.Equal(t, URL1, ui.URL)
+		}
+		if ui.ID == "anotherUI" {
+			hasAnother = true
+			assert.Equal(t, URL2, ui.URL)
+		}
+	}
+	if !(hasSome && hasAnother) {
+		t.Error("missing one or both UI")
+	}
+
+	ma2 := a.ConvertToModel()
+	if debug {
+		pretty, err := json.MarshalIndent(*ma2, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(pretty))
+	}
+
+	assert.Equal(t, *ma.Description, *ma2.Description)
+	assert.Equal(t, *ma.Exp, *ma2.Exp)
+	// UI and Streams could be in any order...
+
+	if *ma.Streams[0].For == For || *ma2.Streams[0].For == For {
+
+		assert.Equal(t, *ma.Streams[0], *ma2.Streams[0])
+		assert.Equal(t, *ma.Streams[1], *ma2.Streams[1])
+
+	} else if *ma.Streams[0].For == *ma2.Streams[0].For {
+
+		assert.Equal(t, *ma.Streams[0], *ma2.Streams[1])
+		assert.Equal(t, *ma.Streams[1], *ma2.Streams[0])
+	}
+
+	if ma.Uis[0].Description.ID == ma2.Uis[0].Description.ID {
+
+		assert.Equal(t, *ma.Uis[0], *ma2.Uis[0])
+		assert.Equal(t, *ma.Uis[1], *ma2.Uis[1])
+
+	} else {
+
+		assert.Equal(t, *ma.Uis[0], *ma2.Uis[1])
+		assert.Equal(t, *ma.Uis[1], *ma2.Uis[0])
+	}
+
 }
 
 func TestNewPool(t *testing.T) {
