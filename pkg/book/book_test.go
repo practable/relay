@@ -1124,7 +1124,6 @@ func TestAddNewPool(t *testing.T) {
 
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
-
 	pid := models.ID{}
 	err = json.Unmarshal(body, &pid)
 	assert.NoError(t, err)
@@ -1139,7 +1138,6 @@ func TestAddNewPool(t *testing.T) {
 
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
-
 	pd := models.Description{}
 	err = json.Unmarshal(body, &pd)
 	assert.NoError(t, err)
@@ -1153,3 +1151,16 @@ func TestAddNewPool(t *testing.T) {
 	assert.Equal(t, thistype, *pd.Type)
 
 }
+
+/*
+func TestAddActivityToPoolID(t *testing.T) {
+
+	// make pool, add to pool store
+	// create activity which will pass activity check
+	// submit.
+	// knock a bit off, see that second submission rejected
+
+	// duplicate activity submissions?!!
+
+}
+*/

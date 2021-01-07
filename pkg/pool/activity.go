@@ -1,7 +1,11 @@
 package pool
 
 import (
+	"errors"
+	"fmt"
+	"net/url"
 	"sync"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
@@ -13,6 +17,74 @@ import (
 // pkg/booking type, making no assumption about presence of ID
 // Use .WithNewRandomID() if this is a new activity that
 // should have a new random ID associated with it
+
+func CheckActivity(a *Activity) error {
+
+	if a == nil {
+		return errors.New("nil pointer to activity")
+	}
+
+	if a.RWMutex == nil {
+		return errors.New("nil pointer to activity mutex")
+	}
+
+	a.RLock()
+	defer a.RUnlock()
+
+	if a.ExpiresAt < time.Now().Unix() {
+		return fmt.Errorf("activity already expired at %d (time now is %d)", a.ExpiresAt, time.Now().Unix())
+	}
+
+	if (Description{}) == a.Description {
+		return errors.New("empty description")
+	}
+
+	// we can live without pretty much any part of the description in the most
+	// basic use cases (won't be pretty on the booking page)
+	// but no ID is a problem as we cannot track this activity without
+
+	if a.ID == "" {
+		return errors.New("no id")
+	}
+
+	for _, s := range a.Streams {
+
+		// empty s.For may be ok in some use cases
+		// e.g. streams all of same type
+		// so don't check it here as we
+		// can't warn, we can only throw an error
+		// and that is not be desirable for that case
+
+		p := s.Permission
+		if p.Audience == "" {
+			return fmt.Errorf("empty audience")
+		}
+
+		_, err := url.ParseRequestURI(p.Audience)
+		if err != nil {
+			return fmt.Errorf("audience not an url because %s", err.Error())
+		}
+
+		ct := p.ConnectionType
+
+		if ct != "session" && ct != "shell" {
+			return fmt.Errorf("connection_type %s is not session or shell", ct)
+		}
+
+		if p.Topic == "" {
+			return fmt.Errorf("empty topic")
+		}
+
+	}
+
+	for _, u := range a.UI {
+		if u.URL == "" {
+			return fmt.Errorf("user interface %s missing url", u.Name)
+		}
+	}
+
+	return nil
+}
 
 func NewActivityFromModel(ma *models.Activity) *Activity {
 	if ma == nil {

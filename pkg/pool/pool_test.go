@@ -203,12 +203,12 @@ func TestTypeConversion(t *testing.T) {
 	assert.Equal(t, *ma.Exp, *ma2.Exp)
 	// UI and Streams could be in any order...
 
-	if *ma.Streams[0].For == For || *ma2.Streams[0].For == For {
+	if *ma.Streams[0].For == *ma2.Streams[0].For {
 
 		assert.Equal(t, *ma.Streams[0], *ma2.Streams[0])
 		assert.Equal(t, *ma.Streams[1], *ma2.Streams[1])
 
-	} else if *ma.Streams[0].For == *ma2.Streams[0].For {
+	} else {
 
 		assert.Equal(t, *ma.Streams[0], *ma2.Streams[1])
 		assert.Equal(t, *ma.Streams[1], *ma2.Streams[0])
@@ -233,6 +233,53 @@ func TestTypeConversion(t *testing.T) {
 	assert.Equal(t, Topic, pt.Topic)
 	assert.Equal(t, ConnectionType, pt.ConnectionType)
 	assert.Equal(t, Scopes, pt.Scopes)
+
+	// now check the activity checker works ok...
+
+	err := CheckActivity(a)
+	assert.Error(t, err)
+	expected := fmt.Sprintf("activity already expired at 789 (time now is %d)", time.Now().Unix())
+	assert.Equal(t, expected, err.Error())
+
+	later := float64(time.Now().Unix() + 3600)
+	ma.Exp = &later
+	a = NewActivityFromModel(ma)
+	err = CheckActivity(a)
+	assert.Error(t, err)
+	assert.Equal(t, "audience not an url because parse \"Audience\": invalid URI for request", err.Error())
+
+	audience := "https://example.com"
+	ma.Streams[0].Permission.Audience = &audience
+	ma.Streams[1].Permission.Audience = &audience
+	a = NewActivityFromModel(ma)
+	err = CheckActivity(a)
+	assert.Error(t, err)
+	assert.Equal(t, "connection_type ConnectionType is not session or shell", err.Error())
+
+	session := "session"
+	shell := "shell"
+	ma.Streams[0].Permission.ConnectionType = &session
+	ma.Streams[1].Permission.ConnectionType = &shell
+	a = NewActivityFromModel(ma)
+	err = CheckActivity(a)
+	assert.NoError(t, err)
+
+	// now introduce some other critical errors...
+	a.ID = ""
+	err = CheckActivity(a)
+	assert.Equal(t, "no id", err.Error())
+
+	a.ID = "ljaldskjf09q27843r0982"      //fix that ...
+	a.Streams[For].Permission.Topic = "" //break this
+	err = CheckActivity(a)
+	assert.Equal(t, "empty topic", err.Error())
+
+	a.Streams[For].Permission.Topic = "Topic" //fix that ...
+	a.Streams[For].Permission.Audience = ""   //break this
+
+	err = CheckActivity(a)
+	assert.Error(t, err)
+	assert.Equal(t, "empty audience", err.Error())
 
 }
 

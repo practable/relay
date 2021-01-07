@@ -22,11 +22,26 @@ func addActivityByPoolIDHandler(ps *pool.PoolStore) func(params pools.AddActivit
 			return pools.NewAddActivityByPoolIDUnauthorized().WithPayload(err.Error())
 		}
 
-		//params.Activity
+		a := pool.NewActivityFromModel(params.Activity)
 
-		aid := "not implemented yet"
+		err = pool.CheckActivity(a)
+
+		if err != nil {
+			return pools.NewAddActivityByPoolIDInternalServerError().WithPayload(err.Error())
+		}
+
+		p, err := ps.GetPoolByID(params.PoolID)
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDNotFound().WithPayload("Pool Does Not Exist")
+		}
+
+		err = p.AddActivity(a)
+		if err != nil {
+			return pools.NewAddActivityByPoolIDInternalServerError().WithPayload(err.Error())
+		}
+
 		mid := &models.ID{
-			ID: &aid,
+			ID: &a.ID,
 		}
 		return pools.NewAddActivityByPoolIDOK().WithPayload(mid)
 	}
@@ -52,14 +67,7 @@ func addNewPoolHandler(ps *pool.PoolStore) func(params pools.AddNewPoolParams, p
 			return pools.NewAddNewPoolNotFound().WithPayload("Do Not Specify ID - Will Be Assigned")
 		}
 
-		d := pool.NewDescription(name)
-		d.SetFurther(pd.Further)
-		d.SetID(uuid.New().String())
-		d.SetImage(pd.Image)
-		d.SetLong(pd.Long)
-		d.SetShort(pd.Short)
-		d.SetThumb(pd.Thumb)
-		d.SetType(*pd.Type)
+		d := pool.NewDescriptionFromModel(pd).WithID(uuid.New().String())
 
 		p := pool.NewPool(name).WithDescription(*d)
 
@@ -74,6 +82,7 @@ func addNewPoolHandler(ps *pool.PoolStore) func(params pools.AddNewPoolParams, p
 		ps.AddPool(p)
 
 		id := p.GetID()
+
 		mid := &models.ID{
 			ID: &id,
 		}
@@ -109,7 +118,7 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 
 		p, err := ps.GetPoolByID(params.PoolID)
 		if err != nil {
-			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload("Pool Does Not Exist")
+			return pools.NewRequestSessionByPoolIDNotFound().WithPayload("Pool Does Not Exist")
 		}
 
 		duration := uint64(params.Duration)
