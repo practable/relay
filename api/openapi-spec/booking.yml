@@ -20,6 +20,82 @@ consumes:
 produces:
 - application/json
 paths:
+  /admin/poolstore:
+    get:
+      description: Export the current pool store including bookings 
+      summary: Export current state
+      tags:
+      - admin
+      operationId: exportPoolStore
+      deprecated: false
+      produces:
+      - application/json
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/poolstore'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {}
+    post:
+      description: Import a new pool store including bookings 
+      summary: Import new current state
+      tags:
+      - admin
+      operationId: importPoolStore
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - poolstore
+      in: body
+      schema:
+        $ref: '#/definitions/poolstore'
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/store_status'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {}
+  /admin/status:
+    get:
+      description: Get the current status (number of groups, pools, bookings, time til last booking finished etc) 
+      summary: Get current status
+      tags:
+      - admin
+      operationId: getStoreStatus
+      deprecated: false
+      produces:
+      - application/json
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/store_status'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {}
   /groups:
     get:
       description: Gets group id for a given group name
@@ -54,6 +130,35 @@ paths:
         500:
           description: ''
           schema: {}
+    post:
+      description: Create new group
+      summary: groups
+      tags:
+      - groups
+      operationId: addNewGroup
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: pool
+        required: true
+        schema:
+          $ref: '#/definitions/group'     
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/id'
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {}
+          
   /groups/{group_id}:
     get:
       description: Gets a description of a group
@@ -83,44 +188,197 @@ paths:
           schema: {}
         500:
           description: ''
-          schema: {} 
-  /pools:
-    get:
-      description: Gets a list of pool_ids associated with a group_id
-      summary: get pool ids in a group
+          schema: {}
+          
+  /groups/{group_id}/pools:
+    
+    delete:
+      description: Delete one or more pool_ids in the group. Return new complete list.
+      summary: groups
       tags:
-      - pools
-      operationId: getPoolsByGroupID
+      - groups
+      operationId: deletePoolsByGroupID
       deprecated: false
       produces:
       - application/json
       parameters:
       - name: group_id
-        in: query
+        in: path
         required: true
         type: string
-        description: Search by group name
+        description: ''
+      - name: pools
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/idlist'
       security:
         - Bearer: []  
       responses:
         200:
           description: ''
           schema:
-            type: array
-            items:
-              type: string
-              description: pool id
-              example: 5a834b5d-0758-4039-a044-6a82b263e079
+            $ref: '#/definitions/idlist'
           headers: {}
         401:
           description: Unauthorized
           schema: {}
         404:
-          description: Unauthorized
-          schema: {}          
+          description: Not Found
         500:
           description: ''
+          schema: {}
+    
+    get:
+      description: Gets a list of pool_ids in the group
+      summary: groups
+      tags:
+      - groups
+      operationId: getPoolsByGroupID
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/idlist'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+        500:
+          description: ''
+          schema: {}
+
+    post:
+      description: Add a list of pool_ids in the group (keep existing). Return new complete list.
+      summary: groups
+      tags:
+      - groups
+      operationId: addPoolsByGroupID
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - name: pools
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/idlist'
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/idlist'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+        500:
+          description: ''
+          schema: {}
+    put:
+      description: Update list of pool_ids in the group (replace existing). Return new complete list.
+      summary: groups
+      tags:
+      - groups
+      operationId: replacePoolsByGroupID
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - name: pools
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/idlist'
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/idlist'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+        500:
+          description: ''
+          schema: {}
+          
+  /pools:
+    get:
+      description: Gets a list of all pool_ids
+      summary: pools
+      tags:
+      - pools
+      operationId: getAllPools
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: pool_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - name: name
+        in: query
+        required: false
+        type: string
+        description: Limit search to pools with name containing this string (case sensitive)
+      - name: exact
+        in: query
+        required: false
+        type: boolean
+        description: Limit search to pools with exact match to the name (meaningless on own)
+        
+      security:
+        - Bearer: []  
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/idlist'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+          schema: {}          
+        500:
+          description: Internal Error
           schema: {} 
+ 
     post:
       description: Add a pool to the poolstore, using details in body 
       summary: Add a new pool
@@ -152,9 +410,9 @@ paths:
           schema: {}          
         500:
           description: ''
-          schema: {} 
-       
-  /pools/{pool_id}/description:
+          schema: {}
+
+  /pools/{pool_id}:
     get:
       description: Gets a description of the pool
       summary: pools
@@ -185,13 +443,41 @@ paths:
           description: Internal Error
           schema: {}
           
-  /pools/{pool_id}/status:
-    get:
-      description: Gets the status of pool's activities
-      summary: Gets the status of the pool's activities
+    delete:
+      description: Delete this pool and all its data (including activities)
+      summary: Delete this pool 
       tags:
       - pools
-      operationId: getPoolStatusByID
+      operationId: deletePool
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: pool_id
+        in: path
+        required: true
+        type: string
+        description: ID of the pool to delete
+      security:
+        - Bearer: []  
+      responses:
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+          schema: {}          
+        500:
+          description: ''
+          schema: {}         
+          
+  /pools/{pool_id}/activities:
+    post:
+      description:  Adds an activity to a pool (activty must include valid exp field)
+      summary: Adds an activity to a pool
+      tags:
+      - pools
+      operationId: addActivityByPoolID
       deprecated: false
       produces:
       - application/json
@@ -201,23 +487,142 @@ paths:
         required: true
         type: string
         description: ''
-      - name: duration
-        in: query
-        required: false
-        type: number
-        format: float64
-        description: ''       
+      - in: body
+        name: activity
+        required: true
+        schema:
+          $ref: '#/definitions/activity'
       security:
-        - Bearer: []  
+        - Bearer: [] 
       responses:
         200:
           description: ''
           schema:
-            $ref: '#/definitions/status'
+            $ref: '#/definitions/id'
           headers: {}
         401:
           description: Unauthorized
           schema: {}
+        404:
+          description: Not Available
+          schema: {}
+        500:
+          description: Internal Error
+          schema: {}
+          
+  /pools/{pool_id}/activities/{activity_id}:
+    delete:
+      description: Delete activity by activity ID
+      summary: Delete activity
+      tags:
+      - pools
+      operationId: deleteActivityByID
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: pool_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - name: activity_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      security:
+        - Bearer: [] 
+      responses:
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+          schema: {}          
+        500:
+          description: Internal Error
+          schema: {}
+          
+    get:
+      description: Get activity description by activity ID
+      summary: Get activity description
+      tags:
+      - pools
+      operationId: getActivityByID
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: pool_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - name: activity_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - name: details
+        in: query
+        required: false
+        type: boolean
+        description: True returns all available details, false just description.
+      security:
+        - Bearer: [] 
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/description'
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+          schema: {}          
+        500:
+          description: Internal Error
+          schema: {}
+    put:
+      description: Updates an activity in a pool (or adds one with a specific ID if does not exist)
+      summary: Update an activity in a pool
+      tags:
+      - pools
+      operationId: updateActivityByID
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: pool_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - name: activity_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - in: body
+        name: activity
+        required: true
+        schema:
+          $ref: '#/definitions/activity'  
+      security:
+        - Bearer: [] 
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/id'
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+          schema: {}          
         500:
           description: Internal Error
           schema: {}
@@ -264,14 +669,14 @@ paths:
         500:
           description: Internal Error
           schema: {}
-          
-  /pools/{pool_id}/activities/{activity_id}:
+
+  /pools/{pool_id}/status:
     get:
-      description: Get activity description by activity ID
-      summary: Get activity description
+      description: Gets the status of pool's activities
+      summary: Gets the status of the pool's activities
       tags:
       - pools
-      operationId: getActivityByID
+      operationId: getPoolStatusByID
       deprecated: false
       produces:
       - application/json
@@ -281,106 +686,31 @@ paths:
         required: true
         type: string
         description: ''
-      - name: activity_id
-        in: path
-        required: true
-        type: string
-        description: ''
+      - name: duration
+        in: query
+        required: false
+        type: number
+        format: float64
+        description: ''       
       security:
-        - Bearer: [] 
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: '#/definitions/description'
-        401:
-          description: Unauthorized
-          schema: {}
-        404:
-          description: Not Found
-          schema: {}          
-        500:
-          description: Internal Error
-          schema: {}
-    put:
-      description: Updates an activity in a pool (or adds one with a specific ID if does not exist)
-      summary: Update an activity in a pool
-      tags:
-      - pools
-      operationId: updateActivityByID
-      deprecated: false
-      produces:
-      - application/json
-      parameters:
-      - name: pool_id
-        in: path
-        required: true
-        type: string
-        description: ''
-      - name: activity_id
-        in: path
-        required: true
-        type: string
-        description: ''
-      - in: body
-        name: activity
-        required: true
-        schema:
-          $ref: '#/definitions/activity'  
-      security:
-        - Bearer: [] 
-      responses:
-        200:
-          description: ''
-          schema:  {}
-        401:
-          description: Unauthorized
-          schema: {}
-        404:
-          description: Not Found
-          schema: {}          
-        500:
-          description: Internal Error
-          schema: {}
-          
-  /pools/{pool_id}/activities:
-    post:
-      description:  Adds an activity to a pool (activty must include valid exp field)
-      summary: Adds an activity to a pool
-      tags:
-      - pools
-      operationId: addActivityByPoolID
-      deprecated: false
-      produces:
-      - application/json
-      parameters:
-      - name: pool_id
-        in: path
-        required: true
-        type: string
-        description: ''
-      - in: body
-        name: activity
-        required: true
-        schema:
-          $ref: '#/definitions/activity'
-      security:
-        - Bearer: [] 
+        - Bearer: []  
       responses:
         200:
           description: ''
           schema:
-            $ref: '#/definitions/id'
+            $ref: '#/definitions/status'
           headers: {}
         401:
           description: Unauthorized
           schema: {}
-        404:
-          description: Not Available
-          schema: {}
         500:
           description: Internal Error
           schema: {}
+          
+
+
+          
+
   /login:
     post:
       description: Login with a class token to get an individual booking token, usable for a finite period.
@@ -545,6 +875,21 @@ definitions:
     required:
     - name
     - type
+
+  group:
+    title: group
+    description: Represents a group (must have a name for tokens to work)
+    type: object
+    properties:
+      description:
+        $ref: '#/definitions/description'
+      pools:
+        type: array
+        items:
+          type: string
+    required:
+    - description
+      
   id:
     title: id
     description: id of a resource
@@ -559,6 +904,13 @@ definitions:
     required:
     - id
 
+  idlist:
+    title: idlist
+    description: list of ids (in array)
+    type: array
+    items:
+      type: string
+    
   permission:
     title: relay permission
     description: Represents fields needed in relay permission tokens
@@ -594,8 +946,22 @@ definitions:
         type: number
         format: int64
     required:
-      - description
+    - description
       
+  poolstore:
+    title: Pool Store
+    description: complete status required for failover
+    type: object
+    properties:
+      description:
+        $ref: '#/definitions/description'
+      todo:
+        type: string
+        description: TODO expand this type to have groups, pools, activities and bookings
+    required:
+    - description
+    - todo
+          
   status:
     title: status
     description: Status of a pool
@@ -626,6 +992,24 @@ definitions:
         format: int
     required:
     - available
+
+  store_status:
+    title: Store status
+    description: Counts of groups, pools, activities, booked sessions
+    type: object
+    properties:
+      groups:
+        type: number
+        format: int
+      pools:
+        type: number
+        format: int
+      activities:
+        type: number
+        format: int
+      bookings:
+        type: number
+        format: int
     
   stream:
     title: stream
