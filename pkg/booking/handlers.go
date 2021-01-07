@@ -147,21 +147,20 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 			return pools.NewRequestSessionByPoolIDInternalServerError().WithPayload(err.Error())
 		}
 
-		// Make session tokens for each stream
-		// If permission token information is wrong
-		// let that be determined by the recipient
-		// we cannot really know
+		// convert our activity from pkg/pool type to booking/models type
+		ma := a.ConvertToModel()
 
-		streams := []*models.Stream{}
+		// Iterate through sessions, making tokens
 
 		iat := ps.Now() - 1
 		nbf := ps.Now() - 1
 
-		for _, s := range a.Streams {
+		bearers := make([]string, len(ma.Streams))
 
-			// copy token
-			claims := s.Permission
-			// update timing
+		for idx, s := range ma.Streams {
+
+			claims := pool.MakeClaims(s.Permission)
+
 			claims.IssuedAt = iat
 			claims.NotBefore = nbf
 			claims.ExpiresAt = exp
@@ -172,53 +171,16 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 				return pools.NewRequestSessionByPoolIDInternalServerError().WithPayload(err.Error())
 			}
 
-			// populate API stream type
-			stream := models.Stream{}
-			stream.For = &s.For
-			stream.Token = &bearer
-			stream.URL = &s.URL
-			stream.Verb = &s.Verb
+			bearers[idx] = bearer
 
-			streams = append(streams, &stream)
 		}
 
-		uis := []*models.UserInterface{}
-
-		for _, u := range a.UI {
-			ui := &models.UserInterface{}
-			ui.URL = &u.URL
-			ui.StreamsRequired = u.StreamsRequired
-			ui.Description = &models.Description{}
-			ui.Description.Further = u.Description.Further
-			ui.Description.Image = u.Description.Image
-			ui.Description.Long = u.Description.Long
-			ui.Description.Name = &u.Description.Name
-			ui.Description.Short = u.Description.Short
-			ui.Description.Thumb = u.Description.Thumb
-			ui.Description.Type = &u.Description.Type
-			ui.Description.ID = u.Description.ID
-
-			uis = append(uis, ui)
+		for idx, bearer := range bearers {
+			ma.Streams[idx].Token = &bearer
 		}
-
-		fexp := float64(exp)
-
-		ma := models.Activity{}
-		ma.Exp = &fexp
-		ma.Streams = streams
-		ma.Uis = uis
-		ma.Description = &models.Description{}
-		ma.Description.Further = a.Description.Further
-		ma.Description.Image = a.Description.Image
-		ma.Description.Long = a.Description.Long
-		ma.Description.Name = &a.Description.Name
-		ma.Description.Short = a.Description.Short
-		ma.Description.Thumb = a.Description.Thumb
-		ma.Description.Type = &a.Description.Type
-		ma.Description.ID = a.Description.ID
 
 		confirm() // confirm booking with Limit checker
-		return pools.NewRequestSessionByPoolIDOK().WithPayload(&ma)
+		return pools.NewRequestSessionByPoolIDOK().WithPayload(ma)
 	}
 }
 
