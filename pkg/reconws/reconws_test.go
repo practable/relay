@@ -28,7 +28,7 @@ import (
 
 func init() {
 
-	log.SetLevel(log.TraceLevel)
+	log.SetLevel(log.WarnLevel)
 
 }
 
@@ -170,30 +170,65 @@ func TestReconnectAuth(t *testing.T) {
 	// check we finished test before relay started
 	assert.True(t, startTime+2 > time.Now().Unix())
 
-	// now ensure relay is running
-	time.Sleep(1 * time.Second)
-
-	data = []byte("ping")
-
+	// now wait until both clients have connected
+	// one will connect before the other, so it's not
+	// possible to guarantee both get this first message
+	// and that is normal behaviour for a non-caching
+	// relay....
+	data = []byte("hello")
 	s0.Out <- WsMessage{Data: data, Type: websocket.TextMessage}
-
-	select {
-	case msg := <-s1.In:
-		assert.Equal(t, data, msg.Data)
-	case <-time.After(timeout):
-		t.Fatal("No message")
-	}
-
-	data = []byte("pong")
-
 	s1.Out <- WsMessage{Data: data, Type: websocket.TextMessage}
 
-	select {
-	case msg := <-s0.In:
-		assert.Equal(t, data, msg.Data)
-	case <-time.After(timeout):
-		t.Fatal("No message")
+	time.Sleep(timeout) // send can come online before receive
+
+	// now send a message we care about
+	data0 := []byte("ping")
+	s0.Out <- WsMessage{Data: data0, Type: websocket.TextMessage}
+	data1 := []byte("pong")
+	s1.Out <- WsMessage{Data: data1, Type: websocket.TextMessage}
+
+	gotPing := false
+	gotPong := false
+
+	for i := 0; i < 20; i++ {
+		select {
+		case msg := <-s1.In:
+			if debug {
+				t.Log(string(msg.Data))
+			}
+			if bytes.Equal(msg.Data, data0) {
+				gotPing = true
+			}
+			// sometimes the messages combine into "helloping"
+			// due to the way framing is etsimated in relay
+			if bytes.Equal(msg.Data, append(data, data0...)) {
+				gotPing = true
+			}
+		case msg := <-s0.In:
+			if debug {
+				t.Log(string(msg.Data))
+			}
+			if bytes.Equal(msg.Data, data1) {
+				gotPong = true
+				if gotPing {
+					break
+				}
+			}
+			if bytes.Equal(msg.Data, append(data, data1...)) {
+				gotPing = true
+				if gotPong {
+					break
+				}
+			}
+		case <-time.After(timeout):
+			continue
+		}
 	}
+
+	if !gotPing || !gotPong {
+		t.Error("did not get both messages")
+	}
+
 	cancel()
 	// Shutdown the Relay and check no messages are being sent
 	close(closed)
