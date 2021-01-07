@@ -19,18 +19,12 @@ import (
 // swagger:model stream
 type Stream struct {
 
-	// Expires At
-	Exp float64 `json:"exp,omitempty"`
-
 	// Describes the stream, and doubles as template key in the URL
 	// Required: true
 	For *string `json:"for"`
 
-	// Issued At
-	Iat float64 `json:"iat,omitempty"`
-
-	// Not Before
-	Nbf float64 `json:"nbf,omitempty"`
+	// permission
+	Permission *Permission `json:"permission,omitempty"`
 
 	// JWT bearer token for submitting in the header when making the request at the URL
 	// Required: true
@@ -52,6 +46,10 @@ func (m *Stream) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validatePermission(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateToken(formats); err != nil {
 		res = append(res, err)
 	}
@@ -70,6 +68,24 @@ func (m *Stream) validateFor(formats strfmt.Registry) error {
 
 	if err := validate.Required("for", "body", m.For); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Stream) validatePermission(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Permission) { // not required
+		return nil
+	}
+
+	if m.Permission != nil {
+		if err := m.Permission.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("permission")
+			}
+			return err
+		}
 	}
 
 	return nil

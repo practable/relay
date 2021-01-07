@@ -525,37 +525,17 @@ func init() {
       "type": "object",
       "title": "activity",
       "required": [
-        "streams",
-        "uis",
         "description",
-        "nbf",
         "exp",
-        "aud"
+        "streams",
+        "uis"
       ],
       "properties": {
-        "aud": {
-          "description": "Audience",
-          "type": "string"
-        },
         "description": {
           "$ref": "#/definitions/description"
         },
         "exp": {
           "description": "Expires At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "iat": {
-          "description": "Issued At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "iss": {
-          "description": "Issuer",
-          "type": "string"
-        },
-        "nbf": {
-          "description": "Not before",
           "type": "number",
           "format": "unix-timestamp"
         },
@@ -565,10 +545,6 @@ func init() {
           "items": {
             "$ref": "#/definitions/stream"
           }
-        },
-        "sub": {
-          "description": "Subject",
-          "type": "string"
         },
         "uis": {
           "description": "User interfaces",
@@ -723,6 +699,34 @@ func init() {
         "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
       }
     },
+    "permission": {
+      "description": "Represents fields needed in relay permission tokens",
+      "type": "object",
+      "title": "relay permission",
+      "required": [
+        "audience",
+        "connection_type",
+        "scopes",
+        "topic"
+      ],
+      "properties": {
+        "audience": {
+          "type": "string"
+        },
+        "connection_type": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "topic": {
+          "type": "string"
+        }
+      }
+    },
     "pool": {
       "description": "Represents a pool",
       "type": "object",
@@ -792,25 +796,13 @@ func init() {
         "token"
       ],
       "properties": {
-        "exp": {
-          "description": "Expires At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
         "for": {
           "description": "Describes the stream, and doubles as template key in the URL",
           "type": "string",
           "example": "video"
         },
-        "iat": {
-          "description": "Issued At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "nbf": {
-          "description": "Not Before",
-          "type": "number",
-          "format": "unix-timestamp"
+        "permission": {
+          "$ref": "#/definitions/permission"
         },
         "token": {
           "description": "JWT bearer token for submitting in the header when making the request at the URL",
@@ -1394,37 +1386,17 @@ func init() {
       "type": "object",
       "title": "activity",
       "required": [
-        "streams",
-        "uis",
         "description",
-        "nbf",
         "exp",
-        "aud"
+        "streams",
+        "uis"
       ],
       "properties": {
-        "aud": {
-          "description": "Audience",
-          "type": "string"
-        },
         "description": {
           "$ref": "#/definitions/description"
         },
         "exp": {
           "description": "Expires At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "iat": {
-          "description": "Issued At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "iss": {
-          "description": "Issuer",
-          "type": "string"
-        },
-        "nbf": {
-          "description": "Not before",
           "type": "number",
           "format": "unix-timestamp"
         },
@@ -1434,10 +1406,6 @@ func init() {
           "items": {
             "$ref": "#/definitions/stream"
           }
-        },
-        "sub": {
-          "description": "Subject",
-          "type": "string"
         },
         "uis": {
           "description": "User interfaces",
@@ -1592,6 +1560,34 @@ func init() {
         "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
       }
     },
+    "permission": {
+      "description": "Represents fields needed in relay permission tokens",
+      "type": "object",
+      "title": "relay permission",
+      "required": [
+        "audience",
+        "connection_type",
+        "scopes",
+        "topic"
+      ],
+      "properties": {
+        "audience": {
+          "type": "string"
+        },
+        "connection_type": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "topic": {
+          "type": "string"
+        }
+      }
+    },
     "pool": {
       "description": "Represents a pool",
       "type": "object",
@@ -1661,25 +1657,13 @@ func init() {
         "token"
       ],
       "properties": {
-        "exp": {
-          "description": "Expires At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
         "for": {
           "description": "Describes the stream, and doubles as template key in the URL",
           "type": "string",
           "example": "video"
         },
-        "iat": {
-          "description": "Issued At",
-          "type": "number",
-          "format": "unix-timestamp"
-        },
-        "nbf": {
-          "description": "Not Before",
-          "type": "number",
-          "format": "unix-timestamp"
+        "permission": {
+          "$ref": "#/definitions/permission"
         },
         "token": {
           "description": "JWT bearer token for submitting in the header when making the request at the URL",
