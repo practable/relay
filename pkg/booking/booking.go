@@ -67,21 +67,17 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 	api.BearerAuth = validateHeader(secret, host)
 
 	// set the Handlers
-	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandlerFunc(ps))
-	api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(getGroupIDByNameHandlerFunc(ps))
-	api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(getGroupDescriptionByIDHandlerFunc(ps))
-	api.PoolsGetPoolsByGroupIDHandler = pools.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupIDHandler(ps))
-	api.PoolsGetPoolDescriptionByIDHandler = pools.GetPoolDescriptionByIDHandlerFunc(getPoolDescriptionByIDHandler(ps))
-	api.PoolsGetPoolStatusByIDHandler = pools.GetPoolStatusByIDHandlerFunc(getPoolStatusByIDHandler(ps))
-	api.PoolsRequestSessionByPoolIDHandler = pools.RequestSessionByPoolIDHandlerFunc(requestSessionByPoolIDHandler(ps, l))
-	api.PoolsAddNewPoolHandler = pools.AddNewPoolHandlerFunc(addNewPoolHandler(ps))
-	api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(addActivityByPoolIDHandler(ps))
-
-	/*
-	   PoolsUpdateActivityByIDHandler: pools.UpdateActivityByIDHandlerFunc(func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
-	   	return middleware.NotImplemented("operation pools.UpdateActivityByID has not yet been implemented")
-	   }),
-	*/
+	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandler(ps))
+	api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(getGroupIDByName(ps))
+	api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(getGroupDescriptionByID(ps))
+	api.PoolsGetPoolsByGroupIDHandler = pools.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupID(ps))
+	api.PoolsGetPoolDescriptionByIDHandler = pools.GetPoolDescriptionByIDHandlerFunc(getPoolDescriptionByID(ps))
+	api.PoolsGetPoolStatusByIDHandler = pools.GetPoolStatusByIDHandlerFunc(getPoolStatusByID(ps))
+	api.PoolsRequestSessionByPoolIDHandler = pools.RequestSessionByPoolIDHandlerFunc(requestSessionByPoolID(ps, l))
+	api.PoolsAddNewPoolHandler = pools.AddNewPoolHandlerFunc(addNewPool(ps))
+	api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(addActivityByPoolID(ps))
+	api.PoolsUpdateActivityByIDHandler = pools.UpdateActivityByIDHandlerFunc(updateActivityByID(ps))
+	api.PoolsGetActivityByIDHandler = pools.GetActivityByIDHandlerFunc(getActivityByID(ps))
 
 	go func() {
 		<-ctx.Done()

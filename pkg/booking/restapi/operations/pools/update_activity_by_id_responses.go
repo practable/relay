@@ -95,6 +95,48 @@ func (o *UpdateActivityByIDUnauthorized) WriteResponse(rw http.ResponseWriter, p
 	}
 }
 
+// UpdateActivityByIDNotFoundCode is the HTTP code returned for type UpdateActivityByIDNotFound
+const UpdateActivityByIDNotFoundCode int = 404
+
+/*UpdateActivityByIDNotFound Not Found
+
+swagger:response updateActivityByIdNotFound
+*/
+type UpdateActivityByIDNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewUpdateActivityByIDNotFound creates UpdateActivityByIDNotFound with default headers values
+func NewUpdateActivityByIDNotFound() *UpdateActivityByIDNotFound {
+
+	return &UpdateActivityByIDNotFound{}
+}
+
+// WithPayload adds the payload to the update activity by Id not found response
+func (o *UpdateActivityByIDNotFound) WithPayload(payload interface{}) *UpdateActivityByIDNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the update activity by Id not found response
+func (o *UpdateActivityByIDNotFound) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *UpdateActivityByIDNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
 // UpdateActivityByIDInternalServerErrorCode is the HTTP code returned for type UpdateActivityByIDInternalServerError
 const UpdateActivityByIDInternalServerErrorCode int = 500
 

@@ -183,7 +183,8 @@ paths:
           schema: {}
         500:
           description: Internal Error
-          schema: {} 
+          schema: {}
+          
   /pools/{pool_id}/status:
     get:
       description: Gets the status of pool's activities
@@ -220,6 +221,7 @@ paths:
         500:
           description: Internal Error
           schema: {}
+          
   /pools/{pool_id}/sessions:
     post:
       description: Request a session on an activity from the pool
@@ -262,7 +264,44 @@ paths:
         500:
           description: Internal Error
           schema: {}
+          
   /pools/{pool_id}/activities/{activity_id}:
+    get:
+      description: Get activity description by activity ID
+      summary: Get activity description
+      tags:
+      - pools
+      operationId: getActivityByID
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: pool_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      - name: activity_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      security:
+        - Bearer: [] 
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/description'
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+          schema: {}          
+        500:
+          description: Internal Error
+          schema: {}
     put:
       description: Updates an activity in a pool (or adds one with a specific ID if does not exist)
       summary: Update an activity in a pool
@@ -297,9 +336,13 @@ paths:
         401:
           description: Unauthorized
           schema: {}
+        404:
+          description: Not Found
+          schema: {}          
         500:
           description: Internal Error
           schema: {}
+          
   /pools/{pool_id}/activities:
     post:
       description:  Adds an activity to a pool (activty must include valid exp field)
