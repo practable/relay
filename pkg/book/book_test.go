@@ -1,6 +1,7 @@
 package book
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -15,6 +16,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/phayes/freeport"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/booking"
 	"github.com/timdrysdale/relay/pkg/booking/models"
@@ -28,6 +31,23 @@ var l *limit.Limit
 var ps *pool.PoolStore
 var host, secret string
 var bookingDuration, mocktime, startime int64
+
+func init() {
+	debug := false
+	if debug {
+		log.SetReportCaller(true)
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: false, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		log.SetLevel(log.WarnLevel)
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
+
+}
 
 func TestMain(m *testing.M) {
 
@@ -1152,15 +1172,227 @@ func TestAddNewPool(t *testing.T) {
 
 }
 
-/*
 func TestAddActivityToPoolID(t *testing.T) {
-
+	debug := false
 	// make pool, add to pool store
-	// create activity which will pass activity check
-	// submit.
-	// knock a bit off, see that second submission rejected
+	// make an admin user login token, swap for booking token
+	loginClaims := &lit.Token{}
+	loginClaims.Audience = host
+	loginClaims.Groups = []string{"everything"} //not an actual group
+	loginClaims.Scopes = []string{"login:admin"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
 
-	// duplicate activity submissions?!!
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+	adminBearer := *(btr.Token)
+
+	// make a description, post in body
+
+	further := "https://example.io/further.html"
+	image := "https://example.io/image.png"
+	long := "some long long long description"
+	name := "Some pool name"
+	short := "short story"
+	thumb := "https://example.io/thumb.png"
+	thistype := "pool"
+
+	d := models.Description{
+		Further: further,
+		Image:   image,
+		Long:    long,
+		Name:    &name,
+		Short:   short,
+		Thumb:   thumb,
+		Type:    &thistype,
+	}
+
+	p := models.Pool{
+		Description: &d,
+		MinSession:  60,
+		MaxSession:  7201,
+	}
+	// Now login again with booking token in body and see that subject is retained
+
+	reqBody, err := json.Marshal(p)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	pid := models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+
+	assert.True(t, len(*pid.ID) > 35)
+
+	// get ID back, use ID to get description, and compare...
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID+"/description", nil)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	pd := models.Description{}
+	err = json.Unmarshal(body, &pd)
+	assert.NoError(t, err)
+
+	assert.Equal(t, name, *pd.Name)
+	assert.Equal(t, further, pd.Further)
+	assert.Equal(t, image, pd.Image)
+	assert.Equal(t, long, pd.Long)
+	assert.Equal(t, short, pd.Short)
+	assert.Equal(t, thumb, pd.Thumb)
+	assert.Equal(t, thistype, *pd.Type)
+
+	// create activity which will pass activity check
+	Further := "Further"
+	ID := "ID"
+	Image := "Image"
+	Long := "Long"
+	Short := "Short"
+	Name := "Name"
+	Thumb := "Thumb"
+	Type := "Type"
+
+	ad0 := models.Description{
+		Further: Further,
+		ID:      ID,
+		Image:   Image,
+		Long:    Long,
+		Short:   Short,
+		Name:    &Name,
+		Thumb:   Thumb,
+		Type:    &Type,
+	}
+
+	Audience := "https://example.com"
+	ConnectionType := "session"
+	Scopes := []string{"read", "write"}
+	Topic := "Topic"
+
+	ap := models.Permission{
+		Audience:       &Audience,
+		ConnectionType: &ConnectionType,
+		Scopes:         Scopes,
+		Topic:          &Topic,
+	}
+
+	For := "For"
+	Token := "Token"
+	URL := "URL"
+	Verb := "Verb"
+	Exp := float64(time.Now().Unix() + 3600)
+
+	s0 := models.Stream{
+		For:        &For,
+		Permission: &ap,
+		Token:      &Token,
+		URL:        &URL,
+		Verb:       &Verb,
+	}
+
+	s1 := s0
+	roF := "roF"
+	s1.For = &roF
+
+	StreamsRequired := []string{"Streams", "Required"}
+
+	ad1 := ad0
+	ad2 := ad0
+
+	ad1.ID = "someUI"
+	ad2.ID = "anotherUI"
+
+	URL1 := "someURL"
+	URL2 := "anotherURL"
+
+	u0 := models.UserInterface{
+		Description:     &ad1,
+		URL:             &URL1,
+		StreamsRequired: StreamsRequired,
+	}
+
+	u1 := models.UserInterface{
+		Description:     &ad2,
+		URL:             &URL2,
+		StreamsRequired: StreamsRequired,
+	}
+
+	ma := &models.Activity{
+		Description: &ad0,
+		Exp:         &Exp,
+		Streams:     []*models.Stream{&s0, &s1},
+		Uis:         []*models.UserInterface{&u0, &u1},
+	}
+
+	err = pool.CheckActivity(pool.NewActivityFromModel(ma))
+	assert.NoError(t, err)
+
+	if debug {
+		pretty, err := json.MarshalIndent(*ma, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(pretty))
+	}
+
+	// submit to pool...
+
+	reqBody2, err := json.Marshal(ma)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+*pid.ID+"/activities", bytes.NewBuffer(reqBody2))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	if debug {
+		fmt.Println(string(body))
+	}
+
+	pid = models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+
+	// check not "ID" as it was originally set
+	// this is POST for new, not PUT for update
+	assert.True(t, len(*pid.ID) > 35)
+
+	// TODO
+
+	// Get activity description and compare
+
+	// 	submit.
+
+	// knock a bit off, see that second submission rejected ?
+
+	// activity with duplicate stream rejected?!!
+	// Better to do a uniqueness check separately, so
+	// that deliverate re-use e.g. same camera but different
+	// hardware, is ok.... the submitter chooses whether to validate ....
+	// or can get a list of duplicates .. or list of duplicates in any particular submission
 
 }
-*/

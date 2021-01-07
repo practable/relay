@@ -4,6 +4,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/booking/models"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
@@ -16,13 +17,15 @@ import (
 func addActivityByPoolIDHandler(ps *pool.PoolStore) func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
 
+		log.Trace("started")
+
 		_, err := isBookingAdmin(principal)
 
 		if err != nil {
 			return pools.NewAddActivityByPoolIDUnauthorized().WithPayload(err.Error())
 		}
 
-		a := pool.NewActivityFromModel(params.Activity)
+		a := pool.NewActivityFromModel(params.Activity).WithNewRandomID()
 
 		err = pool.CheckActivity(a)
 
@@ -40,9 +43,20 @@ func addActivityByPoolIDHandler(ps *pool.PoolStore) func(params pools.AddActivit
 			return pools.NewAddActivityByPoolIDInternalServerError().WithPayload(err.Error())
 		}
 
+		aid := a.ID
+
 		mid := &models.ID{
-			ID: &a.ID,
+			ID: &aid,
 		}
+
+		fields := log.Fields{"pool_id": params.PoolID,
+			"activity_id": a.ID,
+			"name":        a.Name,
+			"type":        "activity",
+			"action":      "new"}
+
+		log.WithFields(fields).Debugf("New activity named %s with ID %s added to pool %s", a.Name, a.ID, params.PoolID)
+
 		return pools.NewAddActivityByPoolIDOK().WithPayload(mid)
 	}
 }
