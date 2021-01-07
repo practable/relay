@@ -3,6 +3,7 @@ package pool
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -223,6 +224,15 @@ func TestTypeConversion(t *testing.T) {
 		assert.Equal(t, *ma.Uis[0], *ma2.Uis[1])
 		assert.Equal(t, *ma.Uis[1], *ma2.Uis[0])
 	}
+
+	pt := MakeClaims(ma.Streams[0].Permission)
+
+	assert.Equal(t, reflect.TypeOf(permission.Token{}), reflect.TypeOf(pt))
+
+	assert.Equal(t, Audience, pt.Audience)
+	assert.Equal(t, Topic, pt.Topic)
+	assert.Equal(t, ConnectionType, pt.ConnectionType)
+	assert.Equal(t, Scopes, pt.Scopes)
 
 }
 

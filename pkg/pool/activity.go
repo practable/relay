@@ -154,6 +154,23 @@ func (a *Activity) WithNewRandomID() *Activity {
 	return a
 }
 
+func MakeClaims(mp *models.Permission) permission.Token {
+
+	if mp == nil {
+		return permission.Token{}
+	}
+
+	return permission.Token{
+		StandardClaims: jwt.StandardClaims{
+			Audience: *mp.Audience,
+		},
+		ConnectionType: *mp.ConnectionType,
+		Scopes:         mp.Scopes,
+		Topic:          *mp.Topic,
+	}
+
+}
+
 func (a *Activity) ConvertToModel() *models.Activity {
 
 	exp := float64(a.ExpiresAt)
