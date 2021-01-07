@@ -86,7 +86,21 @@ func updateActivityByID(ps *pool.PoolStore) func(params pools.UpdateActivityByID
 			return pools.NewUpdateActivityByIDInternalServerError().WithPayload(err.Error())
 		}
 
-		return pools.NewUpdateActivityByIDOK()
+		aid := a.ID
+
+		mid := &models.ID{
+			ID: &aid,
+		}
+
+		fields := log.Fields{"pool_id": params.PoolID,
+			"activity_id": a.ID,
+			"name":        a.Name,
+			"type":        "activity",
+			"action":      "update"}
+
+		log.WithFields(fields).Debugf("Update activity named %s with ID %s in pool %s", a.Name, a.ID, params.PoolID)
+
+		return pools.NewUpdateActivityByIDOK().WithPayload(mid)
 	}
 }
 

@@ -1424,6 +1424,11 @@ func TestAddActivityToPoolID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
+	pid = models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+	assert.Equal(t, activityID, *pid.ID)
+
 	// Now get activity again and check name has changed
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, nil)
 	req.Header.Add("Content-type", "application/json")
