@@ -40,7 +40,7 @@ func (o *GetPoolDescriptionByIDURL) SetBasePath(bp string) {
 func (o *GetPoolDescriptionByIDURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/pools/{pool_id}/description"
+	var _path = "/pools/{pool_id}"
 
 	poolID := o.PoolID
 	if poolID != "" {
