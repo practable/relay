@@ -1,6 +1,8 @@
 package booking
 
 import (
+	"fmt"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
@@ -14,7 +16,81 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func addActivityByPoolIDHandler(ps *pool.PoolStore) func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
+func getActivityByID(ps *pool.PoolStore) func(params pools.GetActivityByIDParams, principal interface{}) middleware.Responder {
+	return func(params pools.GetActivityByIDParams, principal interface{}) middleware.Responder {
+
+		isAdmin, claims, err := isBookingAdminOrUser(principal)
+
+		if err != nil {
+			return pools.NewGetActivityByIDUnauthorized().WithPayload(err.Error())
+		}
+
+		// is this user allowed to access this pool? i.e. is this pool in our of our authorised groups?
+		hasPool := false
+
+		for _, pool := range claims.Pools {
+			if pool != params.PoolID {
+				continue
+			}
+			hasPool = true
+			break
+		}
+
+		if !hasPool && !isAdmin {
+			return pools.NewGetActivityByIDUnauthorized().WithPayload("Pool Not In Authorized Groups")
+		}
+
+		p, err := ps.GetPoolByID(params.PoolID)
+		if err != nil {
+			return pools.NewGetActivityByIDNotFound().WithPayload("Pool Does Not Exist")
+		}
+
+		a, err := p.GetActivityByID(params.ActivityID)
+		if err != nil {
+			return pools.NewGetActivityByIDNotFound().WithPayload("Activity Does Not Exist")
+		}
+
+		d := a.Description.ConvertToModel()
+
+		return pools.NewGetActivityByIDOK().WithPayload(d)
+
+	}
+}
+
+func updateActivityByID(ps *pool.PoolStore) func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
+	return func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
+
+		_, err := isBookingAdmin(principal)
+		if err != nil {
+			return pools.NewUpdateActivityByIDUnauthorized().WithPayload(err.Error())
+		}
+
+		a := pool.NewActivityFromModel(params.Activity) // leave ID unchanged
+		err = pool.CheckActivity(a)
+		if err != nil {
+			return pools.NewUpdateActivityByIDInternalServerError().WithPayload(err.Error())
+		}
+
+		// check activity ID in body matches that in path
+		if a.ID != params.ActivityID {
+			return pools.NewUpdateActivityByIDNotFound().WithPayload(fmt.Sprintf("ID in path (%s) does not match that in body (%s)", params.ActivityID, a.ID))
+		}
+
+		p, err := ps.GetPoolByID(params.PoolID)
+		if err != nil {
+			return pools.NewUpdateActivityByIDNotFound().WithPayload("Pool Does Not Exist")
+		}
+
+		err = p.AddActivity(a)
+		if err != nil {
+			return pools.NewUpdateActivityByIDInternalServerError().WithPayload(err.Error())
+		}
+
+		return pools.NewUpdateActivityByIDOK()
+	}
+}
+
+func addActivityByPoolID(ps *pool.PoolStore) func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
 
 		log.Trace("started")
@@ -61,7 +137,7 @@ func addActivityByPoolIDHandler(ps *pool.PoolStore) func(params pools.AddActivit
 	}
 }
 
-func addNewPoolHandler(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
+func addNewPool(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 	return func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 
 		_, err := isBookingAdmin(principal)
@@ -105,7 +181,7 @@ func addNewPoolHandler(ps *pool.PoolStore) func(params pools.AddNewPoolParams, p
 	}
 }
 
-func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
+func requestSessionByPoolID(ps *pool.PoolStore, l *limit.Limit) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
 	return func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
@@ -207,7 +283,7 @@ func requestSessionByPoolIDHandler(ps *pool.PoolStore, l *limit.Limit) func(para
 	}
 }
 
-func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
+func getPoolStatusByID(ps *pool.PoolStore) func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -254,7 +330,7 @@ func getPoolStatusByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolStatu
 	}
 }
 
-func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
+func getPoolDescriptionByID(ps *pool.PoolStore) func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -291,7 +367,7 @@ func getPoolDescriptionByIDHandler(ps *pool.PoolStore) func(params pools.GetPool
 	}
 }
 
-func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+func getPoolsByGroupID(ps *pool.PoolStore) func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -330,7 +406,7 @@ func getPoolsByGroupIDHandler(ps *pool.PoolStore) func(params pools.GetPoolsByGr
 	}
 }
 
-func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupDescriptionByIDParams, interface{}) middleware.Responder {
+func getGroupDescriptionByID(ps *pool.PoolStore) func(groups.GetGroupDescriptionByIDParams, interface{}) middleware.Responder {
 	return func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -365,7 +441,7 @@ func getGroupDescriptionByIDHandlerFunc(ps *pool.PoolStore) func(groups.GetGroup
 	}
 }
 
-func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
+func getGroupIDByName(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
 	return func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -403,7 +479,7 @@ func getGroupIDByNameHandlerFunc(ps *pool.PoolStore) func(groups.GetGroupIDByNam
 	}
 }
 
-func loginHandlerFunc(ps *pool.PoolStore) func(login.LoginParams, interface{}) middleware.Responder {
+func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middleware.Responder {
 	return func(params login.LoginParams, principal interface{}) middleware.Responder {
 
 		token, ok := principal.(*jwt.Token)

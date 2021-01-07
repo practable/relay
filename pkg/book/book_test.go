@@ -1247,6 +1247,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.True(t, len(*pid.ID) > 35)
+	poolID := *pid.ID
 
 	// get ID back, use ID to get description, and compare...
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID+"/description", nil)
@@ -1362,7 +1363,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 
 	reqBody2, err := json.Marshal(ma)
 	assert.NoError(t, err)
-	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+*pid.ID+"/activities", bytes.NewBuffer(reqBody2))
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+poolID+"/activities", bytes.NewBuffer(reqBody2))
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1381,18 +1382,64 @@ func TestAddActivityToPoolID(t *testing.T) {
 	// this is POST for new, not PUT for update
 	assert.True(t, len(*pid.ID) > 35)
 
-	// TODO
+	activityID := *pid.ID
 
 	// Get activity description and compare
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, nil)
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	if debug {
+		fmt.Println(string(body))
+	}
+	ad := models.Description{}
+	err = json.Unmarshal(body, &ad)
+	assert.NoError(t, err)
 
-	// 	submit.
+	ad0.ID = activityID
 
-	// knock a bit off, see that second submission rejected ?
+	assert.Equal(t, ad0, ad)
 
-	// activity with duplicate stream rejected?!!
-	// Better to do a uniqueness check separately, so
-	// that deliverate re-use e.g. same camera but different
-	// hardware, is ok.... the submitter chooses whether to validate ....
-	// or can get a list of duplicates .. or list of duplicates in any particular submission
+	// Modify activity and update...
+	newName := "This is the updated activity name"
+	ad0.Name = &newName
+	ma = &models.Activity{
+		Description: &ad0,
+		Exp:         &Exp,
+		Streams:     []*models.Stream{&s0, &s1},
+		Uis:         []*models.UserInterface{&u0, &u1},
+	}
+	// Swap to PUT and put new activity in body...
+	reqBody3, err := json.Marshal(ma)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("PUT", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, bytes.NewBuffer(reqBody3))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Now get activity again and check name has changed
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, nil)
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	if debug {
+		fmt.Println(string(body))
+	}
+	ad = models.Description{}
+	err = json.Unmarshal(body, &ad)
+	assert.NoError(t, err)
+
+	assert.Equal(t, newName, *ad.Name)
+	assert.Equal(t, ad0, ad)
 
 }

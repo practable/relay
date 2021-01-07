@@ -52,6 +52,9 @@ func NewBookingAPI(spec *loads.Document) *BookingAPI {
 		PoolsAddNewPoolHandler: pools.AddNewPoolHandlerFunc(func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.AddNewPool has not yet been implemented")
 		}),
+		PoolsGetActivityByIDHandler: pools.GetActivityByIDHandlerFunc(func(params pools.GetActivityByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetActivityByID has not yet been implemented")
+		}),
 		GroupsGetGroupDescriptionByIDHandler: groups.GetGroupDescriptionByIDHandlerFunc(func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation groups.GetGroupDescriptionByID has not yet been implemented")
 		}),
@@ -128,6 +131,8 @@ type BookingAPI struct {
 	PoolsAddActivityByPoolIDHandler pools.AddActivityByPoolIDHandler
 	// PoolsAddNewPoolHandler sets the operation handler for the add new pool operation
 	PoolsAddNewPoolHandler pools.AddNewPoolHandler
+	// PoolsGetActivityByIDHandler sets the operation handler for the get activity by ID operation
+	PoolsGetActivityByIDHandler pools.GetActivityByIDHandler
 	// GroupsGetGroupDescriptionByIDHandler sets the operation handler for the get group description by ID operation
 	GroupsGetGroupDescriptionByIDHandler groups.GetGroupDescriptionByIDHandler
 	// GroupsGetGroupIDByNameHandler sets the operation handler for the get group ID by name operation
@@ -229,6 +234,9 @@ func (o *BookingAPI) Validate() error {
 	}
 	if o.PoolsAddNewPoolHandler == nil {
 		unregistered = append(unregistered, "pools.AddNewPoolHandler")
+	}
+	if o.PoolsGetActivityByIDHandler == nil {
+		unregistered = append(unregistered, "pools.GetActivityByIDHandler")
 	}
 	if o.GroupsGetGroupDescriptionByIDHandler == nil {
 		unregistered = append(unregistered, "groups.GetGroupDescriptionByIDHandler")
@@ -359,6 +367,10 @@ func (o *BookingAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/pools"] = pools.NewAddNewPool(o.context, o.PoolsAddNewPoolHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/pools/{pool_id}/activities/{activity_id}"] = pools.NewGetActivityByID(o.context, o.PoolsGetActivityByIDHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

@@ -321,6 +321,56 @@ func init() {
       }
     },
     "/pools/{pool_id}/activities/{activity_id}": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get activity description by activity ID",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Get activity description",
+        "operationId": "getActivityByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "activity_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/description"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
+          }
+        }
+      },
       "put": {
         "security": [
           {
@@ -364,6 +414,10 @@ func init() {
           },
           "401": {
             "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
             "schema": {}
           },
           "500": {
@@ -1182,6 +1236,56 @@ func init() {
       }
     },
     "/pools/{pool_id}/activities/{activity_id}": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get activity description by activity ID",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Get activity description",
+        "operationId": "getActivityByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "activity_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/description"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
+          }
+        }
+      },
       "put": {
         "security": [
           {
@@ -1225,6 +1329,10 @@ func init() {
           },
           "401": {
             "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
             "schema": {}
           },
           "500": {
