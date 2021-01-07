@@ -39,10 +39,11 @@ func (t *Token) String() string {
 	return string(pretty)
 }
 
-func NewToken(audience string, groups, scopes []string, iat, nbf, exp int64) Token {
+func NewToken(audience string, groups, pools []string, scopes []string, iat, nbf, exp int64) Token {
 	return Token{
 		Groups: groups,
 		Scopes: scopes,
+		Pools:  pools,
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  iat,
 			NotBefore: nbf,
