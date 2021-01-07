@@ -29,7 +29,7 @@ func NewGetPoolDescriptionByID(ctx *middleware.Context, handler GetPoolDescripti
 	return &GetPoolDescriptionByID{Context: ctx, Handler: handler}
 }
 
-/*GetPoolDescriptionByID swagger:route GET /pools/{pool_id}/description pools getPoolDescriptionById
+/*GetPoolDescriptionByID swagger:route GET /pools/{pool_id} pools getPoolDescriptionById
 
 pools
 

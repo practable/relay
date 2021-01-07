@@ -19,6 +19,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/admin"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
@@ -49,11 +50,32 @@ func NewBookingAPI(spec *loads.Document) *BookingAPI {
 		PoolsAddActivityByPoolIDHandler: pools.AddActivityByPoolIDHandlerFunc(func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.AddActivityByPoolID has not yet been implemented")
 		}),
+		GroupsAddNewGroupHandler: groups.AddNewGroupHandlerFunc(func(params groups.AddNewGroupParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.AddNewGroup has not yet been implemented")
+		}),
 		PoolsAddNewPoolHandler: pools.AddNewPoolHandlerFunc(func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.AddNewPool has not yet been implemented")
 		}),
+		GroupsAddPoolsByGroupIDHandler: groups.AddPoolsByGroupIDHandlerFunc(func(params groups.AddPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.AddPoolsByGroupID has not yet been implemented")
+		}),
+		PoolsDeleteActivityByIDHandler: pools.DeleteActivityByIDHandlerFunc(func(params pools.DeleteActivityByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.DeleteActivityByID has not yet been implemented")
+		}),
+		PoolsDeletePoolHandler: pools.DeletePoolHandlerFunc(func(params pools.DeletePoolParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.DeletePool has not yet been implemented")
+		}),
+		GroupsDeletePoolsByGroupIDHandler: groups.DeletePoolsByGroupIDHandlerFunc(func(params groups.DeletePoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.DeletePoolsByGroupID has not yet been implemented")
+		}),
+		AdminExportPoolStoreHandler: admin.ExportPoolStoreHandlerFunc(func(params admin.ExportPoolStoreParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.ExportPoolStore has not yet been implemented")
+		}),
 		PoolsGetActivityByIDHandler: pools.GetActivityByIDHandlerFunc(func(params pools.GetActivityByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.GetActivityByID has not yet been implemented")
+		}),
+		PoolsGetAllPoolsHandler: pools.GetAllPoolsHandlerFunc(func(params pools.GetAllPoolsParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetAllPools has not yet been implemented")
 		}),
 		GroupsGetGroupDescriptionByIDHandler: groups.GetGroupDescriptionByIDHandlerFunc(func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation groups.GetGroupDescriptionByID has not yet been implemented")
@@ -67,11 +89,20 @@ func NewBookingAPI(spec *loads.Document) *BookingAPI {
 		PoolsGetPoolStatusByIDHandler: pools.GetPoolStatusByIDHandlerFunc(func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.GetPoolStatusByID has not yet been implemented")
 		}),
-		PoolsGetPoolsByGroupIDHandler: pools.GetPoolsByGroupIDHandlerFunc(func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
-			return middleware.NotImplemented("operation pools.GetPoolsByGroupID has not yet been implemented")
+		GroupsGetPoolsByGroupIDHandler: groups.GetPoolsByGroupIDHandlerFunc(func(params groups.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.GetPoolsByGroupID has not yet been implemented")
+		}),
+		AdminGetStoreStatusHandler: admin.GetStoreStatusHandlerFunc(func(params admin.GetStoreStatusParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.GetStoreStatus has not yet been implemented")
+		}),
+		AdminImportPoolStoreHandler: admin.ImportPoolStoreHandlerFunc(func(params admin.ImportPoolStoreParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.ImportPoolStore has not yet been implemented")
 		}),
 		LoginLoginHandler: login.LoginHandlerFunc(func(params login.LoginParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation login.Login has not yet been implemented")
+		}),
+		GroupsReplacePoolsByGroupIDHandler: groups.ReplacePoolsByGroupIDHandlerFunc(func(params groups.ReplacePoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.ReplacePoolsByGroupID has not yet been implemented")
 		}),
 		PoolsRequestSessionByPoolIDHandler: pools.RequestSessionByPoolIDHandlerFunc(func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.RequestSessionByPoolID has not yet been implemented")
@@ -129,10 +160,24 @@ type BookingAPI struct {
 
 	// PoolsAddActivityByPoolIDHandler sets the operation handler for the add activity by pool ID operation
 	PoolsAddActivityByPoolIDHandler pools.AddActivityByPoolIDHandler
+	// GroupsAddNewGroupHandler sets the operation handler for the add new group operation
+	GroupsAddNewGroupHandler groups.AddNewGroupHandler
 	// PoolsAddNewPoolHandler sets the operation handler for the add new pool operation
 	PoolsAddNewPoolHandler pools.AddNewPoolHandler
+	// GroupsAddPoolsByGroupIDHandler sets the operation handler for the add pools by group ID operation
+	GroupsAddPoolsByGroupIDHandler groups.AddPoolsByGroupIDHandler
+	// PoolsDeleteActivityByIDHandler sets the operation handler for the delete activity by ID operation
+	PoolsDeleteActivityByIDHandler pools.DeleteActivityByIDHandler
+	// PoolsDeletePoolHandler sets the operation handler for the delete pool operation
+	PoolsDeletePoolHandler pools.DeletePoolHandler
+	// GroupsDeletePoolsByGroupIDHandler sets the operation handler for the delete pools by group ID operation
+	GroupsDeletePoolsByGroupIDHandler groups.DeletePoolsByGroupIDHandler
+	// AdminExportPoolStoreHandler sets the operation handler for the export pool store operation
+	AdminExportPoolStoreHandler admin.ExportPoolStoreHandler
 	// PoolsGetActivityByIDHandler sets the operation handler for the get activity by ID operation
 	PoolsGetActivityByIDHandler pools.GetActivityByIDHandler
+	// PoolsGetAllPoolsHandler sets the operation handler for the get all pools operation
+	PoolsGetAllPoolsHandler pools.GetAllPoolsHandler
 	// GroupsGetGroupDescriptionByIDHandler sets the operation handler for the get group description by ID operation
 	GroupsGetGroupDescriptionByIDHandler groups.GetGroupDescriptionByIDHandler
 	// GroupsGetGroupIDByNameHandler sets the operation handler for the get group ID by name operation
@@ -141,10 +186,16 @@ type BookingAPI struct {
 	PoolsGetPoolDescriptionByIDHandler pools.GetPoolDescriptionByIDHandler
 	// PoolsGetPoolStatusByIDHandler sets the operation handler for the get pool status by ID operation
 	PoolsGetPoolStatusByIDHandler pools.GetPoolStatusByIDHandler
-	// PoolsGetPoolsByGroupIDHandler sets the operation handler for the get pools by group ID operation
-	PoolsGetPoolsByGroupIDHandler pools.GetPoolsByGroupIDHandler
+	// GroupsGetPoolsByGroupIDHandler sets the operation handler for the get pools by group ID operation
+	GroupsGetPoolsByGroupIDHandler groups.GetPoolsByGroupIDHandler
+	// AdminGetStoreStatusHandler sets the operation handler for the get store status operation
+	AdminGetStoreStatusHandler admin.GetStoreStatusHandler
+	// AdminImportPoolStoreHandler sets the operation handler for the import pool store operation
+	AdminImportPoolStoreHandler admin.ImportPoolStoreHandler
 	// LoginLoginHandler sets the operation handler for the login operation
 	LoginLoginHandler login.LoginHandler
+	// GroupsReplacePoolsByGroupIDHandler sets the operation handler for the replace pools by group ID operation
+	GroupsReplacePoolsByGroupIDHandler groups.ReplacePoolsByGroupIDHandler
 	// PoolsRequestSessionByPoolIDHandler sets the operation handler for the request session by pool ID operation
 	PoolsRequestSessionByPoolIDHandler pools.RequestSessionByPoolIDHandler
 	// PoolsUpdateActivityByIDHandler sets the operation handler for the update activity by ID operation
@@ -232,11 +283,32 @@ func (o *BookingAPI) Validate() error {
 	if o.PoolsAddActivityByPoolIDHandler == nil {
 		unregistered = append(unregistered, "pools.AddActivityByPoolIDHandler")
 	}
+	if o.GroupsAddNewGroupHandler == nil {
+		unregistered = append(unregistered, "groups.AddNewGroupHandler")
+	}
 	if o.PoolsAddNewPoolHandler == nil {
 		unregistered = append(unregistered, "pools.AddNewPoolHandler")
 	}
+	if o.GroupsAddPoolsByGroupIDHandler == nil {
+		unregistered = append(unregistered, "groups.AddPoolsByGroupIDHandler")
+	}
+	if o.PoolsDeleteActivityByIDHandler == nil {
+		unregistered = append(unregistered, "pools.DeleteActivityByIDHandler")
+	}
+	if o.PoolsDeletePoolHandler == nil {
+		unregistered = append(unregistered, "pools.DeletePoolHandler")
+	}
+	if o.GroupsDeletePoolsByGroupIDHandler == nil {
+		unregistered = append(unregistered, "groups.DeletePoolsByGroupIDHandler")
+	}
+	if o.AdminExportPoolStoreHandler == nil {
+		unregistered = append(unregistered, "admin.ExportPoolStoreHandler")
+	}
 	if o.PoolsGetActivityByIDHandler == nil {
 		unregistered = append(unregistered, "pools.GetActivityByIDHandler")
+	}
+	if o.PoolsGetAllPoolsHandler == nil {
+		unregistered = append(unregistered, "pools.GetAllPoolsHandler")
 	}
 	if o.GroupsGetGroupDescriptionByIDHandler == nil {
 		unregistered = append(unregistered, "groups.GetGroupDescriptionByIDHandler")
@@ -250,11 +322,20 @@ func (o *BookingAPI) Validate() error {
 	if o.PoolsGetPoolStatusByIDHandler == nil {
 		unregistered = append(unregistered, "pools.GetPoolStatusByIDHandler")
 	}
-	if o.PoolsGetPoolsByGroupIDHandler == nil {
-		unregistered = append(unregistered, "pools.GetPoolsByGroupIDHandler")
+	if o.GroupsGetPoolsByGroupIDHandler == nil {
+		unregistered = append(unregistered, "groups.GetPoolsByGroupIDHandler")
+	}
+	if o.AdminGetStoreStatusHandler == nil {
+		unregistered = append(unregistered, "admin.GetStoreStatusHandler")
+	}
+	if o.AdminImportPoolStoreHandler == nil {
+		unregistered = append(unregistered, "admin.ImportPoolStoreHandler")
 	}
 	if o.LoginLoginHandler == nil {
 		unregistered = append(unregistered, "login.LoginHandler")
+	}
+	if o.GroupsReplacePoolsByGroupIDHandler == nil {
+		unregistered = append(unregistered, "groups.ReplacePoolsByGroupIDHandler")
 	}
 	if o.PoolsRequestSessionByPoolIDHandler == nil {
 		unregistered = append(unregistered, "pools.RequestSessionByPoolIDHandler")
@@ -366,11 +447,39 @@ func (o *BookingAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/groups"] = groups.NewAddNewGroup(o.context, o.GroupsAddNewGroupHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/pools"] = pools.NewAddNewPool(o.context, o.PoolsAddNewPoolHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/groups/{group_id}/pools"] = groups.NewAddPoolsByGroupID(o.context, o.GroupsAddPoolsByGroupIDHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/pools/{pool_id}/activities/{activity_id}"] = pools.NewDeleteActivityByID(o.context, o.PoolsDeleteActivityByIDHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/pools/{pool_id}"] = pools.NewDeletePool(o.context, o.PoolsDeletePoolHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/groups/{group_id}/pools"] = groups.NewDeletePoolsByGroupID(o.context, o.GroupsDeletePoolsByGroupIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/admin/poolstore"] = admin.NewExportPoolStore(o.context, o.AdminExportPoolStoreHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/pools/{pool_id}/activities/{activity_id}"] = pools.NewGetActivityByID(o.context, o.PoolsGetActivityByIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/pools"] = pools.NewGetAllPools(o.context, o.PoolsGetAllPoolsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -382,7 +491,7 @@ func (o *BookingAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/pools/{pool_id}/description"] = pools.NewGetPoolDescriptionByID(o.context, o.PoolsGetPoolDescriptionByIDHandler)
+	o.handlers["GET"]["/pools/{pool_id}"] = pools.NewGetPoolDescriptionByID(o.context, o.PoolsGetPoolDescriptionByIDHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -390,11 +499,23 @@ func (o *BookingAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/pools"] = pools.NewGetPoolsByGroupID(o.context, o.PoolsGetPoolsByGroupIDHandler)
+	o.handlers["GET"]["/groups/{group_id}/pools"] = groups.NewGetPoolsByGroupID(o.context, o.GroupsGetPoolsByGroupIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/admin/status"] = admin.NewGetStoreStatus(o.context, o.AdminGetStoreStatusHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/admin/poolstore"] = admin.NewImportPoolStore(o.context, o.AdminImportPoolStoreHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/login"] = login.NewLogin(o.context, o.LoginLoginHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/groups/{group_id}/pools"] = groups.NewReplacePoolsByGroupID(o.context, o.GroupsReplacePoolsByGroupIDHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

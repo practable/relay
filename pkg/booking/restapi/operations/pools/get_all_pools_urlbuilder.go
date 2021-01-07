@@ -9,17 +9,14 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
-	"strings"
 
 	"github.com/go-openapi/swag"
 )
 
-// GetActivityByIDURL generates an URL for the get activity by ID operation
-type GetActivityByIDURL struct {
-	ActivityID string
-	PoolID     string
-
-	Details *bool
+// GetAllPoolsURL generates an URL for the get all pools operation
+type GetAllPoolsURL struct {
+	Exact *bool
+	Name  *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -29,7 +26,7 @@ type GetActivityByIDURL struct {
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *GetActivityByIDURL) WithBasePath(bp string) *GetActivityByIDURL {
+func (o *GetAllPoolsURL) WithBasePath(bp string) *GetAllPoolsURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -37,29 +34,15 @@ func (o *GetActivityByIDURL) WithBasePath(bp string) *GetActivityByIDURL {
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *GetActivityByIDURL) SetBasePath(bp string) {
+func (o *GetAllPoolsURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *GetActivityByIDURL) Build() (*url.URL, error) {
+func (o *GetAllPoolsURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/pools/{pool_id}/activities/{activity_id}"
-
-	activityID := o.ActivityID
-	if activityID != "" {
-		_path = strings.Replace(_path, "{activity_id}", activityID, -1)
-	} else {
-		return nil, errors.New("activityId is required on GetActivityByIDURL")
-	}
-
-	poolID := o.PoolID
-	if poolID != "" {
-		_path = strings.Replace(_path, "{pool_id}", poolID, -1)
-	} else {
-		return nil, errors.New("poolId is required on GetActivityByIDURL")
-	}
+	var _path = "/pools"
 
 	_basePath := o._basePath
 	if _basePath == "" {
@@ -69,12 +52,20 @@ func (o *GetActivityByIDURL) Build() (*url.URL, error) {
 
 	qs := make(url.Values)
 
-	var detailsQ string
-	if o.Details != nil {
-		detailsQ = swag.FormatBool(*o.Details)
+	var exactQ string
+	if o.Exact != nil {
+		exactQ = swag.FormatBool(*o.Exact)
 	}
-	if detailsQ != "" {
-		qs.Set("details", detailsQ)
+	if exactQ != "" {
+		qs.Set("exact", exactQ)
+	}
+
+	var nameQ string
+	if o.Name != nil {
+		nameQ = *o.Name
+	}
+	if nameQ != "" {
+		qs.Set("name", nameQ)
 	}
 
 	_result.RawQuery = qs.Encode()
@@ -83,7 +74,7 @@ func (o *GetActivityByIDURL) Build() (*url.URL, error) {
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *GetActivityByIDURL) Must(u *url.URL, err error) *url.URL {
+func (o *GetAllPoolsURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -94,17 +85,17 @@ func (o *GetActivityByIDURL) Must(u *url.URL, err error) *url.URL {
 }
 
 // String returns the string representation of the path with query string
-func (o *GetActivityByIDURL) String() string {
+func (o *GetAllPoolsURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *GetActivityByIDURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *GetAllPoolsURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on GetActivityByIDURL")
+		return nil, errors.New("scheme is required for a full url on GetAllPoolsURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on GetActivityByIDURL")
+		return nil, errors.New("host is required for a full url on GetAllPoolsURL")
 	}
 
 	base, err := o.Build()
@@ -118,6 +109,6 @@ func (o *GetActivityByIDURL) BuildFull(scheme, host string) (*url.URL, error) {
 }
 
 // StringFull returns the string representation of a complete url
-func (o *GetActivityByIDURL) StringFull(scheme, host string) string {
+func (o *GetAllPoolsURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

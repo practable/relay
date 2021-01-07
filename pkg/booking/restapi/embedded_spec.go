@@ -38,6 +38,109 @@ func init() {
   "host": "book.practable.io",
   "basePath": "/api/v1",
   "paths": {
+    "/admin/poolstore": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Export the current pool store including bookings",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Export current state",
+        "operationId": "exportPoolStore",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/poolstore"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Import a new pool store including bookings",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Import new current state",
+        "operationId": "importPoolStore",
+        "parameters": [
+          {
+            "name": "poolstore",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/poolstore"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/store_status"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/admin/status": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get the current status (number of groups, pools, bookings, time til last booking finished etc)",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get current status",
+        "operationId": "getStoreStatus",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/store_status"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      }
+    },
     "/groups": {
       "get": {
         "security": [
@@ -72,6 +175,46 @@ func init() {
                 "type": "string",
                 "example": "3a834b55-07c8-cb39-a341-3a82b263e07c"
               }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Create new group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "addNewGroup",
+        "parameters": [
+          {
+            "name": "pool",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/group"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/id"
             }
           },
           "401": {
@@ -117,6 +260,196 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/groups/{group_id}/pools": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a list of pool_ids in the group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "getPoolsByGroupID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Update list of pool_ids in the group (replace existing). Return new complete list.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "replacePoolsByGroupID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "pools",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Add a list of pool_ids in the group (keep existing). Return new complete list.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "addPoolsByGroupID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "pools",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete one or more pool_ids in the group. Return new complete list.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "deletePoolsByGroupID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "pools",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
           },
           "500": {
             "schema": {}
@@ -180,33 +513,33 @@ func init() {
             "Bearer": []
           }
         ],
-        "description": "Gets a list of pool_ids associated with a group_id",
+        "description": "Gets a list of all pool_ids",
         "produces": [
           "application/json"
         ],
         "tags": [
           "pools"
         ],
-        "summary": "get pool ids in a group",
-        "operationId": "getPoolsByGroupID",
+        "summary": "pools",
+        "operationId": "getAllPools",
         "parameters": [
           {
             "type": "string",
-            "description": "Search by group name",
-            "name": "group_id",
-            "in": "query",
-            "required": true
+            "description": "Limit search to pools with name containing this string (case sensitive)",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Limit search to pools with exact match to the name (meaningless on own)",
+            "name": "exact",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "schema": {
-              "type": "array",
-              "items": {
-                "description": "pool id",
-                "type": "string",
-                "example": "5a834b5d-0758-4039-a044-6a82b263e079"
-              }
+              "$ref": "#/definitions/idlist"
             }
           },
           "401": {
@@ -214,10 +547,11 @@ func init() {
             "schema": {}
           },
           "404": {
-            "description": "Unauthorized",
+            "description": "Not Found",
             "schema": {}
           },
           "500": {
+            "description": "Internal Error",
             "schema": {}
           }
         }
@@ -259,6 +593,85 @@ func init() {
           },
           "404": {
             "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a description of the pool",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "pools",
+        "operationId": "getPoolDescriptionByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/description"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete this pool and all its data (including activities)",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Delete this pool",
+        "operationId": "deletePool",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the pool to delete",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
             "schema": {}
           },
           "500": {
@@ -348,6 +761,12 @@ func init() {
             "name": "activity_id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "True returns all available details, false just description.",
+            "name": "details",
+            "in": "query"
           }
         ],
         "responses": {
@@ -410,7 +829,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "schema": {}
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/id"
+            }
           },
           "401": {
             "description": "Unauthorized",
@@ -425,40 +847,43 @@ func init() {
             "schema": {}
           }
         }
-      }
-    },
-    "/pools/{pool_id}/description": {
-      "get": {
+      },
+      "delete": {
         "security": [
           {
             "Bearer": []
           }
         ],
-        "description": "Gets a description of the pool",
+        "description": "Delete activity by activity ID",
         "produces": [
           "application/json"
         ],
         "tags": [
           "pools"
         ],
-        "summary": "pools",
-        "operationId": "getPoolDescriptionByID",
+        "summary": "Delete activity",
+        "operationId": "deleteActivityByID",
         "parameters": [
           {
             "type": "string",
             "name": "pool_id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "string",
+            "name": "activity_id",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/description"
-            }
-          },
           "401": {
             "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
             "schema": {}
           },
           "500": {
@@ -735,6 +1160,25 @@ func init() {
         "type": "pool"
       }
     },
+    "group": {
+      "description": "Represents a group (must have a name for tokens to work)",
+      "type": "object",
+      "title": "group",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/description"
+        },
+        "pools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "id": {
       "description": "id of a resource",
       "type": "object",
@@ -751,6 +1195,14 @@ func init() {
       },
       "example": {
         "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
+      }
+    },
+    "idlist": {
+      "description": "list of ids (in array)",
+      "type": "array",
+      "title": "idlist",
+      "items": {
+        "type": "string"
       }
     },
     "permission": {
@@ -802,6 +1254,24 @@ func init() {
         }
       }
     },
+    "poolstore": {
+      "description": "complete status required for failover",
+      "type": "object",
+      "title": "Pool Store",
+      "required": [
+        "description",
+        "todo"
+      ],
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/description"
+        },
+        "todo": {
+          "description": "TODO expand this type to have groups, pools, activities and bookings",
+          "type": "string"
+        }
+      }
+    },
     "status": {
       "description": "Status of a pool",
       "type": "object",
@@ -838,6 +1308,29 @@ func init() {
         "available": 3,
         "inuse": 5,
         "wait": 0
+      }
+    },
+    "store_status": {
+      "description": "Counts of groups, pools, activities, booked sessions",
+      "type": "object",
+      "title": "Store status",
+      "properties": {
+        "activities": {
+          "type": "number",
+          "format": "int"
+        },
+        "bookings": {
+          "type": "number",
+          "format": "int"
+        },
+        "groups": {
+          "type": "number",
+          "format": "int"
+        },
+        "pools": {
+          "type": "number",
+          "format": "int"
+        }
       }
     },
     "stream": {
@@ -921,6 +1414,9 @@ func init() {
     }
   },
   "tags": [
+    {
+      "name": "admin"
+    },
     {
       "name": "groups"
     },
@@ -953,6 +1449,109 @@ func init() {
   "host": "book.practable.io",
   "basePath": "/api/v1",
   "paths": {
+    "/admin/poolstore": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Export the current pool store including bookings",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Export current state",
+        "operationId": "exportPoolStore",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/poolstore"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Import a new pool store including bookings",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Import new current state",
+        "operationId": "importPoolStore",
+        "parameters": [
+          {
+            "name": "poolstore",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/poolstore"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/store_status"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/admin/status": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get the current status (number of groups, pools, bookings, time til last booking finished etc)",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get current status",
+        "operationId": "getStoreStatus",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/store_status"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      }
+    },
     "/groups": {
       "get": {
         "security": [
@@ -987,6 +1586,46 @@ func init() {
                 "type": "string",
                 "example": "3a834b55-07c8-cb39-a341-3a82b263e07c"
               }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Create new group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "addNewGroup",
+        "parameters": [
+          {
+            "name": "pool",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/group"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/id"
             }
           },
           "401": {
@@ -1032,6 +1671,196 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/groups/{group_id}/pools": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a list of pool_ids in the group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "getPoolsByGroupID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Update list of pool_ids in the group (replace existing). Return new complete list.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "replacePoolsByGroupID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "pools",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Add a list of pool_ids in the group (keep existing). Return new complete list.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "addPoolsByGroupID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "pools",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete one or more pool_ids in the group. Return new complete list.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "deletePoolsByGroupID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "pools",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/idlist"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
           },
           "500": {
             "schema": {}
@@ -1095,33 +1924,33 @@ func init() {
             "Bearer": []
           }
         ],
-        "description": "Gets a list of pool_ids associated with a group_id",
+        "description": "Gets a list of all pool_ids",
         "produces": [
           "application/json"
         ],
         "tags": [
           "pools"
         ],
-        "summary": "get pool ids in a group",
-        "operationId": "getPoolsByGroupID",
+        "summary": "pools",
+        "operationId": "getAllPools",
         "parameters": [
           {
             "type": "string",
-            "description": "Search by group name",
-            "name": "group_id",
-            "in": "query",
-            "required": true
+            "description": "Limit search to pools with name containing this string (case sensitive)",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Limit search to pools with exact match to the name (meaningless on own)",
+            "name": "exact",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "schema": {
-              "type": "array",
-              "items": {
-                "description": "pool id",
-                "type": "string",
-                "example": "5a834b5d-0758-4039-a044-6a82b263e079"
-              }
+              "$ref": "#/definitions/idlist"
             }
           },
           "401": {
@@ -1129,10 +1958,11 @@ func init() {
             "schema": {}
           },
           "404": {
-            "description": "Unauthorized",
+            "description": "Not Found",
             "schema": {}
           },
           "500": {
+            "description": "Internal Error",
             "schema": {}
           }
         }
@@ -1174,6 +2004,85 @@ func init() {
           },
           "404": {
             "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/pools/{pool_id}": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Gets a description of the pool",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "pools",
+        "operationId": "getPoolDescriptionByID",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/description"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete this pool and all its data (including activities)",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "pools"
+        ],
+        "summary": "Delete this pool",
+        "operationId": "deletePool",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the pool to delete",
+            "name": "pool_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
             "schema": {}
           },
           "500": {
@@ -1263,6 +2172,12 @@ func init() {
             "name": "activity_id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "True returns all available details, false just description.",
+            "name": "details",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1325,7 +2240,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "schema": {}
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/id"
+            }
           },
           "401": {
             "description": "Unauthorized",
@@ -1340,40 +2258,43 @@ func init() {
             "schema": {}
           }
         }
-      }
-    },
-    "/pools/{pool_id}/description": {
-      "get": {
+      },
+      "delete": {
         "security": [
           {
             "Bearer": []
           }
         ],
-        "description": "Gets a description of the pool",
+        "description": "Delete activity by activity ID",
         "produces": [
           "application/json"
         ],
         "tags": [
           "pools"
         ],
-        "summary": "pools",
-        "operationId": "getPoolDescriptionByID",
+        "summary": "Delete activity",
+        "operationId": "deleteActivityByID",
         "parameters": [
           {
             "type": "string",
             "name": "pool_id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "string",
+            "name": "activity_id",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/description"
-            }
-          },
           "401": {
             "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
             "schema": {}
           },
           "500": {
@@ -1650,6 +2571,25 @@ func init() {
         "type": "pool"
       }
     },
+    "group": {
+      "description": "Represents a group (must have a name for tokens to work)",
+      "type": "object",
+      "title": "group",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/description"
+        },
+        "pools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "id": {
       "description": "id of a resource",
       "type": "object",
@@ -1666,6 +2606,14 @@ func init() {
       },
       "example": {
         "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
+      }
+    },
+    "idlist": {
+      "description": "list of ids (in array)",
+      "type": "array",
+      "title": "idlist",
+      "items": {
+        "type": "string"
       }
     },
     "permission": {
@@ -1717,6 +2665,24 @@ func init() {
         }
       }
     },
+    "poolstore": {
+      "description": "complete status required for failover",
+      "type": "object",
+      "title": "Pool Store",
+      "required": [
+        "description",
+        "todo"
+      ],
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/description"
+        },
+        "todo": {
+          "description": "TODO expand this type to have groups, pools, activities and bookings",
+          "type": "string"
+        }
+      }
+    },
     "status": {
       "description": "Status of a pool",
       "type": "object",
@@ -1753,6 +2719,29 @@ func init() {
         "available": 3,
         "inuse": 5,
         "wait": 0
+      }
+    },
+    "store_status": {
+      "description": "Counts of groups, pools, activities, booked sessions",
+      "type": "object",
+      "title": "Store status",
+      "properties": {
+        "activities": {
+          "type": "number",
+          "format": "int"
+        },
+        "bookings": {
+          "type": "number",
+          "format": "int"
+        },
+        "groups": {
+          "type": "number",
+          "format": "int"
+        },
+        "pools": {
+          "type": "number",
+          "format": "int"
+        }
       }
     },
     "stream": {
@@ -1836,6 +2825,9 @@ func init() {
     }
   },
   "tags": [
+    {
+      "name": "admin"
+    },
     {
       "name": "groups"
     },

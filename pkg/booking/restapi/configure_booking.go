@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/admin"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
@@ -57,9 +58,49 @@ func configureAPI(api *operations.BookingAPI) http.Handler {
 			return middleware.NotImplemented("operation pools.AddActivityByPoolID has not yet been implemented")
 		})
 	}
+	if api.GroupsAddNewGroupHandler == nil {
+		api.GroupsAddNewGroupHandler = groups.AddNewGroupHandlerFunc(func(params groups.AddNewGroupParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.AddNewGroup has not yet been implemented")
+		})
+	}
 	if api.PoolsAddNewPoolHandler == nil {
 		api.PoolsAddNewPoolHandler = pools.AddNewPoolHandlerFunc(func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.AddNewPool has not yet been implemented")
+		})
+	}
+	if api.GroupsAddPoolsByGroupIDHandler == nil {
+		api.GroupsAddPoolsByGroupIDHandler = groups.AddPoolsByGroupIDHandlerFunc(func(params groups.AddPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.AddPoolsByGroupID has not yet been implemented")
+		})
+	}
+	if api.PoolsDeleteActivityByIDHandler == nil {
+		api.PoolsDeleteActivityByIDHandler = pools.DeleteActivityByIDHandlerFunc(func(params pools.DeleteActivityByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.DeleteActivityByID has not yet been implemented")
+		})
+	}
+	if api.PoolsDeletePoolHandler == nil {
+		api.PoolsDeletePoolHandler = pools.DeletePoolHandlerFunc(func(params pools.DeletePoolParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.DeletePool has not yet been implemented")
+		})
+	}
+	if api.GroupsDeletePoolsByGroupIDHandler == nil {
+		api.GroupsDeletePoolsByGroupIDHandler = groups.DeletePoolsByGroupIDHandlerFunc(func(params groups.DeletePoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.DeletePoolsByGroupID has not yet been implemented")
+		})
+	}
+	if api.AdminExportPoolStoreHandler == nil {
+		api.AdminExportPoolStoreHandler = admin.ExportPoolStoreHandlerFunc(func(params admin.ExportPoolStoreParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.ExportPoolStore has not yet been implemented")
+		})
+	}
+	if api.PoolsGetActivityByIDHandler == nil {
+		api.PoolsGetActivityByIDHandler = pools.GetActivityByIDHandlerFunc(func(params pools.GetActivityByIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetActivityByID has not yet been implemented")
+		})
+	}
+	if api.PoolsGetAllPoolsHandler == nil {
+		api.PoolsGetAllPoolsHandler = pools.GetAllPoolsHandlerFunc(func(params pools.GetAllPoolsParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation pools.GetAllPools has not yet been implemented")
 		})
 	}
 	if api.GroupsGetGroupDescriptionByIDHandler == nil {
@@ -82,14 +123,29 @@ func configureAPI(api *operations.BookingAPI) http.Handler {
 			return middleware.NotImplemented("operation pools.GetPoolStatusByID has not yet been implemented")
 		})
 	}
-	if api.PoolsGetPoolsByGroupIDHandler == nil {
-		api.PoolsGetPoolsByGroupIDHandler = pools.GetPoolsByGroupIDHandlerFunc(func(params pools.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
-			return middleware.NotImplemented("operation pools.GetPoolsByGroupID has not yet been implemented")
+	if api.GroupsGetPoolsByGroupIDHandler == nil {
+		api.GroupsGetPoolsByGroupIDHandler = groups.GetPoolsByGroupIDHandlerFunc(func(params groups.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.GetPoolsByGroupID has not yet been implemented")
+		})
+	}
+	if api.AdminGetStoreStatusHandler == nil {
+		api.AdminGetStoreStatusHandler = admin.GetStoreStatusHandlerFunc(func(params admin.GetStoreStatusParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.GetStoreStatus has not yet been implemented")
+		})
+	}
+	if api.AdminImportPoolStoreHandler == nil {
+		api.AdminImportPoolStoreHandler = admin.ImportPoolStoreHandlerFunc(func(params admin.ImportPoolStoreParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.ImportPoolStore has not yet been implemented")
 		})
 	}
 	if api.LoginLoginHandler == nil {
 		api.LoginLoginHandler = login.LoginHandlerFunc(func(params login.LoginParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation login.Login has not yet been implemented")
+		})
+	}
+	if api.GroupsReplacePoolsByGroupIDHandler == nil {
+		api.GroupsReplacePoolsByGroupIDHandler = groups.ReplacePoolsByGroupIDHandlerFunc(func(params groups.ReplacePoolsByGroupIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.ReplacePoolsByGroupID has not yet been implemented")
 		})
 	}
 	if api.PoolsRequestSessionByPoolIDHandler == nil {

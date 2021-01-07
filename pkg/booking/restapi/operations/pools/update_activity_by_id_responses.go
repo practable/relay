@@ -9,12 +9,14 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime"
+
+	"github.com/timdrysdale/relay/pkg/booking/models"
 )
 
 // UpdateActivityByIDOKCode is the HTTP code returned for type UpdateActivityByIDOK
 const UpdateActivityByIDOKCode int = 200
 
-/*UpdateActivityByIDOK update activity by Id o k
+/*UpdateActivityByIDOK OK
 
 swagger:response updateActivityByIdOK
 */
@@ -23,7 +25,7 @@ type UpdateActivityByIDOK struct {
 	/*
 	  In: Body
 	*/
-	Payload interface{} `json:"body,omitempty"`
+	Payload *models.ID `json:"body,omitempty"`
 }
 
 // NewUpdateActivityByIDOK creates UpdateActivityByIDOK with default headers values
@@ -33,13 +35,13 @@ func NewUpdateActivityByIDOK() *UpdateActivityByIDOK {
 }
 
 // WithPayload adds the payload to the update activity by Id o k response
-func (o *UpdateActivityByIDOK) WithPayload(payload interface{}) *UpdateActivityByIDOK {
+func (o *UpdateActivityByIDOK) WithPayload(payload *models.ID) *UpdateActivityByIDOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the update activity by Id o k response
-func (o *UpdateActivityByIDOK) SetPayload(payload interface{}) {
+func (o *UpdateActivityByIDOK) SetPayload(payload *models.ID) {
 	o.Payload = payload
 }
 
@@ -47,9 +49,11 @@ func (o *UpdateActivityByIDOK) SetPayload(payload interface{}) {
 func (o *UpdateActivityByIDOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
-	payload := o.Payload
-	if err := producer.Produce(rw, payload); err != nil {
-		panic(err) // let the recovery middleware deal with this
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
 	}
 }
 
