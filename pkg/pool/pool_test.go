@@ -460,7 +460,13 @@ func TestAddGetDeletePools(t *testing.T) {
 
 	assert.Equal(t, p0.Name, pool.Name)
 
-	pools, err := ps.GetPoolsByName("stuff1")
+	pools := ps.GetAllPools()
+	assert.Equal(t, 3, len(pools))
+
+	ids := ps.GetAllPoolIDs()
+	assert.Equal(t, 3, len(ids))
+
+	pools, err = ps.GetPoolsByName("stuff1")
 
 	assert.Equal(t, 1, len(pools))
 

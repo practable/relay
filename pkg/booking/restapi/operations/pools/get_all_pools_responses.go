@@ -25,7 +25,7 @@ type GetAllPoolsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.Idlist `json:"body,omitempty"`
+	Payload models.IDList `json:"body,omitempty"`
 }
 
 // NewGetAllPoolsOK creates GetAllPoolsOK with default headers values
@@ -35,13 +35,13 @@ func NewGetAllPoolsOK() *GetAllPoolsOK {
 }
 
 // WithPayload adds the payload to the get all pools o k response
-func (o *GetAllPoolsOK) WithPayload(payload models.Idlist) *GetAllPoolsOK {
+func (o *GetAllPoolsOK) WithPayload(payload models.IDList) *GetAllPoolsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get all pools o k response
-func (o *GetAllPoolsOK) SetPayload(payload models.Idlist) {
+func (o *GetAllPoolsOK) SetPayload(payload models.IDList) {
 	o.Payload = payload
 }
 
@@ -52,7 +52,7 @@ func (o *GetAllPoolsOK) WriteResponse(rw http.ResponseWriter, producer runtime.P
 	payload := o.Payload
 	if payload == nil {
 		// return empty array
-		payload = models.Idlist{}
+		payload = models.IDList{}
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

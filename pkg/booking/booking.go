@@ -67,10 +67,17 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 	api.BearerAuth = validateHeader(secret, host)
 
 	// set the Handlers
-	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandler(ps))
+
+	// ** GROUPS **/
 	api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(getGroupIDByName(ps))
 	api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(getGroupDescriptionByID(ps))
-	api.PoolsGetPoolsByGroupIDHandler = pools.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupID(ps))
+
+	// TODO
+	//api.GroupsGetPoolsByGroupIDHandler = groups.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupID(ps))
+
+	// *** POOLS ***
+	api.PoolsGetAllPoolsHandler = pools.GetAllPoolsHandlerFunc(getAllPools(ps))
+
 	api.PoolsGetPoolDescriptionByIDHandler = pools.GetPoolDescriptionByIDHandlerFunc(getPoolDescriptionByID(ps))
 	api.PoolsGetPoolStatusByIDHandler = pools.GetPoolStatusByIDHandlerFunc(getPoolStatusByID(ps))
 	api.PoolsRequestSessionByPoolIDHandler = pools.RequestSessionByPoolIDHandlerFunc(requestSessionByPoolID(ps, l))
@@ -78,6 +85,9 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 	api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(addActivityByPoolID(ps))
 	api.PoolsUpdateActivityByIDHandler = pools.UpdateActivityByIDHandlerFunc(updateActivityByID(ps))
 	api.PoolsGetActivityByIDHandler = pools.GetActivityByIDHandlerFunc(getActivityByID(ps))
+
+	// *** USERS ***/
+	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandler(ps))
 
 	go func() {
 		<-ctx.Done()

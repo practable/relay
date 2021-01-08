@@ -149,6 +149,30 @@ func (p *PoolStore) GetPoolsByName(name string) ([]*Pool, error) {
 	return pools, nil
 }
 
+func (p *PoolStore) GetAllPools() []*Pool {
+	p.RLock()
+	defer p.RUnlock()
+
+	pools := []*Pool{}
+
+	for _, p := range p.Pools {
+		pools = append(pools, p)
+	}
+	return pools
+}
+
+func (p *PoolStore) GetAllPoolIDs() []string {
+	p.RLock()
+	defer p.RUnlock()
+
+	ids := []string{}
+
+	for k, _ := range p.Pools {
+		ids = append(ids, k)
+	}
+	return ids
+}
+
 func (p *PoolStore) DeletePool(pool *Pool) {
 	p.Lock()
 	defer p.Unlock()

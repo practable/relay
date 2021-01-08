@@ -25,7 +25,7 @@ type DeletePoolsByGroupIDOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.Idlist `json:"body,omitempty"`
+	Payload models.IDList `json:"body,omitempty"`
 }
 
 // NewDeletePoolsByGroupIDOK creates DeletePoolsByGroupIDOK with default headers values
@@ -35,13 +35,13 @@ func NewDeletePoolsByGroupIDOK() *DeletePoolsByGroupIDOK {
 }
 
 // WithPayload adds the payload to the delete pools by group Id o k response
-func (o *DeletePoolsByGroupIDOK) WithPayload(payload models.Idlist) *DeletePoolsByGroupIDOK {
+func (o *DeletePoolsByGroupIDOK) WithPayload(payload models.IDList) *DeletePoolsByGroupIDOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the delete pools by group Id o k response
-func (o *DeletePoolsByGroupIDOK) SetPayload(payload models.Idlist) {
+func (o *DeletePoolsByGroupIDOK) SetPayload(payload models.IDList) {
 	o.Payload = payload
 }
 
@@ -52,7 +52,7 @@ func (o *DeletePoolsByGroupIDOK) WriteResponse(rw http.ResponseWriter, producer 
 	payload := o.Payload
 	if payload == nil {
 		// return empty array
-		payload = models.Idlist{}
+		payload = models.IDList{}
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {
