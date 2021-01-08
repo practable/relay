@@ -33,7 +33,7 @@ func init() {
       "url": "https://practable.io",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.3"
+    "version": "0.4"
   },
   "host": "book.practable.io",
   "basePath": "/api/v1",
@@ -294,7 +294,7 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -302,7 +302,8 @@ func init() {
             "schema": {}
           },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found",
+            "schema": {}
           },
           "500": {
             "schema": {}
@@ -336,14 +337,14 @@ func init() {
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           }
         ],
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -385,14 +386,14 @@ func init() {
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           }
         ],
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -434,14 +435,14 @@ func init() {
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           }
         ],
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -539,7 +540,7 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -1197,10 +1198,10 @@ func init() {
         "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
       }
     },
-    "idlist": {
+    "id_list": {
       "description": "list of ids (in array)",
       "type": "array",
-      "title": "idlist",
+      "title": "ID list",
       "items": {
         "type": "string"
       }
@@ -1444,7 +1445,7 @@ func init() {
       "url": "https://practable.io",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.3"
+    "version": "0.4"
   },
   "host": "book.practable.io",
   "basePath": "/api/v1",
@@ -1705,7 +1706,7 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -1713,7 +1714,8 @@ func init() {
             "schema": {}
           },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found",
+            "schema": {}
           },
           "500": {
             "schema": {}
@@ -1747,14 +1749,14 @@ func init() {
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           }
         ],
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -1796,14 +1798,14 @@ func init() {
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           }
         ],
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -1845,14 +1847,14 @@ func init() {
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           }
         ],
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -1950,7 +1952,7 @@ func init() {
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/idlist"
+              "$ref": "#/definitions/id_list"
             }
           },
           "401": {
@@ -2608,10 +2610,10 @@ func init() {
         "id": "d220c320-eb88-456b-b1dd-b36dae840af2"
       }
     },
-    "idlist": {
+    "id_list": {
       "description": "list of ids (in array)",
       "type": "array",
-      "title": "idlist",
+      "title": "ID list",
       "items": {
         "type": "string"
       }

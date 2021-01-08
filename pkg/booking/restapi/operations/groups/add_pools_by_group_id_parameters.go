@@ -42,7 +42,7 @@ type AddPoolsByGroupIDParams struct {
 	  Required: true
 	  In: body
 	*/
-	Pools models.Idlist
+	Pools models.IDList
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -61,7 +61,7 @@ func (o *AddPoolsByGroupIDParams) BindRequest(r *http.Request, route *middleware
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.Idlist
+		var body models.IDList
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
 				res = append(res, errors.Required("pools", "body", ""))

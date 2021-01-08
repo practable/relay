@@ -25,7 +25,7 @@ type GetPoolsByGroupIDOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.Idlist `json:"body,omitempty"`
+	Payload models.IDList `json:"body,omitempty"`
 }
 
 // NewGetPoolsByGroupIDOK creates GetPoolsByGroupIDOK with default headers values
@@ -35,13 +35,13 @@ func NewGetPoolsByGroupIDOK() *GetPoolsByGroupIDOK {
 }
 
 // WithPayload adds the payload to the get pools by group Id o k response
-func (o *GetPoolsByGroupIDOK) WithPayload(payload models.Idlist) *GetPoolsByGroupIDOK {
+func (o *GetPoolsByGroupIDOK) WithPayload(payload models.IDList) *GetPoolsByGroupIDOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get pools by group Id o k response
-func (o *GetPoolsByGroupIDOK) SetPayload(payload models.Idlist) {
+func (o *GetPoolsByGroupIDOK) SetPayload(payload models.IDList) {
 	o.Payload = payload
 }
 
@@ -52,7 +52,7 @@ func (o *GetPoolsByGroupIDOK) WriteResponse(rw http.ResponseWriter, producer run
 	payload := o.Payload
 	if payload == nil {
 		// return empty array
-		payload = models.Idlist{}
+		payload = models.IDList{}
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {
@@ -110,6 +110,11 @@ const GetPoolsByGroupIDNotFoundCode int = 404
 swagger:response getPoolsByGroupIdNotFound
 */
 type GetPoolsByGroupIDNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
 }
 
 // NewGetPoolsByGroupIDNotFound creates GetPoolsByGroupIDNotFound with default headers values
@@ -118,12 +123,25 @@ func NewGetPoolsByGroupIDNotFound() *GetPoolsByGroupIDNotFound {
 	return &GetPoolsByGroupIDNotFound{}
 }
 
+// WithPayload adds the payload to the get pools by group Id not found response
+func (o *GetPoolsByGroupIDNotFound) WithPayload(payload interface{}) *GetPoolsByGroupIDNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get pools by group Id not found response
+func (o *GetPoolsByGroupIDNotFound) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *GetPoolsByGroupIDNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(404)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
 }
 
 // GetPoolsByGroupIDInternalServerErrorCode is the HTTP code returned for type GetPoolsByGroupIDInternalServerError

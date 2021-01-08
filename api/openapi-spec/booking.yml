@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  version: '0.3'
+  version: '0.4'
   title: Booking
   description: User API for booking experiments
   contact:
@@ -198,10 +198,6 @@ paths:
           schema: {}
           
 
-          
-
-
-
   /groups/{group_id}/pools:
     
     delete:
@@ -223,14 +219,14 @@ paths:
         in: body
         required: true
         schema:
-          $ref: '#/definitions/idlist'
+          $ref: '#/definitions/id_list'
       security:
         - Bearer: []  
       responses:
         200:
           description: ''
           schema:
-            $ref: '#/definitions/idlist'
+            $ref: '#/definitions/id_list'
           headers: {}
         401:
           description: Unauthorized
@@ -262,13 +258,14 @@ paths:
         200:
           description: ''
           schema:
-            $ref: '#/definitions/idlist'
+            $ref: '#/definitions/id_list'
           headers: {}
         401:
           description: Unauthorized
           schema: {}
         404:
           description: Not Found
+          schema: {}
         500:
           description: ''
           schema: {}
@@ -292,14 +289,14 @@ paths:
         in: body
         required: true
         schema:
-          $ref: '#/definitions/idlist'
+          $ref: '#/definitions/id_list'
       security:
         - Bearer: []  
       responses:
         200:
           description: ''
           schema:
-            $ref: '#/definitions/idlist'
+            $ref: '#/definitions/id_list'
           headers: {}
         401:
           description: Unauthorized
@@ -328,14 +325,14 @@ paths:
         in: body
         required: true
         schema:
-          $ref: '#/definitions/idlist'
+          $ref: '#/definitions/id_list'
       security:
         - Bearer: []  
       responses:
         200:
           description: ''
           schema:
-            $ref: '#/definitions/idlist'
+            $ref: '#/definitions/id_list'
           headers: {}
         401:
           description: Unauthorized
@@ -409,7 +406,7 @@ paths:
         200:
           description: ''
           schema:
-            $ref: '#/definitions/idlist'
+            $ref: '#/definitions/id_list'
           headers: {}
         401:
           description: Unauthorized
@@ -908,8 +905,8 @@ definitions:
     required:
     - id
 
-  idlist:
-    title: idlist
+  id_list:
+    title: ID list
     description: list of ids (in array)
     type: array
     items:

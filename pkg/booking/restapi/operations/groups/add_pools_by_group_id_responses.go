@@ -25,7 +25,7 @@ type AddPoolsByGroupIDOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.Idlist `json:"body,omitempty"`
+	Payload models.IDList `json:"body,omitempty"`
 }
 
 // NewAddPoolsByGroupIDOK creates AddPoolsByGroupIDOK with default headers values
@@ -35,13 +35,13 @@ func NewAddPoolsByGroupIDOK() *AddPoolsByGroupIDOK {
 }
 
 // WithPayload adds the payload to the add pools by group Id o k response
-func (o *AddPoolsByGroupIDOK) WithPayload(payload models.Idlist) *AddPoolsByGroupIDOK {
+func (o *AddPoolsByGroupIDOK) WithPayload(payload models.IDList) *AddPoolsByGroupIDOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the add pools by group Id o k response
-func (o *AddPoolsByGroupIDOK) SetPayload(payload models.Idlist) {
+func (o *AddPoolsByGroupIDOK) SetPayload(payload models.IDList) {
 	o.Payload = payload
 }
 
@@ -52,7 +52,7 @@ func (o *AddPoolsByGroupIDOK) WriteResponse(rw http.ResponseWriter, producer run
 	payload := o.Payload
 	if payload == nil {
 		// return empty array
-		payload = models.Idlist{}
+		payload = models.IDList{}
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

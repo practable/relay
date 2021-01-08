@@ -25,7 +25,7 @@ type ReplacePoolsByGroupIDOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.Idlist `json:"body,omitempty"`
+	Payload models.IDList `json:"body,omitempty"`
 }
 
 // NewReplacePoolsByGroupIDOK creates ReplacePoolsByGroupIDOK with default headers values
@@ -35,13 +35,13 @@ func NewReplacePoolsByGroupIDOK() *ReplacePoolsByGroupIDOK {
 }
 
 // WithPayload adds the payload to the replace pools by group Id o k response
-func (o *ReplacePoolsByGroupIDOK) WithPayload(payload models.Idlist) *ReplacePoolsByGroupIDOK {
+func (o *ReplacePoolsByGroupIDOK) WithPayload(payload models.IDList) *ReplacePoolsByGroupIDOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the replace pools by group Id o k response
-func (o *ReplacePoolsByGroupIDOK) SetPayload(payload models.Idlist) {
+func (o *ReplacePoolsByGroupIDOK) SetPayload(payload models.IDList) {
 	o.Payload = payload
 }
 
@@ -52,7 +52,7 @@ func (o *ReplacePoolsByGroupIDOK) WriteResponse(rw http.ResponseWriter, producer
 	payload := o.Payload
 	if payload == nil {
 		// return empty array
-		payload = models.Idlist{}
+		payload = models.IDList{}
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

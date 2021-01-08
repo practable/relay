@@ -9,14 +9,14 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// Idlist idlist
+// IDList ID list
 //
 // list of ids (in array)
 //
-// swagger:model idlist
-type Idlist []string
+// swagger:model id_list
+type IDList []string
 
-// Validate validates this idlist
-func (m Idlist) Validate(formats strfmt.Registry) error {
+// Validate validates this id list
+func (m IDList) Validate(formats strfmt.Registry) error {
 	return nil
 }

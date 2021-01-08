@@ -25,12 +25,18 @@ import (
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/pool"
+	"github.com/timdrysdale/relay/pkg/util"
 )
 
 var l *limit.Limit
 var ps *pool.PoolStore
 var host, secret string
 var bookingDuration, mocktime, startime int64
+
+// Deferred deletes are to clean up between tests
+// and are not an example of how to use the system
+// in production - you want the items to live on
+// so that some booking can be done!
 
 func init() {
 	debug := false
@@ -293,24 +299,47 @@ func TestGetGroupDescriptionByID(t *testing.T) {
 
 }
 
-func TestGetPoolsByID(t *testing.T) {
+func TestGetAllPools(t *testing.T) {
 
 	name := "stuff"
 
 	g0 := pool.NewGroup(name)
 	defer ps.DeleteGroup(g0)
 
+	p0 := pool.NewPool("stuff0")
+	ps.AddPool(p0)
+	defer ps.DeletePool(p0)
+
+	p1 := pool.NewPool("stuff1")
+	ps.AddPool(p1)
+	defer ps.DeletePool(p1)
+
+	p2 := pool.NewPool("things")
+	ps.AddPool(p2)
+	defer ps.DeletePool(p2)
+
+	p3 := pool.NewPool("stuff00")
+	ps.AddPool(p3)
+	defer ps.DeletePool(p3)
+
+	// groups don't affect this test
+	// leaving this here as a reminder
+	// you have to add pools to poolstore
+	// separately to adding to group.
 	ps.AddGroup(g0)
 	defer ps.DeleteGroup(g0)
 
-	p0 := pool.NewPool("stuff0")
-	p1 := pool.NewPool("stuff1")
 	g0.AddPools([]*pool.Pool{p0, p1})
+
+	//check pools exist directly
+	ps.Lock()
+	assert.Equal(t, 4, len(ps.Pools))
+	ps.Unlock()
 
 	claims := &lit.Token{}
 	claims.Audience = host
 	claims.Groups = []string{name}
-	claims.Scopes = []string{"booking:user"}
+	claims.Scopes = []string{"booking:admin"}
 	claims.IssuedAt = ps.GetTime() - 1
 	claims.NotBefore = ps.GetTime() - 1
 	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
@@ -325,19 +354,52 @@ func TestGetPoolsByID(t *testing.T) {
 	req, err := http.NewRequest("GET", host+"/api/v1/pools/", nil)
 	assert.NoError(t, err)
 	req.Header.Add("Authorization", bearer)
-	q := req.URL.Query()
-	q.Add("group_id", g0.ID)
-	req.URL.RawQuery = q.Encode()
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
 	body, err := ioutil.ReadAll(resp.Body)
+	if false {
+		t.Log(resp.Status, string(body))
+	}
 	assert.NoError(t, err)
 
 	r := []string{}
 
 	err = json.Unmarshal(body, &r)
 	assert.NoError(t, err)
-	assert.Equal(t, []string{p0.ID, p1.ID}, r)
+
+	// note the order can change in PoolStore - that's ok
+	assert.True(t, util.SortCompare([]string{p0.ID, p1.ID, p2.ID, p3.ID}, r))
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+	assert.NoError(t, err)
+	q := req.URL.Query()
+	q.Add("name", "stuff0")
+	req.URL.RawQuery = q.Encode()
+	resp, err = client.Do(req)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	r = []string{}
+	err = json.Unmarshal(body, &r)
+	assert.NoError(t, err)
+	assert.True(t, util.SortCompare([]string{p0.ID, p3.ID}, r))
+
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("name", "stuff0")
+	q.Add("exact", "true")
+	req.URL.RawQuery = q.Encode()
+	resp, err = client.Do(req)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	r = []string{}
+	err = json.Unmarshal(body, &r)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{p0.ID}, r)
 
 }
 
@@ -419,7 +481,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	assert.Equal(t, []string{p0.ID, p1.ID}, claims.Pools)
 
 	// Check we can get a description of a pool
-	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/description", nil)
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID, nil)
 	assert.NoError(t, err)
 	req.Header.Add("Authorization", bookingBearer)
 	resp, err = client.Do(req)
@@ -1151,7 +1213,7 @@ func TestAddNewPool(t *testing.T) {
 	assert.True(t, len(*pid.ID) > 35)
 
 	// get ID back, use ID to get description, and compare...
-	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID+"/description", nil)
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID, nil)
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
@@ -1250,7 +1312,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	poolID := *pid.ID
 
 	// get ID back, use ID to get description, and compare...
-	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID+"/description", nil)
+	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID, nil)
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
