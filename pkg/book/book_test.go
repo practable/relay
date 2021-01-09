@@ -1510,3 +1510,24 @@ func TestAddActivityToPoolID(t *testing.T) {
 	assert.Equal(t, ad0, ad)
 
 }
+
+func TestTODO(t *testing.T) {
+
+	todo := []string{
+		"Delete Activity from pool",
+		"Delete pool from group",
+		"Remove pool from Poolstore (taking activities with it, presumably)",
+		"Remove group from poolstore, but leave pools behind)",
+		"Import and export current state",
+		"Report current bookings to user",
+		"Report max bookings limit to user",
+		"Reset PoolStore to clean, known state",
+		"Check if stream already exists",
+		"Lock System to new bookings (set max bookings to zero)",
+		"Report all current bookings and duration (plot in-use)",
+	}
+	for n, l := range todo {
+		fmt.Println(n, ": ", l)
+	}
+
+}
