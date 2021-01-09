@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -11,11 +13,15 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/relay/pkg/booking/models"
+	"github.com/xtgo/uuid"
 )
+
+var debug bool
 
 func TestMain(m *testing.M) {
 	// Setup logging
-	debug := false
+	debug = true
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -45,15 +51,15 @@ func TestNewWithFlush(t *testing.T) {
 
 	l := New(ctx).WithFlush(time.Second)
 	u0 := "user0-TestWithFlush"
-	assert.Equal(t, 0, l.GetSessionCount(u0))
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
 
 	_, err := l.Request(u0, l.Now()+1)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, l.GetSessionCount(u0))
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
 
 	// count correctly goes 1 -> 0 due to flush
 	time.Sleep(2 * time.Second)
-	assert.Equal(t, 0, l.GetSessionCount(u0))
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
 
 	// can't test cancelling flush independently,
 	// because other sub-tasks share the context
@@ -78,40 +84,40 @@ func TestNewHitLimit(t *testing.T) {
 	u0 := "user0-TestNewHitLimit"
 	u1 := "user1-TestNewHitLimit"
 
-	assert.Equal(t, 0, l.GetSessionCount(u0))
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
 
 	//grant 1/2
 	_, err := l.Request(u0, t0+300)
 	assert.NoError(t, err)
 
-	assert.Equal(t, 1, l.GetSessionCount(u0))
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
 
 	// grant 2/2
 	_, err = l.Request(u0, t0+600)
 	assert.NoError(t, err)
-	assert.Equal(t, 2, l.GetSessionCount(u0))
+	assert.Equal(t, 2, l.GetUserSessionCount(u0))
 
 	// deny as at limit of 2
 	_, err = l.Request(u0, t0+600)
 	assert.Error(t, err)
-	assert.Equal(t, 2, l.GetSessionCount(u0))
+	assert.Equal(t, 2, l.GetUserSessionCount(u0))
 
 	// but grant another user to 1/2
 	_, err = l.Request(u1, t0+600)
 	assert.NoError(t, err)
 
-	assert.Equal(t, 1, l.GetSessionCount(u1))
+	assert.Equal(t, 1, l.GetUserSessionCount(u1))
 
 	// wait for first session to finish
 	mocktime = t0 + 400
 	l.FlushAll()
 	// back to one session
-	assert.Equal(t, 1, l.GetSessionCount(u0))
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
 
 	//grant 2/2
 	_, err = l.Request(u0, t0+600)
 	assert.NoError(t, err)
-	assert.Equal(t, 2, l.GetSessionCount(u0))
+	assert.Equal(t, 2, l.GetUserSessionCount(u0))
 
 }
 
@@ -119,18 +125,22 @@ func TestProvisionalRequest(t *testing.T) {
 	// a real-time test because of the way
 	// intervals are timed with time.After
 	t.Parallel()
+
+	t0 := time.Now().Unix()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	l := New(ctx).WithProvisionalPeriod(time.Second)
 	u0 := "user0-TestProvisionalRequest"
 
-	assert.Equal(t, 0, l.GetSessionCount(u0))
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
 
-	cancelBooking, _, _, err := l.ProvisionalRequest(u0, 5)
+	cancelBooking, _, _, err := l.ProvisionalRequest(u0, t0+5)
 
 	assert.NoError(t, err)
-	assert.Equal(t, 1, l.GetSessionCount(u0))
+
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
 
 	// cancel the booking
 	cancelBooking()
@@ -138,19 +148,133 @@ func TestProvisionalRequest(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// booking gone
-	assert.Equal(t, 0, l.GetSessionCount(u0))
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
 
-	_, confirm, _, err := l.ProvisionalRequest(u0, 5)
+	_, confirm, _, err := l.ProvisionalRequest(u0, t0+5)
 
 	assert.NoError(t, err)
-	assert.Equal(t, 1, l.GetSessionCount(u0))
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
 
 	confirm(nil)
 	//booking stays
-	assert.Equal(t, 1, l.GetSessionCount(u0))
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
 	// belt and braces, time out the provisional period
 	time.Sleep(2 * time.Second)
 	// booking stays
-	assert.Equal(t, 1, l.GetSessionCount(u0))
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
+
+}
+
+func TestDenySessionExpiringInPast(t *testing.T) {
+	t.Parallel()
+
+	t0 := time.Now().Unix()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	l := New(ctx)
+
+	u0 := "user0-DenySessionExpiringInPast"
+
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
+
+	_, _, _, err := l.ProvisionalRequest(u0, t0-5)
+
+	assert.Error(t, err)
+
+	assert.Equal(t, "denied: session expires in past", err.Error())
+
+}
+
+func TestConfirmGetActivity(t *testing.T) {
+
+	t.Parallel()
+
+	t0 := time.Now().Unix()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	l := New(ctx).WithProvisionalPeriod(time.Second)
+	u0 := "user0-ConfirmGetActivity"
+
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
+
+	_, confirm, sessionID0, err := l.ProvisionalRequest(u0, t0+5)
+	assert.NoError(t, err)
+	_, err = uuid.Parse(sessionID0)
+	assert.NoError(t, err)
+	name0 := "test activity 0"
+
+	a0 := &models.Activity{
+		Description: &models.Description{
+			Name: &name0,
+		},
+	}
+	confirm(a0)
+
+	time.Sleep(time.Millisecond)
+
+	am := l.GetUserActivities(u0)
+
+	a0r, ok := am[sessionID0]
+
+	assert.True(t, ok)
+
+	assert.Equal(t, *a0, *a0r)
+
+	// add another activity for u0
+
+	_, confirm, sessionID1, err := l.ProvisionalRequest(u0, t0+5)
+
+	assert.NoError(t, err)
+
+	_, err = uuid.Parse(sessionID1)
+
+	assert.NoError(t, err)
+	name1 := "test activity 1"
+
+	a1 := &models.Activity{
+		Description: &models.Description{
+			Name: &name1,
+		},
+	}
+	confirm(a1)
+
+	time.Sleep(time.Millisecond)
+	time.Sleep(time.Millisecond)
+
+	am = l.GetUserActivities(u0)
+
+	assert.Equal(t, 2, len(am))
+
+	a1r, ok := am[sessionID1]
+
+	assert.True(t, ok)
+
+	assert.Equal(t, *a1, *a1r)
+
+	fmt.Println(l.sessions, l.activities)
+
+	if debug {
+		ps, err := json.MarshalIndent(l.sessions, "", "  ")
+		assert.NoError(t, err)
+		fmt.Println("---SESSIONS---")
+		fmt.Println(string(ps))
+
+		pa, err := json.MarshalIndent(l.activities, "", "  ")
+		assert.NoError(t, err)
+		fmt.Println("---ACTIVITIES---")
+		fmt.Println(string(pa))
+	}
+
+	assert.Equal(t, 2, l.GetUserSessionCount(u0))
+	assert.Equal(t, 2, l.GetAllSessionCount())
+
+	exp, sess := l.GetLastBookingEnds()
+
+	assert.Equal(t, t0+5, exp)
+	assert.Equal(t, 2, len(sess))
 
 }

@@ -44,6 +44,7 @@ require (
 	github.com/timdrysdale/crossbar v0.2.1
 	github.com/timdrysdale/reconws v0.0.0-20191012131359-34f25fee9e0e
 	github.com/timdrysdale/vw v0.0.1
+	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
