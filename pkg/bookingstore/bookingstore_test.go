@@ -47,7 +47,8 @@ func TestNewWithFlush(t *testing.T) {
 	u0 := "user0-TestWithFlush"
 	assert.Equal(t, 0, l.GetSessionCount(u0))
 
-	assert.True(t, l.Request(u0, l.Now()+1))
+	_, err := l.Request(u0, l.Now()+1)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, l.GetSessionCount(u0))
 
 	// count correctly goes 1 -> 0 due to flush
@@ -80,19 +81,25 @@ func TestNewHitLimit(t *testing.T) {
 	assert.Equal(t, 0, l.GetSessionCount(u0))
 
 	//grant 1/2
-	assert.True(t, l.Request(u0, t0+300))
+	_, err := l.Request(u0, t0+300)
+	assert.NoError(t, err)
+
 	assert.Equal(t, 1, l.GetSessionCount(u0))
 
 	// grant 2/2
-	assert.True(t, l.Request(u0, t0+600))
+	_, err = l.Request(u0, t0+600)
+	assert.NoError(t, err)
 	assert.Equal(t, 2, l.GetSessionCount(u0))
 
 	// deny as at limit of 2
-	assert.False(t, l.Request(u0, t0+600))
+	_, err = l.Request(u0, t0+600)
+	assert.Error(t, err)
 	assert.Equal(t, 2, l.GetSessionCount(u0))
 
 	// but grant another user to 1/2
-	assert.True(t, l.Request(u1, t0+600))
+	_, err = l.Request(u1, t0+600)
+	assert.NoError(t, err)
+
 	assert.Equal(t, 1, l.GetSessionCount(u1))
 
 	// wait for first session to finish
@@ -102,7 +109,8 @@ func TestNewHitLimit(t *testing.T) {
 	assert.Equal(t, 1, l.GetSessionCount(u0))
 
 	//grant 2/2
-	assert.True(t, l.Request(u0, t0+600))
+	_, err = l.Request(u0, t0+600)
+	assert.NoError(t, err)
 	assert.Equal(t, 2, l.GetSessionCount(u0))
 
 }
@@ -119,7 +127,7 @@ func TestProvisionalRequest(t *testing.T) {
 
 	assert.Equal(t, 0, l.GetSessionCount(u0))
 
-	cancelBooking, _, err := l.ProvisionalRequest(u0, 5)
+	cancelBooking, _, _, err := l.ProvisionalRequest(u0, 5)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, l.GetSessionCount(u0))
@@ -132,7 +140,7 @@ func TestProvisionalRequest(t *testing.T) {
 	// booking gone
 	assert.Equal(t, 0, l.GetSessionCount(u0))
 
-	_, confirm, err := l.ProvisionalRequest(u0, 5)
+	_, confirm, _, err := l.ProvisionalRequest(u0, 5)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, l.GetSessionCount(u0))

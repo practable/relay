@@ -343,7 +343,7 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 // ProvisionalRequest checks if a user has spare capacity within their limit
 // adding their request provisionally (with a delayed autodelete) if approved. The autodelete can be cancelled
 // with the returned CancelFunc, in order to make the booking. If there is no quota left, an error is returned
-func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activity *models.Activity), error) {
+func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activity *models.Activity), string, error) {
 	l.Lock()
 	defer l.Unlock()
 
@@ -356,7 +356,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 			"exp":    exp,
 		}
 		log.WithFields(lf).Debug("bookingstore:request:provisional:denied:noNewSessionsAllowed")
-		return nil, nil, errors.New("denied: no new sessions allowed")
+		return nil, nil, "", errors.New("denied: no new sessions allowed")
 	}
 
 	confirm := make(chan struct{})
@@ -388,7 +388,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 		}
 		log.WithFields(lf).Debug("bookingstore:request:provisional:granted")
 		go l.autoDelete(cancel, confirm, userID, sessionID)
-		return cancelFunc, l.confirm(confirm, userID, sessionID), nil
+		return cancelFunc, l.confirm(confirm, userID, sessionID), sessionID, nil
 	}
 
 	// flush stale sessions before checking number of current sessions
@@ -410,7 +410,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 			"max":          l.max,
 		}
 		log.WithFields(lf).Debug("bookingstore:request:provisional:denied:overLimit")
-		return nil, nil, errors.New("denied: over limit")
+		return nil, nil, "", errors.New("denied: over limit")
 	}
 
 	// if get here, then under limit
@@ -430,17 +430,16 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 	log.WithFields(lf).Debug("bookingstore:request:provisional:granted")
 
 	go l.autoDelete(cancel, confirm, userID, sessionID)
-	return cancelFunc, l.confirm(confirm, userID, sessionID), nil
+	return cancelFunc, l.confirm(confirm, userID, sessionID), sessionID, nil
 }
 
-func (l *Limit) Request(who string, exp int64) bool {
+func (l *Limit) Request(who string, exp int64) (string, error) {
 
-	_, confirm, err := l.ProvisionalRequest(who, exp)
+	_, confirm, ID, err := l.ProvisionalRequest(who, exp)
 
-	if err != nil {
-		return false
+	if err == nil {
+		confirm(nil)
 	}
 
-	confirm(nil)
-	return true
+	return ID, err
 }
