@@ -30,6 +30,12 @@ type Limit struct {
 	// sessions maps user id to map of session ids and expiry times
 	sessions map[string]map[string]int64
 
+	// reverse look up activity
+	activityBySession map[string]*models.Activity
+
+	// reverse look up user
+	userBySession map[string]string
+
 	// maximum number of open sessions
 	max int
 
@@ -159,17 +165,85 @@ func (l *Limit) WithNow(now func() int64) *Limit {
 	return l
 }
 
-func GetSessionActivities() {
-	panic("NOT IMPLEMENTED")
+func (l *Limit) GetUserActivities(user string) map[string]*models.Activity {
+
+	activities, _ := l.activities[user]
+
+	return activities
+
 }
 
-func (l *Limit) GetSessionCount(user string) int {
+func (l *Limit) GetAllActivitiesMap() map[string]map[string]*models.Activity {
+
+	return l.activities
+}
+
+func (l *Limit) GetAllActivities() []*models.Activity {
+
+	allActivities := []*models.Activity{}
+
+	for _, userActivities := range l.activities {
+		for _, a := range userActivities {
+			allActivities = append(allActivities, a)
+		}
+	}
+
+	return allActivities
+}
+
+func (l *Limit) GetLastBookingEnds() (int64, []string) {
+
+	latest := time.Now().Unix()
+	sessionID := []string{}
+
+	for _, userSessions := range l.sessions {
+		for sid, exp := range userSessions {
+			if exp > latest {
+				latest = exp
+				sessionID = []string{sid}
+			} else if exp == latest {
+				sessionID = append(sessionID, sid)
+			}
+
+		}
+	}
+	return latest, sessionID
+}
+
+func (l *Limit) GetAllSessionCount() int {
+
+	count := 0
+
+	for _, sessions := range l.sessions {
+		count = count + len(sessions)
+	}
+	return count
+
+}
+
+// this is expensive
+func (l *Limit) GetActivityFromSessionID(sid string) (*models.Activity, error) {
+
+	return nil, errors.New("not implemented")
+
+}
+
+func (l *Limit) GetUserSessionCount(user string) int {
 
 	sessions, ok := l.sessions[user]
 
 	if !ok {
 		return 0
 	}
+
+	lf := log.Fields{
+		"source":       "bookingstore",
+		"event":        "getUserSessionCount",
+		"userID":       user,
+		"sessionCount": len(sessions),
+		"sessionIDs":   sessions,
+	}
+	log.WithFields(lf).Trace("bookingstore:getUserSessionCount")
 
 	return len(sessions)
 }
@@ -245,6 +319,15 @@ func (l *Limit) flush(stale map[string]int64) map[string]int64 {
 			fresh[k] = s // keep current sessions only
 		}
 	}
+	lf := log.Fields{
+		"source":       "bookingstore",
+		"event":        "flush:sessions",
+		"stale":        stale,
+		"fresh":        fresh,
+		"countRemoved": len(stale) - len(fresh),
+	}
+	log.WithFields(lf).Trace("bookingstore:flush:sessions")
+
 	return fresh
 }
 
@@ -347,11 +430,22 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 	l.Lock()
 	defer l.Unlock()
 
+	if exp < time.Now().Unix() {
+		lf := log.Fields{
+			"source": "bookingstore",
+			"event":  "request:provisional:denied:sessionExpiresInPast",
+			"userID": userID,
+			"exp":    exp,
+		}
+		log.WithFields(lf).Debug("bookingstore:request:provisional:denied:sessionExpiresInPast")
+		return nil, nil, "", errors.New("denied: session expires in past")
+	}
+
 	// no sessions allowed?
 	if l.max < 1 {
 		lf := log.Fields{
 			"source": "bookingstore",
-			"event":  "request:provisional:granted",
+			"event":  "request:provisional:denied:noNewSessionsAllowed",
 			"userID": userID,
 			"exp":    exp,
 		}
@@ -379,14 +473,14 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 
 		lf := log.Fields{
 			"source":       "bookingstore",
-			"event":        "request:provisional:granted",
+			"event":        "request:provisional:granted:first",
 			"userID":       userID,
 			"exp":          exp,
 			"sessionID":    sessionID,
 			"sessionCount": len(fresh),
 			"max":          l.max,
 		}
-		log.WithFields(lf).Debug("bookingstore:request:provisional:granted")
+		log.WithFields(lf).Debug("bookingstore:request:provisional:granted:first")
 		go l.autoDelete(cancel, confirm, userID, sessionID)
 		return cancelFunc, l.confirm(confirm, userID, sessionID), sessionID, nil
 	}
@@ -420,14 +514,14 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 
 	lf := log.Fields{
 		"source":       "bookingstore",
-		"event":        "request:provisional:granted",
+		"event":        "request:provisional:granted:subsequent",
 		"userID":       userID,
 		"exp":          exp,
 		"sessionID":    sessionID,
 		"sessionCount": len(s),
 		"max":          l.max,
 	}
-	log.WithFields(lf).Debug("bookingstore:request:provisional:granted")
+	log.WithFields(lf).Debug("bookingstore:request:provisional:granted:subsequent")
 
 	go l.autoDelete(cancel, confirm, userID, sessionID)
 	return cancelFunc, l.confirm(confirm, userID, sessionID), sessionID, nil
