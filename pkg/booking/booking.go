@@ -26,7 +26,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
-	"github.com/timdrysdale/relay/pkg/limit"
+	"github.com/timdrysdale/relay/pkg/bookingstore"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
@@ -40,7 +40,7 @@ import (
 // @secret- HMAC shared secret which incoming tokens will be signed with
 // @cs - pointer to the CodeStore this API shares with the shellbar websocket relay
 // @options - for future backwards compatibility (no options currently available)
-func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore, l *limit.Limit) {
+func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore, l *bookingstore.Limit) {
 
 	// TODO
 

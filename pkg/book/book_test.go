@@ -21,14 +21,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/booking"
 	"github.com/timdrysdale/relay/pkg/booking/models"
-	"github.com/timdrysdale/relay/pkg/limit"
+	"github.com/timdrysdale/relay/pkg/bookingstore"
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/pool"
 	"github.com/timdrysdale/relay/pkg/util"
 )
 
-var l *limit.Limit
+var l *bookingstore.Limit
 var ps *pool.PoolStore
 var host, secret string
 var bookingDuration, mocktime, startime int64
@@ -71,7 +71,7 @@ func TestMain(m *testing.M) {
 		WithBookingTokenDuration(bookingDuration).
 		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
 
-	l = limit.New().WithFlush(ctx, time.Minute).WithMax(2).WithProvisionalPeriod(5 * time.Second)
+	l = bookingstore.New(ctx).WithFlush(time.Minute).WithMax(2).WithProvisionalPeriod(5 * time.Second)
 
 	port, err := freeport.GetFreePort()
 	if err != nil {
