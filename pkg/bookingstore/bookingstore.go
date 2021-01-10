@@ -482,7 +482,7 @@ func (l *Limit) confirm(confirm chan struct{}, userID, sessionID string, expires
 }
 
 // autoDelete handles the cancellation of a provisional session
-func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID string, ctx context.Context) {
+func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID string) {
 
 	cancelFunc := func() {
 
@@ -494,7 +494,7 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 			"event":     "request:provisional:autoDelete:deleteBooking",
 			"who":       userID,
 			"sessionID": sessionID,
-			"ctx":       ctx.Value("id"),
+			"ctx":       l.ctxServices.Value("id"),
 		}
 
 		sessions := l.Sessions
@@ -527,14 +527,14 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 		cancelFunc()
 		return
 
-	case <-ctx.Done():
+	case <-l.ctxServices.Done():
 		// done because server shut down
 		lf := log.Fields{
 			"source":    "bookingstore",
 			"event":     "request:provisional:autoDelete:contextCancelledBeforeDecision",
 			"who":       userID,
 			"sessionID": sessionID,
-			"ctx":       ctx.Value("id"),
+			"ctx":       l.ctxServices.Value("id"),
 		}
 		log.WithFields(lf).Trace("bookingstore:request:provisional:autoDelete:contextCancelledBeforeDecision")
 		return
@@ -548,7 +548,7 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 			"event":     "request:provisional:autoDelete:keepBooking",
 			"who":       userID,
 			"sessionID": sessionID,
-			"ctx":       ctx.Value("id"),
+			"ctx":       l.ctxServices.Value("id"),
 		}
 		log.WithFields(lf).Trace("bookingstore:request:provisional:autoDelete:keepBooking")
 		return
@@ -637,7 +637,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 	}
 	log.WithFields(lf).Debug("bookingstore:request:provisional:granted")
 
-	go l.autoDelete(cancel, confirm, userID, sessionID, l.ctxServices)
+	go l.autoDelete(cancel, confirm, userID, sessionID)
 	return cancelFunc, l.confirm(confirm, userID, sessionID, exp), sessionID, nil
 }
 

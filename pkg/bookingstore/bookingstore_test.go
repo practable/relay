@@ -22,7 +22,7 @@ var debug bool
 
 func TestMain(m *testing.M) {
 	// Setup logging
-	debug = true
+	debug = false
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -421,8 +421,9 @@ func TestImportExport(t *testing.T) {
 
 		time.Sleep(10 * time.Millisecond)
 	}
-
-	fmt.Println("servicesContextSeenByTestRoutine", l.ctxServices)
+	if debug {
+		t.Log("servicesContextSeenByTestRoutine", l.ctxServices)
+	}
 	// deny as at limit of 2
 	_, err = l.Request(u0, t0+600)
 	assert.Error(t, err)
