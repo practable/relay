@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/booking/models"
+	"github.com/timdrysdale/relay/pkg/util"
 	"github.com/xtgo/uuid"
 )
 
@@ -21,7 +22,7 @@ var debug bool
 
 func TestMain(m *testing.M) {
 	// Setup logging
-	debug = true
+	debug = false
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -165,6 +166,56 @@ func TestProvisionalRequest(t *testing.T) {
 
 }
 
+func TestLockUnlockBooking(t *testing.T) {
+	t.Parallel()
+
+	t0 := time.Now().Unix()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	l := New(ctx)
+
+	u0 := "user0-LockBookings"
+
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
+
+	cancelBooking, _, ID, err := l.ProvisionalRequest(u0, t0+5)
+
+	assert.NoError(t, err)
+
+	_, err = uuid.Parse(ID)
+
+	assert.NoError(t, err)
+
+	cancelBooking()
+
+	time.Sleep(time.Millisecond)
+
+	l.LockBookings()
+
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
+
+	_, _, _, err = l.ProvisionalRequest(u0, t0+5)
+
+	assert.Error(t, err)
+
+	assert.Equal(t, "denied: no new sessions allowed", err.Error())
+
+	l.UnlockBookings()
+
+	cancelBooking, _, ID, err = l.ProvisionalRequest(u0, t0+5)
+
+	assert.NoError(t, err)
+
+	_, err = uuid.Parse(ID)
+
+	assert.NoError(t, err)
+
+	cancelBooking()
+
+}
+
 func TestDenySessionExpiringInPast(t *testing.T) {
 	t.Parallel()
 
@@ -274,8 +325,6 @@ func TestConfirmGetActivity(t *testing.T) {
 
 	assert.Equal(t, *a1, *a1r)
 
-	fmt.Println(l.sessions, l.activities)
-
 	if debug {
 		ps, err := json.MarshalIndent(l.sessions, "", "  ")
 		assert.NoError(t, err)
@@ -303,8 +352,29 @@ func TestConfirmGetActivity(t *testing.T) {
 	assert.Equal(t, 2, l.GetUserSessionCount(u0))
 	assert.Equal(t, 2, l.GetAllSessionCount())
 
+	all := l.GetAllActivities()
+
+	anames := []string{name0, name1}
+
+	anamesr := []string{}
+
+	for _, a := range all {
+		anamesr = append(anamesr, *a.Description.Name)
+	}
+
+	assert.True(t, util.SortCompare(anames, anamesr))
+
 	exp := l.GetLastBookingEnds()
 
 	assert.Equal(t, t0+5, exp)
+
+	_, err = l.GetActivityFromSessionID("not a session id")
+	assert.Error(t, err)
+	assert.Equal(t, "not found", err.Error())
+	a1r2, err := l.GetActivityFromSessionID(sessionID1)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, *a1.Description.Name, *a1r2.Description.Name)
 
 }
