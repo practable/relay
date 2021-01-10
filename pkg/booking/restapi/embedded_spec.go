@@ -1328,6 +1328,13 @@ func init() {
           "type": "number",
           "format": "int"
         },
+        "last_booking_ends": {
+          "type": "number",
+          "format": "unix-timestamp"
+        },
+        "locked": {
+          "type": "boolean"
+        },
         "pools": {
           "type": "number",
           "format": "int"
@@ -2739,6 +2746,13 @@ func init() {
         "groups": {
           "type": "number",
           "format": "int"
+        },
+        "last_booking_ends": {
+          "type": "number",
+          "format": "unix-timestamp"
+        },
+        "locked": {
+          "type": "boolean"
         },
         "pools": {
           "type": "number",

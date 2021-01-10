@@ -28,6 +28,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/util"
 )
 
+var debug bool
 var l *bookingstore.Limit
 var ps *pool.PoolStore
 var host, secret string
@@ -38,8 +39,15 @@ var bookingDuration, mocktime, startime int64
 // in production - you want the items to live on
 // so that some booking can be done!
 
+// If you get unexplained issues with tests, then disable
+// TestUnmarshalMarshalPoolStore
+// because your new mods may have broken import and export
+// which is tested on the common poolstore that all tests
+// in this file rely on. Obvs fix import and export if needed
+// and re-emable this test after triaging your other issues.
+
 func init() {
-	debug := false
+	debug = false
 	if debug {
 		log.SetReportCaller(true)
 		log.SetLevel(log.TraceLevel)
@@ -1529,5 +1537,322 @@ func TestTODO(t *testing.T) {
 	for n, l := range todo {
 		fmt.Println(n, ": ", l)
 	}
+
+}
+
+func TestUnmarshalMarshalPoolStore(t *testing.T) {
+
+	// Set up a pool, import, export, then run same test as above
+	// test: TestLimits
+
+	// *** Setup groups, pools, activities *** //
+
+	statusCodes := []int{}
+
+	name := "stuff"
+	g0 := pool.NewGroup(name)
+	defer ps.DeleteGroup(g0)
+
+	ps.AddGroup(g0)
+	defer ps.DeleteGroup(g0)
+
+	p0 := pool.NewPool("stuff0").WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+
+	g0.AddPool(p0)
+	ps.AddPool(p0)
+	defer ps.DeletePool(p0)
+
+	a := pool.NewActivity("a", ps.Now()+3600)
+
+	p0.AddActivity(a)
+	defer p0.DeleteActivity(a)
+
+	pt0 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "foo",
+		Scopes:         []string{"read", "write"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s0 := pool.NewStream("https://example.com/session/123data")
+	s0.SetPermission(pt0)
+	a.AddStream("data", s0)
+
+	pt1 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "foo", //would not normally set same as other stream - testing convenience
+		Scopes:         []string{"read"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s1 := pool.NewStream("https://example.com/session/456video")
+	s1.SetPermission(pt1)
+	a.AddStream("video", s1)
+
+	a2 := pool.NewActivity("a2", ps.Now()+3600)
+	p0.AddActivity(a2)
+	defer p0.DeleteActivity(a2)
+
+	pt2 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "bar",
+		Scopes:         []string{"read", "write"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+
+	s2 := pool.NewStream("https://example.com/session/123data")
+	s2.SetPermission(pt2)
+	a2.AddStream("data", s2)
+
+	pt3 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "bar", //would not normally set same as other stream - testing convenience
+		Scopes:         []string{"read"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s3 := pool.NewStream("https://example.com/session/456video")
+	s3.SetPermission(pt3)
+	a2.AddStream("video", s3)
+
+	// *** Unmarshal and marshal the pools *** //
+
+	p, err := json.Marshal(ps)
+	assert.NoError(t, err)
+
+	ps2 := &pool.PoolStore{}
+
+	err = json.Unmarshal(p, &ps2)
+	assert.NoError(t, err)
+
+	p2, err := json.MarshalIndent(ps2, "", "\t")
+	assert.NoError(t, err)
+
+	if debug {
+		fmt.Println(string(p2))
+	}
+
+	// *** Initialise the imported poolstore, then swap it for the live one *** //
+	ps2.PostImportEssential()
+
+	// we're just using mocktime to keep up with real time, so this isn't really needed
+	// you can comment it out and this test still passes
+	ps2.PostImportSetNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+
+	// This will ruin other tests unless it works ok ....
+	ps = ps2
+
+	// *** run the rest of the test *** //
+
+	mocktime = time.Now().Unix()
+
+	// login
+	loginClaims := &lit.Token{}
+	loginClaims.Audience = host
+	//check that missing group "everyone" in PoolStore does not stop login
+	loginClaims.Groups = []string{name, "everyone"}
+	loginClaims.Scopes = []string{"login:user"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	// sign user token
+	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	// Sign and get the complete encoded token as a string using the secret
+	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	mocktime = time.Now().Unix()
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	bookingBearer := *(btr.Token)
+
+	token, err := jwt.ParseWithClaims(bookingBearer, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	assert.NoError(t, err)
+
+	claims, ok := token.Claims.(*lit.Token)
+
+	assert.True(t, ok)
+	assert.True(t, token.Valid)
+
+	assert.Equal(t, []string{p0.ID}, claims.Pools)
+
+	// request an activity...
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q := req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ma := &models.Activity{}
+	err = json.Unmarshal(body, ma)
+	assert.NoError(t, err)
+
+	if ma == nil {
+		t.Fatal("no token returned")
+	}
+
+	streamTokenString0 := *((ma.Streams[0]).Token)
+
+	ptclaims := &permission.Token{}
+
+	streamToken, err := jwt.ParseWithClaims(streamTokenString0, ptclaims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method was %v", token.Header["alg"])
+		}
+		return []byte(ps.Secret), nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stc, ok := streamToken.Claims.(*permission.Token)
+
+	// save this to check we get both activities (check data stream permission topic from each request)
+	stcTopic0 := stc.Topic
+
+	// now request a second activity from the same user ...
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	statusCodes = append(statusCodes, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ma = &models.Activity{}
+	err = json.Unmarshal(body, ma)
+	assert.NoError(t, err)
+
+	if ma == nil {
+		t.Fatal("no token returned")
+	}
+
+	streamTokenString0 = *((ma.Streams[0]).Token)
+
+	ptclaims = &permission.Token{}
+
+	streamToken, err = jwt.ParseWithClaims(streamTokenString0, ptclaims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method was %v", token.Header["alg"])
+		}
+		return []byte(ps.Secret), nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stc, ok = streamToken.Claims.(*permission.Token)
+
+	// just check the two topics are what we expect from the data permission tokens
+	stcTopic1 := stc.Topic
+
+	//'123' is from activity 'a'; '789' is from activity 'a2'
+	if !((stcTopic0 == "foo" && stcTopic1 == "bar") || (stcTopic0 == "bar" && stcTopic1 == "foo")) {
+		t.Error("didn't get the right permission tokens - did we get the same activity twice?")
+	}
+
+	// Now let's try being a different user - we should get a 404 not found (no kit left)
+	// by logging in again we'll get a different randomly assigned user id
+	req, err = http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	statusCodes = append(statusCodes, resp.StatusCode)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr2 := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr2)
+	assert.NoError(t, err)
+
+	if btr2 == nil {
+		t.Fatal("no token returned")
+	}
+
+	bookingBearer2 := *(btr2.Token)
+
+	token2, err := jwt.ParseWithClaims(bookingBearer2, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	assert.NoError(t, err)
+
+	claims2, ok := token2.Claims.(*lit.Token)
+
+	assert.True(t, ok)
+	assert.True(t, token.Valid)
+
+	assert.Equal(t, []string{p0.ID}, claims2.Pools)
+
+	// check not same user - important for next test...
+	assert.NotEqual(t, claims.Subject, claims2.Subject)
+
+	// Make the request for the kit ...
+	// now request a second activity from the same user ...
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer2) //different user this time
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.Equal(t, "\"none available\"\n", string(body))
+	statusCodes = append(statusCodes, resp.StatusCode)
+	// Now let's try being first user again - we should 402 payment required (reached quota)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer) // back to first user this time
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusPaymentRequired, resp.StatusCode)
+	assert.Equal(t, "\"Maximum conconcurrent sessions already reached. Try again later.\"\n", string(body))
+	statusCodes = append(statusCodes, resp.StatusCode)
+	assert.Equal(t, []int{200, 200, 404, 402}, statusCodes)
 
 }

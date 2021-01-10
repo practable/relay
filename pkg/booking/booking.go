@@ -100,8 +100,9 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandler(ps))
 
 	// *** NOT IN API YET ***
-	//Get current bookings
-	//Get max bookings allowed
+	// Get current bookings
+	// Get max bookings allowed
+	// admin lock/unlock bookings
 
 	go func() {
 		<-ctx.Done()

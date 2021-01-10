@@ -26,6 +26,12 @@ type StoreStatus struct {
 	// groups
 	Groups int64 `json:"groups,omitempty"`
 
+	// last booking ends
+	LastBookingEnds float64 `json:"last_booking_ends,omitempty"`
+
+	// locked
+	Locked bool `json:"locked,omitempty"`
+
 	// pools
 	Pools int64 `json:"pools,omitempty"`
 }

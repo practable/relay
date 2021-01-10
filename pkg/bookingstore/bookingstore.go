@@ -254,6 +254,13 @@ func (l *Limit) UnlockBookings() {
 	l.lockBookings = false
 }
 
+func (l *Limit) GetLockBookings() bool {
+	l.Lock()
+	defer l.Unlock()
+
+	return l.lockBookings
+}
+
 // GetUserActivities provides pointers to all of a users activities, so that
 // they can be provided with their current bookings (intended for both user and admin scope)
 func (l *Limit) GetUserActivities(user string) (map[string]*models.Activity, error) {
@@ -278,6 +285,13 @@ func (l *Limit) GetAllActivities() map[string]*models.Activity {
 	defer l.Unlock()
 
 	return l.activityBySession
+}
+
+func (l *Limit) GetAllActivitiesCount() int {
+	l.Lock()
+	defer l.Unlock()
+
+	return len(l.activityBySession)
 }
 
 // GetLastBookingEnds is an admin function to help figure out

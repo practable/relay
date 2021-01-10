@@ -7,39 +7,39 @@ import (
 )
 
 type PoolStore struct {
-	*sync.RWMutex
+	*sync.RWMutex `json:"-"`
 
 	// Groups represent non-exclusive combinations of pools
-	Groups map[string]*Group
+	Groups map[string]*Group `json:"groups"`
 
 	// Pools maps all pools in the store
-	Pools map[string]*Pool
+	Pools map[string]*Pool `json:"pools"`
 
 	// Secret for generating tokens - assume one PoolStore per relay
-	Secret []byte
+	Secret []byte `json:"secret"`
 
 	// How long to grant booking tokens for
-	BookingTokenDuration int64
+	BookingTokenDuration int64 `json:"bookingTokenDuration"`
 
 	// Now is a function for getting the time - useful for mocking in test
-	Now func() int64
+	Now func() int64 `json:"-"`
 }
 
 type Group struct {
-	*sync.RWMutex
-	Description
-	Pools []*Pool
+	*sync.RWMutex `json:"-"`
+	Description   `json:"description"`
+	Pools         []*Pool `json:"pools"`
 }
 
 type Pool struct {
-	*sync.RWMutex
-	Description
-	Activities map[string]*Activity
-	Available  map[string]int64
-	InUse      map[string]int64
-	MinSession uint64
-	MaxSession uint64
-	Now        func() int64
+	*sync.RWMutex `json:"-"`
+	Description   `json:"description"`
+	Activities    map[string]*Activity `json:"activities"`
+	Available     map[string]int64     `json:"available"`
+	InUse         map[string]int64     `json:"inUse"`
+	MinSession    uint64               `json:"minSession"`
+	MaxSession    uint64               `json:"maxSession"`
+	Now           func() int64         `json:"-"`
 }
 
 type Description struct {
@@ -50,24 +50,24 @@ type Description struct {
 }
 
 type Activity struct {
-	*sync.RWMutex
-	Description
-	ExpiresAt int64
-	Streams   map[string]*Stream
-	UI        []*UI
+	*sync.RWMutex `json:"-"`
+	Description   `json:"description"`
+	ExpiresAt     int64              `json:"exp"`
+	Streams       map[string]*Stream `json:"streams"`
+	UI            []*UI              `json:"ui"`
 }
 
 type UI struct {
 	// URL with moustache {{key}} templating for stream connections
-	Description
-	URL             string `json:"url"`
-	StreamsRequired []string
+	Description     `json:"description"`
+	URL             string   `json:"url"`
+	StreamsRequired []string `json:"streamsRequired"`
 }
 
 // Stream represents a data or video stream from a relay
 // typically accessed via POST with bearer token
 type Stream struct {
-	*sync.RWMutex
+	*sync.RWMutex `json:"-"`
 
 	// For is the key in the UI's URL in which the client puts
 	// the relay (wss) address and code after getting them
