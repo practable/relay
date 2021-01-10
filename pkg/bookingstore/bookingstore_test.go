@@ -326,22 +326,22 @@ func TestConfirmGetActivity(t *testing.T) {
 	assert.Equal(t, *a1, *a1r)
 
 	if debug {
-		ps, err := json.MarshalIndent(l.sessions, "", "  ")
+		ps, err := json.MarshalIndent(l.Sessions, "", "  ")
 		assert.NoError(t, err)
 		fmt.Println("---SESSIONS---")
 		fmt.Println(string(ps))
 
-		pa, err := json.MarshalIndent(l.activities, "", "  ")
+		pa, err := json.MarshalIndent(l.Activities, "", "  ")
 		assert.NoError(t, err)
 		fmt.Println("---ACTIVITIES---")
 		fmt.Println(string(pa))
 
-		pas, err := json.MarshalIndent(l.activityBySession, "", "  ")
+		pas, err := json.MarshalIndent(l.ActivityBySession, "", "  ")
 		assert.NoError(t, err)
 		fmt.Println("---ACTIVITIES BY SESSION---")
 		fmt.Println(string(pas))
 
-		pus, err := json.MarshalIndent(l.userBySession, "", "  ")
+		pus, err := json.MarshalIndent(l.UserBySession, "", "  ")
 		assert.NoError(t, err)
 		fmt.Println("---USERS BY SESSION---")
 		fmt.Println(string(pus))
@@ -376,5 +376,57 @@ func TestConfirmGetActivity(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, *a1.Description.Name, *a1r2.Description.Name)
+
+}
+
+func TestImportExport(t *testing.T) {
+
+	// can mock time in this test
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	mocktime := time.Now().Unix()
+	t0 := mocktime
+
+	l := New(ctx).WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+	u0 := "user0-TestNewHitLimit"
+	u1 := "user1-TestNewHitLimit"
+
+	assert.Equal(t, 0, l.GetUserSessionCount(u0))
+
+	//grant 1/2
+	_, err := l.Request(u0, t0+300)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
+
+	// grant 2/2
+	_, err = l.Request(u0, t0+600)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, l.GetUserSessionCount(u0))
+
+	// deny as at limit of 2
+	_, err = l.Request(u0, t0+600)
+	assert.Error(t, err)
+	assert.Equal(t, 2, l.GetUserSessionCount(u0))
+
+	// but grant another user to 1/2
+	_, err = l.Request(u1, t0+600)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, l.GetUserSessionCount(u1))
+
+	// wait for first session to finish
+	mocktime = t0 + 400
+	l.FlushAll()
+	// back to one session
+	assert.Equal(t, 1, l.GetUserSessionCount(u0))
+
+	//grant 2/2
+	_, err = l.Request(u0, t0+600)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, l.GetUserSessionCount(u0))
 
 }

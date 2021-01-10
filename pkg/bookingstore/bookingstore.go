@@ -5,6 +5,7 @@ package bookingstore
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sync"
 	"time"
@@ -23,79 +24,150 @@ type confirmation struct {
 }
 
 type Limit struct {
-	*sync.Mutex
+	*sync.Mutex `json:"-"`
 
 	// activities represents users' activities
 	// it maps each user id to a map of their sessionIDs and activities
-	activities map[string]map[string]*models.Activity
+	Activities map[string]map[string]*models.Activity `json:"activities"`
 
 	// sessions represents the expiry time of current sessions
 	// it maps user id to map of session ids and expiry times
-	sessions map[string]map[string]int64
+	Sessions map[string]map[string]int64 `json:"sessions"`
 
 	// activityBySession represents all activities
 	// use for reverse look up activity by sessionID
-	activityBySession map[string]*models.Activity
+	ActivityBySession map[string]*models.Activity `json:"activityBySession"`
 
 	// userBySession represents all users
 	// sue for reverse look up user by sessionID
-	userBySession map[string]string
+	UserBySession map[string]string `json:"userBySession"`
 
 	// lastFlush represents the last time a FlushAll() was done
 	// There is no point in flushing more often than the clock granularity
 	// of one second
-	lastFlush int64
+	LastFlush int64 `json:"lastFlush"`
 
 	// lastBookingEnds represents the expiry time of the longest running session
 	// when new bookings are confirmed, this is updated
-	lastBookingEnds int64
+	LastBookingEnds int64 `json:"lastBookingEnds"`
 
 	// max represents the per-user maximum number of concurrent sessions
 	// there is no limit on historical usage within this package
-	max int
+	Max int `json:"max"`
 
 	// lockBookings represents whether there is a lock on bookings
 	// locking bookings prevents new bookings, letting
 	// existing bookings continue
-	lockBookings bool
+	Locked bool `json:"lockBookings"`
 
 	// flusInterval represents the time delay between automated FlushAll calls
 	// these are intended to prevent inadvertent memory leakage
-	flushInterval time.Duration
+	FlushInterval time.Duration `json:"flushInterval"`
 
 	// provisionalPeriod represents the time that a booking can remain unresolved
 	// into a cancellation or a confirmation with an activity
 	// failing to either cancel or confirm, results in the user being treated
 	// as if they confirmed the booking, in terms of quota, but they cannot
 	// access the activity details again.
-	provisionalPeriod time.Duration
+	ProvisionalPeriod time.Duration `json:"provisionalPeriod"`
 
 	// register represents the channel over which booking confirmations are registered
-	register chan confirmation
+	register chan confirmation `json:"-"`
 
 	// ctx representst the cancellable context for the whole instance
-	ctx context.Context
+	ctx context.Context `json:"-"`
+
+	ctxServices context.Context `json:"-"`
+
+	cancelServices context.CancelFunc `json:"-"`
 
 	// Now represents a function that returns the current time (mockable for non-timer parts of
 	// of the package)
-	Now func() int64
+	Now func() int64 `json:"-"`
+}
+
+// New creates a new Limit with optional
+// hourly flushing to avoid memory leakage
+func New(ctx context.Context) *Limit {
+
+	ctxServices, cancelServices := context.WithCancel(ctx)
+
+	l := &Limit{
+		Mutex:             &sync.Mutex{},
+		Activities:        make(map[string]map[string]*models.Activity),
+		Sessions:          make(map[string]map[string]int64),
+		ActivityBySession: make(map[string]*models.Activity),
+		UserBySession:     make(map[string]string),
+		Max:               2,
+		FlushInterval:     time.Hour,
+		ProvisionalPeriod: time.Hour,
+		register:          make(chan confirmation),
+		Locked:            false,
+		ctx:               ctx,
+		ctxServices:       ctxServices,
+		cancelServices:    cancelServices,
+		LastBookingEnds:   time.Now().Unix(),
+		Now:               func() int64 { return time.Now().Unix() },
+	}
+
+	go l.handleRegister()
+
+	return l
+}
+
+func (l *Limit) ExportAll() ([]byte, error) {
+	return json.Marshal(l)
+}
+
+// ImportAll takes the booking store marshalled into b as our new bookingstore
+// you must be able to cancel the existing context for the
+func (l *Limit) ImportAll(b []byte) error {
+
+	new := &Limit{}
+
+	err := json.Unmarshal(b, new)
+
+	if err != nil {
+		return err
+	}
+
+	new.PostImportEssential()
+
+	l.cancelServices()
+
+	l = new
+
+	return nil
+}
+
+// PostImportEssential sets up mutexes and Now() functions
+// Assume the original bookingstore context was cancelled
+// so as to stop the registerhandler and flush....
+func (l *Limit) PostImportEssential() {
+	l.Mutex = &sync.Mutex{}
+	l.register = make(chan confirmation)
+	ctxServices, cancelServices := context.WithCancel(l.ctx)
+	l.ctxServices = ctxServices
+	l.cancelServices = cancelServices
+	go l.handleRegister()
 }
 
 // handleRegister handles booking confirmations and should be run in one separate goro
+// it must also have its own context so we can stop and start it for import.
 func (l *Limit) handleRegister() {
 	log.WithFields(log.Fields{"source": "bookingstore", "event": "confirm:start"}).Trace("bookstore:confirm:start")
 	for {
 		select {
-		case <-l.ctx.Done():
+		case <-l.ctxServices.Done():
 			log.WithFields(log.Fields{"source": "bookingstore", "event": "confirm:stop"}).Trace("bookingstore:confirm:stop")
 			return
 		case c := <-l.register:
 
-			if c.expiresAt > l.lastBookingEnds {
-				l.lastBookingEnds = c.expiresAt
+			if c.expiresAt > l.LastBookingEnds {
+				l.LastBookingEnds = c.expiresAt
 			}
 
-			l.userBySession[c.sessionID] = c.userID
+			l.UserBySession[c.sessionID] = c.userID
 
 			if c.activity == nil {
 				lf := log.Fields{
@@ -110,19 +182,19 @@ func (l *Limit) handleRegister() {
 				continue
 			}
 
-			if _, ok := l.activities[c.userID]; !ok {
-				l.activities[c.userID] = make(map[string]*models.Activity)
+			if _, ok := l.Activities[c.userID]; !ok {
+				l.Activities[c.userID] = make(map[string]*models.Activity)
 			}
-			lau := l.activities[c.userID]
+			lau := l.Activities[c.userID]
 			lau[c.sessionID] = c.activity
-			l.activities[c.userID] = lau
+			l.Activities[c.userID] = lau
 			ID := ""
 
 			if c.activity.Description != nil {
 				ID = c.activity.Description.ID
 			}
 
-			l.activityBySession[c.sessionID] = c.activity
+			l.ActivityBySession[c.sessionID] = c.activity
 
 			lf := log.Fields{
 				"source":     "bookingstore",
@@ -136,30 +208,6 @@ func (l *Limit) handleRegister() {
 		}
 	}
 
-}
-
-// New creates a new Limit with optional
-// hourly flushing to avoid memory leakage
-func New(ctx context.Context) *Limit {
-	l := &Limit{
-		Mutex:             &sync.Mutex{},
-		activities:        make(map[string]map[string]*models.Activity),
-		sessions:          make(map[string]map[string]int64),
-		activityBySession: make(map[string]*models.Activity),
-		userBySession:     make(map[string]string),
-		max:               2,
-		flushInterval:     time.Hour,
-		provisionalPeriod: time.Hour,
-		register:          make(chan confirmation),
-		lockBookings:      false,
-		ctx:               ctx,
-		lastBookingEnds:   time.Now().Unix(),
-		Now:               func() int64 { return time.Now().Unix() },
-	}
-
-	go l.handleRegister()
-
-	return l
 }
 
 // WithFlush adds a periodic flush to avoid memory leakage
@@ -176,7 +224,7 @@ func (l *Limit) WithFlush(interval time.Duration) *Limit {
 	l.Lock()
 	defer l.Unlock()
 
-	l.flushInterval = interval
+	l.FlushInterval = interval
 
 	go func() {
 
@@ -188,14 +236,14 @@ func (l *Limit) WithFlush(interval time.Duration) *Limit {
 
 		for {
 			select {
-			case <-l.ctx.Done():
+			case <-l.ctxServices.Done():
 				lf := log.Fields{
 					"source": "bookingstore",
 					"event":  "withFlush:stop",
 				}
 				log.WithFields(lf).Trace("bookingstore:withFlush:stop")
 				return
-			case <-time.After(l.flushInterval):
+			case <-time.After(l.FlushInterval):
 				lf := log.Fields{
 					"source": "bookingstore",
 					"event":  "withFlush:flushAll",
@@ -218,7 +266,7 @@ func (l *Limit) WithProvisionalPeriod(interval time.Duration) *Limit {
 	l.Lock()
 	defer l.Unlock()
 
-	l.provisionalPeriod = interval
+	l.ProvisionalPeriod = interval
 
 	return l
 }
@@ -227,7 +275,7 @@ func (l *Limit) WithProvisionalPeriod(interval time.Duration) *Limit {
 func (l *Limit) WithMax(max int) *Limit {
 	l.Lock()
 	defer l.Unlock()
-	l.max = max
+	l.Max = max
 	return l
 }
 
@@ -244,21 +292,21 @@ func (l *Limit) LockBookings() {
 	l.Lock()
 	defer l.Unlock()
 
-	l.lockBookings = true
+	l.Locked = true
 }
 
 func (l *Limit) UnlockBookings() {
 	l.Lock()
 	defer l.Unlock()
 
-	l.lockBookings = false
+	l.Locked = false
 }
 
 func (l *Limit) GetLockBookings() bool {
 	l.Lock()
 	defer l.Unlock()
 
-	return l.lockBookings
+	return l.Locked
 }
 
 // GetUserActivities provides pointers to all of a users activities, so that
@@ -269,7 +317,7 @@ func (l *Limit) GetUserActivities(user string) (map[string]*models.Activity, err
 
 	var err error
 
-	a, ok := l.activities[user]
+	a, ok := l.Activities[user]
 	if !ok {
 		err = errors.New("not found")
 	}
@@ -284,14 +332,14 @@ func (l *Limit) GetAllActivities() map[string]*models.Activity {
 	l.Lock()
 	defer l.Unlock()
 
-	return l.activityBySession
+	return l.ActivityBySession
 }
 
 func (l *Limit) GetAllActivitiesCount() int {
 	l.Lock()
 	defer l.Unlock()
 
-	return len(l.activityBySession)
+	return len(l.ActivityBySession)
 }
 
 // GetLastBookingEnds is an admin function to help figure out
@@ -302,7 +350,7 @@ func (l *Limit) GetLastBookingEnds() int64 {
 	l.Lock()
 	defer l.Unlock()
 
-	return l.lastBookingEnds
+	return l.LastBookingEnds
 }
 
 // Get all sessionCount is primarily an admin function
@@ -312,7 +360,7 @@ func (l *Limit) GetAllSessionCount() int {
 	l.FlushAll()
 	l.Lock()
 	defer l.Unlock()
-	return len(l.activityBySession)
+	return len(l.ActivityBySession)
 }
 
 // GetActivityFromSessionID allows an activity to be retrieved even if the
@@ -324,7 +372,7 @@ func (l *Limit) GetActivityFromSessionID(sid string) (*models.Activity, error) {
 
 	var err error
 
-	a, ok := l.activityBySession[sid]
+	a, ok := l.ActivityBySession[sid]
 
 	if !ok {
 		err = errors.New("not found")
@@ -339,7 +387,7 @@ func (l *Limit) GetUserSessionCount(user string) int {
 	defer l.Unlock()
 
 	l.flushUser(user)
-	return len(l.sessions[user])
+	return len(l.Sessions[user])
 }
 
 // FlushAll removes all stale entries from all maps
@@ -347,36 +395,36 @@ func (l *Limit) FlushAll() {
 	l.Lock()
 	defer l.Unlock()
 
-	timeSinceLastFlush := time.Now().Unix() - l.lastFlush
+	timeSinceLastFlush := time.Now().Unix() - l.LastFlush
 
 	if timeSinceLastFlush < 1 { // nothing has changed within the last second.
 		return
 	}
 
-	sessions := l.sessions
+	sessions := l.Sessions
 	for userID, _ := range sessions {
 		l.flushUser(userID)
 	}
 
-	l.lastFlush = time.Now().Unix()
+	l.LastFlush = time.Now().Unix()
 }
 
 // flushUser removes stale entries from all maps
 // for a given user
 func (l *Limit) flushUser(user string) {
 
-	stale := l.sessions[user]
+	stale := l.Sessions[user]
 	now := l.Now()
 	for k, s := range stale {
 		if s < now {
-			delete(l.sessions[user], k)
-			delete(l.activities[user], k)
-			delete(l.activityBySession, k)
-			delete(l.userBySession, k)
+			delete(l.Sessions[user], k)
+			delete(l.Activities[user], k)
+			delete(l.ActivityBySession, k)
+			delete(l.UserBySession, k)
 		}
 	}
 
-	removed := len(stale) - len(l.sessions[user])
+	removed := len(stale) - len(l.Sessions[user])
 
 	if removed > 0 {
 		lf := log.Fields{
@@ -432,7 +480,7 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 			"sessionID": sessionID,
 		}
 
-		sessions := l.sessions
+		sessions := l.Sessions
 
 		s, ok := sessions[userID]
 
@@ -445,7 +493,7 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 
 		sessions[userID] = s
 
-		l.sessions = sessions
+		l.Sessions = sessions
 
 		log.WithFields(lf).Trace("bookingstore:request:provisional:autoDelete:deleteBooking:ok")
 	}
@@ -456,13 +504,13 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 		cancelFunc()
 		return
 
-	case <-time.After(l.provisionalPeriod):
+	case <-time.After(l.ProvisionalPeriod):
 		// prevent leakage if api handler stalls before
 		// confirming or cancelling
 		cancelFunc()
 		return
 
-	case <-l.ctx.Done():
+	case <-l.ctxServices.Done():
 		// done because server shut down
 		lf := log.Fields{
 			"source":    "bookingstore",
@@ -510,7 +558,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 	}
 
 	// no sessions allowed?
-	if l.max < 1 || l.lockBookings {
+	if l.Max < 1 || l.Locked {
 		lf := log.Fields{
 			"source": "bookingstore",
 			"event":  "request:provisional:denied:noNewSessionsAllowed",
@@ -529,18 +577,18 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 	sessionID := uuid.New().String()
 
 	// check if user has a session map
-	_, ok := l.sessions[userID]
+	_, ok := l.Sessions[userID]
 
 	if !ok {
-		l.sessions[userID] = make(map[string]int64)
+		l.Sessions[userID] = make(map[string]int64)
 	} else {
 		l.flushUser(userID) //up date our session list
 	}
 
 	// user session count
-	usc := len(l.sessions[userID])
+	usc := len(l.Sessions[userID])
 
-	if usc >= l.max {
+	if usc >= l.Max {
 
 		lf := log.Fields{
 			"source":           "bookingstore",
@@ -549,7 +597,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 			"exp":              exp,
 			"sessionID":        sessionID,
 			"userSessionCount": usc,
-			"max":              l.max,
+			"max":              l.Max,
 		}
 		log.WithFields(lf).Debug("bookingstore:request:provisional:denied:overLimit")
 		return nil, nil, "", errors.New("denied: over limit")
@@ -557,7 +605,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 
 	// grant provisional session
 
-	l.sessions[userID][sessionID] = exp
+	l.Sessions[userID][sessionID] = exp
 
 	lf := log.Fields{
 		"source":           "bookingstore",
@@ -566,7 +614,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 		"exp":              exp,
 		"sessionID":        sessionID,
 		"userSessionCount": usc,
-		"max":              l.max,
+		"max":              l.Max,
 	}
 	log.WithFields(lf).Debug("bookingstore:request:provisional:granted")
 
