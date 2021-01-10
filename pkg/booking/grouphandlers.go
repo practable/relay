@@ -6,6 +6,24 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
+func addNewGroup(ps *pool.PoolStore) func(groups.AddNewGroupParams, interface{}) middleware.Responder {
+	return func(params groups.AddNewGroupParams, principal interface{}) middleware.Responder {
+		return middleware.NotImplemented("operation groups.AddNewGroup has not yet been implemented")
+	}
+}
+
+func addPoolsByGroupID(ps *pool.PoolStore) func(groups.AddPoolsByGroupIDParams, interface{}) middleware.Responder {
+	return func(params groups.AddPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+		return middleware.NotImplemented("operation groups.AddPoolsByGroupID has not yet been implemented")
+	}
+}
+
+func deletePoolsByGroupID(ps *pool.PoolStore) func(groups.DeletePoolsByGroupIDParams, interface{}) middleware.Responder {
+	return func(params groups.DeletePoolsByGroupIDParams, principal interface{}) middleware.Responder {
+		return middleware.NotImplemented("operation groups.DeletePoolsByGroupID has not yet been implemented")
+	}
+}
+
 func getPoolsByGroupID(ps *pool.PoolStore) func(params groups.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 	return func(params groups.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 
@@ -115,5 +133,12 @@ func getGroupIDByName(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, in
 		}
 
 		return groups.NewGetGroupIDByNameOK().WithPayload(ids)
+	}
+}
+
+func replacePoolsByGroupID(ps *pool.PoolStore) func(groups.ReplacePoolsByGroupIDParams, interface{}) middleware.Responder {
+
+	return func(params groups.ReplacePoolsByGroupIDParams, principal interface{}) middleware.Responder {
+		return middleware.NotImplemented("operation groups.ReplacePoolsByGroupID has not yet been implemented")
 	}
 }

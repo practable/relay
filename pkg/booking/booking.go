@@ -23,6 +23,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/booking/restapi"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations"
+	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/admin"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
@@ -68,26 +69,39 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 
 	// set the Handlers
 
-	// ** GROUPS **/
+	// *** ADMIN *** //
+	api.AdminExportPoolStoreHandler = admin.ExportPoolStoreHandlerFunc(exportPoolStore(ps, l))
+	api.AdminGetStoreStatusHandler = admin.GetStoreStatusHandlerFunc(getStoreStatus(ps, l))
+	api.AdminImportPoolStoreHandler = admin.ImportPoolStoreHandlerFunc(importPoolStore(ps, l))
+
+	// *** GROUPS *** //
+	api.GroupsAddNewGroupHandler = groups.AddNewGroupHandlerFunc(addNewGroup(ps))
+	api.GroupsAddPoolsByGroupIDHandler = groups.AddPoolsByGroupIDHandlerFunc(addPoolsByGroupID(ps))
+	api.GroupsDeletePoolsByGroupIDHandler = groups.DeletePoolsByGroupIDHandlerFunc(deletePoolsByGroupID(ps))
 	api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(getGroupIDByName(ps))
 	api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(getGroupDescriptionByID(ps))
+	api.GroupsGetPoolsByGroupIDHandler = groups.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupID(ps)) //TODO implementation issues?
+	api.GroupsReplacePoolsByGroupIDHandler = groups.ReplacePoolsByGroupIDHandlerFunc(replacePoolsByGroupID(ps))
+	api.PoolsUpdateActivityByIDHandler = pools.UpdateActivityByIDHandlerFunc(updateActivityByID(ps))
 
-	// TODO
-	//api.GroupsGetPoolsByGroupIDHandler = groups.GetPoolsByGroupIDHandlerFunc(getPoolsByGroupID(ps))
-
-	// *** POOLS ***
+	// *** POOLS *** //
+	api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(addActivityByPoolID(ps))
+	api.PoolsAddNewPoolHandler = pools.AddNewPoolHandlerFunc(addNewPool(ps))
+	api.PoolsDeleteActivityByIDHandler = pools.DeleteActivityByIDHandlerFunc(deleteActivityByID(ps))
+	api.PoolsDeletePoolHandler = pools.DeletePoolHandlerFunc(deletePool(ps))
+	api.PoolsGetActivityByIDHandler = pools.GetActivityByIDHandlerFunc(getActivityByID(ps))
 	api.PoolsGetAllPoolsHandler = pools.GetAllPoolsHandlerFunc(getAllPools(ps))
-
 	api.PoolsGetPoolDescriptionByIDHandler = pools.GetPoolDescriptionByIDHandlerFunc(getPoolDescriptionByID(ps))
 	api.PoolsGetPoolStatusByIDHandler = pools.GetPoolStatusByIDHandlerFunc(getPoolStatusByID(ps))
 	api.PoolsRequestSessionByPoolIDHandler = pools.RequestSessionByPoolIDHandlerFunc(requestSessionByPoolID(ps, l))
-	api.PoolsAddNewPoolHandler = pools.AddNewPoolHandlerFunc(addNewPool(ps))
-	api.PoolsAddActivityByPoolIDHandler = pools.AddActivityByPoolIDHandlerFunc(addActivityByPoolID(ps))
 	api.PoolsUpdateActivityByIDHandler = pools.UpdateActivityByIDHandlerFunc(updateActivityByID(ps))
-	api.PoolsGetActivityByIDHandler = pools.GetActivityByIDHandlerFunc(getActivityByID(ps))
 
-	// *** USERS ***/
+	// *** USERS *** //
 	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandler(ps))
+
+	// *** NOT IN API YET ***
+	//Get current bookings
+	//Get max bookings allowed
 
 	go func() {
 		<-ctx.Done()
