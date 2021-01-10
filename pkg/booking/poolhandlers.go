@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/booking/models"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
-	"github.com/timdrysdale/relay/pkg/limit"
+	"github.com/timdrysdale/relay/pkg/bookingstore"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
@@ -239,7 +239,7 @@ func addNewPool(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principa
 	}
 }
 
-func requestSessionByPoolID(ps *pool.PoolStore, l *limit.Limit) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
+func requestSessionByPoolID(ps *pool.PoolStore, l *bookingstore.Limit) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
 	return func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
@@ -286,21 +286,57 @@ func requestSessionByPoolID(ps *pool.PoolStore, l *limit.Limit) func(params pool
 
 		exp := ps.Now() + int64(duration)
 		// Check we have concurrent booking quota left over, by making a provisional booking
-		confirm, err := l.ProvisionalRequest(claims.Subject, exp)
+		cancelBooking, confirmBooking, sID, err := l.ProvisionalRequest(claims.Subject, exp)
 
 		if err != nil {
+			lf := log.Fields{
+				"source":    "booking",
+				"event":     "requestSession:activityRequest:overLimit",
+				"poolID":    params.PoolID,
+				"userID":    claims.Subject,
+				"duration":  duration,
+				"expiresAt": exp,
+				"error":     err.Error(),
+			}
+			log.WithFields(lf).Info("booking:requestSession:activityRequest:OverLimit")
 			return pools.NewRequestSessionByPoolIDPaymentRequired().WithPayload("Maximum conconcurrent sessions already reached. Try again later.")
 		}
 
-		aid, err := p.ActivityRequestAny(duration)
+		aID, err := p.ActivityRequestAny(duration)
 
 		if err != nil {
+			lf := log.Fields{
+				"source":    "booking",
+				"event":     "requestSession:activityRequest:notFound",
+				"sessionID": sID,
+				"poolID":    params.PoolID,
+				"userID":    claims.Subject,
+				"duration":  duration,
+				"expiresAt": exp,
+				"error":     err.Error(),
+			}
+			log.WithFields(lf).Error("booking:requestSession:activityRequest:notFound")
+			cancelBooking()
 			return pools.NewRequestSessionByPoolIDNotFound().WithPayload(err.Error())
 		}
 
-		a, err := p.GetActivityByID(aid)
+		a, err := p.GetActivityByID(aID)
 
 		if err != nil {
+
+			lf := log.Fields{
+				"source":     "booking",
+				"event":      "requestSession:getActivity:internalError",
+				"activityID": aID,
+				"sessionID":  sID,
+				"poolID":     params.PoolID,
+				"userID":     claims.Subject,
+				"duration":   duration,
+				"expiresAt":  exp,
+				"error":      err.Error(),
+			}
+			log.WithFields(lf).Error("booking:requestSession:getActivity:internalError")
+			cancelBooking()
 			return pools.NewRequestSessionByPoolIDInternalServerError().WithPayload(err.Error())
 		}
 
@@ -325,6 +361,21 @@ func requestSessionByPoolID(ps *pool.PoolStore, l *limit.Limit) func(params pool
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 			bearer, err := token.SignedString(ps.Secret)
 			if err != nil {
+
+				lf := log.Fields{
+					"source":     "booking",
+					"event":      "requestSession:makeTokens:internalError",
+					"activityID": aID,
+					"sessionID":  sID,
+					"poolID":     params.PoolID,
+					"userID":     claims.Subject,
+					"duration":   duration,
+					"issuedAt":   iat,
+					"expiresAt":  exp,
+					"error":      err.Error(),
+				}
+				log.WithFields(lf).Error("booking:requestSession:makeTokens:internalError")
+				cancelBooking()
 				return pools.NewRequestSessionByPoolIDInternalServerError().WithPayload(err.Error())
 			}
 
@@ -336,7 +387,20 @@ func requestSessionByPoolID(ps *pool.PoolStore, l *limit.Limit) func(params pool
 			ma.Streams[idx].Token = &bearer
 		}
 
-		confirm() // confirm booking with Limit checker
+		lf := log.Fields{
+			"source":     "booking:requestSession",
+			"event":      "granted",
+			"activityID": aID,
+			"sessionID":  sID,
+			"poolID":     params.PoolID,
+			"userID":     claims.Subject,
+			"duration":   duration,
+			"issuedAt":   iat,
+			"expiresAt":  exp,
+		}
+		log.WithFields(lf).Info("booking:requestSession:granted")
+
+		confirmBooking(ma) // confirm booking with Limit checker
 		return pools.NewRequestSessionByPoolIDOK().WithPayload(ma)
 	}
 }
