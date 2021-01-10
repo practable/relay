@@ -1,6 +1,7 @@
 package pool
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 	"sync"
@@ -52,6 +53,26 @@ func (p *PoolStore) PostImportEssential() {
 			}
 		}
 	}
+}
+
+func (p *PoolStore) ExportAll() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func ImportAll(b []byte) (*PoolStore, error) {
+
+	new := &PoolStore{}
+
+	err := json.Unmarshal(b, new)
+
+	if err != nil {
+		return nil, err
+	}
+
+	new.PostImportEssential()
+
+	return new, nil
+
 }
 
 // PostImportSetNow applies a custom Now() func to the poolstore

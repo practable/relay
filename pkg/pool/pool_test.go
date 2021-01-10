@@ -1,17 +1,42 @@
 package pool
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/relay/pkg/booking/models"
 	"github.com/timdrysdale/relay/pkg/permission"
 )
+
+var debug bool
+
+func init() {
+	debug = false
+	if debug {
+		log.SetReportCaller(true)
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: false, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		log.SetLevel(log.WarnLevel)
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
+
+}
 
 func mockTime(now *int64) int64 {
 	return *now
@@ -585,5 +610,126 @@ func TestAddPermissionsToStream(t *testing.T) {
 	s := NewStream("https://example.com/some/stream").WithPermission(p)
 
 	assert.Equal(t, p, s.GetPermission())
+
+}
+
+func TestImportExport(t *testing.T) {
+
+	// *** Setup groups, pools, activities *** //
+
+	mocktime := time.Now().Unix()
+
+	ps := NewPoolStore().WithSecret("bar")
+
+	name := "stuff"
+	g0 := NewGroup(name)
+	ps.AddGroup(g0)
+	defer ps.DeleteGroup(g0)
+
+	p0 := NewPool("stuff0").WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+	g0.AddPool(p0)
+	ps.AddPool(p0)
+	defer ps.DeletePool(p0)
+
+	a := NewActivity("a", ps.Now()+3600)
+
+	p0.AddActivity(a)
+	defer p0.DeleteActivity(a)
+
+	pt0 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "foo",
+		Scopes:         []string{"read", "write"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s0 := NewStream("https://example.com/session/123data")
+	s0.SetPermission(pt0)
+	a.AddStream("data", s0)
+
+	pt1 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "foo", //would not normally set same as other stream - testing convenience
+		Scopes:         []string{"read"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s1 := NewStream("https://example.com/session/456video")
+	s1.SetPermission(pt1)
+	a.AddStream("video", s1)
+
+	a2 := NewActivity("a2", ps.Now()+3600)
+	p0.AddActivity(a2)
+	defer p0.DeleteActivity(a2)
+
+	pt2 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "bar",
+		Scopes:         []string{"read", "write"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+
+	s2 := NewStream("https://example.com/session/123data")
+	s2.SetPermission(pt2)
+	a2.AddStream("data", s2)
+
+	pt3 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "bar", //would not normally set same as other stream - testing convenience
+		Scopes:         []string{"read"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s3 := NewStream("https://example.com/session/456video")
+	s3.SetPermission(pt3)
+	a2.AddStream("video", s3)
+
+	b, err := ps.ExportAll()
+
+	assert.NoError(t, err)
+
+	// kill the poolstore
+	ps = &PoolStore{
+		RWMutex: &sync.RWMutex{},
+	}
+
+	// check it's dead
+	p, err := ps.GetPoolByID(p0.ID)
+	assert.Error(t, err)
+
+	// restore the poolstore
+	ps2, err := ImportAll(b)
+	ps2.PostImportSetNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+	ps = ps2
+
+	// *** run the rest of the test *** //
+
+	mocktime = time.Now().Unix()
+
+	p, err = ps.GetPoolByID(p0.ID)
+
+	assert.NoError(t, err)
+
+	aID0, err := p.ActivityRequestAny(2000)
+
+	agot0, err := p.GetActivityByID(aID0)
+
+	// now request a second activity from the same user ...
+	aID1, err := p.ActivityRequestAny(2000)
+
+	agot1, err := p.GetActivityByID(aID1)
+
+	topic0 := agot0.Streams["data"].Permission.Topic
+	topic1 := agot1.Streams["data"].Permission.Topic
+
+	//'123' is from activity 'a'; '789' is from activity 'a2'
+	if !((topic0 == "foo" && topic1 == "bar") || (topic0 == "bar" && topic1 == "foo")) {
+		t.Error("didn't get the right permission tokens - did we get the same activity twice?")
+	}
 
 }
