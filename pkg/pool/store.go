@@ -55,6 +55,15 @@ func (p *PoolStore) PostImportEssential() {
 	}
 }
 
+func CopyStore(from, to *PoolStore) {
+	to.RWMutex = from.RWMutex
+	to.Groups = from.Groups
+	to.Pools = from.Pools
+	to.Secret = from.Secret
+	to.BookingTokenDuration = from.BookingTokenDuration
+	to.Now = from.Now
+}
+
 func (p *PoolStore) ExportAll() ([]byte, error) {
 	return json.Marshal(p)
 }

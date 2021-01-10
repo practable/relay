@@ -153,6 +153,11 @@ func configureAPI(api *operations.BookingAPI) http.Handler {
 			return middleware.NotImplemented("operation pools.RequestSessionByPoolID has not yet been implemented")
 		})
 	}
+	if api.AdminSetLockHandler == nil {
+		api.AdminSetLockHandler = admin.SetLockHandlerFunc(func(params admin.SetLockParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.SetLock has not yet been implemented")
+		})
+	}
 	if api.PoolsUpdateActivityByIDHandler == nil {
 		api.PoolsUpdateActivityByIDHandler = pools.UpdateActivityByIDHandlerFunc(func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.UpdateActivityByID has not yet been implemented")

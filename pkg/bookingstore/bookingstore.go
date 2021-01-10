@@ -86,6 +86,29 @@ type Limit struct {
 	Now func() int64 `json:"-"`
 }
 
+func CopyStore(from, to *Limit) {
+	to.Lock()
+	from.Lock()
+	defer to.Unlock()
+	defer from.Unlock()
+	to.Mutex = from.Mutex
+	to.Activities = from.Activities
+	to.Sessions = from.Sessions
+	to.ActivityBySession = from.ActivityBySession
+	to.UserBySession = from.UserBySession
+	to.LastFlush = from.LastFlush
+	to.LastBookingEnds = from.LastBookingEnds
+	to.Max = from.Max
+	to.Locked = from.Locked
+	to.FlushInterval = from.FlushInterval
+	to.ProvisionalPeriod = from.ProvisionalPeriod
+	to.register = from.register
+	to.ctx = from.ctx
+	to.ctxServices = from.ctxServices
+	to.cancelServices = from.cancelServices
+	to.Now = from.Now
+}
+
 // New creates a new Limit with optional
 // hourly flushing to avoid memory leakage
 func New(ctx context.Context) *Limit {
@@ -156,6 +179,7 @@ func (l *Limit) PostImportEssential(ctx context.Context) {
 	ctxServices, cancelServices := context.WithCancel(ctxNew)
 	l.ctxServices = ctxServices
 	l.cancelServices = cancelServices
+	l.Now = func() int64 { return time.Now().Unix() }
 	go l.handleRegister(ctxServices)
 }
 

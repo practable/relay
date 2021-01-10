@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -1540,6 +1541,13 @@ func TestTODO(t *testing.T) {
 
 }
 
+//***********************************************************
+//                               _         _
+//  _  _ _ _  _ __  __ _ _ _ __| |_  __ _| |
+// | || | ' \| '  \/ _` | '_(_-< ' \/ _` | |
+//  \_,_|_||_|_|_|_\__,_|_| /__/_||_\__,_|_|
+//
+//***********************************************************
 func TestUnmarshalMarshalPoolStore(t *testing.T) {
 
 	// Set up a pool, import, export, then run same test as above
@@ -1854,5 +1862,521 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	assert.Equal(t, "\"Maximum conconcurrent sessions already reached. Try again later.\"\n", string(body))
 	statusCodes = append(statusCodes, resp.StatusCode)
 	assert.Equal(t, []int{200, 200, 404, 402}, statusCodes)
+
+}
+
+//***********************************************************
+//
+//  _                     _                           _
+// (_)_ __  _ __  ___ _ _| |_   _____ ___ __  ___ _ _| |_
+// | | '  \| '_ \/ _ \ '_|  _| / -_) \ / '_ \/ _ \ '_|  _|
+// |_|_|_|_| .__/\___/_|  \__| \___/_\_\ .__/\___/_|  \__|
+//         |_|                         |_|
+//
+//
+//***********************************************************
+// http://patorjk.com/software/taag/#p=display&f=Small&t=import%20export
+
+func TestImportExportPoolStore(t *testing.T) {
+
+	veryVerbose := false
+	// Set up a Local pool, import via server, interact, export, check for bookings
+	// *** Setup groups, pools, activities *** //
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ps2 := pool.NewPoolStore().
+		WithSecret(secret).
+		WithBookingTokenDuration(bookingDuration).
+		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+
+	l2 := bookingstore.New(ctx).WithFlush(time.Minute).WithMax(2).WithProvisionalPeriod(5 * time.Second)
+
+	statusCodes := []int{}
+
+	name := "stuff"
+	g0 := pool.NewGroup(name)
+	defer ps2.DeleteGroup(g0)
+
+	ps2.AddGroup(g0)
+	defer ps2.DeleteGroup(g0)
+
+	p0 := pool.NewPool("stuff0").WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+
+	g0.AddPool(p0)
+	ps2.AddPool(p0)
+	defer ps2.DeletePool(p0)
+
+	a := pool.NewActivity("a", ps2.Now()+3600)
+
+	p0.AddActivity(a)
+	defer p0.DeleteActivity(a)
+
+	pt0 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "foo",
+		Scopes:         []string{"read", "write"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s0 := pool.NewStream("https://example.com/session/123data")
+	s0.SetPermission(pt0)
+	a.AddStream("data", s0)
+
+	pt1 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "foo", //would not normally set same as other stream - testing convenience
+		Scopes:         []string{"read"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s1 := pool.NewStream("https://example.com/session/456video")
+	s1.SetPermission(pt1)
+	a.AddStream("video", s1)
+
+	a2 := pool.NewActivity("a2", ps2.Now()+3600)
+	p0.AddActivity(a2)
+	defer p0.DeleteActivity(a2)
+
+	pt2 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "bar",
+		Scopes:         []string{"read", "write"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+
+	s2 := pool.NewStream("https://example.com/session/123data")
+	s2.SetPermission(pt2)
+	a2.AddStream("data", s2)
+
+	pt3 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "bar", //would not normally set same as other stream - testing convenience
+		Scopes:         []string{"read"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s3 := pool.NewStream("https://example.com/session/456video")
+	s3.SetPermission(pt3)
+	a2.AddStream("video", s3)
+
+	// *** Unmarshal and marshal the pools *** //
+
+	bps2, err := ps2.ExportAll()
+	assert.NoError(t, err)
+	bl2, err := l2.ExportAll()
+	assert.NoError(t, err)
+	bookingEnc := base64.StdEncoding.EncodeToString(bl2)
+	poolEnc := base64.StdEncoding.EncodeToString(bps2)
+
+	store := models.Poolstore{
+		Booking: &bookingEnc,
+		Pool:    &poolEnc,
+	}
+	var pretty []byte
+
+	if veryVerbose {
+		pretty, err = json.MarshalIndent(ps2, "", "\t")
+		fmt.Println("LOCAL POOL STORE")
+		fmt.Println(string(pretty))
+		fmt.Println("LOCAL POOL STORE marshalled to bytes")
+		fmt.Println(string(bps2))
+		fmt.Println("LOCAL POOL STORE Base64 Encoded")
+		fmt.Println(string(poolEnc))
+		fmt.Println("LOCAL POOL STORE Base64 Decoded")
+		poolDec, err := base64.StdEncoding.DecodeString(poolEnc)
+		assert.NoError(t, err)
+		fmt.Println(string(poolDec))
+		pscheck := &pool.PoolStore{}
+		err = json.Unmarshal(poolDec, pscheck)
+		assert.NoError(t, err)
+		pretty, err = json.MarshalIndent(pscheck, "", "\t")
+		fmt.Println("LOCAL POOL STORE Unmarshalled")
+		fmt.Println(string(pretty))
+	}
+	mocktime = time.Now().Unix()
+
+	//            _           _         _             _
+	//   __ _  __| |_ __ ___ (_)_ __   | | ___   __ _(_)_ __
+	//  / _` |/ _` | '_ ` _ \| | '_ \  | |/ _ \ / _` | | '_ \
+	// | (_| | (_| | | | | | | | | | | | | (_) | (_| | | | | |
+	//  \__,_|\__,_|_| |_| |_|_|_| |_| |_|\___/ \__, |_|_| |_|
+	//                                          |___/
+
+	loginClaims := &lit.Token{}
+	loginClaims.Audience = host
+	loginClaims.Groups = []string{name, "everyone"}
+	loginClaims.Scopes = []string{"login:admin"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	mocktime = time.Now().Unix()
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	adminBearer := *(btr.Token)
+
+	token, err := jwt.ParseWithClaims(adminBearer, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	assert.NoError(t, err)
+
+	claims, ok := token.Claims.(*lit.Token)
+
+	if veryVerbose {
+		pretty, err := json.MarshalIndent(claims, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println("------------- adminBearer claims-----------")
+		fmt.Println(string(pretty))
+	}
+
+	assert.True(t, ok)
+	assert.True(t, token.Valid)
+
+	// adminBearer doesn't get pools evaluated because it can access them all
+
+	//  _                            _
+	// (_)_ __ ___  _ __   ___  _ __| |_
+	// | | '_ ` _ \| '_ \ / _ \| '__| __|
+	// | | | | | | | |_) | (_) | |  | |_
+	// |_|_| |_| |_| .__/ \___/|_|   \__|
+	//             |_|
+
+	reqBody, err := json.Marshal(store)
+
+	req, err = http.NewRequest("POST", host+"/api/v1/admin/poolstore", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	req.Header.Add("Content-type", "application/json")
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	if veryVerbose {
+		t.Log("importStatus:", resp.Status)
+	}
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms := &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	if ms == nil {
+		t.Fatal("no status returned")
+	}
+
+	if veryVerbose {
+		pretty, err := json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println("-------------STORE STATUS AFTER IMPORT-----------")
+		fmt.Println(string(pretty))
+	}
+
+	//                      _             _
+	//  _   _ ___  ___ _ __| | ___   __ _(_)_ __
+	// | | | / __|/ _ \ '__| |/ _ \ / _` | | '_ \
+	// | |_| \__ \  __/ |  | | (_) | (_| | | | | |
+	//  \__,_|___/\___|_|  |_|\___/ \__, |_|_| |_|
+	//                              |___/
+
+	// login
+	loginClaims = &lit.Token{}
+	loginClaims.Audience = host
+	//check that missing group "everyone" in PoolStore does not stop login
+	loginClaims.Groups = []string{name, "everyone"}
+	loginClaims.Scopes = []string{"login:user"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	// sign user token
+	loginToken = jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	// Sign and get the complete encoded token as a string using the secret
+	loginBearer, err = loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	mocktime = time.Now().Unix()
+
+	client = &http.Client{}
+	req, err = http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr = &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	bookingBearer := *(btr.Token)
+
+	token, err = jwt.ParseWithClaims(bookingBearer, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	assert.NoError(t, err)
+
+	claims, ok = token.Claims.(*lit.Token)
+
+	if veryVerbose {
+		pretty, err = json.MarshalIndent(claims, "", "\t")
+		fmt.Println("Login token claims")
+		fmt.Println(string(pretty))
+	}
+	assert.True(t, ok)
+	assert.True(t, token.Valid)
+
+	assert.Equal(t, []string{p0.ID}, claims.Pools)
+
+	//                                 _                _   _       _ _
+	//  _ __ ___  __ _ _   _  ___  ___| |_    __ _  ___| |_(_)_   _(_) |_ _   _
+	// | '__/ _ \/ _` | | | |/ _ \/ __| __|  / _` |/ __| __| \ \ / / | __| | | |
+	// | | |  __/ (_| | |_| |  __/\__ \ |_  | (_| | (__| |_| |\ V /| | |_| |_| |
+	// |_|  \___|\__, |\__,_|\___||___/\__|  \__,_|\___|\__|_| \_/ |_|\__|\__, |
+	//              |_|                                                   |___/
+	//
+
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q := req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ma := &models.Activity{}
+	err = json.Unmarshal(body, ma)
+	assert.NoError(t, err)
+
+	if ma == nil {
+		t.Fatal("no token returned")
+	}
+
+	streamTokenString0 := *((ma.Streams[0]).Token)
+
+	ptclaims := &permission.Token{}
+
+	streamToken, err := jwt.ParseWithClaims(streamTokenString0, ptclaims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method was %v", token.Header["alg"])
+		}
+		return []byte(ps.Secret), nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stc, ok := streamToken.Claims.(*permission.Token)
+
+	// save this to check we get both activities (check data stream permission topic from each request)
+	stcTopic0 := stc.Topic
+
+	// now request a second activity from the same user ...
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	statusCodes = append(statusCodes, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ma = &models.Activity{}
+	err = json.Unmarshal(body, ma)
+	assert.NoError(t, err)
+
+	if ma == nil {
+		t.Fatal("no token returned")
+	}
+
+	streamTokenString0 = *((ma.Streams[0]).Token)
+
+	ptclaims = &permission.Token{}
+
+	streamToken, err = jwt.ParseWithClaims(streamTokenString0, ptclaims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method was %v", token.Header["alg"])
+		}
+		return []byte(ps.Secret), nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stc, ok = streamToken.Claims.(*permission.Token)
+
+	// just check the two topics are what we expect from the data permission tokens
+	stcTopic1 := stc.Topic
+
+	//'123' is from activity 'a'; '789' is from activity 'a2'
+	if !((stcTopic0 == "foo" && stcTopic1 == "bar") || (stcTopic0 == "bar" && stcTopic1 == "foo")) {
+		t.Error("didn't get the right permission tokens - did we get the same activity twice?")
+	}
+
+	// Now let's try being a different user - we should get a 404 not found (no kit left)
+	// by logging in again we'll get a different randomly assigned user id
+	req, err = http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	statusCodes = append(statusCodes, resp.StatusCode)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr2 := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr2)
+	assert.NoError(t, err)
+
+	if btr2 == nil {
+		t.Fatal("no token returned")
+	}
+
+	bookingBearer2 := *(btr2.Token)
+
+	token2, err := jwt.ParseWithClaims(bookingBearer2, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	assert.NoError(t, err)
+
+	claims2, ok := token2.Claims.(*lit.Token)
+
+	assert.True(t, ok)
+	assert.True(t, token.Valid)
+
+	assert.Equal(t, []string{p0.ID}, claims2.Pools)
+
+	// check not same user - important for next test...
+	assert.NotEqual(t, claims.Subject, claims2.Subject)
+
+	// Make the request for the kit ...
+	// now request a second activity from the same user ...
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer2) //different user this time
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.Equal(t, "\"none available\"\n", string(body))
+	statusCodes = append(statusCodes, resp.StatusCode)
+	// Now let's try being first user again - we should 402 payment required (reached quota)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer) // back to first user this time
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusPaymentRequired, resp.StatusCode)
+	assert.Equal(t, "\"Maximum conconcurrent sessions already reached. Try again later.\"\n", string(body))
+	statusCodes = append(statusCodes, resp.StatusCode)
+	assert.Equal(t, []int{200, 200, 404, 402}, statusCodes)
+
+	/* Get the StoreStatus */
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms = &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		pretty, err = json.MarshalIndent(ms, "", "\t")
+		fmt.Println(string(pretty))
+	}
+
+	assert.Equal(t, int64(2), ms.Activities)
+	assert.Equal(t, int64(2), ms.Bookings)
+	assert.Equal(t, int64(1), ms.Groups)
+	assert.Equal(t, int64(1), ms.Pools)
+	assert.Equal(t, float64(mocktime+2000), ms.LastBookingEnds)
+	fmt.Println(time.Now().Unix())
+
+	/* EXPORT AGAIN AND CHECK?
+
+	assert.NoError(t, err)
+
+	p, err := json.Marshal(ps)
+	assert.NoError(t, err)
+
+	ps2 := &pool.PoolStore{}
+
+	err = json.Unmarshal(p, &ps2)
+	assert.NoError(t, err)
+
+	p2, err := json.MarshalIndent(ps2, "", "\t")
+	assert.NoError(t, err)
+
+	if debug {
+		fmt.Println(string(p2))
+	}
+
+	// *** Initialise the imported poolstore, then swap it for the live one *** //
+	ps2.PostImportEssential()
+
+	// we're just using mocktime to keep up with real time, so this isn't really needed
+	// you can comment it out and this test still passes
+	ps2.PostImportSetNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+
+	// This will ruin other tests unless it works ok ....
+	ps = ps2
+	*/
 
 }

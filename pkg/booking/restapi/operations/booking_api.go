@@ -107,6 +107,9 @@ func NewBookingAPI(spec *loads.Document) *BookingAPI {
 		PoolsRequestSessionByPoolIDHandler: pools.RequestSessionByPoolIDHandlerFunc(func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.RequestSessionByPoolID has not yet been implemented")
 		}),
+		AdminSetLockHandler: admin.SetLockHandlerFunc(func(params admin.SetLockParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.SetLock has not yet been implemented")
+		}),
 		PoolsUpdateActivityByIDHandler: pools.UpdateActivityByIDHandlerFunc(func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.UpdateActivityByID has not yet been implemented")
 		}),
@@ -198,6 +201,8 @@ type BookingAPI struct {
 	GroupsReplacePoolsByGroupIDHandler groups.ReplacePoolsByGroupIDHandler
 	// PoolsRequestSessionByPoolIDHandler sets the operation handler for the request session by pool ID operation
 	PoolsRequestSessionByPoolIDHandler pools.RequestSessionByPoolIDHandler
+	// AdminSetLockHandler sets the operation handler for the set lock operation
+	AdminSetLockHandler admin.SetLockHandler
 	// PoolsUpdateActivityByIDHandler sets the operation handler for the update activity by ID operation
 	PoolsUpdateActivityByIDHandler pools.UpdateActivityByIDHandler
 	// ServeError is called when an error is received, there is a default handler
@@ -339,6 +344,9 @@ func (o *BookingAPI) Validate() error {
 	}
 	if o.PoolsRequestSessionByPoolIDHandler == nil {
 		unregistered = append(unregistered, "pools.RequestSessionByPoolIDHandler")
+	}
+	if o.AdminSetLockHandler == nil {
+		unregistered = append(unregistered, "admin.SetLockHandler")
 	}
 	if o.PoolsUpdateActivityByIDHandler == nil {
 		unregistered = append(unregistered, "pools.UpdateActivityByIDHandler")
@@ -520,6 +528,10 @@ func (o *BookingAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/pools/{pool_id}/sessions"] = pools.NewRequestSessionByPoolID(o.context, o.PoolsRequestSessionByPoolIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/admin/status"] = admin.NewSetLock(o.context, o.AdminSetLockHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
