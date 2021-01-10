@@ -187,6 +187,22 @@ func TestDenySessionExpiringInPast(t *testing.T) {
 
 }
 
+func TestGetUserSessionCountNoUser(t *testing.T) {
+
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	l := New(ctx)
+	u0 := "user0-does-not-exist"
+	count := l.GetUserSessionCount(u0)
+	assert.Equal(t, 0, count)
+	count = l.GetUserSessionCount("")
+	assert.Equal(t, 0, count)
+
+}
+
 func TestConfirmGetActivity(t *testing.T) {
 
 	t.Parallel()
@@ -216,7 +232,9 @@ func TestConfirmGetActivity(t *testing.T) {
 
 	time.Sleep(time.Millisecond)
 
-	am := l.GetUserActivities(u0)
+	am, err := l.GetUserActivities(u0)
+
+	assert.NoError(t, err)
 
 	a0r, ok := am[sessionID0]
 
@@ -245,7 +263,8 @@ func TestConfirmGetActivity(t *testing.T) {
 	time.Sleep(time.Millisecond)
 	time.Sleep(time.Millisecond)
 
-	am = l.GetUserActivities(u0)
+	am, err = l.GetUserActivities(u0)
+	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(am))
 
@@ -267,14 +286,25 @@ func TestConfirmGetActivity(t *testing.T) {
 		assert.NoError(t, err)
 		fmt.Println("---ACTIVITIES---")
 		fmt.Println(string(pa))
+
+		pas, err := json.MarshalIndent(l.activityBySession, "", "  ")
+		assert.NoError(t, err)
+		fmt.Println("---ACTIVITIES BY SESSION---")
+		fmt.Println(string(pas))
+
+		pus, err := json.MarshalIndent(l.userBySession, "", "  ")
+		assert.NoError(t, err)
+		fmt.Println("---USERS BY SESSION---")
+		fmt.Println(string(pus))
+
 	}
 
+	assert.NoError(t, err)
 	assert.Equal(t, 2, l.GetUserSessionCount(u0))
 	assert.Equal(t, 2, l.GetAllSessionCount())
 
-	exp, sess := l.GetLastBookingEnds()
+	exp := l.GetLastBookingEnds()
 
 	assert.Equal(t, t0+5, exp)
-	assert.Equal(t, 2, len(sess))
 
 }
