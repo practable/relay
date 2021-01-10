@@ -99,6 +99,36 @@ paths:
         500:
           description: ''
           schema: {}
+    post:
+      description: Set whether the bookings are locked or not
+      summary: set/release booking lock
+      tags:
+      - admin
+      operationId: setLock
+      deprecated: false
+      parameters:
+      - name: lock
+        in: query
+        required: true
+        type: boolean
+        description: set booking lock
+      produces:
+      - application/json
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/store_status'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {}
+      
 
 
   /groups:
@@ -951,17 +981,18 @@ definitions:
       
   poolstore:
     title: Pool Store
-    description: complete status required for failover
+    description: complete status required for failover. Encoded strings used for convenience and seperation of concerns, at cost of performance.
     type: object
     properties:
-      description:
-        $ref: '#/definitions/description'
-      todo:
+      pool:
         type: string
-        description: TODO expand this type to have groups, pools, activities and bookings
+        description: base64-encoded string representing PoolStore in JSON format
+      booking:
+        type: string
+        description: base64-encoded string representing bookingstore in JSON format
     required:
-    - description
-    - todo
+    - pool
+    - booking
           
   status:
     title: status

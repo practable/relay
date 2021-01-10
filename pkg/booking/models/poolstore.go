@@ -14,29 +14,29 @@ import (
 
 // Poolstore Pool Store
 //
-// complete status required for failover
+// complete status required for failover. Encoded strings used for convenience and seperation of concerns, at cost of performance.
 //
 // swagger:model poolstore
 type Poolstore struct {
 
-	// description
+	// base64-encoded string representing bookingstore in JSON format
 	// Required: true
-	Description *Description `json:"description"`
+	Booking *string `json:"booking"`
 
-	// TODO expand this type to have groups, pools, activities and bookings
+	// base64-encoded string representing PoolStore in JSON format
 	// Required: true
-	Todo *string `json:"todo"`
+	Pool *string `json:"pool"`
 }
 
 // Validate validates this poolstore
 func (m *Poolstore) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateDescription(formats); err != nil {
+	if err := m.validateBooking(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateTodo(formats); err != nil {
+	if err := m.validatePool(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -46,27 +46,18 @@ func (m *Poolstore) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Poolstore) validateDescription(formats strfmt.Registry) error {
+func (m *Poolstore) validateBooking(formats strfmt.Registry) error {
 
-	if err := validate.Required("description", "body", m.Description); err != nil {
+	if err := validate.Required("booking", "body", m.Booking); err != nil {
 		return err
-	}
-
-	if m.Description != nil {
-		if err := m.Description.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("description")
-			}
-			return err
-		}
 	}
 
 	return nil
 }
 
-func (m *Poolstore) validateTodo(formats strfmt.Registry) error {
+func (m *Poolstore) validatePool(formats strfmt.Registry) error {
 
-	if err := validate.Required("todo", "body", m.Todo); err != nil {
+	if err := validate.Required("pool", "body", m.Pool); err != nil {
 		return err
 	}
 

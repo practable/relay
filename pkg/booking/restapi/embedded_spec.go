@@ -139,6 +139,45 @@ func init() {
             "schema": {}
           }
         }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Set whether the bookings are locked or not",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "set/release booking lock",
+        "operationId": "setLock",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "set booking lock",
+            "name": "lock",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/store_status"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
       }
     },
     "/groups": {
@@ -1256,19 +1295,20 @@ func init() {
       }
     },
     "poolstore": {
-      "description": "complete status required for failover",
+      "description": "complete status required for failover. Encoded strings used for convenience and seperation of concerns, at cost of performance.",
       "type": "object",
       "title": "Pool Store",
       "required": [
-        "description",
-        "todo"
+        "pool",
+        "booking"
       ],
       "properties": {
-        "description": {
-          "$ref": "#/definitions/description"
+        "booking": {
+          "description": "base64-encoded string representing bookingstore in JSON format",
+          "type": "string"
         },
-        "todo": {
-          "description": "TODO expand this type to have groups, pools, activities and bookings",
+        "pool": {
+          "description": "base64-encoded string representing PoolStore in JSON format",
           "type": "string"
         }
       }
@@ -1558,6 +1598,45 @@ func init() {
             "schema": {}
           }
         }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Set whether the bookings are locked or not",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "set/release booking lock",
+        "operationId": "setLock",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "set booking lock",
+            "name": "lock",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/store_status"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
       }
     },
     "/groups": {
@@ -2675,19 +2754,20 @@ func init() {
       }
     },
     "poolstore": {
-      "description": "complete status required for failover",
+      "description": "complete status required for failover. Encoded strings used for convenience and seperation of concerns, at cost of performance.",
       "type": "object",
       "title": "Pool Store",
       "required": [
-        "description",
-        "todo"
+        "pool",
+        "booking"
       ],
       "properties": {
-        "description": {
-          "$ref": "#/definitions/description"
+        "booking": {
+          "description": "base64-encoded string representing bookingstore in JSON format",
+          "type": "string"
         },
-        "todo": {
-          "description": "TODO expand this type to have groups, pools, activities and bookings",
+        "pool": {
+          "description": "base64-encoded string representing PoolStore in JSON format",
           "type": "string"
         }
       }

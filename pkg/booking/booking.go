@@ -73,6 +73,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 	api.AdminExportPoolStoreHandler = admin.ExportPoolStoreHandlerFunc(exportPoolStore(ps, l))
 	api.AdminGetStoreStatusHandler = admin.GetStoreStatusHandlerFunc(getStoreStatus(ps, l))
 	api.AdminImportPoolStoreHandler = admin.ImportPoolStoreHandlerFunc(importPoolStore(ps, l))
+	api.AdminSetLockHandler = admin.SetLockHandlerFunc(setLock(ps, l))
 
 	// *** GROUPS *** //
 	api.GroupsAddNewGroupHandler = groups.AddNewGroupHandlerFunc(addNewGroup(ps))
