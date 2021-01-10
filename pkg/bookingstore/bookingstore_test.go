@@ -22,7 +22,7 @@ var debug bool
 
 func TestMain(m *testing.M) {
 	// Setup logging
-	debug = false
+	debug = true
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -382,7 +382,6 @@ func TestConfirmGetActivity(t *testing.T) {
 func TestImportExport(t *testing.T) {
 
 	// can mock time in this test
-	t.Parallel()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -407,6 +406,23 @@ func TestImportExport(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 2, l.GetUserSessionCount(u0))
 
+	// import and export!
+
+	if true {
+		b, err := l.ExportAll()
+
+		assert.NoError(t, err)
+
+		l, err = ImportAll(l, b)
+
+		l.SetNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+
+		assert.NoError(t, err)
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	fmt.Println("servicesContextSeenByTestRoutine", l.ctxServices)
 	// deny as at limit of 2
 	_, err = l.Request(u0, t0+600)
 	assert.Error(t, err)
@@ -428,5 +444,141 @@ func TestImportExport(t *testing.T) {
 	_, err = l.Request(u0, t0+600)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, l.GetUserSessionCount(u0))
+
+	if debug {
+		t.Log("----------TEST COMPLETED-------------")
+	}
+
+}
+
+func TestIndividualChildContextCancellation(t *testing.T) {
+	t.Parallel()
+	ctxP, cancelP := context.WithCancel(context.Background())
+	defer cancelP()
+
+	ctx0, cancel0 := context.WithCancel(ctxP)
+
+	ctx1, cancel1 := context.WithCancel(ctxP)
+	defer cancel1()
+
+	go func() {
+
+		select {
+
+		case <-time.After(time.Second):
+			t.Error("unexpected timeout ctx0")
+		case <-ctx0.Done():
+		}
+
+	}()
+
+	go func() {
+
+		select {
+
+		case <-time.After(time.Second):
+		case <-ctx1.Done():
+			t.Error("unexpected done ctx1")
+		}
+
+	}()
+
+	cancel0()
+
+	time.Sleep(2 * time.Second)
+
+}
+
+func TestIndividualChildContextCancellationInStruct(t *testing.T) {
+	t.Parallel()
+	ctxP, cancelP := context.WithCancel(context.Background())
+	defer cancelP()
+
+	ctx0, cancel0 := context.WithCancel(ctxP)
+
+	l := &Limit{}
+
+	l.ctxServices = ctx0
+	l.cancelServices = cancel0
+
+	ctx1, cancel1 := context.WithCancel(ctxP)
+
+	defer cancel1()
+
+	go func() {
+
+		select {
+
+		case <-time.After(time.Second):
+			t.Error("unexpected timeout ctx0")
+		case <-ctx0.Done():
+		}
+
+	}()
+
+	go func() {
+
+		select {
+
+		case <-time.After(time.Second):
+		case <-ctx1.Done():
+			t.Error("unexpected done ctx1")
+		}
+
+	}()
+
+	l.cancelServices()
+
+	time.Sleep(2 * time.Second)
+
+}
+
+func TestIndividualChildContextCancellationInStructSwap(t *testing.T) {
+
+	t.Parallel()
+
+	ctxP, cancelP := context.WithCancel(context.Background())
+	defer cancelP()
+
+	ctx0, cancel0 := context.WithCancel(ctxP)
+
+	l := &Limit{}
+
+	l.ctxServices = ctx0
+	l.cancelServices = cancel0
+
+	oldCancel := l.cancelServices
+
+	ctx1, cancel1 := context.WithCancel(ctxP)
+	l.ctxServices = ctx1
+	l.cancelServices = cancel1
+
+	defer cancel1()
+
+	go func() {
+
+		select {
+
+		case <-time.After(time.Second):
+			t.Error("unexpected timeout ctx0")
+		case <-ctx0.Done():
+		}
+
+	}()
+
+	go func() {
+
+		select {
+
+		case <-time.After(time.Second):
+		case <-ctx1.Done():
+			t.Error("unexpected done ctx1")
+		}
+
+	}()
+
+	oldCancel()
+
+	time.Sleep(2 * time.Second)
 
 }
