@@ -72,14 +72,14 @@ type Limit struct {
 	ProvisionalPeriod time.Duration `json:"provisionalPeriod"`
 
 	// register represents the channel over which booking confirmations are registered
-	register chan confirmation `json:"-"`
+	register chan confirmation
 
 	// ctx representst the cancellable context for the whole instance
-	ctx context.Context `json:"-"`
+	ctx context.Context
 
-	ctxServices context.Context `json:"-"`
+	ctxServices context.Context
 
-	cancelServices context.CancelFunc `json:"-"`
+	cancelServices context.CancelFunc
 
 	// Now represents a function that returns the current time (mockable for non-timer parts of
 	// of the package)
@@ -90,7 +90,10 @@ type Limit struct {
 // hourly flushing to avoid memory leakage
 func New(ctx context.Context) *Limit {
 
-	ctxServices, cancelServices := context.WithCancel(ctx)
+	// value for debugging context swaps...
+	ctxNew := context.WithValue(ctx, "id", uuid.New().String()[0:6])
+
+	ctxServices, cancelServices := context.WithCancel(ctxNew)
 
 	l := &Limit{
 		Mutex:             &sync.Mutex{},
@@ -110,8 +113,7 @@ func New(ctx context.Context) *Limit {
 		Now:               func() int64 { return time.Now().Unix() },
 	}
 
-	go l.handleRegister()
-
+	go l.handleRegister(ctxServices)
 	return l
 }
 
@@ -120,46 +122,52 @@ func (l *Limit) ExportAll() ([]byte, error) {
 }
 
 // ImportAll takes the booking store marshalled into b as our new bookingstore
-// you must be able to cancel the existing context for the
-func (l *Limit) ImportAll(b []byte) error {
+// manage pointer scope by making this return the pointer
+// for the calling function to replace the poolstore pointer with
+func ImportAll(l *Limit, b []byte) (*Limit, error) {
 
 	new := &Limit{}
 
 	err := json.Unmarshal(b, new)
 
 	if err != nil {
-		return err
+		log.WithFields(log.Fields{"source": "bookingstore", "event": "import:marshal:error", "error": err.Error()}).Trace("bookingstore:import:marshal:error")
+		return nil, err
 	}
 
-	new.PostImportEssential()
+	log.WithFields(log.Fields{"source": "bookingstore", "event": "import:marshal:ok"}).Trace("bookingstore:import:marshal:ok")
+	// pass in the parent context which we
+	// are keeping
+	new.PostImportEssential(l.ctx)
 
+	// stop the old services - including any pending bookings.
 	l.cancelServices()
 
-	l = new
-
-	return nil
+	return new, nil
 }
 
 // PostImportEssential sets up mutexes and Now() functions
 // Assume the original bookingstore context was cancelled
 // so as to stop the registerhandler and flush....
-func (l *Limit) PostImportEssential() {
+func (l *Limit) PostImportEssential(ctx context.Context) {
 	l.Mutex = &sync.Mutex{}
 	l.register = make(chan confirmation)
-	ctxServices, cancelServices := context.WithCancel(l.ctx)
+	ctxNew := context.WithValue(ctx, "id", uuid.New().String()[0:6])
+	ctxServices, cancelServices := context.WithCancel(ctxNew)
 	l.ctxServices = ctxServices
 	l.cancelServices = cancelServices
-	go l.handleRegister()
+	go l.handleRegister(ctxServices)
 }
 
 // handleRegister handles booking confirmations and should be run in one separate goro
 // it must also have its own context so we can stop and start it for import.
-func (l *Limit) handleRegister() {
-	log.WithFields(log.Fields{"source": "bookingstore", "event": "confirm:start"}).Trace("bookstore:confirm:start")
+func (l *Limit) handleRegister(ctx context.Context) {
+
+	log.WithFields(log.Fields{"source": "bookingstore", "event": "confirm:start", "ctx": ctx.Value("id")}).Trace("bookstore:confirm:start")
 	for {
 		select {
-		case <-l.ctxServices.Done():
-			log.WithFields(log.Fields{"source": "bookingstore", "event": "confirm:stop"}).Trace("bookingstore:confirm:stop")
+		case <-ctx.Done():
+			log.WithFields(log.Fields{"source": "bookingstore", "event": "confirm:stop", "ctx": ctx.Value("id")}).Trace("bookingstore:confirm:stop")
 			return
 		case c := <-l.register:
 
@@ -177,6 +185,7 @@ func (l *Limit) handleRegister() {
 					"sessionID":  c.sessionID,
 					"expiresAt":  c.expiresAt,
 					"activityID": "",
+					"ctx":        ctx.Value("id"),
 				}
 				log.WithFields(lf).Trace("bookingstore:confirm:activity:nil")
 				continue
@@ -203,6 +212,7 @@ func (l *Limit) handleRegister() {
 				"sessionID":  c.sessionID,
 				"expiresAt":  c.expiresAt,
 				"activityID": ID,
+				"ctx":        ctx.Value("id"),
 			}
 			log.WithFields(lf).Trace("bookingstore:confirm:activity:ok")
 		}
@@ -286,6 +296,12 @@ func (l *Limit) WithNow(now func() int64) *Limit {
 	defer l.Unlock()
 	l.Now = now
 	return l
+}
+
+func (l *Limit) SetNow(now func() int64) {
+	l.Lock()
+	defer l.Unlock()
+	l.Now = now
 }
 
 func (l *Limit) LockBookings() {
@@ -466,7 +482,7 @@ func (l *Limit) confirm(confirm chan struct{}, userID, sessionID string, expires
 }
 
 // autoDelete handles the cancellation of a provisional session
-func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID string) {
+func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID string, ctx context.Context) {
 
 	cancelFunc := func() {
 
@@ -478,6 +494,7 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 			"event":     "request:provisional:autoDelete:deleteBooking",
 			"who":       userID,
 			"sessionID": sessionID,
+			"ctx":       ctx.Value("id"),
 		}
 
 		sessions := l.Sessions
@@ -510,13 +527,14 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 		cancelFunc()
 		return
 
-	case <-l.ctxServices.Done():
+	case <-ctx.Done():
 		// done because server shut down
 		lf := log.Fields{
 			"source":    "bookingstore",
 			"event":     "request:provisional:autoDelete:contextCancelledBeforeDecision",
 			"who":       userID,
 			"sessionID": sessionID,
+			"ctx":       ctx.Value("id"),
 		}
 		log.WithFields(lf).Trace("bookingstore:request:provisional:autoDelete:contextCancelledBeforeDecision")
 		return
@@ -530,6 +548,7 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 			"event":     "request:provisional:autoDelete:keepBooking",
 			"who":       userID,
 			"sessionID": sessionID,
+			"ctx":       ctx.Value("id"),
 		}
 		log.WithFields(lf).Trace("bookingstore:request:provisional:autoDelete:keepBooking")
 		return
@@ -618,7 +637,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 	}
 	log.WithFields(lf).Debug("bookingstore:request:provisional:granted")
 
-	go l.autoDelete(cancel, confirm, userID, sessionID)
+	go l.autoDelete(cancel, confirm, userID, sessionID, l.ctxServices)
 	return cancelFunc, l.confirm(confirm, userID, sessionID, exp), sessionID, nil
 }
 
