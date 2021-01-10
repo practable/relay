@@ -95,6 +95,8 @@ func (l *Limit) handleRegister() {
 				l.lastBookingEnds = c.expiresAt
 			}
 
+			l.userBySession[c.sessionID] = c.userID
+
 			if c.activity == nil {
 				lf := log.Fields{
 					"source":     "bookingstore",
@@ -107,6 +109,7 @@ func (l *Limit) handleRegister() {
 				log.WithFields(lf).Trace("bookingstore:confirm:activity:nil")
 				continue
 			}
+
 			if _, ok := l.activities[c.userID]; !ok {
 				l.activities[c.userID] = make(map[string]*models.Activity)
 			}
@@ -118,6 +121,9 @@ func (l *Limit) handleRegister() {
 			if c.activity.Description != nil {
 				ID = c.activity.Description.ID
 			}
+
+			l.activityBySession[c.sessionID] = c.activity
+
 			lf := log.Fields{
 				"source":     "bookingstore",
 				"event":      "confirm:activity:nil",
