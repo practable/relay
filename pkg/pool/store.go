@@ -18,6 +18,56 @@ func NewPoolStore() *PoolStore {
 	}
 }
 
+// PostImportEssential sets up mutexes and Now() functions
+func (p *PoolStore) PostImportEssential() {
+	// we're creating mutexes for first time, so we
+	// don't need to take the lock just now.
+	// This should be done before making
+	// this the "live" PoolStore or else
+	// other conurrent handlers will try to take
+	// locks with pointers to mutexes that don't exist...
+	// TODO ... consider stopping other handlers during import.
+	// Could set a flag for validateHeader ...
+	// risk locking ourselves out though... TBC ....
+
+	// PoolStore
+	p.RWMutex = &sync.RWMutex{}
+	p.Now = func() int64 { return time.Now().Unix() }
+
+	// Groups
+	for _, g := range p.Groups {
+		g.RWMutex = &sync.RWMutex{}
+	}
+
+	// Pools -> Activities -> Streams
+	for _, pool := range p.Pools {
+		pool.RWMutex = &sync.RWMutex{}
+		pool.Now = func() int64 { return time.Now().Unix() }
+
+		for _, act := range pool.Activities {
+			act.RWMutex = &sync.RWMutex{}
+
+			for _, s := range act.Streams {
+				s.RWMutex = &sync.RWMutex{}
+			}
+		}
+	}
+}
+
+// PostImportSetNow applies a custom Now() func to the poolstore
+// and all pools - useful for mocking time in tests which
+// involve import/export
+func (p *PoolStore) PostImportSetNow(now func() int64) {
+	p.Lock()
+	defer p.Unlock()
+	p.Now = now
+	for _, pool := range p.Pools {
+		pool.Lock()
+		pool.Now = now
+		pool.Unlock()
+	}
+}
+
 func (p *PoolStore) WithSecret(secret string) *PoolStore {
 	p.Lock()
 	defer p.Unlock()
@@ -159,6 +209,18 @@ func (p *PoolStore) GetAllPools() []*Pool {
 		pools = append(pools, p)
 	}
 	return pools
+}
+
+func (p *PoolStore) GetAllPoolCount() int {
+	p.RLock()
+	defer p.RUnlock()
+	return len(p.Pools)
+}
+
+func (p *PoolStore) GetAllGroupsCount() int {
+	p.RLock()
+	defer p.RUnlock()
+	return len(p.Groups)
 }
 
 func (p *PoolStore) GetAllPoolIDs() []string {
