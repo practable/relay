@@ -338,9 +338,18 @@ func requestSessionByPoolID(ps *pool.PoolStore, l *bookingstore.Limit) func(para
 		cancelBooking, confirmBooking, sID, err := l.ProvisionalRequest(claims.Subject, exp)
 
 		if err != nil {
+
+			event := "requestSession:activityRequest:overLimit"
+			msg := "Maximum concurrent sessions already reached. Try again later."
+
+			if err.Error() == "denied: no new sessions allowed" {
+				event = "requestSession:activityRequest:denied:noNewSessionsAllowed"
+				msg = "No new sessions allowed. Try again later."
+			}
+
 			lf := log.Fields{
 				"source":    "booking",
-				"event":     "requestSession:activityRequest:overLimit",
+				"event":     event,
 				"poolID":    params.PoolID,
 				"userID":    claims.Subject,
 				"duration":  duration,
@@ -348,7 +357,7 @@ func requestSessionByPoolID(ps *pool.PoolStore, l *bookingstore.Limit) func(para
 				"error":     err.Error(),
 			}
 			log.WithFields(lf).Info("booking:requestSession:activityRequest:OverLimit")
-			return pools.NewRequestSessionByPoolIDPaymentRequired().WithPayload("Maximum conconcurrent sessions already reached. Try again later.")
+			return pools.NewRequestSessionByPoolIDPaymentRequired().WithPayload(msg)
 		}
 
 		aID, err := p.ActivityRequestAny(duration)

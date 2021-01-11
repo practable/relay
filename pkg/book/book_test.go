@@ -48,7 +48,7 @@ var bookingDuration, mocktime, startime int64
 // and re-emable this test after triaging your other issues.
 
 func init() {
-	debug = true
+	debug = false
 	if debug {
 		log.SetReportCaller(true)
 		log.SetLevel(log.TraceLevel)
@@ -861,12 +861,21 @@ func TestRequestSessionByPoolID(t *testing.T) {
 
 }
 
+//*******************************************************
+//  _____ ___ ___ _____   _    ___ __  __ ___ _____ ___
+// |_   _| __/ __|_   _| | |  |_ _|  \/  |_ _|_   _/ __|
+//   | | | _|\__ \ | |   | |__ | || |\/| || |  | | \__ \
+//   |_| |___|___/ |_|   |____|___|_|  |_|___| |_| |___/
+//
+//*******************************************************
+
 func TestLimits(t *testing.T) {
 	// minimal activity just for testing- less complete than you'd need in production
 	// note that stream order and activity order are not guaranteed - hence the
 	// conveniences taken in this test (which is checking limits, not token formation)
 
 	statusCodes := []int{}
+	expectedCodes := []int{}
 
 	name := "stuff"
 	g0 := pool.NewGroup(name)
@@ -941,18 +950,21 @@ func TestLimits(t *testing.T) {
 
 	mocktime = time.Now().Unix()
 
-	// login
+	//            _           _         _             _
+	//   __ _  __| |_ __ ___ (_)_ __   | | ___   __ _(_)_ __
+	//  / _` |/ _` | '_ ` _ \| | '_ \  | |/ _ \ / _` | | '_ \
+	// | (_| | (_| | | | | | | | | | | | | (_) | (_| | | | | |
+	//  \__,_|\__,_|_| |_| |_|_|_| |_| |_|\___/ \__, |_|_| |_|
+	//                                          |___/
+
 	loginClaims := &lit.Token{}
 	loginClaims.Audience = host
-	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
-	loginClaims.Scopes = []string{"login:user"}
+	loginClaims.Scopes = []string{"login:admin"}
 	loginClaims.IssuedAt = ps.GetTime() - 1
 	loginClaims.NotBefore = ps.GetTime() - 1
 	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
-	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
-	// Sign and get the complete encoded token as a string using the secret
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
 
@@ -964,10 +976,83 @@ func TestLimits(t *testing.T) {
 	req.Header.Add("Authorization", loginBearer)
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
+	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusOK)
 
 	body, err := ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	adminBearer := *(btr.Token)
+	//  _         _
+	// | |___  __| |__
+	// | / _ \/ _| / /
+	// |_\___/\__|_\_\
+	//
+	// lock
+
+	req, err = http.NewRequest("POST", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	q := req.URL.Query()
+	q.Add("lock", "true")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusOK)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms := &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	assert.Equal(t, true, ms.Locked)
+
+	//                     _           _
+	//  _  _ ___ ___ _ _  | |___  __ _(_)_ _
+	// | || (_-</ -_) '_| | / _ \/ _` | | ' \
+	//  \_,_/__/\___|_|   |_\___/\__, |_|_||_|
+	//                           |___/
+	//
+	// user login
+
+	loginClaims = &lit.Token{}
+	loginClaims.Audience = host
+	//check that missing group "everyone" in PoolStore does not stop login
+	loginClaims.Groups = []string{name, "everyone"}
+	loginClaims.Scopes = []string{"login:user"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	// sign user token
+	loginToken = jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	// Sign and get the complete encoded token as a string using the secret
+	loginBearer, err = loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	mocktime = time.Now().Unix()
+
+	client = &http.Client{}
+	req, err = http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusOK)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr = &models.Bookingtoken{}
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
@@ -989,15 +1074,78 @@ func TestLimits(t *testing.T) {
 
 	assert.Equal(t, []string{p0.ID}, claims.Pools)
 
-	// request an activity...
+	//  _              __        __      _ _
+	// | |_ _ _ _  _  / _|___   / _|__ _(_) |
+	// |  _| '_| || | > _|_ _| |  _/ _` | | |
+	//  \__|_|  \_, | \_____|  |_| \__,_|_|_|
+	//          |__/
+	//
+	// try & fail
+
 	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
 	assert.NoError(t, err)
-	q := req.URL.Query()
+	q = req.URL.Query()
 	q.Add("duration", "2000")
 	req.URL.RawQuery = q.Encode()
 	req.Header.Add("Authorization", bookingBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
+
+	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusPaymentRequired)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "\"No new sessions allowed. Try again later.\"\n", string(body))
+
+	assert.Equal(t, http.StatusPaymentRequired, resp.StatusCode)
+
+	//            _         _
+	//  _  _ _ _ | |___  __| |__
+	// | || | ' \| / _ \/ _| / /
+	//  \_,_|_||_|_\___/\__|_\_\
+	//
+	// unlock
+
+	req, err = http.NewRequest("POST", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("lock", "false")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusOK)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms = &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	assert.Equal(t, false, ms.Locked)
+
+	//                           _             _   _     _ _
+	//  _ _ ___ __ _ _  _ ___ __| |_   __ _ __| |_(_)_ _(_) |_ _  _
+	// | '_/ -_) _` | || / -_|_-<  _| / _` / _|  _| \ V / |  _| || |
+	// |_| \___\__, |\_,_\___/__/\__| \__,_\__|\__|_|\_/|_|\__|\_, |
+	//            |_|                                          |__/
+	//
+	// request an activity...
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	q.Add("duration", "2000")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusOK)
 
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
@@ -1040,6 +1188,7 @@ func TestLimits(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusOK)
 
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
@@ -1077,16 +1226,20 @@ func TestLimits(t *testing.T) {
 		t.Error("didn't get the right permission tokens - did we get the same activity twice?")
 	}
 
-	// Now let's try being a different user - we should get a 404 not found (no kit left)
-	// by logging in again we'll get a different randomly assigned user id
+	// Now let's try being a different user -
 	req, err = http.NewRequest("POST", host+"/api/v1/login", nil)
 	assert.NoError(t, err)
 	req.Header.Add("Authorization", loginBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusOK)
+
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
+
 	btr2 := &models.Bookingtoken{}
 	err = json.Unmarshal(body, btr2)
 	assert.NoError(t, err)
@@ -1113,7 +1266,9 @@ func TestLimits(t *testing.T) {
 	assert.NotEqual(t, claims.Subject, claims2.Subject)
 
 	// Make the request for the kit ...
-	// now request a second activity from the same user ...
+	// we should get a 404 not found (no kit left)
+	// but no payment required, because we're a different user
+	// with no bookings at present, so we are under quota
 	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
 	assert.NoError(t, err)
 	q = req.URL.Query()
@@ -1128,6 +1283,8 @@ func TestLimits(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	assert.Equal(t, "\"none available\"\n", string(body))
 	statusCodes = append(statusCodes, resp.StatusCode)
+	expectedCodes = append(expectedCodes, http.StatusNotFound)
+
 	// Now let's try being first user again - we should 402 payment required (reached quota)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+p0.ID+"/sessions", nil)
 	assert.NoError(t, err)
@@ -1141,9 +1298,10 @@ func TestLimits(t *testing.T) {
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusPaymentRequired, resp.StatusCode)
-	assert.Equal(t, "\"Maximum conconcurrent sessions already reached. Try again later.\"\n", string(body))
+	assert.Equal(t, "\"Maximum concurrent sessions already reached. Try again later.\"\n", string(body))
 	statusCodes = append(statusCodes, resp.StatusCode)
-	assert.Equal(t, []int{200, 200, 404, 402}, statusCodes)
+	expectedCodes = append(expectedCodes, http.StatusPaymentRequired)
+	assert.Equal(t, expectedCodes, statusCodes)
 }
 
 func TestAddNewPool(t *testing.T) {
@@ -1858,7 +2016,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusPaymentRequired, resp.StatusCode)
-	assert.Equal(t, "\"Maximum conconcurrent sessions already reached. Try again later.\"\n", string(body))
+	assert.Equal(t, "\"Maximum concurrent sessions already reached. Try again later.\"\n", string(body))
 	statusCodes = append(statusCodes, resp.StatusCode)
 	assert.Equal(t, []int{200, 200, 404, 402}, statusCodes)
 
@@ -2318,7 +2476,7 @@ func TestImportExportPoolStore(t *testing.T) {
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusPaymentRequired, resp.StatusCode)
-	assert.Equal(t, "\"Maximum conconcurrent sessions already reached. Try again later.\"\n", string(body))
+	assert.Equal(t, "\"Maximum concurrent sessions already reached. Try again later.\"\n", string(body))
 	statusCodes = append(statusCodes, resp.StatusCode)
 	assert.Equal(t, []int{200, 200, 404, 402}, statusCodes)
 
