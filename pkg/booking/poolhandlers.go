@@ -106,13 +106,50 @@ func addNewPool(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principa
 
 func deleteActivityByID(ps *pool.PoolStore) func(pools.DeleteActivityByIDParams, interface{}) middleware.Responder {
 	return func(params pools.DeleteActivityByIDParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation pools.DeleteActivityByID has not yet been implemented")
+		_, err := isBookingAdmin(principal)
+
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload(err.Error())
+		}
+
+		if params.ActivityID == "" || params.PoolID == "" {
+			return pools.NewDeleteActivityByIDNotFound()
+		}
+
+		p, err := ps.GetPoolByID(params.PoolID)
+		if err != nil {
+			return pools.NewDeleteActivityByIDNotFound()
+		}
+
+		a, err := p.GetActivityByID(params.ActivityID)
+
+		if err != nil {
+			return pools.NewDeleteActivityByIDNotFound()
+		}
+
+		p.DeleteActivity(a)
+
+		return pools.NewDeleteActivityByIDNotFound()
+
 	}
 }
 
 func deletePool(ps *pool.PoolStore) func(pools.DeletePoolParams, interface{}) middleware.Responder {
 	return func(params pools.DeletePoolParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation pools.DeletePool has not yet been implemented")
+		_, err := isBookingAdmin(principal)
+
+		if err != nil {
+			return pools.NewRequestSessionByPoolIDUnauthorized().WithPayload(err.Error())
+		}
+
+		p, err := ps.GetPoolByID(params.PoolID)
+		if err != nil {
+			return pools.NewDeleteActivityByIDNotFound()
+		}
+
+		ps.DeletePool(p)
+
+		return pools.NewDeletePoolNotFound()
 	}
 }
 

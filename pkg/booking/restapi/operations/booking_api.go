@@ -62,6 +62,9 @@ func NewBookingAPI(spec *loads.Document) *BookingAPI {
 		PoolsDeleteActivityByIDHandler: pools.DeleteActivityByIDHandlerFunc(func(params pools.DeleteActivityByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.DeleteActivityByID has not yet been implemented")
 		}),
+		GroupsDeleteGroupHandler: groups.DeleteGroupHandlerFunc(func(params groups.DeleteGroupParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.DeleteGroup has not yet been implemented")
+		}),
 		PoolsDeletePoolHandler: pools.DeletePoolHandlerFunc(func(params pools.DeletePoolParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.DeletePool has not yet been implemented")
 		}),
@@ -171,6 +174,8 @@ type BookingAPI struct {
 	GroupsAddPoolsByGroupIDHandler groups.AddPoolsByGroupIDHandler
 	// PoolsDeleteActivityByIDHandler sets the operation handler for the delete activity by ID operation
 	PoolsDeleteActivityByIDHandler pools.DeleteActivityByIDHandler
+	// GroupsDeleteGroupHandler sets the operation handler for the delete group operation
+	GroupsDeleteGroupHandler groups.DeleteGroupHandler
 	// PoolsDeletePoolHandler sets the operation handler for the delete pool operation
 	PoolsDeletePoolHandler pools.DeletePoolHandler
 	// GroupsDeletePoolsByGroupIDHandler sets the operation handler for the delete pools by group ID operation
@@ -299,6 +304,9 @@ func (o *BookingAPI) Validate() error {
 	}
 	if o.PoolsDeleteActivityByIDHandler == nil {
 		unregistered = append(unregistered, "pools.DeleteActivityByIDHandler")
+	}
+	if o.GroupsDeleteGroupHandler == nil {
+		unregistered = append(unregistered, "groups.DeleteGroupHandler")
 	}
 	if o.PoolsDeletePoolHandler == nil {
 		unregistered = append(unregistered, "pools.DeletePoolHandler")
@@ -468,6 +476,10 @@ func (o *BookingAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/pools/{pool_id}/activities/{activity_id}"] = pools.NewDeleteActivityByID(o.context, o.PoolsDeleteActivityByIDHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/groups/{group_id}"] = groups.NewDeleteGroup(o.context, o.GroupsDeleteGroupHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}

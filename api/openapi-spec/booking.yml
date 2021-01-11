@@ -176,7 +176,7 @@ paths:
       - application/json
       parameters:
       - in: body
-        name: pool
+        name: group
         required: true
         schema:
           $ref: '#/definitions/group'     
@@ -194,9 +194,35 @@ paths:
           description: ''
           schema: {}
 
-          
-          
   /groups/{group_id}:
+    
+    delete:
+      description: Delete this group, but not the pools associated with it.
+      summary: groups
+      tags:
+      - groups
+      operationId: deleteGroup
+      deprecated: false
+      produces:
+      - application/json
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        type: string
+        description: ''
+      security:
+        - Bearer: []  
+      responses:
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+        500:
+          description: ''
+          schema: {}
+          
     get:
       description: Gets a description of a group
       summary: groups
@@ -222,6 +248,9 @@ paths:
           headers: {}
         401:
           description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
           schema: {}
         500:
           description: ''
@@ -918,6 +947,7 @@ definitions:
         type: array
         items:
           type: string
+          description: poolIDs to add to the group
     required:
     - description
       

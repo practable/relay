@@ -36,7 +36,7 @@ type AddNewGroupParams struct {
 	  Required: true
 	  In: body
 	*/
-	Pool *models.Group
+	Group *models.Group
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -53,9 +53,9 @@ func (o *AddNewGroupParams) BindRequest(r *http.Request, route *middleware.Match
 		var body models.Group
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("pool", "body", ""))
+				res = append(res, errors.Required("group", "body", ""))
 			} else {
-				res = append(res, errors.NewParseError("pool", "body", "", err))
+				res = append(res, errors.NewParseError("group", "body", "", err))
 			}
 		} else {
 			// validate body object
@@ -64,11 +64,11 @@ func (o *AddNewGroupParams) BindRequest(r *http.Request, route *middleware.Match
 			}
 
 			if len(res) == 0 {
-				o.Pool = &body
+				o.Group = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("pool", "body", ""))
+		res = append(res, errors.Required("group", "body", ""))
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

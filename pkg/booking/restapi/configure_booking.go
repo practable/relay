@@ -78,6 +78,11 @@ func configureAPI(api *operations.BookingAPI) http.Handler {
 			return middleware.NotImplemented("operation pools.DeleteActivityByID has not yet been implemented")
 		})
 	}
+	if api.GroupsDeleteGroupHandler == nil {
+		api.GroupsDeleteGroupHandler = groups.DeleteGroupHandlerFunc(func(params groups.DeleteGroupParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation groups.DeleteGroup has not yet been implemented")
+		})
+	}
 	if api.PoolsDeletePoolHandler == nil {
 		api.PoolsDeletePoolHandler = pools.DeletePoolHandlerFunc(func(params pools.DeletePoolParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.DeletePool has not yet been implemented")
