@@ -45,31 +45,31 @@ type Limit struct {
 	// lastFlush represents the last time a FlushAll() was done
 	// There is no point in flushing more often than the clock granularity
 	// of one second
-	LastFlush int64 `json:"lastFlush"`
+	LastFlush *int64 `json:"lastFlush"`
 
 	// lastBookingEnds represents the expiry time of the longest running session
 	// when new bookings are confirmed, this is updated
-	LastBookingEnds int64 `json:"lastBookingEnds"`
+	LastBookingEnds *int64 `json:"lastBookingEnds"`
 
 	// max represents the per-user maximum number of concurrent sessions
 	// there is no limit on historical usage within this package
-	Max int `json:"max"`
+	Max *int `json:"max"`
 
 	// lockBookings represents whether there is a lock on bookings
 	// locking bookings prevents new bookings, letting
 	// existing bookings continue
-	Locked bool `json:"lockBookings"`
+	Locked *bool `json:"lockBookings"`
 
 	// flusInterval represents the time delay between automated FlushAll calls
 	// these are intended to prevent inadvertent memory leakage
-	FlushInterval time.Duration `json:"flushInterval"`
+	FlushInterval *time.Duration `json:"flushInterval"`
 
 	// provisionalPeriod represents the time that a booking can remain unresolved
 	// into a cancellation or a confirmation with an activity
 	// failing to either cancel or confirm, results in the user being treated
 	// as if they confirmed the booking, in terms of quota, but they cannot
 	// access the activity details again.
-	ProvisionalPeriod time.Duration `json:"provisionalPeriod"`
+	ProvisionalPeriod *time.Duration `json:"provisionalPeriod"`
 
 	// register represents the channel over which booking confirmations are registered
 	register chan confirmation
@@ -118,21 +118,28 @@ func New(ctx context.Context) *Limit {
 
 	ctxServices, cancelServices := context.WithCancel(ctxNew)
 
+	now := time.Now().Unix()
+	max := 2
+	flush := time.Hour
+	prov := time.Hour
+	locked := false
+	lastFlush := time.Now().Unix() - 1
 	l := &Limit{
 		Mutex:             &sync.Mutex{},
 		Activities:        make(map[string]map[string]*models.Activity),
 		Sessions:          make(map[string]map[string]int64),
 		ActivityBySession: make(map[string]*models.Activity),
 		UserBySession:     make(map[string]string),
-		Max:               2,
-		FlushInterval:     time.Hour,
-		ProvisionalPeriod: time.Hour,
+		Max:               &max,
+		FlushInterval:     &flush,
+		ProvisionalPeriod: &prov,
 		register:          make(chan confirmation),
-		Locked:            false,
+		Locked:            &locked,
 		ctx:               ctx,
 		ctxServices:       ctxServices,
 		cancelServices:    cancelServices,
-		LastBookingEnds:   time.Now().Unix(),
+		LastBookingEnds:   &now,
+		LastFlush:         &lastFlush,
 		Now:               func() int64 { return time.Now().Unix() },
 	}
 
@@ -173,6 +180,38 @@ func ImportAll(l *Limit, b []byte) (*Limit, error) {
 // Assume the original bookingstore context was cancelled
 // so as to stop the registerhandler and flush....
 func (l *Limit) PostImportEssential(ctx context.Context) {
+
+	// check for nil pointers and fix with default values
+	if l.LastFlush == nil {
+		lastFlush := time.Now().Unix() - 1
+		l.LastFlush = &lastFlush
+	}
+
+	if l.LastBookingEnds == nil {
+		lbe := time.Now().Unix()
+		l.LastBookingEnds = &lbe
+	}
+
+	if l.Max == nil {
+		max := int64(2)
+		l.LastBookingEnds = &max
+	}
+
+	if l.ProvisionalPeriod == nil {
+		prov := time.Hour
+		l.ProvisionalPeriod = &prov
+	}
+
+	if l.FlushInterval == nil {
+		flush := time.Hour
+		l.FlushInterval = &flush
+	}
+
+	if l.Locked == nil {
+		locked := false
+		l.Locked = &locked
+	}
+
 	l.Mutex = &sync.Mutex{}
 	l.register = make(chan confirmation)
 	ctxNew := context.WithValue(ctx, "id", uuid.New().String()[0:6])
@@ -195,8 +234,17 @@ func (l *Limit) handleRegister(ctx context.Context) {
 			return
 		case c := <-l.register:
 
-			if c.expiresAt > l.LastBookingEnds {
-				l.LastBookingEnds = c.expiresAt
+			if c.expiresAt > *l.LastBookingEnds {
+				lf := log.Fields{
+					"source": "bookingstore",
+					"event":  "confirm:updateLastBookingEnds",
+					"ctx":    ctx.Value("id"),
+					"old":    *l.LastBookingEnds,
+					"new":    c.expiresAt,
+				}
+				log.WithFields(lf).Trace("bookingstore:confirm:updateLastBookingEnds")
+				*l.LastBookingEnds = c.expiresAt
+
 			}
 
 			l.UserBySession[c.sessionID] = c.userID
@@ -258,7 +306,7 @@ func (l *Limit) WithFlush(interval time.Duration) *Limit {
 	l.Lock()
 	defer l.Unlock()
 
-	l.FlushInterval = interval
+	*l.FlushInterval = interval
 
 	go func() {
 
@@ -277,7 +325,7 @@ func (l *Limit) WithFlush(interval time.Duration) *Limit {
 				}
 				log.WithFields(lf).Trace("bookingstore:withFlush:stop")
 				return
-			case <-time.After(l.FlushInterval):
+			case <-time.After(*l.FlushInterval):
 				lf := log.Fields{
 					"source": "bookingstore",
 					"event":  "withFlush:flushAll",
@@ -300,7 +348,7 @@ func (l *Limit) WithProvisionalPeriod(interval time.Duration) *Limit {
 	l.Lock()
 	defer l.Unlock()
 
-	l.ProvisionalPeriod = interval
+	*l.ProvisionalPeriod = interval
 
 	return l
 }
@@ -309,7 +357,7 @@ func (l *Limit) WithProvisionalPeriod(interval time.Duration) *Limit {
 func (l *Limit) WithMax(max int) *Limit {
 	l.Lock()
 	defer l.Unlock()
-	l.Max = max
+	*l.Max = max
 	return l
 }
 
@@ -332,21 +380,21 @@ func (l *Limit) LockBookings() {
 	l.Lock()
 	defer l.Unlock()
 
-	l.Locked = true
+	*l.Locked = true
 }
 
 func (l *Limit) UnlockBookings() {
 	l.Lock()
 	defer l.Unlock()
 
-	l.Locked = false
+	*l.Locked = false
 }
 
 func (l *Limit) GetLockBookings() bool {
 	l.Lock()
 	defer l.Unlock()
 
-	return l.Locked
+	return *l.Locked
 }
 
 // GetUserActivities provides pointers to all of a users activities, so that
@@ -389,8 +437,7 @@ func (l *Limit) GetAllActivitiesCount() int {
 func (l *Limit) GetLastBookingEnds() int64 {
 	l.Lock()
 	defer l.Unlock()
-
-	return l.LastBookingEnds
+	return *l.LastBookingEnds
 }
 
 // Get all sessionCount is primarily an admin function
@@ -435,7 +482,7 @@ func (l *Limit) FlushAll() {
 	l.Lock()
 	defer l.Unlock()
 
-	timeSinceLastFlush := time.Now().Unix() - l.LastFlush
+	timeSinceLastFlush := time.Now().Unix() - *l.LastFlush
 
 	if timeSinceLastFlush < 1 { // nothing has changed within the last second.
 		return
@@ -446,7 +493,7 @@ func (l *Limit) FlushAll() {
 		l.flushUser(userID)
 	}
 
-	l.LastFlush = time.Now().Unix()
+	*l.LastFlush = time.Now().Unix()
 }
 
 // flushUser removes stale entries from all maps
@@ -545,7 +592,7 @@ func (l *Limit) autoDelete(cancel, confirm chan struct{}, userID, sessionID stri
 		cancelFunc()
 		return
 
-	case <-time.After(l.ProvisionalPeriod):
+	case <-time.After(*l.ProvisionalPeriod):
 		// prevent leakage if api handler stalls before
 		// confirming or cancelling
 		cancelFunc()
@@ -601,7 +648,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 	}
 
 	// no sessions allowed?
-	if l.Max < 1 || l.Locked {
+	if *l.Max < 1 || *l.Locked {
 		lf := log.Fields{
 			"source": "bookingstore",
 			"event":  "request:provisional:denied:noNewSessionsAllowed",
@@ -631,7 +678,7 @@ func (l *Limit) ProvisionalRequest(userID string, exp int64) (func(), func(activ
 	// user session count
 	usc := len(l.Sessions[userID])
 
-	if usc >= l.Max {
+	if usc >= *l.Max {
 
 		lf := log.Fields{
 			"source":           "bookingstore",

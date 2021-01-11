@@ -48,7 +48,7 @@ var bookingDuration, mocktime, startime int64
 // and re-emable this test after triaging your other issues.
 
 func init() {
-	debug = false
+	debug = true
 	if debug {
 		log.SetReportCaller(true)
 		log.SetLevel(log.TraceLevel)
