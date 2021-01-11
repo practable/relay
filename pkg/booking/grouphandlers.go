@@ -39,6 +39,8 @@ func addNewGroup(ps *pool.PoolStore) func(groups.AddNewGroupParams, interface{})
 		g.SetNewRandomID()
 		g.SetPools(pools)
 
+		ps.AddGroup(g)
+
 		mid := &models.ID{
 			ID: &g.ID,
 		}

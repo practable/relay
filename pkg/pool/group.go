@@ -74,9 +74,7 @@ func (g *Group) WithPool(pool *Pool) *Group {
 func (g *Group) SetPools(pools []*Pool) {
 	g.Lock()
 	defer g.Unlock()
-	p := g.Pools
-	p = append(p, pools...)
-	g.Pools = p
+	g.Pools = pools
 }
 
 func (g *Group) WithPools(pools []*Pool) *Group {
