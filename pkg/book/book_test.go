@@ -27,6 +27,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/pool"
 	"github.com/timdrysdale/relay/pkg/util"
+	"github.com/xtgo/uuid"
 )
 
 var debug bool
@@ -1361,7 +1362,6 @@ func TestAddNewPool(t *testing.T) {
 		MinSession:  60,
 		MaxSession:  7201,
 	}
-	// Now login again with booking token in body and see that subject is retained
 
 	reqBody, err := json.Marshal(p)
 	assert.NoError(t, err)
@@ -2031,10 +2031,16 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 //         |_|                         |_|
 //
 //
+//   ___ ___ _____   ___  ___   ___  _  _____ _  _  ___ ___
+//  / __| __|_   _| | _ )/ _ \ / _ \| |/ /_ _| \| |/ __/ __|
+// | (_ | _|  | |   | _ \ (_) | (_) | ' < | || .` | (_ \__ \
+//  \___|___| |_|   |___/\___/ \___/|_|\_\___|_|\_|\___|___/
+//
+//
 //***********************************************************
 // http://patorjk.com/software/taag/#p=display&f=Small&t=import%20export
 
-func TestImportExportPoolStore(t *testing.T) {
+func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	veryVerbose := false
 	// Set up a Local pool, import via server, interact, export, check for bookings
@@ -2510,6 +2516,62 @@ func TestImportExportPoolStore(t *testing.T) {
 	assert.Equal(t, int64(1), ms.Pools)
 	assert.Equal(t, float64(mocktime+2000), ms.LastBookingEnds)
 
+	// 	   ___ ___ _____   ___  ___   ___  _  _____ _  _  ___ ___
+	//   / __| __|_   _| | _ )/ _ \ / _ \| |/ /_ _| \| |/ __/ __|
+	//  | (_ | _|  | |   | _ \ (_) | (_) | ' < | || .` | (_ \__ \
+	//   \___|___| |_|   |___/\___/ \___/|_|\_\___|_|\_|\___|___/
+	//
+	req, err = http.NewRequest("GET", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer) //different user this time
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	mb := &models.Bookings{}
+
+	err = json.Unmarshal(body, mb)
+	assert.NoError(t, err)
+
+	assert.Equal(t, int64(2), *mb.Max)
+	assert.Equal(t, 2, len(mb.Activities))
+
+	// Check that there is a proper permissions token in a stream
+	// While this is a necessary rather than a sufficient check
+	// it's a good start. TODO - make this check more complete in future
+	// so that we don't forget what we need in this and end up
+	// breaking the booking client (webapp)
+
+	act0 := mb.Activities[0]
+	stream0 := act0.Streams[0]
+
+	ptclaims = &permission.Token{}
+
+	streamToken, err = jwt.ParseWithClaims(*stream0.Token, ptclaims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method was %v", token.Header["alg"])
+		}
+		return []byte(ps.Secret), nil
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	stc, ok = streamToken.Claims.(*permission.Token)
+
+	assert.True(t, ok)
+
+	assert.True(t, stc.Topic == "foo" || stc.Topic == "bar")
+
+	if veryVerbose {
+		pretty, err = json.MarshalIndent(act0, "", "\t")
+		fmt.Println(string(pretty))
+	}
+
 	//   _____ ___ __  ___ _ _| |_
 	//  / -_) \ / '_ \/ _ \ '_|  _|
 	//  \___/_\_\ .__/\___/_|  \__|
@@ -2561,5 +2623,611 @@ func TestImportExportPoolStore(t *testing.T) {
 	assert.Equal(t, 2, len(exportedPool.Pools[p0.ID].Activities))
 	assert.Equal(t, 2, len(exportedBooking.ActivityBySession))
 	assert.Equal(t, 2, len(exportedBooking.UserBySession))
+
+}
+
+//********************************************************
+//    _   ___  ___    ___  ___ _    ___ _____ ___
+//   /_\ |   \|   \  |   \| __| |  | __|_   _| __|
+//  / _ \| |) | |) | | |) | _|| |__| _|  | | | _|
+// /_/ \_\___/|___/  |___/|___|____|___| |_| |___|
+//
+//
+//   ___ ___  ___  _   _ ___   ___  ___   ___  _
+//  / __| _ \/ _ \| | | | _ \ | _ \/ _ \ / _ \| |
+// | (_ |   / (_) | |_| |  _/ |  _/ (_) | (_) | |__
+//  \___|_|_\\___/_\___/|_|  _|_|_ \___/_\___/|____|
+//    /_\ / __|_   _|_ _\ \ / /_ _|_   _\ \ / /
+//   / _ \ (__  | |  | | \ V / | |  | |  \ V /
+//  /_/ \_\___| |_| |___| \_/ |___| |_|   |_|
+//
+//******************************************************
+func TestAddDeleteGroupPoolActivity(t *testing.T) {
+
+	veryVerbose := false
+	var pretty []byte
+
+	// Admin login
+
+	loginClaims := &lit.Token{}
+	loginClaims.Audience = host
+	loginClaims.Groups = []string{"everyone"}
+	loginClaims.Scopes = []string{"login:admin"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	mocktime = time.Now().Unix()
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	adminBearer := *(btr.Token)
+
+	token, err := jwt.ParseWithClaims(adminBearer, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	assert.NoError(t, err)
+
+	_, ok := token.Claims.(*lit.Token)
+	assert.True(t, ok)
+	assert.True(t, token.Valid)
+
+	/* Get the StoreStatus */
+	//     _                    _        _
+	//  __| |_ ___ _ _ ___   __| |_ __ _| |_ _  _ ___
+	// (_-<  _/ _ \ '_/ -_) (_-<  _/ _` |  _| || (_-<
+	// /__/\__\___/_| \___| /__/\__\__,_|\__|\_,_/__/
+	//
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms := &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		pretty, err = json.MarshalIndent(ms, "", "\t")
+		fmt.Println(string(pretty))
+	}
+
+	assert.Equal(t, int64(0), ms.Activities)
+	assert.Equal(t, int64(0), ms.Bookings)
+	assert.Equal(t, int64(0), ms.Groups)
+	assert.Equal(t, int64(0), ms.Pools)
+
+	//          _    _                  _
+	//  __ _ __| |__| |  _ __  ___  ___| |___
+	// / _` / _` / _` | | '_ \/ _ \/ _ \ (_-<
+	// \__,_\__,_\__,_| | .__/\___/\___/_/__/
+	//                  |_|
+	//
+
+	// make a description, post in body
+
+	further := "https://example.io/further.html"
+	image := "https://example.io/image.png"
+	long := "some long long long description"
+	name := "red"
+	short := "short story"
+	thumb := "https://example.io/thumb.png"
+	thistype := "pool"
+
+	d0 := models.Description{
+		Further: further,
+		Image:   image,
+		Long:    long,
+		Name:    &name,
+		Short:   short,
+		Thumb:   thumb,
+		Type:    &thistype,
+	}
+
+	p0 := models.Pool{
+		Description: &d0,
+		MinSession:  60,
+		MaxSession:  7201,
+	}
+
+	reqBody, err := json.Marshal(p0)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	pid := models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+
+	pid0 := *pid.ID
+	_, err = uuid.Parse(pid0)
+	assert.NoError(t, err)
+
+	further1 := "https://example.io/further1.html"
+	image1 := "https://example.io/image1.png"
+	long1 := "some long long long description1"
+	name1 := "red1"
+	short1 := "short story1"
+	thumb1 := "https://example.io/thumb1.png"
+	thistype1 := "pool"
+
+	d1 := models.Description{
+		Further: further1,
+		Image:   image1,
+		Long:    long1,
+		Name:    &name1,
+		Short:   short1,
+		Thumb:   thumb1,
+		Type:    &thistype1,
+	}
+
+	p1 := models.Pool{
+		Description: &d1,
+		MinSession:  60,
+		MaxSession:  7201,
+	}
+
+	reqBody, err = json.Marshal(p1)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	pid = models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+
+	pid1 := *pid.ID
+	_, err = uuid.Parse(pid1)
+	assert.NoError(t, err)
+
+	// 	          _    _
+	//   __ _ __| |__| |  __ _ _ _ ___ _  _ _ __
+	//  / _` / _` / _` | / _` | '_/ _ \ || | '_ \
+	//  \__,_\__,_\__,_| \__, |_| \___/\_,_| .__/
+	//                   |___/             |_|
+	//
+
+	further2 := "https://example.io/further2.html"
+	image2 := "https://example.io/image2.png"
+	long2 := "some long long long description2"
+	name2 := "red2"
+	short2 := "short story2"
+	thumb2 := "https://example.io/thumb2.png"
+	thistype2 := "group"
+
+	d2 := models.Description{
+		Further: further2,
+		Image:   image2,
+		Long:    long2,
+		Name:    &name2,
+		Short:   short2,
+		Thumb:   thumb2,
+		Type:    &thistype2,
+	}
+
+	pools := []string{pid0, pid1}
+
+	mg := models.Group{
+		Description: &d2,
+		Pools:       pools,
+	}
+
+	reqBody, err = json.Marshal(mg)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/groups", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
+	}
+
+	pid = models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+
+	gid := *pid.ID
+	_, err = uuid.Parse(gid)
+	assert.NoError(t, err)
+
+	/* Get the StoreStatus again */
+	//     _                    _        _
+	//  __| |_ ___ _ _ ___   __| |_ __ _| |_ _  _ ___
+	// (_-<  _/ _ \ '_/ -_) (_-<  _/ _` |  _| || (_-<
+	// /__/\__\___/_| \___| /__/\__\__,_|\__|\_,_/__/
+	//
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms = &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	if true {
+		pretty, err = json.MarshalIndent(ms, "", "\t")
+		fmt.Println(string(pretty))
+	}
+
+	assert.Equal(t, int64(0), ms.Activities)
+	assert.Equal(t, int64(0), ms.Bookings)
+	assert.Equal(t, int64(1), ms.Groups)
+	assert.Equal(t, int64(2), ms.Pools)
+
+	// Third Pool...
+
+	further3 := "https://example.io/further3.html"
+	image3 := "https://example.io/image3.png"
+	long3 := "some long long long description3"
+	name3 := "red3"
+	short3 := "short story3"
+	thumb3 := "https://example.io/thumb3.png"
+	thistype3 := "pool"
+
+	d3 := models.Description{
+		Further: further3,
+		Image:   image3,
+		Long:    long3,
+		Name:    &name3,
+		Short:   short3,
+		Thumb:   thumb3,
+		Type:    &thistype3,
+	}
+
+	p3 := models.Pool{
+		Description: &d3,
+		MinSession:  60,
+		MaxSession:  7201,
+	}
+
+	reqBody, err = json.Marshal(p3)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	pid = models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+
+	pid3 := *pid.ID
+	_, err = uuid.Parse(pid3)
+	assert.NoError(t, err)
+
+	// Add pool to group ...
+
+	ids := &models.IDList{pid3}
+
+	reqBody, err = json.Marshal(ids)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
+	}
+
+	pids := models.IDList{}
+	err = json.Unmarshal(body, &pids)
+	assert.NoError(t, err)
+
+	assert.True(t, util.SortCompare([]string{pid0, pid1, pid3}, pids))
+
+	// Get store....
+
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/poolstore", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	export := &models.Poolstore{}
+	err = json.Unmarshal(body, export)
+	assert.NoError(t, err)
+
+	poolBytes, err := base64.StdEncoding.DecodeString(*export.Pool)
+	assert.NoError(t, err)
+
+	bookingBytes, err := base64.StdEncoding.DecodeString(*export.Booking)
+	assert.NoError(t, err)
+
+	exportedPool := &pool.PoolStore{}
+
+	err = json.Unmarshal(poolBytes, exportedPool)
+	assert.NoError(t, err)
+
+	exportedBooking := &bookingstore.Limit{}
+
+	err = json.Unmarshal(bookingBytes, exportedBooking)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		prettyPool, err := json.MarshalIndent(exportedPool, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(prettyPool))
+	}
+
+	assert.Equal(t, 3, len(exportedPool.Groups[gid].Pools))
+
+	// Delete pool0 from the group (but keep the pool!!)
+
+	ids = &models.IDList{pid0}
+
+	reqBody, err = json.Marshal(ids)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("DELETE", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
+	}
+
+	pids = models.IDList{}
+	err = json.Unmarshal(body, &pids)
+	assert.NoError(t, err)
+
+	assert.True(t, util.SortCompare([]string{pid1, pid3}, pids))
+
+	// Check ... 2 pools in group, 3 pools in total still
+
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/poolstore", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	export = &models.Poolstore{}
+	err = json.Unmarshal(body, export)
+	assert.NoError(t, err)
+
+	poolBytes, err = base64.StdEncoding.DecodeString(*export.Pool)
+	assert.NoError(t, err)
+
+	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
+	assert.NoError(t, err)
+
+	exportedPool = &pool.PoolStore{}
+
+	err = json.Unmarshal(poolBytes, exportedPool)
+	assert.NoError(t, err)
+
+	exportedBooking = &bookingstore.Limit{}
+
+	err = json.Unmarshal(bookingBytes, exportedBooking)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		prettyPool, err := json.MarshalIndent(exportedPool, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(prettyPool))
+	}
+
+	assert.Equal(t, 2, len(exportedPool.Groups[gid].Pools))
+	assert.Equal(t, 3, len(exportedPool.Pools))
+
+	gpids := []string{}
+
+	for _, p := range exportedPool.Groups[gid].Pools {
+		gpids = append(gpids, p.ID)
+	}
+
+	assert.True(t, util.SortCompare([]string{pid1, pid3}, gpids))
+
+	// Now replace pid1, pid3 with pid0, pid3
+
+	ids = &models.IDList{pid0, pid3}
+
+	reqBody, err = json.Marshal(ids)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("PUT", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
+	}
+
+	pids = models.IDList{}
+	err = json.Unmarshal(body, &pids)
+	assert.NoError(t, err)
+
+	assert.True(t, util.SortCompare([]string{pid0, pid3}, pids))
+
+	// Check ... 2 pools in group, 3 pools in total still
+	// but that pools in group have swapped as required
+
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/poolstore", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	export = &models.Poolstore{}
+	err = json.Unmarshal(body, export)
+	assert.NoError(t, err)
+
+	poolBytes, err = base64.StdEncoding.DecodeString(*export.Pool)
+	assert.NoError(t, err)
+
+	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
+	assert.NoError(t, err)
+
+	exportedPool = &pool.PoolStore{}
+
+	err = json.Unmarshal(poolBytes, exportedPool)
+	assert.NoError(t, err)
+
+	exportedBooking = &bookingstore.Limit{}
+
+	err = json.Unmarshal(bookingBytes, exportedBooking)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		prettyPool, err := json.MarshalIndent(exportedPool, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(prettyPool))
+	}
+
+	assert.Equal(t, 2, len(exportedPool.Groups[gid].Pools))
+	assert.Equal(t, 3, len(exportedPool.Pools))
+
+	gpids = []string{}
+
+	for _, p := range exportedPool.Groups[gid].Pools {
+		gpids = append(gpids, p.ID)
+	}
+
+	assert.True(t, util.SortCompare([]string{pid0, pid3}, gpids))
+
+	// Delete pool1 altogether
+	req, err = http.NewRequest("DELETE", host+"/api/v1/pools/"+pid1, nil)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
+	}
+
+	// Check ... 2 pools in group, are same 2 pools in total now that p1 is gone
+
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/poolstore", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	export = &models.Poolstore{}
+	err = json.Unmarshal(body, export)
+	assert.NoError(t, err)
+
+	poolBytes, err = base64.StdEncoding.DecodeString(*export.Pool)
+	assert.NoError(t, err)
+
+	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
+	assert.NoError(t, err)
+
+	exportedPool = &pool.PoolStore{}
+
+	err = json.Unmarshal(poolBytes, exportedPool)
+	assert.NoError(t, err)
+
+	exportedBooking = &bookingstore.Limit{}
+
+	err = json.Unmarshal(bookingBytes, exportedBooking)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		prettyPool, err := json.MarshalIndent(exportedPool, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(prettyPool))
+	}
+
+	assert.Equal(t, 2, len(exportedPool.Groups[gid].Pools))
+	assert.Equal(t, 2, len(exportedPool.Pools))
+
+	gpids = []string{}
+
+	for _, p := range exportedPool.Groups[gid].Pools {
+		gpids = append(gpids, p.ID)
+	}
+
+	assert.True(t, util.SortCompare([]string{pid0, pid3}, gpids))
 
 }
