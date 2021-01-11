@@ -814,14 +814,14 @@ func TestRequestSessionByPoolID(t *testing.T) {
 		t.Fatal("no token returned")
 	}
 
-	streamTokenString0 := *((ma.Streams[0]).Token)
-	streamTokenString1 := *((ma.Streams[1]).Token)
+	streamTokenString0 := (ma.Streams[0]).Token
+	//streamTokenString1 := (ma.Streams[1]).Token
 
 	assert.Equal(t, "a", *(ma.Description.Name))
 	assert.Equal(t, 2, len(ma.Streams))
 	assert.Equal(t, 2, len(ma.Uis))
-	assert.Equal(t, "ey", (*((ma.Streams[0]).Token))[0:2])
-	assert.Equal(t, "ey", streamTokenString1[0:2])
+	//assert.Equal(t, "ey", ((ma.Streams[0]).Token))[0:2]
+	//assert.Equal(t, "ey", streamTokenString1[0:2])
 
 	ptclaims := &permission.Token{}
 
@@ -1159,7 +1159,7 @@ func TestLimits(t *testing.T) {
 		t.Fatal("no token returned")
 	}
 
-	streamTokenString0 := *((ma.Streams[0]).Token)
+	streamTokenString0 := (ma.Streams[0]).Token
 
 	ptclaims := &permission.Token{}
 
@@ -1202,7 +1202,7 @@ func TestLimits(t *testing.T) {
 		t.Fatal("no token returned")
 	}
 
-	streamTokenString0 = *((ma.Streams[0]).Token)
+	streamTokenString0 = (ma.Streams[0]).Token
 
 	ptclaims = &permission.Token{}
 
@@ -1540,7 +1540,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	s0 := models.Stream{
 		For:        &For,
 		Permission: &ap,
-		Token:      &Token,
+		Token:      Token,
 		URL:        &URL,
 		Verb:       &Verb,
 	}
@@ -1675,26 +1675,6 @@ func TestAddActivityToPoolID(t *testing.T) {
 
 	assert.Equal(t, newName, *ad.Name)
 	assert.Equal(t, ad0, ad)
-
-}
-
-func TestTODO(t *testing.T) {
-
-	todo := []string{
-		"Delete Activity from pool",
-		"Delete pool from group",
-		"Remove pool from Poolstore (taking activities with it, presumably)",
-		"Remove group from poolstore, but leave pools behind)",
-		"Report current bookings to user",
-		"Report max bookings limit to user",
-		"Reset PoolStore to clean, known state",
-		"Check if stream already exists",
-		"Lock System to new bookings (set max bookings to zero)",
-		"Report all current bookings and duration (plot in-use)",
-	}
-	for n, l := range todo {
-		fmt.Println(n, ": ", l)
-	}
 
 }
 
@@ -1885,7 +1865,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 		t.Fatal("no token returned")
 	}
 
-	streamTokenString0 := *((ma.Streams[0]).Token)
+	streamTokenString0 := (ma.Streams[0]).Token
 
 	ptclaims := &permission.Token{}
 
@@ -1927,7 +1907,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 		t.Fatal("no token returned")
 	}
 
-	streamTokenString0 = *((ma.Streams[0]).Token)
+	streamTokenString0 = (ma.Streams[0]).Token
 
 	ptclaims = &permission.Token{}
 
@@ -2351,7 +2331,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		t.Fatal("no token returned")
 	}
 
-	streamTokenString0 := *((ma.Streams[0]).Token)
+	streamTokenString0 := (ma.Streams[0]).Token
 
 	ptclaims := &permission.Token{}
 
@@ -2393,7 +2373,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		t.Fatal("no token returned")
 	}
 
-	streamTokenString0 = *((ma.Streams[0]).Token)
+	streamTokenString0 = (ma.Streams[0]).Token
 
 	ptclaims = &permission.Token{}
 
@@ -2550,7 +2530,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	ptclaims = &permission.Token{}
 
-	streamToken, err = jwt.ParseWithClaims(*stream0.Token, ptclaims, func(token *jwt.Token) (interface{}, error) {
+	streamToken, err = jwt.ParseWithClaims(stream0.Token, ptclaims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method was %v", token.Header["alg"])
 		}
@@ -2689,6 +2669,20 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	_, ok := token.Claims.(*lit.Token)
 	assert.True(t, ok)
 	assert.True(t, token.Valid)
+
+	// Import an empty store (reset!!)
+
+	req, err = http.NewRequest("DELETE", host+"/api/v1/admin/poolstore", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	if veryVerbose {
+		t.Log("importStatus:", resp.Status)
+	}
 
 	/* Get the StoreStatus */
 	//     _                    _        _
@@ -2858,7 +2852,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+		fmt.Println("1", string(body))
 	}
 
 	pid = models.ID{}
@@ -2888,7 +2882,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	err = json.Unmarshal(body, ms)
 	assert.NoError(t, err)
 
-	if true {
+	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
 		fmt.Println(string(pretty))
 	}
@@ -2960,7 +2954,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+		fmt.Println("2", string(body))
 	}
 
 	pids := models.IDList{}
@@ -3028,7 +3022,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+		fmt.Println("3", string(body))
 	}
 
 	pids = models.IDList{}
@@ -3105,7 +3099,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+		fmt.Println("4", string(body))
 	}
 
 	pids = models.IDList{}
@@ -3176,8 +3170,8 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+	if resp.StatusCode != http.StatusNotFound {
+		fmt.Println("5", string(body))
 	}
 
 	// Check ... 2 pools in group, are same 2 pools in total now that p1 is gone
@@ -3230,4 +3224,219 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	assert.True(t, util.SortCompare([]string{pid0, pid3}, gpids))
 
+	// create an activity for pool0
+
+	exp := float64(mocktime + 50)
+	name4 := "act"
+	thisType4 := "activity"
+
+	d4 := models.Description{
+		Name: &name4,
+		Type: &thisType4,
+	}
+
+	ma := models.Activity{
+		Description: &d4,
+		Exp:         &exp,
+	}
+
+	reqBody, err = json.Marshal(ma)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+pid0+"/activities", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "{\"code\":602,\"message\":\"streams in body is required\"}", string(body))
+
+	what := "data"
+	url := "http://some.io"
+	aud := "https://example.com"
+	ct := "session"
+	topic := "foo"
+	scopes := []string{"read"}
+
+	perm := models.Permission{
+		Audience:       &aud,
+		ConnectionType: &ct,
+		Topic:          &topic,
+		Scopes:         scopes,
+	}
+	ma.Streams = []*models.Stream{
+		&models.Stream{
+			For:        &what,
+			URL:        &url,
+			Permission: &perm,
+		},
+	}
+
+	name5 := "some UI"
+	thisType5 := "UI"
+	url2 := "http:/some2.io"
+	d5 := models.Description{
+		Name: &name5,
+		Type: &thisType5,
+	}
+
+	ma.Uis = []*models.UserInterface{
+		&models.UserInterface{
+			Description: &d5,
+			URL:         &url2,
+		},
+	}
+	reqBody, err = json.Marshal(ma)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+pid0+"/activities", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	pid = models.ID{}
+	err = json.Unmarshal(body, &pid)
+	assert.NoError(t, err)
+
+	aid4 := *pid.ID
+	_, err = uuid.Parse(aid4)
+	assert.NoError(t, err)
+
+	// Get store status and check for activity
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms = &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		pretty, err = json.MarshalIndent(ms, "", "\t")
+		fmt.Println(string(pretty))
+	}
+
+	assert.Equal(t, int64(1), ms.Activities)
+	assert.Equal(t, int64(0), ms.Bookings)
+	assert.Equal(t, int64(1), ms.Groups)
+	assert.Equal(t, int64(2), ms.Pools)
+
+	// check the activity exists ok ...
+
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/poolstore", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	export = &models.Poolstore{}
+	err = json.Unmarshal(body, export)
+	assert.NoError(t, err)
+
+	poolBytes, err = base64.StdEncoding.DecodeString(*export.Pool)
+	assert.NoError(t, err)
+
+	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
+	assert.NoError(t, err)
+
+	exportedPool = &pool.PoolStore{}
+
+	err = json.Unmarshal(poolBytes, exportedPool)
+	assert.NoError(t, err)
+
+	exportedBooking = &bookingstore.Limit{}
+
+	err = json.Unmarshal(bookingBytes, exportedBooking)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		prettyPool, err := json.MarshalIndent(exportedPool, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(prettyPool))
+	}
+
+	// now delete it ...
+	req, err = http.NewRequest("DELETE", host+"/api/v1/pools/"+pid0+"/activities/"+aid4, nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	// check no activity...
+	// Get store status and check for activity
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms = &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		pretty, err = json.MarshalIndent(ms, "", "\t")
+		fmt.Println(string(pretty))
+	}
+
+	assert.Equal(t, int64(0), ms.Activities)
+	assert.Equal(t, int64(0), ms.Bookings)
+	assert.Equal(t, int64(1), ms.Groups)
+	assert.Equal(t, int64(2), ms.Pools)
+
+	// now delete group
+	req, err = http.NewRequest("DELETE", host+"/api/v1/groups/"+gid, nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	// Get store status and check group is gone but pools stay
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms = &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		pretty, err = json.MarshalIndent(ms, "", "\t")
+		fmt.Println(string(pretty))
+	}
+
+	assert.Equal(t, int64(0), ms.Activities)
+	assert.Equal(t, int64(0), ms.Bookings)
+	assert.Equal(t, int64(0), ms.Groups)
+	assert.Equal(t, int64(2), ms.Pools)
 }

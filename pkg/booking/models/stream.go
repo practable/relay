@@ -24,11 +24,11 @@ type Stream struct {
 	For *string `json:"for"`
 
 	// permission
-	Permission *Permission `json:"permission,omitempty"`
+	// Required: true
+	Permission *Permission `json:"permission"`
 
 	// JWT bearer token for submitting in the header when making the request at the URL
-	// Required: true
-	Token *string `json:"token"`
+	Token string `json:"token,omitempty"`
 
 	// URL at which to obtain access to the stream (getting a redirect URL containing a one time code)
 	// Required: true
@@ -47,10 +47,6 @@ func (m *Stream) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validatePermission(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateToken(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -75,8 +71,8 @@ func (m *Stream) validateFor(formats strfmt.Registry) error {
 
 func (m *Stream) validatePermission(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Permission) { // not required
-		return nil
+	if err := validate.Required("permission", "body", m.Permission); err != nil {
+		return err
 	}
 
 	if m.Permission != nil {
@@ -86,15 +82,6 @@ func (m *Stream) validatePermission(formats strfmt.Registry) error {
 			}
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (m *Stream) validateToken(formats strfmt.Registry) error {
-
-	if err := validate.Required("token", "body", m.Token); err != nil {
-		return err
 	}
 
 	return nil

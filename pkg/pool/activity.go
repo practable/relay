@@ -166,14 +166,12 @@ func NewSingleStreamFromModel(ms *models.Stream) *Stream {
 		return &Stream{}
 	}
 
-	var For, Token, URL, Verb string
+	var For, URL, Verb string
 
 	if ms.For != nil {
 		For = *ms.For
 	}
-	if ms.Token != nil {
-		Token = *ms.Token
-	}
+
 	if ms.URL != nil {
 		URL = *ms.URL
 	}
@@ -206,7 +204,7 @@ func NewSingleStreamFromModel(ms *models.Stream) *Stream {
 		RWMutex: &sync.RWMutex{},
 		For:     For,
 		URL:     URL,
-		Token:   Token,
+		Token:   ms.Token,
 		Verb:    Verb,
 		Permission: permission.Token{
 			Topic:          *ms.Permission.Topic,
@@ -263,7 +261,7 @@ func SingleStreamToModel(s *Stream) *models.Stream {
 	return &models.Stream{
 		For:   &s.For,
 		URL:   &s.URL,
-		Token: &s.Token,
+		Token: s.Token,
 		Verb:  &s.Verb,
 		Permission: &models.Permission{
 			Topic:          &s.Permission.Topic,

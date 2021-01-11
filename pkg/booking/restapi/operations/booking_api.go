@@ -68,6 +68,9 @@ func NewBookingAPI(spec *loads.Document) *BookingAPI {
 		PoolsDeletePoolHandler: pools.DeletePoolHandlerFunc(func(params pools.DeletePoolParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.DeletePool has not yet been implemented")
 		}),
+		AdminDeletePoolStoreHandler: admin.DeletePoolStoreHandlerFunc(func(params admin.DeletePoolStoreParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation admin.DeletePoolStore has not yet been implemented")
+		}),
 		GroupsDeletePoolsByGroupIDHandler: groups.DeletePoolsByGroupIDHandlerFunc(func(params groups.DeletePoolsByGroupIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation groups.DeletePoolsByGroupID has not yet been implemented")
 		}),
@@ -181,6 +184,8 @@ type BookingAPI struct {
 	GroupsDeleteGroupHandler groups.DeleteGroupHandler
 	// PoolsDeletePoolHandler sets the operation handler for the delete pool operation
 	PoolsDeletePoolHandler pools.DeletePoolHandler
+	// AdminDeletePoolStoreHandler sets the operation handler for the delete pool store operation
+	AdminDeletePoolStoreHandler admin.DeletePoolStoreHandler
 	// GroupsDeletePoolsByGroupIDHandler sets the operation handler for the delete pools by group ID operation
 	GroupsDeletePoolsByGroupIDHandler groups.DeletePoolsByGroupIDHandler
 	// AdminExportPoolStoreHandler sets the operation handler for the export pool store operation
@@ -315,6 +320,9 @@ func (o *BookingAPI) Validate() error {
 	}
 	if o.PoolsDeletePoolHandler == nil {
 		unregistered = append(unregistered, "pools.DeletePoolHandler")
+	}
+	if o.AdminDeletePoolStoreHandler == nil {
+		unregistered = append(unregistered, "admin.DeletePoolStoreHandler")
 	}
 	if o.GroupsDeletePoolsByGroupIDHandler == nil {
 		unregistered = append(unregistered, "groups.DeletePoolsByGroupIDHandler")
@@ -492,6 +500,10 @@ func (o *BookingAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/pools/{pool_id}"] = pools.NewDeletePool(o.context, o.PoolsDeletePoolHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/admin/poolstore"] = admin.NewDeletePoolStore(o.context, o.AdminDeletePoolStoreHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}

@@ -10,6 +10,22 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
+func deletePoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.DeletePoolStoreParams, interface{}) middleware.Responder {
+	return func(params admin.DeletePoolStoreParams, principal interface{}) middleware.Responder {
+		_, err := isBookingAdmin(principal)
+
+		if err != nil {
+			return admin.NewDeletePoolStoreUnauthorized().WithPayload(err.Error())
+		}
+
+		ps.Reset()
+		l.Reset()
+
+		return admin.NewDeletePoolStoreNotFound()
+
+	}
+}
+
 func exportPoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.ExportPoolStoreParams, interface{}) middleware.Responder {
 
 	return func(params admin.ExportPoolStoreParams, principal interface{}) middleware.Responder {
@@ -55,7 +71,7 @@ func getStoreStatus(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.GetSto
 		}
 
 		status := &models.StoreStatus{
-			Activities:      int64(l.GetAllActivitiesCount()),
+			Activities:      int64(ps.GetAvailableActivitiesCount()),
 			Bookings:        int64(l.GetAllSessionCount()),
 			Groups:          int64(ps.GetAllGroupsCount()),
 			Pools:           int64(ps.GetAllPoolCount()),
@@ -118,7 +134,7 @@ func importPoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.Impor
 		pool.CopyStore(newps, ps)
 
 		status := &models.StoreStatus{
-			Activities:      int64(l.GetAllActivitiesCount()),
+			Activities:      int64(ps.GetAvailableActivitiesCount()),
 			Bookings:        int64(l.GetAllSessionCount()),
 			Groups:          int64(ps.GetAllGroupsCount()),
 			Pools:           int64(ps.GetAllPoolCount()),
@@ -144,7 +160,7 @@ func setLock(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.SetLockParams
 			l.UnlockBookings()
 		}
 		status := &models.StoreStatus{
-			Activities:      int64(l.GetAllActivitiesCount()),
+			Activities:      int64(ps.GetAvailableActivitiesCount()),
 			Bookings:        int64(l.GetAllSessionCount()),
 			Groups:          int64(ps.GetAllGroupsCount()),
 			Pools:           int64(ps.GetAllPoolCount()),

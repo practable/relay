@@ -107,6 +107,35 @@ func init() {
             "schema": {}
           }
         }
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete the contents of the pool store including bookings",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Delete current state",
+        "operationId": "deletePoolStore",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
       }
     },
     "/admin/status": {
@@ -1487,7 +1516,7 @@ func init() {
       "required": [
         "for",
         "url",
-        "token"
+        "permission"
       ],
       "properties": {
         "for": {
@@ -1665,6 +1694,35 @@ func init() {
             "schema": {}
           }
         }
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete the contents of the pool store including bookings",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Delete current state",
+        "operationId": "deletePoolStore",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
       }
     },
     "/admin/status": {
@@ -3045,7 +3103,7 @@ func init() {
       "required": [
         "for",
         "url",
-        "token"
+        "permission"
       ],
       "properties": {
         "for": {

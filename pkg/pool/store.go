@@ -19,6 +19,12 @@ func NewPoolStore() *PoolStore {
 	}
 }
 
+func (p *PoolStore) Reset() {
+
+	p.Groups = make(map[string]*Group)
+	p.Pools = make(map[string]*Pool)
+}
+
 // PostImportEssential sets up mutexes and Now() functions
 func (p *PoolStore) PostImportEssential() {
 	// we're creating mutexes for first time, so we
@@ -301,4 +307,18 @@ func (p *PoolStore) SetSecret(secret string) {
 	p.Lock()
 	defer p.Unlock()
 	p.Secret = []byte(secret)
+}
+
+func (p *PoolStore) GetAvailableActivitiesCount() int {
+	p.Lock()
+	defer p.Unlock()
+
+	avail := 0
+
+	for _, pool := range p.Pools {
+		avail = avail + len(pool.Activities)
+	}
+
+	return avail
+
 }

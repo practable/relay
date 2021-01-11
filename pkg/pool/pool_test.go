@@ -69,7 +69,7 @@ func TestTypeConversionWithNilPointers(t *testing.T) {
 	ms := &models.Stream{
 		For:        nil,
 		Permission: nil,
-		Token:      nil,
+		Token:      "",
 		URL:        nil,
 		Verb:       nil,
 	}
@@ -129,7 +129,7 @@ func TestTypeConversion(t *testing.T) {
 	s0 := models.Stream{
 		For:        &For,
 		Permission: &p,
-		Token:      &Token,
+		Token:      Token,
 		URL:        &URL,
 		Verb:       &Verb,
 	}

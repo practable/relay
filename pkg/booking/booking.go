@@ -70,6 +70,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 	// set the Handlers
 
 	// *** ADMIN *** //
+	api.AdminDeletePoolStoreHandler = admin.DeletePoolStoreHandlerFunc(deletePoolStore(ps, l))
 	api.AdminExportPoolStoreHandler = admin.ExportPoolStoreHandlerFunc(exportPoolStore(ps, l))
 	api.AdminGetStoreStatusHandler = admin.GetStoreStatusHandlerFunc(getStoreStatus(ps, l))
 	api.AdminImportPoolStoreHandler = admin.ImportPoolStoreHandlerFunc(importPoolStore(ps, l))
