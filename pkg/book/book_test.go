@@ -1527,7 +1527,6 @@ func TestTODO(t *testing.T) {
 		"Delete pool from group",
 		"Remove pool from Poolstore (taking activities with it, presumably)",
 		"Remove group from poolstore, but leave pools behind)",
-		"Import and export current state",
 		"Report current bookings to user",
 		"Report max bookings limit to user",
 		"Reset PoolStore to clean, known state",
@@ -2324,6 +2323,11 @@ func TestImportExportPoolStore(t *testing.T) {
 	assert.Equal(t, []int{200, 200, 404, 402}, statusCodes)
 
 	/* Get the StoreStatus */
+	//     _                    _        _
+	//  __| |_ ___ _ _ ___   __| |_ __ _| |_ _  _ ___
+	// (_-<  _/ _ \ '_/ -_) (_-<  _/ _` |  _| || (_-<
+	// /__/\__\___/_| \___| /__/\__\__,_|\__|\_,_/__/
+	//
 	req, err = http.NewRequest("GET", host+"/api/v1/admin/status", nil)
 	assert.NoError(t, err)
 	req.Header.Add("Authorization", adminBearer)
@@ -2347,36 +2351,57 @@ func TestImportExportPoolStore(t *testing.T) {
 	assert.Equal(t, int64(1), ms.Groups)
 	assert.Equal(t, int64(1), ms.Pools)
 	assert.Equal(t, float64(mocktime+2000), ms.LastBookingEnds)
-	fmt.Println(time.Now().Unix())
 
-	/* EXPORT AGAIN AND CHECK?
+	//   _____ ___ __  ___ _ _| |_
+	//  / -_) \ / '_ \/ _ \ '_|  _|
+	//  \___/_\_\ .__/\___/_|  \__|
+	//          |_|
+	//
+	// EXPORT AGAIN AND CHECK?
 
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/poolstore", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
 	assert.NoError(t, err)
 
-	p, err := json.Marshal(ps)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
-	ps2 := &pool.PoolStore{}
-
-	err = json.Unmarshal(p, &ps2)
+	export := &models.Poolstore{}
+	err = json.Unmarshal(body, export)
 	assert.NoError(t, err)
 
-	p2, err := json.MarshalIndent(ps2, "", "\t")
+	poolBytes, err := base64.StdEncoding.DecodeString(*export.Pool)
 	assert.NoError(t, err)
 
-	if debug {
-		fmt.Println(string(p2))
+	bookingBytes, err := base64.StdEncoding.DecodeString(*export.Booking)
+	assert.NoError(t, err)
+
+	exportedPool := &pool.PoolStore{}
+
+	err = json.Unmarshal(poolBytes, exportedPool)
+	assert.NoError(t, err)
+
+	exportedBooking := &bookingstore.Limit{}
+
+	err = json.Unmarshal(bookingBytes, exportedBooking)
+	assert.NoError(t, err)
+
+	if veryVerbose {
+		prettyPool, err := json.MarshalIndent(exportedPool, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(prettyPool))
+
+		prettyBooking, err := json.MarshalIndent(exportedBooking, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(prettyBooking))
 	}
 
-	// *** Initialise the imported poolstore, then swap it for the live one *** //
-	ps2.PostImportEssential()
-
-	// we're just using mocktime to keep up with real time, so this isn't really needed
-	// you can comment it out and this test still passes
-	ps2.PostImportSetNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
-
-	// This will ruin other tests unless it works ok ....
-	ps = ps2
-	*/
+	assert.Equal(t, 2, len(exportedPool.Pools[p0.ID].Activities))
+	assert.Equal(t, 2, len(exportedBooking.ActivityBySession))
+	assert.Equal(t, 2, len(exportedBooking.UserBySession))
 
 }
