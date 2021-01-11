@@ -23,6 +23,28 @@ produces:
 paths:
 
   /admin/poolstore:
+    delete:
+      description: Delete the contents of the pool store including bookings 
+      summary: Delete current state
+      tags:
+      - admin
+      operationId: deletePoolStore
+      deprecated: false
+      produces:
+      - application/json
+      security:
+        - Bearer: []  
+      responses:
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Unauthorized
+          schema: {}
+        500:
+          description: ''
+          schema: {}
+          
     get:
       description: Export the current pool store including bookings 
       summary: Export current state
@@ -1153,7 +1175,7 @@ definitions:
     required:
     - for
     - url
-    - token
+    - permission
     
   userInterface:
     title: userInterface

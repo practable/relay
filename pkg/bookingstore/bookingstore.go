@@ -147,6 +147,17 @@ func New(ctx context.Context) *Limit {
 	return l
 }
 
+func (l *Limit) Reset() {
+	lbe := time.Now().Unix() - 1
+	lastFlush := time.Now().Unix() - 1
+	l.Activities = make(map[string]map[string]*models.Activity)
+	l.Sessions = make(map[string]map[string]int64)
+	l.ActivityBySession = make(map[string]*models.Activity)
+	l.UserBySession = make(map[string]string)
+	l.LastBookingEnds = &lbe
+	l.LastFlush = &lastFlush
+}
+
 func (l *Limit) ExportAll() ([]byte, error) {
 	return json.Marshal(l)
 }

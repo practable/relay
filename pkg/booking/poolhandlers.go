@@ -479,7 +479,7 @@ func requestSessionByPoolID(ps *pool.PoolStore, l *bookingstore.Limit) func(para
 		}
 
 		for idx, bearer := range bearers {
-			ma.Streams[idx].Token = &bearer
+			ma.Streams[idx].Token = bearer
 		}
 
 		lf := log.Fields{
