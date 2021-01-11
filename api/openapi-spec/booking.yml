@@ -403,6 +403,33 @@ paths:
           schema: {}
 
   /login:
+    get:
+      description: Get details of currently held bookings and max number of bookings that can be held
+      summary: Get current bookings
+      tags:
+      - login
+      operationId: getCurrentBookings
+      deprecated: false
+      produces:
+      - application/json
+      security:
+        - Bearer: [] 
+      responses:
+        200:
+          description: ''
+          schema:
+            $ref: '#/definitions/bookings'
+          headers: {}
+        401:
+          description: Unauthorized
+          schema: {}
+        404:
+          description: Not Found
+          schema: {}         
+        500:
+          description: Internal Error
+          schema: {}
+          
     post:
       description: Login with a class token to get an individual booking token, usable for a finite period.
       summary: login
@@ -834,6 +861,24 @@ definitions:
     - exp
     - streams
     - uis
+
+  bookings:
+    title: details of bookings held
+    description: Contains credentials to access currently booked activities and info on max concurrent sessions
+    type: object
+    properties:
+      max:
+        description: Maximum concurrent bookings permitted
+        type: number
+        format: int
+      activities:
+        description: Array of activities, including credentials, sufficient to permit access to the activities
+        type: array
+        items:
+          $ref: '#/definitions/activity'
+    required:
+      - max
+      - activities
    
   bookingtoken:
     title: booking token details

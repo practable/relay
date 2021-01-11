@@ -100,6 +100,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 
 	// *** USERS *** //
 	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandler(ps))
+	api.LoginGetCurrentBookingsHandler = login.GetCurrentBookingsHandlerFunc(getCurrentBookings(ps, l))
 
 	// *** NOT IN API YET ***
 	// Get current bookings
