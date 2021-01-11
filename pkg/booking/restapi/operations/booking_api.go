@@ -80,6 +80,9 @@ func NewBookingAPI(spec *loads.Document) *BookingAPI {
 		PoolsGetAllPoolsHandler: pools.GetAllPoolsHandlerFunc(func(params pools.GetAllPoolsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation pools.GetAllPools has not yet been implemented")
 		}),
+		LoginGetCurrentBookingsHandler: login.GetCurrentBookingsHandlerFunc(func(params login.GetCurrentBookingsParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation login.GetCurrentBookings has not yet been implemented")
+		}),
 		GroupsGetGroupDescriptionByIDHandler: groups.GetGroupDescriptionByIDHandlerFunc(func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation groups.GetGroupDescriptionByID has not yet been implemented")
 		}),
@@ -186,6 +189,8 @@ type BookingAPI struct {
 	PoolsGetActivityByIDHandler pools.GetActivityByIDHandler
 	// PoolsGetAllPoolsHandler sets the operation handler for the get all pools operation
 	PoolsGetAllPoolsHandler pools.GetAllPoolsHandler
+	// LoginGetCurrentBookingsHandler sets the operation handler for the get current bookings operation
+	LoginGetCurrentBookingsHandler login.GetCurrentBookingsHandler
 	// GroupsGetGroupDescriptionByIDHandler sets the operation handler for the get group description by ID operation
 	GroupsGetGroupDescriptionByIDHandler groups.GetGroupDescriptionByIDHandler
 	// GroupsGetGroupIDByNameHandler sets the operation handler for the get group ID by name operation
@@ -322,6 +327,9 @@ func (o *BookingAPI) Validate() error {
 	}
 	if o.PoolsGetAllPoolsHandler == nil {
 		unregistered = append(unregistered, "pools.GetAllPoolsHandler")
+	}
+	if o.LoginGetCurrentBookingsHandler == nil {
+		unregistered = append(unregistered, "login.GetCurrentBookingsHandler")
 	}
 	if o.GroupsGetGroupDescriptionByIDHandler == nil {
 		unregistered = append(unregistered, "groups.GetGroupDescriptionByIDHandler")
@@ -500,6 +508,10 @@ func (o *BookingAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/pools"] = pools.NewGetAllPools(o.context, o.PoolsGetAllPoolsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/login"] = login.NewGetCurrentBookings(o.context, o.LoginGetCurrentBookingsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

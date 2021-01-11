@@ -108,6 +108,11 @@ func configureAPI(api *operations.BookingAPI) http.Handler {
 			return middleware.NotImplemented("operation pools.GetAllPools has not yet been implemented")
 		})
 	}
+	if api.LoginGetCurrentBookingsHandler == nil {
+		api.LoginGetCurrentBookingsHandler = login.GetCurrentBookingsHandlerFunc(func(params login.GetCurrentBookingsParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation login.GetCurrentBookings has not yet been implemented")
+		})
+	}
 	if api.GroupsGetGroupDescriptionByIDHandler == nil {
 		api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation groups.GetGroupDescriptionByID has not yet been implemented")

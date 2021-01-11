@@ -538,6 +538,41 @@ func init() {
       }
     },
     "/login": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get details of currently held bookings and max number of bookings that can be held",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "login"
+        ],
+        "summary": "Get current bookings",
+        "operationId": "getCurrentBookings",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/bookings"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
+          }
+        }
+      },
       "post": {
         "security": [
           {
@@ -1111,6 +1146,29 @@ func init() {
           "items": {
             "$ref": "#/definitions/userInterface"
           }
+        }
+      }
+    },
+    "bookings": {
+      "description": "Contains credentials to access currently booked activities and info on max concurrent sessions",
+      "type": "object",
+      "title": "details of bookings held",
+      "required": [
+        "max",
+        "activities"
+      ],
+      "properties": {
+        "activities": {
+          "description": "Array of activities, including credentials, sufficient to permit access to the activities",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/activity"
+          }
+        },
+        "max": {
+          "description": "Maximum concurrent bookings permitted",
+          "type": "number",
+          "format": "int"
         }
       }
     },
@@ -2038,6 +2096,41 @@ func init() {
       }
     },
     "/login": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get details of currently held bookings and max number of bookings that can be held",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "login"
+        ],
+        "summary": "Get current bookings",
+        "operationId": "getCurrentBookings",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/bookings"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {}
+          },
+          "500": {
+            "description": "Internal Error",
+            "schema": {}
+          }
+        }
+      },
       "post": {
         "security": [
           {
@@ -2611,6 +2704,29 @@ func init() {
           "items": {
             "$ref": "#/definitions/userInterface"
           }
+        }
+      }
+    },
+    "bookings": {
+      "description": "Contains credentials to access currently booked activities and info on max concurrent sessions",
+      "type": "object",
+      "title": "details of bookings held",
+      "required": [
+        "max",
+        "activities"
+      ],
+      "properties": {
+        "activities": {
+          "description": "Array of activities, including credentials, sufficient to permit access to the activities",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/activity"
+          }
+        },
+        "max": {
+          "description": "Maximum concurrent bookings permitted",
+          "type": "number",
+          "format": "int"
         }
       }
     },

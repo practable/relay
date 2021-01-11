@@ -6,9 +6,48 @@ import (
 	"github.com/google/uuid"
 	"github.com/timdrysdale/relay/pkg/booking/models"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
+	"github.com/timdrysdale/relay/pkg/bookingstore"
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/pool"
 )
+
+func getCurrentBookings(ps *pool.PoolStore, l *bookingstore.Limit) func(login.GetCurrentBookingsParams, interface{}) middleware.Responder {
+	return func(params login.GetCurrentBookingsParams, principal interface{}) middleware.Responder {
+
+		claims, err := isBookingUser(principal)
+
+		if err != nil {
+			return login.NewGetCurrentBookingsUnauthorized().WithPayload(err.Error())
+		}
+
+		if claims.Subject == "" {
+			return login.NewGetCurrentBookingsUnauthorized().WithPayload("no subject in token (userID)")
+		}
+
+		actmap, err := l.GetUserActivities(claims.Subject)
+
+		if err != nil {
+			return login.NewGetCurrentBookingsUnauthorized().WithPayload(err.Error())
+		}
+
+		max := int64(l.GetMax())
+
+		acts := []*models.Activity{}
+
+		for _, act := range actmap {
+
+			acts = append(acts, act)
+		}
+
+		bookings := &models.Bookings{
+			Max:        &max,
+			Activities: acts,
+		}
+
+		return login.NewGetCurrentBookingsOK().WithPayload(bookings)
+
+	}
+}
 
 func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middleware.Responder {
 	return func(params login.LoginParams, principal interface{}) middleware.Responder {

@@ -361,6 +361,12 @@ func (l *Limit) WithMax(max int) *Limit {
 	return l
 }
 
+func (l *Limit) GetMax() int {
+	l.Lock()
+	defer l.Unlock()
+	return *l.Max
+}
+
 // WithNow sets the time function, useful for testing basic functionality
 // but does not affect anything running off timers
 func (l *Limit) WithNow(now func() int64) *Limit {
