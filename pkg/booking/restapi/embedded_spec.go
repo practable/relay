@@ -242,7 +242,7 @@ func init() {
         "operationId": "addNewGroup",
         "parameters": [
           {
-            "name": "pool",
+            "name": "group",
             "in": "body",
             "required": true,
             "schema": {
@@ -299,6 +299,46 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete this group, but not the pools associated with it.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "deleteGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
           },
           "500": {
             "schema": {}
@@ -1214,6 +1254,7 @@ func init() {
         "pools": {
           "type": "array",
           "items": {
+            "description": "poolIDs to add to the group",
             "type": "string"
           }
         }
@@ -1701,7 +1742,7 @@ func init() {
         "operationId": "addNewGroup",
         "parameters": [
           {
-            "name": "pool",
+            "name": "group",
             "in": "body",
             "required": true,
             "schema": {
@@ -1758,6 +1799,46 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {}
+          },
+          "500": {
+            "schema": {}
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete this group, but not the pools associated with it.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "groups"
+        ],
+        "summary": "groups",
+        "operationId": "deleteGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "group_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          },
+          "404": {
+            "description": "Not Found"
           },
           "500": {
             "schema": {}
@@ -2673,6 +2754,7 @@ func init() {
         "pools": {
           "type": "array",
           "items": {
+            "description": "poolIDs to add to the group",
             "type": "string"
           }
         }

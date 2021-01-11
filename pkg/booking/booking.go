@@ -78,6 +78,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore,
 	// *** GROUPS *** //
 	api.GroupsAddNewGroupHandler = groups.AddNewGroupHandlerFunc(addNewGroup(ps))
 	api.GroupsAddPoolsByGroupIDHandler = groups.AddPoolsByGroupIDHandlerFunc(addPoolsByGroupID(ps))
+	api.GroupsDeleteGroupHandler = groups.DeleteGroupHandlerFunc(deleteGroup(ps))
 	api.GroupsDeletePoolsByGroupIDHandler = groups.DeletePoolsByGroupIDHandlerFunc(deletePoolsByGroupID(ps))
 	api.GroupsGetGroupIDByNameHandler = groups.GetGroupIDByNameHandlerFunc(getGroupIDByName(ps))
 	api.GroupsGetGroupDescriptionByIDHandler = groups.GetGroupDescriptionByIDHandlerFunc(getGroupDescriptionByID(ps))

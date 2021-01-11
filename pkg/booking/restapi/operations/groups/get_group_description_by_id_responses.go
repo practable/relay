@@ -99,6 +99,48 @@ func (o *GetGroupDescriptionByIDUnauthorized) WriteResponse(rw http.ResponseWrit
 	}
 }
 
+// GetGroupDescriptionByIDNotFoundCode is the HTTP code returned for type GetGroupDescriptionByIDNotFound
+const GetGroupDescriptionByIDNotFoundCode int = 404
+
+/*GetGroupDescriptionByIDNotFound Not Found
+
+swagger:response getGroupDescriptionByIdNotFound
+*/
+type GetGroupDescriptionByIDNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewGetGroupDescriptionByIDNotFound creates GetGroupDescriptionByIDNotFound with default headers values
+func NewGetGroupDescriptionByIDNotFound() *GetGroupDescriptionByIDNotFound {
+
+	return &GetGroupDescriptionByIDNotFound{}
+}
+
+// WithPayload adds the payload to the get group description by Id not found response
+func (o *GetGroupDescriptionByIDNotFound) WithPayload(payload interface{}) *GetGroupDescriptionByIDNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get group description by Id not found response
+func (o *GetGroupDescriptionByIDNotFound) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetGroupDescriptionByIDNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
 // GetGroupDescriptionByIDInternalServerErrorCode is the HTTP code returned for type GetGroupDescriptionByIDInternalServerError
 const GetGroupDescriptionByIDInternalServerErrorCode int = 500
 
