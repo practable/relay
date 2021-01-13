@@ -52,7 +52,6 @@ bearer=$(shell token)
 		viper.SetDefault("write", "true")
 
 		lifetime := viper.GetInt64("lifetime")
-		role := viper.GetString("role")
 		audience := viper.GetString("audience")
 		secret := viper.GetString("secret")
 		topic := viper.GetString("topic")
@@ -66,10 +65,6 @@ bearer=$(shell token)
 			fmt.Println("ACCESSTOKEN_LIFETIME not set")
 			os.Exit(1)
 		}
-		if role == "" {
-			fmt.Println("ACCESSTOKEN_ROLE not set")
-			os.Exit(1)
-		}
 		if secret == "" {
 			fmt.Println("ACCESSTOKEN_SECRET not set")
 			os.Exit(1)
@@ -78,6 +73,7 @@ bearer=$(shell token)
 			fmt.Println("ACCESSTOKEN_TOPIC not set")
 			os.Exit(1)
 		}
+
 		if connectionType == "" {
 			fmt.Println("ACCESSTOKEN_CONNECTIONTYPE not set")
 			os.Exit(1)

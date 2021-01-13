@@ -40,9 +40,11 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
+	github.com/timdrysdale/agg v0.0.0-20191019095533-60164dd8a269
 	github.com/timdrysdale/chanstats v0.0.0-20190915011233-b0c6a75b4ff9 // indirect
 	github.com/timdrysdale/crossbar v0.2.1
 	github.com/timdrysdale/reconws v0.0.0-20191012131359-34f25fee9e0e
+	github.com/timdrysdale/rwc v0.0.0-20191011123131-00e6abe5e8d0
 	github.com/timdrysdale/vw v0.0.1
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b

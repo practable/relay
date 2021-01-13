@@ -1,4 +1,4 @@
-package cmd
+package vw
 
 import (
 	"bytes"
@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/timdrysdale/relay/pkg/rwc"
 )
 
 // These tests do not start the hub or the websocket client
@@ -15,11 +14,11 @@ import (
 // and simpler than inspecting the side effects of a running
 // Hub and Websocket
 
-func TestHandleDestinationAdd(t *testing.T) {
+func TestHandleStreamAdd(t *testing.T) {
 
-	rule := []byte(`{"id":"00","stream":"/stream/large","destination":"wss://video.practable.io:443/large"}`)
+	rule := []byte(`{"stream":"/stream/large","feeds":["audio","video0"]}`)
 
-	req, err := http.NewRequest("PUT", "", bytes.NewBuffer(rule))
+	req, err := http.NewRequest("PUT", "/api/streams", bytes.NewBuffer(rule))
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,7 +27,7 @@ func TestHandleDestinationAdd(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	a := testApp(false)
-	handler := http.HandlerFunc(a.handleDestinationAdd)
+	handler := http.HandlerFunc(a.handleStreamAdd)
 
 	go func() {
 		handler.ServeHTTP(rr, req)
@@ -38,29 +37,30 @@ func TestHandleDestinationAdd(t *testing.T) {
 				status, http.StatusOK)
 		}
 
-		// note prefix / on stream is removed
-		expected := `{"id":"00","stream":"stream/large","destination":"wss://video.practable.io:443/large","token":"","file":""}`
+		//note prefix / on stream is removed
+		expected := `{"stream":"stream/large","feeds":["audio","video0"]}`
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
 				rr.Body.String(), expected)
 		}
 	}()
 
-	got := <-a.Websocket.Add
+	got := <-a.Hub.Add
 
 	if got.Stream != "stream/large" {
 		t.Error("Wrong stream")
 	}
-	if got.Destination != "wss://video.practable.io:443/large" {
-		t.Error("Wrong destination")
+
+	if got.Feeds[0] != "audio" {
+		t.Error("Wrong feeds")
 	}
-	if got.Id != "00" {
-		t.Error("Wrong Id")
+	if got.Feeds[1] != "video0" {
+		t.Error("Wrong feeds")
 	}
 
 }
 
-func TestHandleDestinationDelete(t *testing.T) {
+func TestHandleStreamDelete(t *testing.T) {
 
 	req, err := http.NewRequest("DELETE", "", nil)
 	if err != nil {
@@ -68,13 +68,13 @@ func TestHandleDestinationDelete(t *testing.T) {
 	}
 
 	req = mux.SetURLVars(req, map[string]string{
-		"id": "00",
+		"stream": "video0",
 	})
 
 	rr := httptest.NewRecorder()
 
 	a := testApp(false)
-	handler := http.HandlerFunc(a.handleDestinationDelete)
+	handler := http.HandlerFunc(a.handleStreamDelete)
 
 	go func() {
 		handler.ServeHTTP(rr, req)
@@ -85,15 +85,15 @@ func TestHandleDestinationDelete(t *testing.T) {
 		}
 	}()
 
-	got := <-a.Websocket.Delete
+	got := <-a.Hub.Delete
 
-	if got != "00" {
-		t.Error("Wrong Id")
+	if got != "video0" {
+		t.Error("Wrong stream")
 	}
 
 }
 
-func TestHandleDestinationDeleteAll(t *testing.T) {
+func TestHandleStreamDeleteAll(t *testing.T) {
 
 	req, err := http.NewRequest("DELETE", "", nil)
 	if err != nil {
@@ -101,13 +101,13 @@ func TestHandleDestinationDeleteAll(t *testing.T) {
 	}
 
 	req = mux.SetURLVars(req, map[string]string{
-		"id": "all",
+		"stream": "all",
 	})
 
 	rr := httptest.NewRecorder()
 
 	a := testApp(false)
-	handler := http.HandlerFunc(a.handleDestinationDeleteAll)
+	handler := http.HandlerFunc(a.handleStreamDeleteAll)
 
 	go func() {
 		handler.ServeHTTP(rr, req)
@@ -118,16 +118,16 @@ func TestHandleDestinationDeleteAll(t *testing.T) {
 		}
 	}()
 
-	got := <-a.Websocket.Delete
+	got := <-a.Hub.Delete
 
 	if got != "deleteAll" {
-		t.Errorf("handler send wrong message on Websocket.Delete: got %v want %v",
+		t.Errorf("handler send wrong message on Hub.Delete: got %v want %v",
 			got, "deleteAll")
 	}
 
 }
 
-func TestHandleDestinationShow(t *testing.T) {
+func TestHandleStreamShow(t *testing.T) {
 
 	req, err := http.NewRequest("PUT", "", nil)
 	if err != nil {
@@ -135,16 +135,16 @@ func TestHandleDestinationShow(t *testing.T) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req = mux.SetURLVars(req, map[string]string{
-		"id": "00",
+		"stream": "stream/large",
 	})
 
 	rr := httptest.NewRecorder()
 
 	a := testApp(false)
-	handler := http.HandlerFunc(a.handleDestinationShow)
+	handler := http.HandlerFunc(a.handleStreamShow)
 
-	a.Websocket.Rules = make(map[string]rwc.Rule)
-	a.Websocket.Rules["00"] = rwc.Rule{Destination: "wss://video.practable.io:443/large", Stream: "/stream/large", Id: "00"}
+	a.Hub.Rules = make(map[string][]string)
+	a.Hub.Rules["stream/large"] = []string{"audio", "video0"}
 
 	handler.ServeHTTP(rr, req)
 
@@ -153,7 +153,7 @@ func TestHandleDestinationShow(t *testing.T) {
 			status, http.StatusOK)
 	}
 
-	expected := `{"id":"00","stream":"/stream/large","destination":"wss://video.practable.io:443/large","token":"","file":""}`
+	expected := "[\"audio\",\"video0\"]"
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
@@ -161,7 +161,7 @@ func TestHandleDestinationShow(t *testing.T) {
 
 }
 
-func TestHandleDestinationShowAll(t *testing.T) {
+func TestHandleStreamShowAll(t *testing.T) {
 
 	req, err := http.NewRequest("PUT", "", nil)
 	if err != nil {
@@ -172,15 +172,11 @@ func TestHandleDestinationShowAll(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	a := testApp(false)
-	handler := http.HandlerFunc(a.handleDestinationShowAll)
+	handler := http.HandlerFunc(a.handleStreamShowAll)
 
-	a.Websocket.Rules = make(map[string]rwc.Rule)
-	a.Websocket.Rules["stream/large"] = rwc.Rule{Stream: "/stream/large",
-		Destination: "wss://somewhere",
-		Id:          "00"}
-	a.Websocket.Rules["stream/medium"] = rwc.Rule{Stream: "/stream/medium",
-		Destination: "wss://overthere",
-		Id:          "01"}
+	a.Hub.Rules = make(map[string][]string)
+	a.Hub.Rules["stream/large"] = []string{"audio", "video0"}
+	a.Hub.Rules["stream/medium"] = []string{"audio", "video1"}
 
 	handler.ServeHTTP(rr, req)
 
@@ -189,7 +185,7 @@ func TestHandleDestinationShowAll(t *testing.T) {
 			status, http.StatusOK)
 	}
 
-	expected := `{"stream/large":{"id":"00","stream":"/stream/large","destination":"wss://somewhere","token":"","file":""},"stream/medium":{"id":"01","stream":"/stream/medium","destination":"wss://overthere","token":"","file":""}}`
+	expected := `{"stream/large":["audio","video0"],"stream/medium":["audio","video1"]}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)

@@ -640,7 +640,7 @@ func TestWriteToFile(t *testing.T) {
 	mh := agg.New()
 	go mh.Run(closed)
 
-	time.Sleep(time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 
 	h := New(mh)
 	go h.Run(closed)
@@ -657,7 +657,7 @@ func TestWriteToFile(t *testing.T) {
 
 	h.Add <- *r
 
-	time.Sleep(time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 
 	if _, ok := h.Rules[id]; !ok {
 		t.Error("Rule not registered in Rules")
@@ -669,7 +669,7 @@ func TestWriteToFile(t *testing.T) {
 
 	h.Messages.Register <- c
 
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 
 	string0 := "test message"
 
