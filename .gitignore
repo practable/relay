@@ -21,7 +21,7 @@ TODO.md
 *.debug
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
+*.cov
 # binaries
 cmd/shell/shell
 cmd/session/session
