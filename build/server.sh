@@ -8,4 +8,4 @@ sudo cp shell /usr/local/bin
 cd ../session
 go build
 sudo cp session /usr/local/bin
-cd ../build
+
