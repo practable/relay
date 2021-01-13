@@ -5,6 +5,75 @@ Secure websocket relay server and clients for sharing video, data, and ssh acros
 IN DEVELOPMENT NOW - REPO HERE FOR BACKUP ONLY - DO NOT USE - API IN FLUX
 
 
+## Operations considerations
+
+
+### Booking
+
+Booking uses an in-memory store on a single process, so this will be lost if the process or server fails. Tokens already distributed will be viable if the relay remains up, and with the secret unchanged. Resetting the booking and re-using already-assigned equipment will result in user collision (two users unexpectedly sharing the same kit), reducing the quality of the experience. 
+
+#### Recovery - worst case
+
+- identity failure
+- restart booking service
+- lock to new bookings
+- import or re-establish groups, pools, activities
+- wait until the longest session has definitely finished (deny new bookings mean time)
+- open bookings
+
+#### Recovery - speeding up the process
+
+##### No additional code
+
+check connections on relay and restart sooner if all connections drop
+
+##### Additional code
+
+This approach is a light-weight approach to persistance
+
+ - Implement persist to disk by writing each booking to a file.
+ - Reconstruct bookingstore localling from the record (ignore stale entries)
+ - Import to server
+ - Consider automation of this on startup
+    - check for existing pool structure (not likely to change)
+    - check for recent booking transactions
+ 
+##### Active-passive
+
+A passive server could be updated with poolStore and booking events from the active service.
+
+In the event of the active server failing, the duplicate state in the passive server would suffice for failover.
+
+If the active server failed because of data corruption, then the worst case recovery applies.
+
+### Relay
+
+The relay does not store state beyond the lifetime of the authorisation codes, so the time-horizon for a failure is limited to rebuffing authorisation codes that are still valid, but being submitted to the newly restarted instance which does not have a record of them. This will simply trigger a reconnect via access, so no state-persistance is necessary. Other than the secret.
+
+### Shellrelay
+
+The shellrelay relies on hosts reconnecting after a failure. The shellrelay also relies on hosts obtaining new tokens before their current tokens time out. In the current system this needs to be manually managed. Long life tokens could be given for safety, e.g. lasting to end of term, with the tradeoff that the shared secret would need rotating if breached. The shared secret for the relay and shellrelay should be different to allow the relay secret to be rotated more frequently if desirable.
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
 Ignore below here (README.md from crossbar ...)
 
 ## Benchmarking
