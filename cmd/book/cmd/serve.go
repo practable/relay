@@ -39,7 +39,6 @@ export BOOK_PORT=4000
 export BOOK_FQDN=https://book.practable.io
 export BOOK_LOGINTIME=3600
 export BOOK_SECRET=somesecret
-export BOOK_LOGFILE=/var/log/book.log
 book serve
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -55,7 +54,6 @@ book serve
 		fqdn := viper.GetString("fqdn")
 		port := viper.GetInt("port")
 		secret := viper.GetString("secret")
-		logfile := viper.GetString("logfile")
 		logintime := viper.GetInt("logintime")
 
 		if development {
@@ -71,14 +69,6 @@ book serve
 			//production environment
 			log.SetFormatter(&log.JSONFormatter{})
 			log.SetLevel(log.WarnLevel)
-
-			file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-			if err == nil {
-				log.SetOutput(file)
-			} else {
-				log.Infof("Failed to log to %s, using default stderr", logfile)
-			}
-
 		}
 
 		c := make(chan os.Signal, 1)
