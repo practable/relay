@@ -8,7 +8,7 @@
 Relay is a set of tools and services to let you to host remote lab experiments, without opening firewall ports.
 
  - Secure websocket relay and host adapter for sharing video and data, with read/write permissions
- - Secure login shell relay, host adapter and client  with end-to-end encrypted administration access without a jumpserver 
+ - Secure login shell relay, host adapter and client for end-to-end encrypted admin access without a jumpserver 
  - Booking server for connecting users to experiments
  - Works with experiments behind firewalls and NAT because all communications are relayed 
  - No need to open firewall ports, or get public IPv4 addresses.
@@ -26,7 +26,7 @@ To cite the paper:
   
   Having said that, the API is more or less in place now, and I expect to modify it only to suit immediate operational requirements that emerge in coming weeks.
   
-  Once I've produced documentation to support my first batch of users, I will then improve this README to explain how it all hangs together from the point of view of developers - which let's face it, if you are here, you probably are. Meanwhile, feel free to browse in the repo to 'pkg/crossbar' and 'pkg/vw' where you can see (dated) introductions to key parts.
+  Once I've produced documentation to support my first batch of users, I will then improve this README to explain how it all hangs together from the point of view of developers - which let's face it, if you are here, you probably are. Meanwhile, feel free to browse in the repo to `pkg/crossbar` and `pkg/vw` where you can see (dated) introductions to key parts.
   
 Just to match that theme of under-construction, here are some remote lab boxes part way through construction.
   
