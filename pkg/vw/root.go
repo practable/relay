@@ -16,12 +16,24 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package main
+package vw
 
 import (
-	"github.com/timdrysdale/relay/pkg/vw/cmd"
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	cmd.Execute()
+var rootCmd = &cobra.Command{
+	Use:   "vw",
+	Short: "VW video websockets transporter",
+	Long:  `VW receives MPEG TS streams via http, then forwards combinations of those streams to websocket servers`,
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

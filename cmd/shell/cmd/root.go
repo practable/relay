@@ -29,17 +29,18 @@ var logFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "shell",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Shell is a set of services for relaying ssh connections",
+	Long: `Available services are 
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+session relay := relays websockets, with jwt-token protected access via separate http API
+session host := connects to local sshd dameon (or whatever other login shell you are relaying)
+session client := listens at a local port for connections from your ssh tool
+`,
+
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
-	},
+	//Run: func(cmd *cobra.Command, args []string) {
+	//},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

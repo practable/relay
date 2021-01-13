@@ -1,4 +1,4 @@
-package cmd
+package vw
 
 import (
 	"bufio"
@@ -117,7 +117,7 @@ func TestStreamUsingInternals(t *testing.T) {
 	args := fmt.Sprintf("-re -i sample.ts -f mpegts -codec:v mpeg1video -s 640x480 -b:v 1000k -r 24 -bf 0 %s", dest)
 	argSlice := strings.Split(args, " ")
 	cmd := exec.Command("ffmpeg", argSlice...)
-	fp, err := filepath.Abs("../test")
+	fp, err := filepath.Abs("./test")
 	assert.NoError(t, err)
 	cmd.Dir = fp
 	err = cmd.Run()
@@ -165,7 +165,8 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 		logignore := bufio.NewWriter(&ignore)
 		log.SetOutput(logignore)
 	}
-	go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
+	//go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
+	go Stream()
 
 	// destination websocket reporting channels
 	msgSize0 := make(chan int)
@@ -240,7 +241,7 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 	args := fmt.Sprintf("-re -f concat -i list.txt -f mpegts -codec:v mpeg1video -s 640x480 -b:v 1000k -r 24 -bf 0 %s", dest)
 	argSlice := strings.Split(args, " ")
 	cmd := exec.Command("ffmpeg", argSlice...)
-	fp, err := filepath.Abs("../test")
+	fp, err := filepath.Abs("./test")
 	assert.NoError(t, err)
 	cmd.Dir = fp
 	go func() {
@@ -333,7 +334,8 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 
 	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
 
-	go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
+	//go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
+	go Stream()
 
 	time.Sleep(time.Second) // big safety margin to get crossbar running
 
@@ -457,7 +459,7 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 	args := fmt.Sprintf("-re -f concat -i list.txt -f mpegts -codec:v mpeg1video -s 640x480 -b:v 1000k -r 24 -bf 0 %s", dest)
 	argSlice := strings.Split(args, " ")
 	cmd := exec.Command("ffmpeg", argSlice...)
-	fp, err := filepath.Abs("../test")
+	fp, err := filepath.Abs("./test")
 	assert.NoError(t, err)
 	cmd.Dir = fp
 
