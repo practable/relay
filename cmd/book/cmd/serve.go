@@ -48,13 +48,14 @@ book serve
 
 		viper.SetDefault("port", 8080)
 		viper.SetDefault("maxtime", 5400)
-		viper.SetDefault("logfile", "book.log")
+		viper.SetDefault("logfile", "/var/log/book/book.log")
 
 		development := viper.GetBool("development")
 		fqdn := viper.GetString("fqdn")
 		port := viper.GetInt("port")
 		secret := viper.GetString("secret")
 		logintime := viper.GetInt("logintime")
+		logfile := viper.GetString("logfile")
 
 		if development {
 			// development environment
@@ -69,6 +70,13 @@ book serve
 			//production environment
 			log.SetFormatter(&log.JSONFormatter{})
 			log.SetLevel(log.WarnLevel)
+
+			file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+			if err == nil {
+				log.SetOutput(file)
+			} else {
+				log.Infof("Failed to log to %s, using default stderr", logfile)
+			}
 		}
 
 		c := make(chan os.Signal, 1)
