@@ -1,11 +1,9 @@
 package manifest
 
 import (
-	"encoding/json"
-	"fmt"
+	"io/ioutil"
 	"testing"
 
-	"github.com/r3labs/diff"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
@@ -18,6 +16,26 @@ func init() {
 
 }
 
+func TestExample(t *testing.T) {
+
+	m0 := Example()
+
+	_, err := yaml.Marshal(m0)
+
+	assert.NoError(t, err)
+
+	content, err := ioutil.ReadFile("testdata/example.yaml")
+	assert.NoError(t, err)
+
+	m1 := &Manifest{}
+	err = yaml.Unmarshal(content, m1)
+	assert.NoError(t, err)
+
+	assert.Equal(t, m0, m1)
+
+}
+
+/*
 func TestGetManifest(t *testing.T) {
 
 	ps := Example()
@@ -61,3 +79,4 @@ func TestGetManifest(t *testing.T) {
 	}
 
 }
+*/
