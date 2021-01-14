@@ -7,7 +7,7 @@ import (
 )
 
 type PoolStore struct {
-	*sync.RWMutex `json:"-"`
+	*sync.RWMutex `json:"-" yaml:"-"`
 
 	// Groups represent non-exclusive combinations of pools
 	Groups map[string]*Group `json:"groups"`
@@ -22,24 +22,24 @@ type PoolStore struct {
 	BookingTokenDuration int64 `json:"bookingTokenDuration"`
 
 	// Now is a function for getting the time - useful for mocking in test
-	Now func() int64 `json:"-"`
+	Now func() int64 `json:"-" yaml:"-"`
 }
 
 type Group struct {
-	*sync.RWMutex `json:"-"`
+	*sync.RWMutex `json:"-" yaml:"-"`
 	Description   `json:"description"`
 	Pools         []*Pool `json:"pools"`
 }
 
 type Pool struct {
-	*sync.RWMutex `json:"-"`
+	*sync.RWMutex `json:"-" yaml:"-"`
 	Description   `json:"description"`
 	Activities    map[string]*Activity `json:"activities"`
 	Available     map[string]int64     `json:"available"`
 	InUse         map[string]int64     `json:"inUse"`
 	MinSession    uint64               `json:"minSession"`
 	MaxSession    uint64               `json:"maxSession"`
-	Now           func() int64         `json:"-"`
+	Now           func() int64         `json:"-" yaml:"-"`
 }
 
 type Description struct {
