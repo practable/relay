@@ -31,14 +31,14 @@ type Token struct {
 	// ConnectionIDSalt remains hidden within a relay
 	// and is used to obscure the actual topic used in a hub
 	// from visibility in access logs e.g. in shellbar
-	TopicSalt string `json:"topicSalt,omitempty"`
+	TopicSalt string `json:"topicSalt,omitempty"  yaml:",omitempty"`
 
 	// AlertHost controls whether making _this_
 	// particular connection should alert the host
 	// This is needed for ssh hosts in shellbar
-	AlertHost bool `json:"alertHost,omitempty"`
+	AlertHost bool `json:"alertHost,omitempty" yaml:",omitempty"`
 
-	jwt.StandardClaims
+	jwt.StandardClaims `yaml:",omitempty"`
 }
 
 func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf, exp int64) Token {
