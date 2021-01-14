@@ -1,0 +1,258 @@
+groups:
+  controls3:
+    pools:
+    - spinner-controls3
+  everyone:
+    pools:
+    - penduino-everyone
+    - spinner-everyone
+pools:
+  penduino-everyone:
+    description:
+      name: Penduino (Everyone)
+      type: penduino-pool-v1.0
+      short: Electromagnetic Pendulums
+      long: Explore the operation of simple pendulums using an electromagnetic drive
+        system.
+      further: https://static.practable.io/info/penduino-v1.0
+      thumb: https://assets.practable.io/images/penduino-v1.0/thumb.png
+      image: https://assets.practable.io/images/penduino-v1.0/image.png
+    minsession: 600
+    maxsession: 3600
+    activities:
+    - penduino-activity-00
+    - penduino-activity-01
+    - penduino-activity-02
+  spinner-controls3:
+    description:
+      name: Spinner (Controls 3)
+      type: spinner-pool-v1.0
+      short: Electromagnetic Pendulums
+      long: Explore the operation of simple pendulums using an electromagnetic drive
+        system.
+      further: https://static.practable.io/info/spinner-v1.0
+      thumb: https://assets.practable.io/images/spinner-v1.0/thumb.png
+      image: https://assets.practable.io/images/spinner-v1.0/image.png
+    minsession: 600
+    maxsession: 3600
+    activities:
+    - spinner-activity-01
+    - spinner-activity-02
+  spinner-everyone:
+    description:
+      name: Spinner (Everyone)
+      type: spinner-pool-v1.0
+      short: Electromagnetic Pendulums
+      long: Explore the operation of simple pendulums using an electromagnetic drive
+        system.
+      further: https://static.practable.io/info/spinner-v1.0
+      thumb: https://assets.practable.io/images/spinner-v1.0/thumb.png
+      image: https://assets.practable.io/images/spinner-v1.0/image.png
+    minsession: 600
+    maxsession: 3600
+    activities:
+    - spinner-activity-00
+activities:
+  penduino-activity-00:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 1613256113
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/penduino-activity-00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: penduino-activity-00-data
+        verb: POST
+      video:
+        for: data
+        url: https://relay-access.practable.io/session/penduino-activity-00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: penduino-activity-00-video
+        verb: POST
+  penduino-activity-01:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 1613256113
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/penduino-activity-01-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: penduino-activity-01-data
+        verb: POST
+      video:
+        for: data
+        url: https://relay-access.practable.io/session/penduino-activity-01-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: penduino-activity-01-video
+        verb: POST
+  penduino-activity-02:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 1613256113
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/penduino-activity-02-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: penduino-activity-02-data
+        verb: POST
+      video:
+        for: data
+        url: https://relay-access.practable.io/session/penduino-activity-02-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: penduino-activity-02-video
+        verb: POST
+  spinner-activity-00:
+    description: spinner-activity-v1.0
+    UISet: spinner
+    exp: 1613256113
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spinner-activity-00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spinner-activity-00-data
+        verb: POST
+      video:
+        for: data
+        url: https://relay-access.practable.io/session/spinner-activity-00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spinner-activity-00-video
+        verb: POST
+  spinner-activity-01:
+    description: spinner-activity-v1.0
+    UISet: spinner
+    exp: 1613256113
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spinner-activity-01-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spinner-activity-01-data
+        verb: POST
+      video:
+        for: data
+        url: https://relay-access.practable.io/session/spinner-activity-01-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spinner-activity-01-video
+        verb: POST
+  spinner-activity-02:
+    description: spinner-activity-v1.0
+    UISet: spinner
+    exp: 1613256113
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spinner-activity-02-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spinner-activity-02-data
+        verb: POST
+      video:
+        for: data
+        url: https://relay-access.practable.io/session/spinner-activity-02-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spinner-activity-02-video
+        verb: POST
+uis:
+  penduino-advanced-ui-v1.0:
+    description:
+      name: Penduino (Advanced)
+      type: penduino-advanced-ui-v1.0
+      short: Control an Electromagnetic Pendulum
+      long: Start the pendulum swinging, and observe the difference in decay time
+        for three different types of braking - no braking, short circuit load, and
+        energised coil. Explore the impact of different settings for the drive and
+        brake.
+      further: https://static.practable.io/info/penduino-advanced-ui-v1.0
+      thumb: https://assets.practable.io/images/penduino-advanced-ui-v1.0/thumb.png
+      image: https://assets.practable.io/images/penduino-advanced-ui-v1.0/image.png
+    url: https://static.practable.io/ui/penduino-advanced-ui-v1.0?data={{data}}&video={{video}}
+    streamsrequired:
+    - data
+    - video
+  penduino-basic-ui-v1.0:
+    description:
+      name: Penduino (Basic)
+      type: penduino-basic-ui-v1.0
+      short: Control an Electromagnetic Pendulum
+      long: Start the pendulum swinging, and observe the difference in decay time
+        for three different types of braking - no braking, short circuit load, and
+        energised coil.
+      further: https://static.practable.io/info/penduino-basic-ui-v1.0
+      thumb: https://assets.practable.io/images/penduino-basic-ui-v1.0/thumb.png
+      image: https://assets.practable.io/images/penduino-basic-ui-v1.0/image.png
+    url: https://static.practable.io/ui/penduino-basic-ui-v1.0?data={{data}}&video={{video}}
+    streamsrequired:
+    - data
+    - video
+  spinner-advanced-ui-v1.0:
+    description:
+      name: Spinner (Advanced)
+      type: spinner-advanced-ui-v1.0
+      short: Control a spinning weighted disk
+      long: Use a PID loop to achieve a specificed spin speed
+      further: https://static.practable.io/info/spinner-advanced-ui-v1.0
+      thumb: https://assets.practable.io/images/spinner-advanced-ui-v1.0/thumb.png
+      image: https://assets.practable.io/images/spinner-advanced-ui-v1.0/image.png
+    url: https://static.practable.io/ui/spinner-advanced-ui-v1.0?data={{data}}&video={{video}}
+    streamsrequired:
+    - data
+    - video
+  spinner-basic-ui-v1.0:
+    description:
+      name: Spinner (Basic)
+      type: spinner-basic-ui-v1.0
+      short: Control a spinning weighted disk
+      long: Set the drive percentage and observe the steady state speed.
+      further: https://static.practable.io/info/spinner-basic-ui-v1.0
+      thumb: https://assets.practable.io/images/spinner-basic-ui-v1.0/thumb.png
+      image: https://assets.practable.io/images/spinner-basic-ui-v1.0/image.png
+    url: https://static.practable.io/ui/spinner-basic-ui-v1.0?data={{data}}&video={{video}}
+    streamsrequired:
+    - data
+    - video
+UISets:
+  penduino:
+  - penduino-basic-ui-v1.0
+  - penduino-advanced-ui-v1.0
+  spinner:
+  - spinner-basic-ui-v1.0
+  - spinner-advanced-ui-v1.0
+descriptions:
+  penduino-activity-v1.0:
+    name: Penduino
+    type: penduino-activity-v1.0
+    short: Electromagnetic Pendulum
+    long: A simple pendulum with electromagnetic drive system producing simple harmonic
+      motion. The drive and braking effect are variable. They are determined by how
+      much of the pendulum's travel the coil remains energised for. The pendulum can
+      also be slowed down by short-circuiting the coil, without applying any power,
+      or left to swing freely with no drive or braking.
+    further: https://static.practable.io/info/penduino-v1.0
+    thumb: https://assets.practable.io/images/penduino-v1.0/thumb.png
+    image: https://assets.practable.io/images/penduino-v1.0/image.png
+  spinner-activity-v1.0:
+    name: Spinner
+    type: spinner-activity-v1.0
+    short: Weighted spinning disk
+    long: ' A simple weighted spinning disk driven by a brushed DC motor. The spin
+      speed can be set by the duty cycle of the drive signal, either directly, or
+      by using a proportional-integral-derivative (PID) control loop. The disk position
+      can also be set by using a PID loop.'
+    further: https://static.practable.io/info/spinner-v1.0
+    thumb: https://assets.practable.io/images/spinner-v1.0/thumb.png
+    image: https://assets.practable.io/images/spinner-v1.0/image.png

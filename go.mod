@@ -32,6 +32,7 @@ require (
 	github.com/ory/viper v1.7.5
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
+	github.com/r3labs/diff v1.1.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.5.1 // indirect
