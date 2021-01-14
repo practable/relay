@@ -2,11 +2,25 @@
 
 Shellrelay connects clients with remote sshd behind firewalls, by relaying the connection. This is intended for use cases where an incoming ssh connection would be acceptable, but the administration in arranging the incoming ports open on the firewall is burdensome.
 
-Note that the SSH
+## Known issues 
+
+Some infrequent data corruption observed during moderate traffic (using top) may be down to framing errors in the tcp code, and this could be be diagnosed by comparing against the websocat implementation as a front end, as part of exploring `packet` options.
+
+https://github.com/vi/websocat/issues/42
+
+> Yes. How do you want to contact this daemon? Over TCP or UNIX socket?
+>  
+> For example,
+> 
+> `websocat -Et tcp-l:127.0.0.1:1234 reuse-raw:ws://echo.websocket.org`
+> acts as a server, forwarding multiple incoming TCP connections to one reused WebSocket connection. Each line of incoming data is transformed to a WebSocket message, each incoming WebSocket message is transformed into a line, which is sent to some currently connected client (or cached up and sent to subsequent client if current client suddenly disconnected).
+> `echo 'request in JSON' | nc -q 1 127.0.0.1 1234 > reply.json`
+> acts as a client (you can also use something like websocat -b - tcp:127.0.0.1:1234 as a TCP client, but there may be some issues).
+
 
 ## SSH protocol speaking order
 
-One of the quirks of dynamically creating unique connections is that in practice, clients speak their identification code as soon as they connect. This "normal" unrelated connection was captured with the wireshark display filter "ssh", and aborted at the password prompt:
+One of the quirks of dynamically creating unique connections is that in practice, clients speak their identification code as soon as they connect. This "normal" unrelayed connection was captured with the wireshark display filter "ssh", and aborted at the password prompt:
 
 ```
 No.     Time           Source                Destination           Protocol Length Info
