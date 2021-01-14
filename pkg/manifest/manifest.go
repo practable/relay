@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/timdrysdale/relay/pkg/permission"
 	"github.com/timdrysdale/relay/pkg/pool"
 	"gopkg.in/yaml.v2"
@@ -20,10 +21,14 @@ import (
 type Manifest struct {
 
 	// Groups represents all the groups in the poolstore
-	Groups []*Group `yaml:"groups"`
+	Groups []Group `yaml:"groups"`
 
 	// Pools represents all the pools in the poolstore
-	Pools []*Pool
+	Pools []Pool `yaml:"pools"`
+
+	Secret string `yaml:"secret"`
+
+	BookingTokenDuration int64 `yaml:"bookingTokenDuration"`
 }
 
 type Group struct {
@@ -37,49 +42,190 @@ type Group struct {
 	Pools []string
 }
 
+type Activity struct {
+	ExpiresAt int64
+
+	Tokens map[string]permission.Token
+}
+
 type Pool struct {
 
 	// ID represents the PoolStore-provided ID, obtained on adding the pool
 	ID string
 
-	// Pool represents the pool
-	Pool *pool.Pool
+	Description pool.Description
 
-	// DefaultActivity represents the default properties of activities
-	DefaultActivity *pool.Activity
+	MinSession uint64
+
+	MaxSession uint64
+
+	ActivityDescription pool.Description
+
+	Streams map[string]pool.Stream
+
+	UI []*pool.UI
+
+	Activities []Activity
 }
 
 func (m *Manifest) GetPoolStore() *pool.PoolStore {
 
-	ps := pool.NewPoolStore()
+	ps := pool.NewPoolStore().
+		WithBookingTokenDuration(m.BookingTokenDuration).
+		WithSecret(m.Secret)
 
-	//TODO implement!
+	// inflate and add pools, and correlate id with ptr
+	// for construcing group later
+
+	pmap := make(map[string]*pool.Pool)
+
+	for _, mp := range m.Pools {
+		p := mp.ToPool()
+		pmap[mp.ID] = p
+		ps.AddPool(p)
+	}
+
+	//TODO implement groups
 
 	return ps
 
 }
 
+func (mp *Pool) ToPool() *pool.Pool {
+
+	p := &pool.Pool{
+		Description: mp.Description,
+		MinSession:  mp.MaxSession,
+		MaxSession:  mp.MaxSession,
+	}
+	if len(mp.Activities) < 1 {
+		return p
+	}
+
+	p.Activities = make(map[string]*pool.Activity)
+
+	for _, a := range mp.Activities {
+
+		pa := &pool.Activity{
+			Description: mp.ActivityDescription,
+			ExpiresAt:   a.ExpiresAt,
+			UI:          mp.UI,
+			Streams:     make(map[string]*pool.Stream),
+		}
+
+		for k, v := range mp.Streams {
+
+			s := v
+
+			if _, ok := a.Tokens[k]; !ok {
+				continue
+			}
+
+			s.Permission = a.Tokens[k]
+
+			pa.Streams[k] = &s
+		}
+
+		p.Activities[pa.ID] = pa
+
+	}
+
+	return p
+
+}
+
+func PoolToManifestPool(p pool.Pool) Pool {
+
+	mp := Pool{
+		Description: p.Description,
+		MinSession:  p.MaxSession,
+		MaxSession:  p.MaxSession,
+	}
+
+	if len(p.Activities) < 1 {
+		return mp
+	}
+
+	// get the first key in the map
+	var key string
+	for k, _ := range p.Activities {
+		key = k
+		break
+	}
+
+	// use that key/activity to populate the default activity
+	a := p.Activities[key]
+
+	mp.ActivityDescription = a.Description
+
+	s := make(map[string]pool.Stream)
+
+	for _, v := range a.Streams {
+		v.Permission = permission.Token{} //ignore tokens in default representation
+		s[v.For] = *v
+	}
+
+	mp.Streams = s
+
+	//u := []*pool.UI{}
+
+	//for _, v := range a.UI {
+	//	u = append(u, *v)
+	//}
+
+	mp.UI = a.UI
+
+	mas := []Activity{}
+
+	for _, pa := range p.Activities {
+
+		ma := Activity{
+			ExpiresAt: pa.ExpiresAt,
+			Tokens:    make(map[string]permission.Token),
+		}
+
+		for _, v := range pa.Streams {
+
+			ma.Tokens[v.For] = v.Permission
+
+		}
+
+		mas = append(mas, ma)
+	}
+
+	mp.Activities = mas
+
+	return mp
+
+}
+
 func GetManifest(ps *pool.PoolStore) *Manifest {
 
-	m := &Manifest{}
+	m := &Manifest{
+		Secret:               string(ps.Secret),
+		BookingTokenDuration: ps.BookingTokenDuration,
+	}
 
-	// TODO - make sensible defaults  map the arguments, and treat as defaults those that only have one entry?
+	// Manifest assumes that all activities in a pool are
+	// identical EXCEPT for the permission token, so as
+	// to keep the manifest as compact and efficient as
+	// possible, and help the human editor!
+	// It won't be true once multiple suppliers exist,
+	// so we need to develop better manifest support
+	// for when that happens.
 
-	//pmap := make(map[*pool.Pool]*Pool)
+	pmap := make(map[*pool.Pool]string)
 
 	for _, pp := range ps.Pools {
-		mp := &Pool{
-			ID:              pp.ID,
-			Pool:            pp,
-			DefaultActivity: pool.NewActivity("default", 0),
-		}
-		//pmap[pp] = mp
 
+		mp := PoolToManifestPool(*pp)
+		pid := uuid.New().String()
+		mp.ID = pid
+		pmap[pp] = pid
 		m.Pools = append(m.Pools, mp)
 	}
 
 	for _, pg := range ps.Groups {
-
 		mg := &Group{
 			Description: &pg.Description,
 			Pools:       []string{},
@@ -87,15 +233,13 @@ func GetManifest(ps *pool.PoolStore) *Manifest {
 
 		for _, pp := range pg.Pools {
 
-			mg.Pools = append(mg.Pools, pp.ID)
+			if _, ok := pmap[pp]; !ok {
+				continue
+			}
 
-			//if mp, ok := pmap[pp]; ok {
-			//	mg.Pools = append(mg.Pools, mp)
-			//}
-
+			mg.Pools = append(mg.Pools, pmap[pp])
 		}
-
-		m.Groups = append(m.Groups, mg)
+		m.Groups = append(m.Groups, *mg)
 	}
 
 	return m
@@ -137,13 +281,15 @@ func Example() *pool.PoolStore {
 
 	duration := int64(2628000) //3 months
 
-	ps := pool.NewPoolStore()
+	ps := pool.NewPoolStore().WithSecret("somesecret")
 
 	name := "stuff"
 
 	g0 := pool.NewGroup(name)
-
 	ps.AddGroup(g0)
+
+	g1 := pool.NewGroup("things")
+	ps.AddGroup(g1)
 
 	p0 := pool.NewPool("stuff0")
 
@@ -156,9 +302,26 @@ func Example() *pool.PoolStore {
 	}
 
 	g0.AddPool(p0)
+	g1.AddPool(p0)
+
 	ps.AddPool(p0)
 
-	a := pool.NewActivity("a", ps.Now()+duration)
+	p1 := pool.NewPool("things0")
+
+	p1.DisplayInfo = pool.DisplayInfo{
+		Short:   "The Good Things - Pool 0",
+		Long:    "This thing has some good things in it",
+		Further: "https://example.com/further.html",
+		Thumb:   "https://example.com/thumb.png",
+		Image:   "https://example.com/img.png",
+	}
+
+	g1.AddPool(p1)
+
+	ps.AddPool(p1)
+
+	// Activity A
+	a := pool.NewActivity("acti00", ps.Now()+duration)
 
 	p0.AddActivity(a)
 
@@ -217,6 +380,39 @@ func Example() *pool.PoolStore {
 		WithDescription(du1)
 
 	a.AddUI(u1)
+
+	// Activity B
+
+	b := pool.NewActivity("acti01", ps.Now()+duration)
+
+	p0.AddActivity(b)
+
+	pt2 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "230498529083",
+		Scopes:         []string{"read", "write"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s2 := pool.NewStream("https://example.com/session/23049852908")
+	s2.SetPermission(pt2)
+	b.AddStream("data", s2)
+
+	pt3 := permission.Token{
+		ConnectionType: "session",
+		Topic:          "asdfasdf456",
+		Scopes:         []string{"read"},
+		StandardClaims: jwt.StandardClaims{
+			Audience: "https://example.com",
+		},
+	}
+	s3 := pool.NewStream("https://example.com/session/asdfasdf456")
+	s3.SetPermission(pt3)
+	b.AddStream("video", s3)
+
+	b.AddUI(u0)
+	b.AddUI(u1)
 
 	return ps
 
