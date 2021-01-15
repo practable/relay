@@ -6,7 +6,7 @@
 // except for the stream details
 package manifest
 
-func Example() *Manifest {
+func Example(exp int64) *Manifest {
 
 	M := &Manifest{}
 
@@ -95,8 +95,6 @@ func Example() *Manifest {
 	}
 
 	M.Activities = make(map[Ref]*Activity)
-
-	exp := int64(1613256113)
 
 	spa0 := make(map[string]*Stream)
 	spa0["data"] = &Stream{
