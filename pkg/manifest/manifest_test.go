@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
@@ -23,21 +23,24 @@ import (
 	"github.com/timdrysdale/relay/pkg/bookingstore"
 	lit "github.com/timdrysdale/relay/pkg/login"
 	"github.com/timdrysdale/relay/pkg/pool"
+	"github.com/xtgo/uuid"
 	"gopkg.in/yaml.v2"
 )
 
 var debug bool
 var l *bookingstore.Limit
 var ps *pool.PoolStore
-var host, audience, localSecret, remoteSecret string
 var bookingDuration, mocktime, startime int64
 var useLocal bool
+var bearer, secret string
+var bc *apiclient.Bc
 
 func init() {
 
-	useLocal = false
+	useLocal = true
 
 	debug = false
+
 	if debug {
 		os.Setenv("DEBUG", "true") //for apiclient
 		log.SetReportCaller(true)
@@ -57,40 +60,80 @@ func init() {
 
 func TestMain(m *testing.M) {
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	var lt lit.Token
+	var cfg *apiclient.TransportConfig
+	var loginBearer string
 
-	localSecret = "somesecret"
-	secret, err := ioutil.ReadFile("../../secret/book.practable.io.secret")
+	iat := time.Now().Unix() - 1
+	nbf := iat
+	exp := nbf + 30
+
+	if useLocal {
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		secret = "somesecret"
+
+		ps = pool.NewPoolStore().
+			WithSecret(secret).
+			WithBookingTokenDuration(int64(180))
+
+		l = bookingstore.New(ctx).WithFlush(time.Minute).WithMax(2).WithProvisionalPeriod(5 * time.Second)
+
+		port, err := freeport.GetFreePort()
+		if err != nil {
+			panic(err)
+		}
+
+		host := "[::]:" + strconv.Itoa(port)
+
+		audience := "http://" + host
+
+		go booking.API(ctx, port, audience, secret, ps, l)
+
+		time.Sleep(time.Second)
+
+		lt = lit.NewToken(audience, []string{"everyone"}, []string{}, []string{"login:admin"}, iat, nbf, exp)
+		loginBearer, err = lit.Signed(lt, secret)
+		if err != nil {
+			panic(err)
+		}
+
+		cfg = apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{"http"})
+
+	} else { //remote
+
+		remoteSecret, err := ioutil.ReadFile("../../secret/book.practable.io.secret")
+		if err != nil {
+			panic(err)
+		}
+
+		secret = strings.TrimSuffix(string(remoteSecret), "\n")
+
+		lt = lit.NewToken("https://book.practable.io", []string{"everyone"}, []string{}, []string{"login:admin"}, iat, nbf, exp)
+		loginBearer, err = lit.Signed(lt, secret)
+		if err != nil {
+			panic(err)
+		}
+
+		cfg = apiclient.DefaultTransportConfig().WithSchemes([]string{"https"})
+
+	}
+
+	loginAuth := httptransport.APIKeyAuth("Authorization", "header", loginBearer)
+
+	bc := apiclient.NewHTTPClientWithConfig(nil, cfg)
+
+	timeout := 10 * time.Second
+
+	params := login.NewLoginParams().WithTimeout(timeout)
+	resp, err := bc.Login.Login(params, loginAuth)
 	if err != nil {
 		panic(err)
 	}
-	remoteSecret = strings.TrimSuffix(string(secret), "\n")
 
-	bookingDuration = int64(180)
-
-	mocktime = time.Now().Unix()
-	startime = mocktime
-
-	ps = pool.NewPoolStore().
-		WithSecret(localSecret).
-		WithBookingTokenDuration(bookingDuration).
-		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
-
-	l = bookingstore.New(ctx).WithFlush(time.Minute).WithMax(2).WithProvisionalPeriod(5 * time.Second)
-
-	port, err := freeport.GetFreePort()
-	if err != nil {
-		panic(err)
-	}
-
-	host = "[::]:" + strconv.Itoa(port)
-
-	audience = "http://" + host
-
-	go booking.API(ctx, port, audience, localSecret, ps, l)
-
-	time.Sleep(time.Second)
+	bearer = *resp.GetPayload().Token
 
 	exitVal := m.Run()
 
@@ -116,46 +159,23 @@ func TestExample(t *testing.T) {
 
 }
 
-func TestBc(t *testing.T) {
-
-	iat := time.Now().Unix() - 1
-	nbf := iat
-	exp := nbf + 30
-
-	var lt lit.Token
-	var bearer string
-	var err error
-	if useLocal {
-		lt = lit.NewToken(audience, []string{"everyone"}, []string{}, []string{"login:admin"}, iat, nbf, exp)
-		bearer, err = lit.Signed(lt, localSecret)
-	} else {
-		lt = lit.NewToken("https://book.practable.io", []string{"everyone"}, []string{}, []string{"login:admin"}, iat, nbf, exp)
-		bearer, err = lit.Signed(lt, remoteSecret)
-	}
-
+func TestBearer(t *testing.T) {
+	// admin
+	token, err := jwt.ParseWithClaims(bearer, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
 	assert.NoError(t, err)
 
-	loginAuth := httptransport.APIKeyAuth("Authorization", "header", bearer)
+	claims, ok := token.Claims.(*lit.Token)
 
-	var cfg *apiclient.TransportConfig
+	assert.True(t, ok)
+	assert.True(t, token.Valid)
 
-	if useLocal {
-		cfg = apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{"http"})
-	} else {
-		cfg = apiclient.DefaultTransportConfig().WithSchemes([]string{"https"})
-	}
+	assert.Equal(t, []string{"everyone"}, claims.Groups)
+	assert.Equal(t, []string{"booking:admin"}, claims.Scopes)
+	assert.True(t, claims.ExpiresAt > time.Now().Unix()+30)
 
-	bc := apiclient.NewHTTPClientWithConfig(nil, cfg)
-
-	timeout := 10 * time.Second
-	params := login.NewLoginParams().WithTimeout(timeout)
-
-	resp, err := bc.Login.Login(params, loginAuth)
-
+	_, err = uuid.Parse(claims.Subject)
 	assert.NoError(t, err)
-
-	fmt.Println(resp)
-
-	//rehydrate, get the bookingToken ...
 
 }
