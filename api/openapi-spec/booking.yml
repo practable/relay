@@ -14,7 +14,8 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header 
-schemes: []
+schemes:
+  - https
 consumes:
 - application/json
 produces:
