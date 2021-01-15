@@ -49,12 +49,13 @@ type UISet []Ref
 type StreamSet []Ref
 
 type Stream struct {
-	For            string `yaml:"for"`
-	URL            string `yaml:"url"`
-	Audience       string `yaml:"audience"`
-	ConnectionType string `yaml:"ct"`
-	Topic          string `yaml:"topic"`
-	Verb           string `yaml:"verb"`
+	For            string   `yaml:"for"`
+	URL            string   `yaml:"url"`
+	Audience       string   `yaml:"audience"`
+	ConnectionType string   `yaml:"ct"`
+	Topic          string   `yaml:"topic"`
+	Verb           string   `yaml:"verb"`
+	Scopes         []string `yaml:"scopes"`
 }
 
 type Description struct {

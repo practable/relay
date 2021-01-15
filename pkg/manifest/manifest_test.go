@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -12,13 +14,17 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
+	"github.com/timdrysdale/relay/pkg/bc/client/admin"
+	groups "github.com/timdrysdale/relay/pkg/bc/client/groups"
 	login "github.com/timdrysdale/relay/pkg/bc/client/login"
+	"github.com/timdrysdale/relay/pkg/bc/models"
 	"github.com/timdrysdale/relay/pkg/booking"
 	"github.com/timdrysdale/relay/pkg/bookingstore"
 	lit "github.com/timdrysdale/relay/pkg/login"
@@ -27,6 +33,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var auth runtime.ClientAuthInfoWriter
 var debug bool
 var l *bookingstore.Limit
 var ps *pool.PoolStore
@@ -34,6 +41,7 @@ var bookingDuration, mocktime, startime int64
 var useLocal bool
 var bearer, secret string
 var bc *apiclient.Bc
+var timeout time.Duration
 
 func init() {
 
@@ -123,9 +131,9 @@ func TestMain(m *testing.M) {
 
 	loginAuth := httptransport.APIKeyAuth("Authorization", "header", loginBearer)
 
-	bc := apiclient.NewHTTPClientWithConfig(nil, cfg)
+	bc = apiclient.NewHTTPClientWithConfig(nil, cfg)
 
-	timeout := 10 * time.Second
+	timeout = 10 * time.Second
 
 	params := login.NewLoginParams().WithTimeout(timeout)
 	resp, err := bc.Login.Login(params, loginAuth)
@@ -134,6 +142,8 @@ func TestMain(m *testing.M) {
 	}
 
 	bearer = *resp.GetPayload().Token
+
+	auth = httptransport.APIKeyAuth("Authorization", "header", bearer)
 
 	exitVal := m.Run()
 
@@ -159,6 +169,32 @@ func TestExample(t *testing.T) {
 
 }
 
+// TestProduceExample is only used to generate the example
+// after a breaking update, and should be checked by hand
+// This "fails" if enabled
+func testProduceExample(t *testing.T) {
+	// This fails if enabled"
+
+	exp := int64(1613256113)
+	m0 := Example(exp)
+
+	buf, err := yaml.Marshal(m0)
+
+	assert.NoError(t, err)
+
+	err = ioutil.WriteFile("testdata/example.yaml", buf, 0644)
+
+	assert.NoError(t, err)
+
+	if err == nil {
+		fmt.Println("Examples file successfully written to testdata/example.yaml")
+	}
+
+	// ensure we notice if enabled accidentally
+	t.Fatal("wrote example file")
+
+}
+
 func TestBearer(t *testing.T) {
 	// admin
 	token, err := jwt.ParseWithClaims(bearer, &lit.Token{}, func(token *jwt.Token) (interface{}, error) {
@@ -177,5 +213,69 @@ func TestBearer(t *testing.T) {
 
 	_, err = uuid.Parse(claims.Subject)
 	assert.NoError(t, err)
+
+}
+
+func TestAddGroup(t *testing.T) {
+
+	n := "somegroup"
+	ty := "group"
+	g := &models.Group{
+		Description: &models.Description{
+			Name: &n,
+			Type: &ty,
+		},
+	}
+	params := groups.NewAddNewGroupParams().
+		WithTimeout(timeout).
+		WithGroup(g)
+
+	resp, err := bc.Groups.AddNewGroup(params, auth)
+
+	assert.NoError(t, err)
+
+	gid := resp.GetPayload()
+
+	if debug {
+		fmt.Println(*gid.ID)
+	}
+
+	_, err = uuid.Parse(*gid.ID)
+
+	assert.NoError(t, err, "groupID not a uuid")
+
+}
+
+func TestUploadManifest(t *testing.T) {
+
+	if useLocal != true {
+		t.Fatal("Don't run this test on a live server - it wipes the everything!")
+	}
+
+	// clear store
+	err := bc.Admin.DeletePoolStore(
+		admin.NewDeletePoolStoreParams().
+			WithTimeout(timeout),
+		auth)
+
+	assert.Error(t, err)
+
+	assert.Equal(t, "[DELETE /admin/poolstore][404] deletePoolStoreNotFound  <nil>", err.Error())
+
+	m := Example(time.Now().Unix() + 3600)
+
+	status, err := UploadManifest(bc, auth, timeout, *m)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, int64(2), status.Groups)
+	assert.Equal(t, int64(3), status.Pools)
+	assert.Equal(t, int64(6), status.Activities)
+
+	if debug {
+		pretty, err := json.MarshalIndent(status, "", "\t")
+		assert.NoError(t, err)
+		fmt.Println(string(pretty))
+	}
 
 }
