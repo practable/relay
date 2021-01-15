@@ -1,24 +1,105 @@
 package manifest
 
 import (
+	"bufio"
+	"bytes"
+	"context"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
 	"testing"
+	"time"
 
+	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/phayes/freeport"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
+	login "github.com/timdrysdale/relay/pkg/bc/client/login"
+	"github.com/timdrysdale/relay/pkg/booking"
+	"github.com/timdrysdale/relay/pkg/bookingstore"
+	lit "github.com/timdrysdale/relay/pkg/login"
+	"github.com/timdrysdale/relay/pkg/pool"
 	"gopkg.in/yaml.v2"
 )
 
 var debug bool
+var l *bookingstore.Limit
+var ps *pool.PoolStore
+var host, audience, localSecret, remoteSecret string
+var bookingDuration, mocktime, startime int64
+var useLocal bool
 
 func init() {
 
+	useLocal = false
+
 	debug = false
+	if debug {
+		os.Setenv("DEBUG", "true") //for apiclient
+		log.SetReportCaller(true)
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: false, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		os.Setenv("DEBUG", "false")
+		log.SetLevel(log.WarnLevel)
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
 
 }
 
-func TestExample(t *testing.T) {
+func TestMain(m *testing.M) {
 
-	m0 := Example()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	localSecret = "somesecret"
+	secret, err := ioutil.ReadFile("../../secret/book.practable.io.secret")
+	if err != nil {
+		panic(err)
+	}
+	remoteSecret = strings.TrimSuffix(string(secret), "\n")
+
+	bookingDuration = int64(180)
+
+	mocktime = time.Now().Unix()
+	startime = mocktime
+
+	ps = pool.NewPoolStore().
+		WithSecret(localSecret).
+		WithBookingTokenDuration(bookingDuration).
+		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
+
+	l = bookingstore.New(ctx).WithFlush(time.Minute).WithMax(2).WithProvisionalPeriod(5 * time.Second)
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		panic(err)
+	}
+
+	host = "[::]:" + strconv.Itoa(port)
+
+	audience = "http://" + host
+
+	go booking.API(ctx, port, audience, localSecret, ps, l)
+
+	time.Sleep(time.Second)
+
+	exitVal := m.Run()
+
+	os.Exit(exitVal)
+}
+
+func TestExample(t *testing.T) {
+	exp := int64(1613256113)
+	m0 := Example(exp)
 
 	_, err := yaml.Marshal(m0)
 
@@ -35,48 +116,46 @@ func TestExample(t *testing.T) {
 
 }
 
-/*
-func TestGetManifest(t *testing.T) {
+func TestBc(t *testing.T) {
 
-	ps := Example()
-	assert.Equal(t, 2, len(ps.Pools), "incorrect pool count")
-	assert.Equal(t, 2, len(ps.Groups), "incorrect group count")
+	iat := time.Now().Unix() - 1
+	nbf := iat
+	exp := nbf + 30
 
-	if debug {
-		pretty, err := json.MarshalIndent(ps, "", "\t")
-		assert.NoError(t, err)
-		fmt.Println(string(pretty))
+	var lt lit.Token
+	var bearer string
+	var err error
+	if useLocal {
+		lt = lit.NewToken(audience, []string{"everyone"}, []string{}, []string{"login:admin"}, iat, nbf, exp)
+		bearer, err = lit.Signed(lt, localSecret)
+	} else {
+		lt = lit.NewToken("https://book.practable.io", []string{"everyone"}, []string{}, []string{"login:admin"}, iat, nbf, exp)
+		bearer, err = lit.Signed(lt, remoteSecret)
 	}
-
-	m := GetManifest(ps)
-
-	buf, err := yaml.Marshal(m)
 
 	assert.NoError(t, err)
 
-	if debug {
-		fmt.Println(string(buf))
+	loginAuth := httptransport.APIKeyAuth("Authorization", "header", bearer)
+
+	var cfg *apiclient.TransportConfig
+
+	if useLocal {
+		cfg = apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{"http"})
+	} else {
+		cfg = apiclient.DefaultTransportConfig().WithSchemes([]string{"https"})
 	}
 
-	ps2 := m.GetPoolStore()
+	bc := apiclient.NewHTTPClientWithConfig(nil, cfg)
 
-	if false {
-		pretty, err := json.MarshalIndent(ps2, "", "\t")
-		assert.NoError(t, err)
-		fmt.Println(string(pretty))
-	}
+	timeout := 10 * time.Second
+	params := login.NewLoginParams().WithTimeout(timeout)
 
-	changeLog, err := diff.Diff(*ps, *ps2)
+	resp, err := bc.Login.Login(params, loginAuth)
+
 	assert.NoError(t, err)
 
-	assert.Equal(t, 2, len(ps2.Pools), "incorrect pool count")
-	assert.Equal(t, 2, len(ps2.Groups), "incorrect group count")
+	fmt.Println(resp)
 
-	if true {
-		pretty, err := json.MarshalIndent(changeLog, "", "\t")
-		assert.NoError(t, err)
-		fmt.Println(string(pretty))
-	}
+	//rehydrate, get the bookingToken ...
 
 }
-*/
