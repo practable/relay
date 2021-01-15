@@ -65,6 +65,8 @@ activities:
         ct: session
         topic: penduino-activity-00-data
         verb: POST
+        scopes:
+        - read
       video:
         for: data
         url: https://relay-access.practable.io/session/penduino-activity-00-video
@@ -72,6 +74,9 @@ activities:
         ct: session
         topic: penduino-activity-00-video
         verb: POST
+        scopes:
+        - read
+        - write
   penduino-activity-01:
     description: penduino-activity-v1.0
     UISet: penduino
@@ -84,6 +89,8 @@ activities:
         ct: session
         topic: penduino-activity-01-data
         verb: POST
+        scopes:
+        - read
       video:
         for: data
         url: https://relay-access.practable.io/session/penduino-activity-01-video
@@ -91,6 +98,9 @@ activities:
         ct: session
         topic: penduino-activity-01-video
         verb: POST
+        scopes:
+        - read
+        - write
   penduino-activity-02:
     description: penduino-activity-v1.0
     UISet: penduino
@@ -103,6 +113,8 @@ activities:
         ct: session
         topic: penduino-activity-02-data
         verb: POST
+        scopes:
+        - read
       video:
         for: data
         url: https://relay-access.practable.io/session/penduino-activity-02-video
@@ -110,6 +122,9 @@ activities:
         ct: session
         topic: penduino-activity-02-video
         verb: POST
+        scopes:
+        - read
+        - write
   spinner-activity-00:
     description: spinner-activity-v1.0
     UISet: spinner
@@ -122,6 +137,8 @@ activities:
         ct: session
         topic: spinner-activity-00-data
         verb: POST
+        scopes:
+        - read
       video:
         for: data
         url: https://relay-access.practable.io/session/spinner-activity-00-video
@@ -129,6 +146,9 @@ activities:
         ct: session
         topic: spinner-activity-00-video
         verb: POST
+        scopes:
+        - read
+        - write
   spinner-activity-01:
     description: spinner-activity-v1.0
     UISet: spinner
@@ -141,6 +161,8 @@ activities:
         ct: session
         topic: spinner-activity-01-data
         verb: POST
+        scopes:
+        - read
       video:
         for: data
         url: https://relay-access.practable.io/session/spinner-activity-01-video
@@ -148,6 +170,9 @@ activities:
         ct: session
         topic: spinner-activity-01-video
         verb: POST
+        scopes:
+        - read
+        - write
   spinner-activity-02:
     description: spinner-activity-v1.0
     UISet: spinner
@@ -160,6 +185,8 @@ activities:
         ct: session
         topic: spinner-activity-02-data
         verb: POST
+        scopes:
+        - read
       video:
         for: data
         url: https://relay-access.practable.io/session/spinner-activity-02-video
@@ -167,6 +194,9 @@ activities:
         ct: session
         topic: spinner-activity-02-video
         verb: POST
+        scopes:
+        - read
+        - write
 uis:
   penduino-advanced-ui-v1.0:
     description:
