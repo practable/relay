@@ -61,6 +61,7 @@ book serve
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
 			fmt.Printf("Listening port: %d\n", port)
+			fmt.Printf("Secret=[%s]\n", secret)
 			log.SetFormatter(&log.TextFormatter{})
 			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)
