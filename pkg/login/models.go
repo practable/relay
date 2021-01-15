@@ -53,6 +53,11 @@ func NewToken(audience string, groups, pools []string, scopes []string, iat, nbf
 	}
 }
 
+func Signed(token Token, secret string) (string, error) {
+
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, token).SignedString([]byte(secret))
+}
+
 func SetSubject(token *Token, subject string) {
 	token.Subject = subject
 }
