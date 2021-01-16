@@ -11,24 +11,25 @@ require (
 	github.com/go-openapi/errors v0.19.9
 	github.com/go-openapi/loads v0.20.0
 	github.com/go-openapi/runtime v0.19.24
-	github.com/go-openapi/spec v0.20.0
-	github.com/go-openapi/strfmt v0.19.11
-	github.com/go-openapi/swag v0.19.12
-	github.com/go-openapi/validate v0.20.0
+	github.com/go-openapi/spec v0.20.1
+	github.com/go-openapi/strfmt v0.20.0
+	github.com/go-openapi/swag v0.19.13
+	github.com/go-openapi/validate v0.20.1
 	github.com/gobuffalo/packr v1.30.1 // indirect
 	github.com/gobuffalo/packr/v2 v2.5.1
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.0.4
-	github.com/google/uuid v1.1.3
+	github.com/google/uuid v1.1.5
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/jinzhu/copier v0.1.0
+	github.com/jinzhu/copier v0.2.3
 	github.com/jpillora/backoff v1.0.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/ory/viper v1.7.5
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
@@ -49,7 +50,8 @@ require (
 	github.com/timdrysdale/vw v0.0.1
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
-	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014 // indirect
+	golang.org/x/sys v0.0.0-20210113181707-4bcb84eeeb78 // indirect
+	golang.org/x/text v0.3.5 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
