@@ -131,7 +131,9 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 		// so that pools can be removed from groups by admin
 		// all pools must therefore be in a group, to be accessible
 		// even if that is a group of one pool....
-		pids := []string{}
+		// Also, prevent duplication if pools are in more than one
+		// group (pool assigned to multiple groups is expected)
+		pidmap := make(map[string]bool)
 
 		for _, group_name := range bookingClaims.Groups {
 
@@ -143,10 +145,16 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 			for _, g := range gps {
 				pls := g.GetPools()
 				for _, p := range pls {
-					pids = append(pids, p.ID)
+					pidmap[p.ID] = true
 				}
 			}
 
+		}
+
+		pids := []string{}
+
+		for pid, _ := range pidmap {
+			pids = append(pids, pid)
 		}
 
 		bookingClaims.Pools = pids

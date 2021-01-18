@@ -112,6 +112,11 @@ func TestBooking(t *testing.T) {
 
 	g0.AddPool(p0)
 
+	g1 := pool.NewGroup("somecourse")
+	ps.AddGroup(g1)
+	defer ps.DeleteGroup(g1)
+	g1.AddPool(p0) //add to both groups - should only see it once though
+
 	loginClaims := &lit.Token{}
 	loginClaims.Audience = host
 	loginClaims.Groups = []string{"somecourse", "everyone"}
