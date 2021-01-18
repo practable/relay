@@ -126,9 +126,12 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 		bookingClaims.ExpiresAt = bookingClaims.NotBefore + ps.BookingTokenDuration
 		bookingClaims.Subject = subject
 
-		// Get a list of all the pool_ids that can be booked
-
-		pids := bookingClaims.Pools
+		// ignore old pools, and Use only pools that are currently
+		// associated with the authorised groups
+		// so that pools can be removed from groups by admin
+		// all pools must therefore be in a group, to be accessible
+		// even if that is a group of one pool....
+		pids := []string{}
 
 		for _, group_name := range bookingClaims.Groups {
 
