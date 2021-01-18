@@ -101,6 +101,17 @@ func TestMain(m *testing.M) {
 
 func TestBooking(t *testing.T) {
 
+	// need a pool to check we don't duplicate pools
+	g0 := pool.NewGroup("everyone")
+	ps.AddGroup(g0)
+	defer ps.DeleteGroup(g0)
+
+	p0 := pool.NewPool("stuff0")
+	ps.AddPool(p0)
+	defer ps.DeletePool(p0)
+
+	g0.AddPool(p0)
+
 	loginClaims := &lit.Token{}
 	loginClaims.Audience = host
 	loginClaims.Groups = []string{"somecourse", "everyone"}
@@ -197,6 +208,7 @@ func TestBooking(t *testing.T) {
 
 	// key test
 	assert.Equal(t, subject, claims.Subject)
+	assert.Equal(t, 1, len(claims.Pools))
 
 }
 
@@ -562,7 +574,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	assert.NoError(t, err)
 	err = json.Unmarshal(body, &s)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(3), *s.Available)
+	assert.Equal(t, int64(2), *s.Available)
 	assert.Equal(t, int64(0), s.Wait)
 	assert.Equal(t, true, s.Later)
 	assert.Equal(t, int64(1), s.Used)
@@ -584,7 +596,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	assert.NoError(t, err)
 	err = json.Unmarshal(body, &s)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(3), *s.Available)
+	assert.Equal(t, int64(0), *s.Available)
 	assert.Equal(t, int64(2000), s.Wait)
 	assert.Equal(t, true, s.Later)
 	assert.Equal(t, int64(3), s.Used)
@@ -628,7 +640,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	s = models.Status{}
 	err = json.Unmarshal(body, &s)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(2), *s.Available)
+	assert.Equal(t, int64(0), *s.Available)
 	assert.Equal(t, int64(2000), s.Wait)
 	assert.Equal(t, true, s.Later)
 	assert.Equal(t, int64(2), s.Used)
@@ -652,7 +664,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	s = models.Status{}
 	err = json.Unmarshal(body, &s)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(2), *s.Available)
+	assert.Equal(t, int64(0), *s.Available)
 	assert.Equal(t, int64(0), s.Wait)
 	assert.Equal(t, false, s.Later)
 	assert.Equal(t, int64(2), s.Used)
