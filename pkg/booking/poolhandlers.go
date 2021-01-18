@@ -317,7 +317,7 @@ func getPoolStatusByID(ps *pool.PoolStore) func(params pools.GetPoolStatusByIDPa
 		wait, err := p.ActivityWaitDuration(duration)
 		s.Later = (err == nil) //err means no kit avail later
 		s.Wait = int64(wait)
-		avail := int64(p.CountAvailable())
+		avail := int64(p.CountAvailable() - p.CountInUse())
 		s.Available = &avail
 		s.Used = int64(p.CountInUse())
 
