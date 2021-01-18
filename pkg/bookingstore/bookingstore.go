@@ -417,6 +417,7 @@ func (l *Limit) GetLockBookings() bool {
 // GetUserActivities provides pointers to all of a users activities, so that
 // they can be provided with their current bookings (intended for both user and admin scope)
 func (l *Limit) GetUserActivities(user string) (map[string]*models.Activity, error) {
+	l.FlushAll()
 	l.Lock()
 	defer l.Unlock()
 
@@ -434,6 +435,7 @@ func (l *Limit) GetUserActivities(user string) (map[string]*models.Activity, err
 // This must be for admin use only - else anyone can use anyone else's
 // sessions - activities contain credentials
 func (l *Limit) GetAllActivities() map[string]*models.Activity {
+	l.FlushAll()
 	l.Lock()
 	defer l.Unlock()
 
@@ -441,6 +443,7 @@ func (l *Limit) GetAllActivities() map[string]*models.Activity {
 }
 
 func (l *Limit) GetAllActivitiesCount() int {
+	l.FlushAll()
 	l.Lock()
 	defer l.Unlock()
 
