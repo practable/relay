@@ -437,6 +437,8 @@ func requestSessionByPoolID(ps *pool.PoolStore, l *bookingstore.Limit) func(para
 
 		// convert our activity from pkg/pool type to booking/models type
 		ma := a.ConvertToModel()
+		flexp := float64(exp)
+		ma.Exp = &flexp
 
 		// Iterate through sessions, making tokens
 
