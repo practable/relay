@@ -15,7 +15,7 @@
 #     -  BOOKJS_USERTOKEN
 #
 # - starts a booking server on port 4000
-#   and uploads the manifest.yaml
+#   and uploads ./manifest.yaml
 #
 # - starts a static server on port 6000
 #   which serves the assets in ./assets
@@ -61,8 +61,6 @@ export BOOKUPLOAD_TOKEN=$BOOKJS_ADMINTOKEN
 echo "Admin token:"
 echo ${BOOKJS_ADMINTOKEN}
 
-
-
 # read and split the token and do some base64URL translation
 read h p s <<< $(echo $BOOKJS_ADMINTOKEN | tr [-_] [+/] | sed 's/\./ /g')
 
@@ -96,6 +94,11 @@ export BOOKUPLOAD_HOST=[::]:4000
 export BOOKRESET_HOST=$BOOKUPLOAD_HOST
 export BOOKRESET_SCHEME=$BOOKUPLOAD_SCHEME
 
+# storestatus settings
+export BOOKSTATUS_HOST=$BOOKUPLOAD_HOST
+export BOOKSTATUS_SCHEME=$BOOKUPLOAD_SCHEME
+export BOOKSTATUS_TOKEN=$BOOKUPLOAD_TOKEN
+
 set | grep BOOK
 
 # start book server
@@ -121,14 +124,16 @@ echo "commands:"
 echo "  a: tail of the assert server log"
 echo "  b: tail of book server log [default]"
 echo "  g: start insecure chrome"
-echo "  r: reset the poolstore (careful!)"
+echo "  l: Lock bookings"
+echo "  n: uNlock bookings"
+echo "  r: reset the poolstore (has confirm)"
+echo "  s: get the status of the poolstore)"
 echo "  u: re-upload manifest"
 echo "  done: stop servers"
 
-
 for (( ; ; ))
 do
-	read -p 'What next? [a/b/g/u/r/done]:' command
+	read -p 'What next? [a/b/g/l/n/u/r/s/done]:' command
 
 	echo $command
 
@@ -146,16 +151,39 @@ elif [ "$command" = "g" ];
 then
 	mkdir -p ../tmp/chrome-user
 	google-chrome --disable-web-security --user-data-dir="../tmp/chrome-user" > chrome.log 2>&1 &
+elif [ "$command" = "l" ];
+then
+	export BOOKTOKEN_ADMIN=true
+    export BOOKSTATUS_TOKEN=$(book token)
+	read -p 'Enter lock message:' message
+	book setstatus lock "$message"
+elif [ "$command" = "n" ];
+then
+	export BOOKTOKEN_ADMIN=true
+    export BOOKSTATUS_TOKEN=$(book token)
+	read -p 'Enter unlock message:' message
+	book setstatus unlock "$message"
 elif [ "$command" = "r" ];
 then
 	export BOOKTOKEN_ADMIN=true
     export BOOKRESET_TOKEN=$(book token)
     book reset
-elif [ "$command" = "u" ];
+elif [ "$command" = "s" ];
 then
 	export BOOKTOKEN_ADMIN=true
-    export BOOKUPLOAD_TOKEN=$(book token)
-    book upload manifest.yaml	
+    export BOOKSTATUS_TOKEN=$(book token)
+	book getstatus
+elif [ "$command" = "u" ];
+then
+	read -p "Definitely upload [y/N]?" confirm
+	if ([ "$confirm" == "y" ] || [ "$confirm" == "Y" ]  || [ "$confirm" == "yes"  ] );
+	then
+		export BOOKTOKEN_ADMIN=true
+		export BOOKUPLOAD_TOKEN=$(book token)
+		book upload manifest.yaml
+	else
+		echo "wise choice, aborting"
+	fi
 else	
      echo -e "\nUnknown command ${command}."
 fi

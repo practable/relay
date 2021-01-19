@@ -25,9 +25,15 @@ type Bookings struct {
 	// Required: true
 	Activities []*Activity `json:"activities"`
 
+	// if true, no new bookings are being accepted
+	Locked bool `json:"locked,omitempty"`
+
 	// Maximum concurrent bookings permitted
 	// Required: true
 	Max *int64 `json:"max"`
+
+	// message of the day, typically to explain any current or upcoming locked periods
+	Msg string `json:"msg,omitempty"`
 }
 
 // Validate validates this bookings
