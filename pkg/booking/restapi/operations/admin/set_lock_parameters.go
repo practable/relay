@@ -37,6 +37,10 @@ type SetLockParams struct {
 	  In: query
 	*/
 	Lock bool
+	/*set message of the day (use query so it can be seen in server logs)
+	  In: query
+	*/
+	Msg *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -52,6 +56,11 @@ func (o *SetLockParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 
 	qLock, qhkLock, _ := qs.GetOK("lock")
 	if err := o.bindLock(qLock, qhkLock, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qMsg, qhkMsg, _ := qs.GetOK("msg")
+	if err := o.bindMsg(qMsg, qhkMsg, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -82,6 +91,24 @@ func (o *SetLockParams) bindLock(rawData []string, hasKey bool, formats strfmt.R
 		return errors.InvalidType("lock", "query", "bool", raw)
 	}
 	o.Lock = value
+
+	return nil
+}
+
+// bindMsg binds and validates parameter Msg from query.
+func (o *SetLockParams) bindMsg(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	o.Msg = &raw
 
 	return nil
 }

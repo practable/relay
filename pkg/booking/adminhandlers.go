@@ -77,6 +77,7 @@ func getStoreStatus(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.GetSto
 			Pools:           int64(ps.GetAllPoolCount()),
 			LastBookingEnds: float64(l.GetLastBookingEnds()),
 			Locked:          l.GetLockBookings(),
+			Msg:             l.GetMessage(),
 		}
 		return admin.NewGetStoreStatusOK().WithPayload(status)
 	}
@@ -159,6 +160,11 @@ func setLock(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.SetLockParams
 		} else {
 			l.UnlockBookings()
 		}
+
+		if params.Msg != nil {
+			l.SetMessage(*params.Msg)
+		}
+
 		status := &models.StoreStatus{
 			Activities:      int64(ps.GetAvailableActivitiesCount()),
 			Bookings:        int64(l.GetAllSessionCount()),
@@ -166,6 +172,7 @@ func setLock(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.SetLockParams
 			Pools:           int64(ps.GetAllPoolCount()),
 			LastBookingEnds: float64(l.GetLastBookingEnds()),
 			Locked:          l.GetLockBookings(),
+			Msg:             l.GetMessage(),
 		}
 		return admin.NewSetLockOK().WithPayload(status)
 	}

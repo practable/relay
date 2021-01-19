@@ -40,6 +40,27 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
+func TestMessage(t *testing.T) {
+
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	l := New(ctx)
+
+	defaultMsg := "Open for bookings"
+
+	assert.Equal(t, defaultMsg, l.GetMessage())
+
+	newMsg := "Some other message"
+
+	l.SetMessage(newMsg)
+
+	assert.Equal(t, newMsg, l.GetMessage())
+
+}
+
 func TestNewWithFlush(t *testing.T) {
 
 	t.Parallel()

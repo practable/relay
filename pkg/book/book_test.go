@@ -99,6 +99,105 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
+func TestGetSetLockedMessage(t *testing.T) {
+	loginClaims := &lit.Token{}
+	loginClaims.Audience = host
+	loginClaims.Groups = []string{"stuff", "everyone"}
+	loginClaims.Scopes = []string{"login:admin"}
+	loginClaims.IssuedAt = ps.GetTime() - 1
+	loginClaims.NotBefore = ps.GetTime() - 1
+	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
+	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
+	mocktime = time.Now().Unix()
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", loginBearer)
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	btr := &models.Bookingtoken{}
+	err = json.Unmarshal(body, btr)
+	assert.NoError(t, err)
+
+	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	adminBearer := *(btr.Token)
+
+	/* keep original locked status and  message for putting back later
+	      (this test doesn't really
+		  care what the default is, but other tests might) */
+
+	req, err = http.NewRequest("GET", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms := &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	originalLock := ms.Locked
+	originalMessage := ms.Msg
+
+	req, err = http.NewRequest("POST", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	q := req.URL.Query()
+	q.Add("lock", "true")
+	q.Add("msg", "A different message")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms = &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	assert.Equal(t, true, ms.Locked)
+	assert.Equal(t, "A different message", ms.Msg)
+
+	req, err = http.NewRequest("POST", host+"/api/v1/admin/status", nil)
+	assert.NoError(t, err)
+	q = req.URL.Query()
+	if originalLock {
+		q.Add("lock", "true")
+	} else {
+		q.Add("lock", "false")
+	}
+	q.Add("msg", originalMessage)
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	ms = &models.StoreStatus{}
+	err = json.Unmarshal(body, ms)
+	assert.NoError(t, err)
+
+	assert.Equal(t, originalLock, ms.Locked)
+	assert.Equal(t, originalMessage, ms.Msg)
+
+}
+
 func TestBooking(t *testing.T) {
 
 	// need a pool to check we don't duplicate pools

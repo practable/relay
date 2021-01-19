@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  version: '0.4'
+  version: '0.5'
   title: Booking
   description: User API for booking experiments
   contact:
@@ -15,7 +15,7 @@ securityDefinitions:
     name: Authorization
     in: header 
 schemes:
-  - https
+  - http
 consumes:
 - application/json
 produces:
@@ -135,6 +135,11 @@ paths:
         required: true
         type: boolean
         description: set booking lock
+      - name: msg
+        in: query
+        required: false
+        type: string
+        description: set message of the day (use query so it can be seen in server logs)        
       produces:
       - application/json
       security:
@@ -899,6 +904,13 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/activity'
+      locked:
+        description: if true, no new bookings are being accepted
+        type: boolean
+      msg:
+        description: message of the day, typically to explain any current or upcoming locked periods
+        example: "Preview Access: sessions will be available from 10am - 5pm GMT today"
+        type: string
     required:
       - max
       - activities
@@ -1145,6 +1157,8 @@ definitions:
         format: unix-timestamp
       locked:
         type: boolean
+      msg:
+        type: string
     
   stream:
     title: stream

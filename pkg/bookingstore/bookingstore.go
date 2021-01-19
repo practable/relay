@@ -60,6 +60,12 @@ type Limit struct {
 	// existing bookings continue
 	Locked *bool `json:"lockBookings"`
 
+	// Message represents a status comment that e.g.
+	// useful for letting users know why the
+	// lock is applied, or when bookings will be
+	// locked/unlocked next
+	Message *string `json:"message"`
+
 	// flusInterval represents the time delay between automated FlushAll calls
 	// these are intended to prevent inadvertent memory leakage
 	FlushInterval *time.Duration `json:"flushInterval"`
@@ -124,6 +130,7 @@ func New(ctx context.Context) *Limit {
 	prov := time.Hour
 	locked := false
 	lastFlush := time.Now().Unix() - 1
+	message := "Open for bookings"
 	l := &Limit{
 		Mutex:             &sync.Mutex{},
 		Activities:        make(map[string]map[string]*models.Activity),
@@ -135,6 +142,7 @@ func New(ctx context.Context) *Limit {
 		ProvisionalPeriod: &prov,
 		register:          make(chan confirmation),
 		Locked:            &locked,
+		Message:           &message,
 		ctx:               ctx,
 		ctxServices:       ctxServices,
 		cancelServices:    cancelServices,
@@ -412,6 +420,18 @@ func (l *Limit) GetLockBookings() bool {
 	defer l.Unlock()
 
 	return *l.Locked
+}
+
+func (l *Limit) SetMessage(msg string) {
+	l.Lock()
+	defer l.Unlock()
+	*l.Message = msg
+}
+
+func (l *Limit) GetMessage() string {
+	l.Lock()
+	defer l.Unlock()
+	return *l.Message
 }
 
 // GetUserActivities provides pointers to all of a users activities, so that
