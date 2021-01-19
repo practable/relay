@@ -32,6 +32,9 @@ type StoreStatus struct {
 	// locked
 	Locked bool `json:"locked,omitempty"`
 
+	// msg
+	Msg string `json:"msg,omitempty"`
+
 	// pools
 	Pools int64 `json:"pools,omitempty"`
 }

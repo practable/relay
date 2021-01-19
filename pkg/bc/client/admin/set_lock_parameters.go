@@ -66,6 +66,11 @@ type SetLockParams struct {
 
 	*/
 	Lock bool
+	/*Msg
+	  set message of the day (use query so it can be seen in server logs)
+
+	*/
+	Msg *string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -116,6 +121,17 @@ func (o *SetLockParams) SetLock(lock bool) {
 	o.Lock = lock
 }
 
+// WithMsg adds the msg to the set lock params
+func (o *SetLockParams) WithMsg(msg *string) *SetLockParams {
+	o.SetMsg(msg)
+	return o
+}
+
+// SetMsg adds the msg to the set lock params
+func (o *SetLockParams) SetMsg(msg *string) {
+	o.Msg = msg
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *SetLockParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -131,6 +147,22 @@ func (o *SetLockParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regis
 		if err := r.SetQueryParam("lock", qLock); err != nil {
 			return err
 		}
+	}
+
+	if o.Msg != nil {
+
+		// query param msg
+		var qrMsg string
+		if o.Msg != nil {
+			qrMsg = *o.Msg
+		}
+		qMsg := qrMsg
+		if qMsg != "" {
+			if err := r.SetQueryParam("msg", qMsg); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	if len(res) > 0 {
