@@ -16,6 +16,7 @@ import (
 // SetLockURL generates an URL for the set lock operation
 type SetLockURL struct {
 	Lock bool
+	Msg  *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -54,6 +55,14 @@ func (o *SetLockURL) Build() (*url.URL, error) {
 	lockQ := swag.FormatBool(o.Lock)
 	if lockQ != "" {
 		qs.Set("lock", lockQ)
+	}
+
+	var msgQ string
+	if o.Msg != nil {
+		msgQ = *o.Msg
+	}
+	if msgQ != "" {
+		qs.Set("msg", msgQ)
 	}
 
 	_result.RawQuery = qs.Encode()

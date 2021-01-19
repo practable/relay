@@ -24,6 +24,9 @@ func init() {
   "produces": [
     "application/json"
   ],
+  "schemes": [
+    "http"
+  ],
   "swagger": "2.0",
   "info": {
     "description": "User API for booking experiments",
@@ -33,7 +36,7 @@ func init() {
       "url": "https://practable.io",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.4"
+    "version": "0.5"
   },
   "host": "book.practable.io",
   "basePath": "/api/v1",
@@ -191,6 +194,12 @@ func init() {
             "name": "lock",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "set message of the day (use query so it can be seen in server logs)",
+            "name": "msg",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1194,10 +1203,19 @@ func init() {
             "$ref": "#/definitions/activity"
           }
         },
+        "locked": {
+          "description": "if true, no new bookings are being accepted",
+          "type": "boolean"
+        },
         "max": {
           "description": "Maximum concurrent bookings permitted",
           "type": "number",
           "format": "int"
+        },
+        "msg": {
+          "description": "message of the day, typically to explain any current or upcoming locked periods",
+          "type": "string",
+          "example": "Preview Access: sessions will be available from 10am - 5pm GMT today"
         }
       }
     },
@@ -1502,6 +1520,9 @@ func init() {
         },
         "locked": {
           "type": "boolean"
+        },
+        "msg": {
+          "type": "string"
         },
         "pools": {
           "type": "number",
@@ -1611,6 +1632,9 @@ func init() {
   "produces": [
     "application/json"
   ],
+  "schemes": [
+    "http"
+  ],
   "swagger": "2.0",
   "info": {
     "description": "User API for booking experiments",
@@ -1620,7 +1644,7 @@ func init() {
       "url": "https://practable.io",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.4"
+    "version": "0.5"
   },
   "host": "book.practable.io",
   "basePath": "/api/v1",
@@ -1778,6 +1802,12 @@ func init() {
             "name": "lock",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "set message of the day (use query so it can be seen in server logs)",
+            "name": "msg",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2781,10 +2811,19 @@ func init() {
             "$ref": "#/definitions/activity"
           }
         },
+        "locked": {
+          "description": "if true, no new bookings are being accepted",
+          "type": "boolean"
+        },
         "max": {
           "description": "Maximum concurrent bookings permitted",
           "type": "number",
           "format": "int"
+        },
+        "msg": {
+          "description": "message of the day, typically to explain any current or upcoming locked periods",
+          "type": "string",
+          "example": "Preview Access: sessions will be available from 10am - 5pm GMT today"
         }
       }
     },
@@ -3089,6 +3128,9 @@ func init() {
         },
         "locked": {
           "type": "boolean"
+        },
+        "msg": {
+          "type": "string"
         },
         "pools": {
           "type": "number",
