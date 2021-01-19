@@ -42,6 +42,8 @@ func getCurrentBookings(ps *pool.PoolStore, l *bookingstore.Limit) func(login.Ge
 		bookings := &models.Bookings{
 			Max:        &max,
 			Activities: acts,
+			Locked:     l.GetLockBookings(),
+			Msg:        l.GetMessage(),
 		}
 
 		return login.NewGetCurrentBookingsOK().WithPayload(bookings)

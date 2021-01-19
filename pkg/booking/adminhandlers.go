@@ -141,6 +141,7 @@ func importPoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.Impor
 			Pools:           int64(ps.GetAllPoolCount()),
 			LastBookingEnds: float64(l.GetLastBookingEnds()),
 			Locked:          l.GetLockBookings(),
+			Msg:             l.GetMessage(),
 		}
 
 		return admin.NewImportPoolStoreOK().WithPayload(status)

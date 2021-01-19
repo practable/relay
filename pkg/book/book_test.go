@@ -2634,6 +2634,8 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	assert.Equal(t, int64(2), *mb.Max)
 	assert.Equal(t, 2, len(mb.Activities))
+	assert.False(t, mb.Locked)
+	assert.Equal(t, "Open for bookings", mb.Msg)
 
 	// Check that there is a proper permissions token in a stream
 	// While this is a necessary rather than a sufficient check
