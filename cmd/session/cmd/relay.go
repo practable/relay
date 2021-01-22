@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -102,8 +101,8 @@ shell relay
 			}
 		}()
 
-		audience := accessFQDN + ":" + strconv.Itoa(accessPort)
-		target := relayFQDN + ":" + strconv.Itoa(relayPort)
+		audience := accessFQDN //+ ":" + strconv.Itoa(accessPort)
+		target := relayFQDN    //+ ":" + strconv.Itoa(relayPort)
 
 		wg.Add(1)
 
