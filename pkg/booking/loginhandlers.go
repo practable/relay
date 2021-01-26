@@ -110,10 +110,10 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 					return []byte(ps.Secret), nil
 				})
 			if err == nil {
-				claims, ok = ebt.Claims.(*lit.Token)
+				oldclaims, ok := ebt.Claims.(*lit.Token)
 				if ok {
-					if claims.Subject != "" {
-						subject = claims.Subject //if subject is usable, use it
+					if oldclaims.Subject != "" {
+						subject = oldclaims.Subject //if subject is usable, use it
 					}
 				}
 			}
