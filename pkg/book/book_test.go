@@ -276,13 +276,27 @@ func TestBooking(t *testing.T) {
 
 	subject := claims.Subject //save for next test
 
-	// Now login again with booking token in body and see that subject is retained
+	// Now login again with previous booking token in body and see that subject is retained
+	// but that only groups in new token are returned
+	newLoginClaims := &lit.Token{}
+	newLoginClaims.Audience = host
+	newLoginClaims.Groups = []string{"othercourse", "everyone"}
+	newLoginClaims.Scopes = []string{"login:user"}
+	newLoginClaims.IssuedAt = ps.GetTime() - 1
+	newLoginClaims.NotBefore = ps.GetTime() - 1
+	newLoginClaims.ExpiresAt = newLoginClaims.NotBefore + ps.BookingTokenDuration
+	// sign user token
+	newLoginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, newLoginClaims)
+	// Sign and get the complete encoded token as a string using the secret
+	newLoginBearer, err := newLoginToken.SignedString([]byte(ps.Secret))
+	assert.NoError(t, err)
+
 	respBody, err := json.Marshal(lit.TokenInBody{Token: bookingTokenReturned})
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/login", bytes.NewBuffer(respBody))
 	assert.NoError(t, err)
 	req.Header.Set("Content-type", "application/json")
-	req.Header.Add("Authorization", loginBearer)
+	req.Header.Add("Authorization", newLoginBearer)
 	resp, err = client.Do(req)
 
 	assert.NoError(t, err)
@@ -304,7 +318,8 @@ func TestBooking(t *testing.T) {
 	assert.True(t, ok)
 	assert.True(t, token.Valid)
 
-	assert.Equal(t, []string{"somecourse", "everyone"}, claims.Groups)
+	//note groups are different  somecourse -> othercourse
+	assert.Equal(t, []string{"othercourse", "everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
 	assert.True(t, claims.ExpiresAt < ps.Now()+bookingDuration+15)
 	assert.True(t, claims.ExpiresAt > ps.Now()+bookingDuration-15)
