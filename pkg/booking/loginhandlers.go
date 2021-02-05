@@ -24,11 +24,11 @@ func getCurrentBookings(ps *pool.PoolStore, l *bookingstore.Limit) func(login.Ge
 			return login.NewGetCurrentBookingsUnauthorized().WithPayload("no subject in token (userID)")
 		}
 
-		actmap, err := l.GetUserActivities(claims.Subject)
+		actmap := make(map[string]*models.Activity)
 
-		if err != nil {
-			return login.NewGetCurrentBookingsUnauthorized().WithPayload(err.Error())
-		}
+		actmap, _ = l.GetUserActivities(claims.Subject)
+
+		// ignore error because no activities is just a null map
 
 		max := int64(l.GetMax())
 
