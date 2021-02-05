@@ -619,7 +619,23 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	assert.True(t, ok)
 	assert.True(t, token.Valid)
 
-	assert.Equal(t, []string{p0.ID, p1.ID}, claims.Pools)
+	assert.True(t, util.SortCompare([]string{p0.ID, p1.ID}, claims.Pools))
+
+	// Check we can get our booking info, even with no bookings made
+	req, err = http.NewRequest("GET", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	bk := models.Bookings{}
+	err = json.Unmarshal(body, &bk)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(2), *bk.Max)
+	assert.Equal(t, []*models.Activity{}, bk.Activities)
+	assert.Equal(t, false, bk.Locked)
+	assert.Equal(t, "Open for bookings", bk.Msg)
 
 	// Check we can get a description of a pool
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID, nil)
@@ -990,6 +1006,23 @@ func TestRequestSessionByPoolID(t *testing.T) {
 	scopematch := reflect.DeepEqual(ma.Uis[0].StreamsRequired, []string{"data", "video"}) ||
 		reflect.DeepEqual(ma.Uis[0].StreamsRequired, []string{"data"})
 	assert.True(t, scopematch)
+
+	// Check we can get our booked activity via booking info
+	// Check we can get our booking info, even with no bookings made
+	req, err = http.NewRequest("GET", host+"/api/v1/login", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bookingBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	bk := models.Bookings{}
+	err = json.Unmarshal(body, &bk)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(2), *bk.Max)
+	assert.Equal(t, []*models.Activity{ma}, bk.Activities)
+	assert.Equal(t, false, bk.Locked)
+	assert.Equal(t, "Open for bookings", bk.Msg)
 
 }
 
