@@ -58,6 +58,16 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 
 		for _, a := range m.GetActivitiesInPool(pref) {
 
+			if a == nil {
+				fmt.Printf("Nil pointer to activity\n")
+				continue
+			}
+
+			if a.Description == nil {
+				fmt.Printf("Nil pointer to activity Description\n")
+				continue
+			}
+
 			_, err = bc.Pools.AddActivityByPoolID(
 				pools.NewAddActivityByPoolIDParams().
 					WithTimeout(timeout).
@@ -66,7 +76,10 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 				auth)
 
 			if err != nil {
-				fmt.Printf("Error adding activity: %s %s %s\n", p.Name, *&a.Description.ID, err.Error())
+				if a.Description == nil {
+					fmt.Printf("Nil pointer to description\n")
+				}
+				fmt.Printf("Error adding activity to Pool [%s/%s]: %s\n", p.Name, pid, err.Error())
 				return nil, err
 			}
 			activity_count += 1

@@ -67,7 +67,9 @@ func GetStreamsModel(streams map[string]*Stream) []*models.Stream {
 }
 
 func (s *Stream) ToModel() *models.Stream {
-
+	if s == nil {
+		return &models.Stream{}
+	}
 	return &models.Stream{
 		For:  &s.For,
 		URL:  &s.URL,
@@ -108,6 +110,9 @@ func (m *Manifest) GetUIModel(uiref Ref) *models.UserInterface {
 
 func (d *Description) ToModel() *models.Description {
 
+	if d == nil {
+		return &models.Description{}
+	}
 	return &models.Description{
 		ID:      "",
 		Further: d.Further,
