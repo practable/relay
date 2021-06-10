@@ -7,6 +7,7 @@
 package manifest
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-openapi/runtime"
@@ -19,6 +20,8 @@ import (
 
 func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout time.Duration, m Manifest) (*models.StoreStatus, error) {
 
+	pnames := make(map[string]string)
+	pcounts := make(map[string]int)
 	pids := make(map[Ref]string)
 
 	// Going pool by pool, add the pool, then add the activities to the pool
@@ -43,12 +46,15 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 			//	"error":  err.Error(),
 			//	"pref":   pref,
 			//}).Error("error adding new pool")
+			fmt.Printf("Error adding pool: %s %s\n", p.Name, err.Error())
 			return nil, err
 		}
 
 		pid := *resp.GetPayload().ID
 
 		pids[pref] = pid
+
+		activity_count := 0
 
 		for _, a := range m.GetActivitiesInPool(pref) {
 
@@ -60,9 +66,16 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 				auth)
 
 			if err != nil {
+				fmt.Printf("Error adding activity: %s %s %s\n", p.Name, *&a.Description.ID, err.Error())
 				return nil, err
 			}
+			activity_count += 1
+			// fmt.Printf("  - pool: %s\n", *a.Description.Name)
 		}
+
+		pnames[pid] = p.Name
+		pcounts[pid] = activity_count
+		fmt.Printf("Pool of %3d: %s\n", activity_count, p.Name)
 	}
 
 	for name, g := range m.Groups {
@@ -84,10 +97,13 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 			auth)
 
 		if err != nil {
+			fmt.Printf("Error adding Group: %s\n", *mg.Description.Name)
 			return nil, err
 		}
 
 		gid := *gresp.GetPayload().ID
+
+		fmt.Printf("Group: %s \n", *mg.Description.Name)
 
 		// add pools to group
 
@@ -95,6 +111,7 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 
 		for _, pref := range g.Pools {
 			mids = append(mids, pids[pref])
+			fmt.Printf("  - %3dx %s\n", pcounts[pids[pref]], pnames[pids[pref]])
 		}
 
 		_, err = bc.Groups.AddPoolsByGroupID(
@@ -105,6 +122,7 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 			auth)
 
 		if err != nil {
+			fmt.Printf("Error adding Pool to Group %s %s\n", gid, err.Error())
 			return nil, err
 		}
 
