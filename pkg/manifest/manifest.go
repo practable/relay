@@ -122,7 +122,8 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 			auth)
 
 		if err != nil {
-			fmt.Printf("Error adding Pool to Group %s %s\n", gid, err.Error())
+			fmt.Printf("  - ** Error adding Pools to Group %s because %s\n", *mg.Description.Name, err.Error())
+
 			return nil, err
 		}
 
