@@ -17,7 +17,8 @@ import (
 )
 
 // NewSetLockParams creates a new SetLockParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewSetLockParams() SetLockParams {
 
 	return SetLockParams{}
@@ -63,7 +64,6 @@ func (o *SetLockParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 	if err := o.bindMsg(qMsg, qhkMsg, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -82,6 +82,7 @@ func (o *SetLockParams) bindLock(rawData []string, hasKey bool, formats strfmt.R
 
 	// Required: true
 	// AllowEmptyValue: false
+
 	if err := validate.RequiredString("lock", "query", raw); err != nil {
 		return err
 	}
@@ -104,10 +105,10 @@ func (o *SetLockParams) bindMsg(rawData []string, hasKey bool, formats strfmt.Re
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.Msg = &raw
 
 	return nil

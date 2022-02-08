@@ -13,7 +13,8 @@ import (
 )
 
 // NewGetCurrentBookingsParams creates a new GetCurrentBookingsParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetCurrentBookingsParams() GetCurrentBookingsParams {
 
 	return GetCurrentBookingsParams{}

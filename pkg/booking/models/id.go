@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -15,11 +17,13 @@ import (
 // ID id
 //
 // id of a resource
+// Example: {"id":"d220c320-eb88-456b-b1dd-b36dae840af2"}
 //
 // swagger:model id
 type ID struct {
 
 	// identification
+	// Example: d220c320-eb88-456b-b1dd-b36dae840af2
 	// Required: true
 	ID *string `json:"id"`
 }
@@ -44,6 +48,11 @@ func (m *ID) validateID(formats strfmt.Registry) error {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this id based on context it is used
+func (m *ID) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

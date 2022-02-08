@@ -29,7 +29,7 @@ func NewGetCurrentBookings(ctx *middleware.Context, handler GetCurrentBookingsHa
 	return &GetCurrentBookings{Context: ctx, Handler: handler}
 }
 
-/*GetCurrentBookings swagger:route GET /login login getCurrentBookings
+/* GetCurrentBookings swagger:route GET /login login getCurrentBookings
 
 Get current bookings
 
@@ -47,7 +47,6 @@ func (o *GetCurrentBookings) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		r = rCtx
 	}
 	var Params = NewGetCurrentBookingsParams()
-
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
@@ -58,7 +57,7 @@ func (o *GetCurrentBookings) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 	var principal interface{}
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
@@ -67,7 +66,6 @@ func (o *GetCurrentBookings) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	res := o.Handler.Handle(Params, principal) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

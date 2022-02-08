@@ -14,7 +14,8 @@ import (
 )
 
 // NewDeleteGroupParams creates a new DeleteGroupParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewDeleteGroupParams() DeleteGroupParams {
 
 	return DeleteGroupParams{}
@@ -49,7 +50,6 @@ func (o *DeleteGroupParams) BindRequest(r *http.Request, route *middleware.Match
 	if err := o.bindGroupID(rGroupID, rhkGroupID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -65,7 +65,6 @@ func (o *DeleteGroupParams) bindGroupID(rawData []string, hasKey bool, formats s
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.GroupID = raw
 
 	return nil
