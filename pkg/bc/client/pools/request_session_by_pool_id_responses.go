@@ -53,7 +53,6 @@ func (o *RequestSessionByPoolIDReader) ReadResponse(response runtime.ClientRespo
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -64,7 +63,7 @@ func NewRequestSessionByPoolIDOK() *RequestSessionByPoolIDOK {
 	return &RequestSessionByPoolIDOK{}
 }
 
-/*RequestSessionByPoolIDOK handles this case with default header values.
+/* RequestSessionByPoolIDOK describes a response with status code 200, with default header values.
 
 RequestSessionByPoolIDOK request session by pool Id o k
 */
@@ -75,7 +74,6 @@ type RequestSessionByPoolIDOK struct {
 func (o *RequestSessionByPoolIDOK) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/sessions][%d] requestSessionByPoolIdOK  %+v", 200, o.Payload)
 }
-
 func (o *RequestSessionByPoolIDOK) GetPayload() *models.Activity {
 	return o.Payload
 }
@@ -97,7 +95,7 @@ func NewRequestSessionByPoolIDUnauthorized() *RequestSessionByPoolIDUnauthorized
 	return &RequestSessionByPoolIDUnauthorized{}
 }
 
-/*RequestSessionByPoolIDUnauthorized handles this case with default header values.
+/* RequestSessionByPoolIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -108,7 +106,6 @@ type RequestSessionByPoolIDUnauthorized struct {
 func (o *RequestSessionByPoolIDUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/sessions][%d] requestSessionByPoolIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *RequestSessionByPoolIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -128,7 +125,7 @@ func NewRequestSessionByPoolIDPaymentRequired() *RequestSessionByPoolIDPaymentRe
 	return &RequestSessionByPoolIDPaymentRequired{}
 }
 
-/*RequestSessionByPoolIDPaymentRequired handles this case with default header values.
+/* RequestSessionByPoolIDPaymentRequired describes a response with status code 402, with default header values.
 
 Quota Exceeded
 */
@@ -139,7 +136,6 @@ type RequestSessionByPoolIDPaymentRequired struct {
 func (o *RequestSessionByPoolIDPaymentRequired) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/sessions][%d] requestSessionByPoolIdPaymentRequired  %+v", 402, o.Payload)
 }
-
 func (o *RequestSessionByPoolIDPaymentRequired) GetPayload() interface{} {
 	return o.Payload
 }
@@ -159,7 +155,7 @@ func NewRequestSessionByPoolIDNotFound() *RequestSessionByPoolIDNotFound {
 	return &RequestSessionByPoolIDNotFound{}
 }
 
-/*RequestSessionByPoolIDNotFound handles this case with default header values.
+/* RequestSessionByPoolIDNotFound describes a response with status code 404, with default header values.
 
 Not Available
 */
@@ -170,7 +166,6 @@ type RequestSessionByPoolIDNotFound struct {
 func (o *RequestSessionByPoolIDNotFound) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/sessions][%d] requestSessionByPoolIdNotFound  %+v", 404, o.Payload)
 }
-
 func (o *RequestSessionByPoolIDNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -190,7 +185,7 @@ func NewRequestSessionByPoolIDInternalServerError() *RequestSessionByPoolIDInter
 	return &RequestSessionByPoolIDInternalServerError{}
 }
 
-/*RequestSessionByPoolIDInternalServerError handles this case with default header values.
+/* RequestSessionByPoolIDInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -201,7 +196,6 @@ type RequestSessionByPoolIDInternalServerError struct {
 func (o *RequestSessionByPoolIDInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/sessions][%d] requestSessionByPoolIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *RequestSessionByPoolIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

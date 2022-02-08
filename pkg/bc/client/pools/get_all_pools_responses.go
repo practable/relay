@@ -47,7 +47,6 @@ func (o *GetAllPoolsReader) ReadResponse(response runtime.ClientResponse, consum
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewGetAllPoolsOK() *GetAllPoolsOK {
 	return &GetAllPoolsOK{}
 }
 
-/*GetAllPoolsOK handles this case with default header values.
+/* GetAllPoolsOK describes a response with status code 200, with default header values.
 
 GetAllPoolsOK get all pools o k
 */
@@ -69,7 +68,6 @@ type GetAllPoolsOK struct {
 func (o *GetAllPoolsOK) Error() string {
 	return fmt.Sprintf("[GET /pools][%d] getAllPoolsOK  %+v", 200, o.Payload)
 }
-
 func (o *GetAllPoolsOK) GetPayload() models.IDList {
 	return o.Payload
 }
@@ -89,7 +87,7 @@ func NewGetAllPoolsUnauthorized() *GetAllPoolsUnauthorized {
 	return &GetAllPoolsUnauthorized{}
 }
 
-/*GetAllPoolsUnauthorized handles this case with default header values.
+/* GetAllPoolsUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -100,7 +98,6 @@ type GetAllPoolsUnauthorized struct {
 func (o *GetAllPoolsUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /pools][%d] getAllPoolsUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *GetAllPoolsUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -120,7 +117,7 @@ func NewGetAllPoolsNotFound() *GetAllPoolsNotFound {
 	return &GetAllPoolsNotFound{}
 }
 
-/*GetAllPoolsNotFound handles this case with default header values.
+/* GetAllPoolsNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -131,7 +128,6 @@ type GetAllPoolsNotFound struct {
 func (o *GetAllPoolsNotFound) Error() string {
 	return fmt.Sprintf("[GET /pools][%d] getAllPoolsNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetAllPoolsNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -151,7 +147,7 @@ func NewGetAllPoolsInternalServerError() *GetAllPoolsInternalServerError {
 	return &GetAllPoolsInternalServerError{}
 }
 
-/*GetAllPoolsInternalServerError handles this case with default header values.
+/* GetAllPoolsInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -162,7 +158,6 @@ type GetAllPoolsInternalServerError struct {
 func (o *GetAllPoolsInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /pools][%d] getAllPoolsInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetAllPoolsInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

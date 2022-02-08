@@ -47,7 +47,6 @@ func (o *GetGroupDescriptionByIDReader) ReadResponse(response runtime.ClientResp
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewGetGroupDescriptionByIDOK() *GetGroupDescriptionByIDOK {
 	return &GetGroupDescriptionByIDOK{}
 }
 
-/*GetGroupDescriptionByIDOK handles this case with default header values.
+/* GetGroupDescriptionByIDOK describes a response with status code 200, with default header values.
 
 GetGroupDescriptionByIDOK get group description by Id o k
 */
@@ -69,7 +68,6 @@ type GetGroupDescriptionByIDOK struct {
 func (o *GetGroupDescriptionByIDOK) Error() string {
 	return fmt.Sprintf("[GET /groups/{group_id}][%d] getGroupDescriptionByIdOK  %+v", 200, o.Payload)
 }
-
 func (o *GetGroupDescriptionByIDOK) GetPayload() *models.Description {
 	return o.Payload
 }
@@ -91,7 +89,7 @@ func NewGetGroupDescriptionByIDUnauthorized() *GetGroupDescriptionByIDUnauthoriz
 	return &GetGroupDescriptionByIDUnauthorized{}
 }
 
-/*GetGroupDescriptionByIDUnauthorized handles this case with default header values.
+/* GetGroupDescriptionByIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -102,7 +100,6 @@ type GetGroupDescriptionByIDUnauthorized struct {
 func (o *GetGroupDescriptionByIDUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /groups/{group_id}][%d] getGroupDescriptionByIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *GetGroupDescriptionByIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -122,7 +119,7 @@ func NewGetGroupDescriptionByIDNotFound() *GetGroupDescriptionByIDNotFound {
 	return &GetGroupDescriptionByIDNotFound{}
 }
 
-/*GetGroupDescriptionByIDNotFound handles this case with default header values.
+/* GetGroupDescriptionByIDNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -133,7 +130,6 @@ type GetGroupDescriptionByIDNotFound struct {
 func (o *GetGroupDescriptionByIDNotFound) Error() string {
 	return fmt.Sprintf("[GET /groups/{group_id}][%d] getGroupDescriptionByIdNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetGroupDescriptionByIDNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -153,7 +149,7 @@ func NewGetGroupDescriptionByIDInternalServerError() *GetGroupDescriptionByIDInt
 	return &GetGroupDescriptionByIDInternalServerError{}
 }
 
-/*GetGroupDescriptionByIDInternalServerError handles this case with default header values.
+/* GetGroupDescriptionByIDInternalServerError describes a response with status code 500, with default header values.
 
 GetGroupDescriptionByIDInternalServerError get group description by Id internal server error
 */
@@ -164,7 +160,6 @@ type GetGroupDescriptionByIDInternalServerError struct {
 func (o *GetGroupDescriptionByIDInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /groups/{group_id}][%d] getGroupDescriptionByIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetGroupDescriptionByIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

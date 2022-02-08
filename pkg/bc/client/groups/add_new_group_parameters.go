@@ -18,56 +18,70 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/models"
 )
 
-// NewAddNewGroupParams creates a new AddNewGroupParams object
-// with the default values initialized.
+// NewAddNewGroupParams creates a new AddNewGroupParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewAddNewGroupParams() *AddNewGroupParams {
-	var ()
 	return &AddNewGroupParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewAddNewGroupParamsWithTimeout creates a new AddNewGroupParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewAddNewGroupParamsWithTimeout(timeout time.Duration) *AddNewGroupParams {
-	var ()
 	return &AddNewGroupParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewAddNewGroupParamsWithContext creates a new AddNewGroupParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewAddNewGroupParamsWithContext(ctx context.Context) *AddNewGroupParams {
-	var ()
 	return &AddNewGroupParams{
-
 		Context: ctx,
 	}
 }
 
 // NewAddNewGroupParamsWithHTTPClient creates a new AddNewGroupParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewAddNewGroupParamsWithHTTPClient(client *http.Client) *AddNewGroupParams {
-	var ()
 	return &AddNewGroupParams{
 		HTTPClient: client,
 	}
 }
 
-/*AddNewGroupParams contains all the parameters to send to the API endpoint
-for the add new group operation typically these are written to a http.Request
+/* AddNewGroupParams contains all the parameters to send to the API endpoint
+   for the add new group operation.
+
+   Typically these are written to a http.Request.
 */
 type AddNewGroupParams struct {
 
-	/*Group*/
+	// Group.
 	Group *models.Group
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the add new group params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *AddNewGroupParams) WithDefaults() *AddNewGroupParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the add new group params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *AddNewGroupParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the add new group params
@@ -121,7 +135,6 @@ func (o *AddNewGroupParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.R
 		return err
 	}
 	var res []error
-
 	if o.Group != nil {
 		if err := r.SetBodyParam(o.Group); err != nil {
 			return err

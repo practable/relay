@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -15,33 +17,40 @@ import (
 // Description description
 //
 // Description of a resource e.g. pool, activity, user interface
+// Example: {"further":"https://static.practable.io/descriptions/pools/penduino/index.html","image":"https://assets.practable.io/images/pools/penduino/image.png","long":"Some longer description","name":"Penduino (basic)","short":"Penduino electromagnetic pendulums with pulsed drive and braking","thumb":"https://assets.practable.io/images/pools/penduino/thumb.png","type":"pool"}
 //
 // swagger:model description
 type Description struct {
 
 	// URL for further information
+	// Example: https://static.practable.io/info/penduino/ui.html
 	Further string `json:"further,omitempty"`
 
 	// Identification used in PoolStore
 	ID string `json:"id,omitempty"`
 
 	// URL of main image (500x500)
+	// Example: https://assets.practable.io/images/penduino-500x500.png
 	Image string `json:"image,omitempty"`
 
 	// 280 char additional description of the interface in plain text
 	Long string `json:"long,omitempty"`
 
 	// Display name
+	// Example: Penduino (basic)
 	// Required: true
 	Name *string `json:"name"`
 
 	// 140 char max description of the interface in plain text
+	// Example: Interface to the penduino electromagnetic pendulum with variable drive, active braking, short and open circuit loading.
 	Short string `json:"short,omitempty"`
 
 	// URL of thumbnail image (150x150)
+	// Example: https://assets.practable.io/images/penduino-150x150.png
 	Thumb string `json:"thumb,omitempty"`
 
 	// Type of resource being described, e.g. pool, activity, userinterface
+	// Example: userinterface
 	// Required: true
 	Type *string `json:"type"`
 }
@@ -79,6 +88,11 @@ func (m *Description) validateType(formats strfmt.Registry) error {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this description based on context it is used
+func (m *Description) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

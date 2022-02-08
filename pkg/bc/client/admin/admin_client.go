@@ -25,17 +25,20 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
 // ClientService is the interface for Client methods
 type ClientService interface {
-	DeletePoolStore(params *DeletePoolStoreParams, authInfo runtime.ClientAuthInfoWriter) error
+	DeletePoolStore(params *DeletePoolStoreParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) error
 
-	ExportPoolStore(params *ExportPoolStoreParams, authInfo runtime.ClientAuthInfoWriter) (*ExportPoolStoreOK, error)
+	ExportPoolStore(params *ExportPoolStoreParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ExportPoolStoreOK, error)
 
-	GetStoreStatus(params *GetStoreStatusParams, authInfo runtime.ClientAuthInfoWriter) (*GetStoreStatusOK, error)
+	GetStoreStatus(params *GetStoreStatusParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetStoreStatusOK, error)
 
-	ImportPoolStore(params *ImportPoolStoreParams, authInfo runtime.ClientAuthInfoWriter) (*ImportPoolStoreOK, error)
+	ImportPoolStore(params *ImportPoolStoreParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ImportPoolStoreOK, error)
 
-	SetLock(params *SetLockParams, authInfo runtime.ClientAuthInfoWriter) (*SetLockOK, error)
+	SetLock(params *SetLockParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*SetLockOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -45,13 +48,12 @@ type ClientService interface {
 
   Delete the contents of the pool store including bookings
 */
-func (a *Client) DeletePoolStore(params *DeletePoolStoreParams, authInfo runtime.ClientAuthInfoWriter) error {
+func (a *Client) DeletePoolStore(params *DeletePoolStoreParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeletePoolStoreParams()
 	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "deletePoolStore",
 		Method:             "DELETE",
 		PathPattern:        "/admin/poolstore",
@@ -63,7 +65,12 @@ func (a *Client) DeletePoolStore(params *DeletePoolStoreParams, authInfo runtime
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	_, err := a.transport.Submit(op)
 	if err != nil {
 		return err
 	}
@@ -75,13 +82,12 @@ func (a *Client) DeletePoolStore(params *DeletePoolStoreParams, authInfo runtime
 
   Export the current pool store including bookings
 */
-func (a *Client) ExportPoolStore(params *ExportPoolStoreParams, authInfo runtime.ClientAuthInfoWriter) (*ExportPoolStoreOK, error) {
+func (a *Client) ExportPoolStore(params *ExportPoolStoreParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ExportPoolStoreOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewExportPoolStoreParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "exportPoolStore",
 		Method:             "GET",
 		PathPattern:        "/admin/poolstore",
@@ -93,7 +99,12 @@ func (a *Client) ExportPoolStore(params *ExportPoolStoreParams, authInfo runtime
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -112,13 +123,12 @@ func (a *Client) ExportPoolStore(params *ExportPoolStoreParams, authInfo runtime
 
   Get the current status (number of groups, pools, bookings, time til last booking finished etc)
 */
-func (a *Client) GetStoreStatus(params *GetStoreStatusParams, authInfo runtime.ClientAuthInfoWriter) (*GetStoreStatusOK, error) {
+func (a *Client) GetStoreStatus(params *GetStoreStatusParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetStoreStatusOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetStoreStatusParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getStoreStatus",
 		Method:             "GET",
 		PathPattern:        "/admin/status",
@@ -130,7 +140,12 @@ func (a *Client) GetStoreStatus(params *GetStoreStatusParams, authInfo runtime.C
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -149,13 +164,12 @@ func (a *Client) GetStoreStatus(params *GetStoreStatusParams, authInfo runtime.C
 
   Import a new pool store including bookings
 */
-func (a *Client) ImportPoolStore(params *ImportPoolStoreParams, authInfo runtime.ClientAuthInfoWriter) (*ImportPoolStoreOK, error) {
+func (a *Client) ImportPoolStore(params *ImportPoolStoreParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ImportPoolStoreOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewImportPoolStoreParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "importPoolStore",
 		Method:             "POST",
 		PathPattern:        "/admin/poolstore",
@@ -167,7 +181,12 @@ func (a *Client) ImportPoolStore(params *ImportPoolStoreParams, authInfo runtime
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -186,13 +205,12 @@ func (a *Client) ImportPoolStore(params *ImportPoolStoreParams, authInfo runtime
 
   Set whether the bookings are locked or not
 */
-func (a *Client) SetLock(params *SetLockParams, authInfo runtime.ClientAuthInfoWriter) (*SetLockOK, error) {
+func (a *Client) SetLock(params *SetLockParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*SetLockOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewSetLockParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "setLock",
 		Method:             "POST",
 		PathPattern:        "/admin/status",
@@ -204,7 +222,12 @@ func (a *Client) SetLock(params *SetLockParams, authInfo runtime.ClientAuthInfoW
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}

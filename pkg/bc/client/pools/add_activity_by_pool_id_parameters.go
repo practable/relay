@@ -18,58 +18,73 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/models"
 )
 
-// NewAddActivityByPoolIDParams creates a new AddActivityByPoolIDParams object
-// with the default values initialized.
+// NewAddActivityByPoolIDParams creates a new AddActivityByPoolIDParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewAddActivityByPoolIDParams() *AddActivityByPoolIDParams {
-	var ()
 	return &AddActivityByPoolIDParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewAddActivityByPoolIDParamsWithTimeout creates a new AddActivityByPoolIDParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewAddActivityByPoolIDParamsWithTimeout(timeout time.Duration) *AddActivityByPoolIDParams {
-	var ()
 	return &AddActivityByPoolIDParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewAddActivityByPoolIDParamsWithContext creates a new AddActivityByPoolIDParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewAddActivityByPoolIDParamsWithContext(ctx context.Context) *AddActivityByPoolIDParams {
-	var ()
 	return &AddActivityByPoolIDParams{
-
 		Context: ctx,
 	}
 }
 
 // NewAddActivityByPoolIDParamsWithHTTPClient creates a new AddActivityByPoolIDParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewAddActivityByPoolIDParamsWithHTTPClient(client *http.Client) *AddActivityByPoolIDParams {
-	var ()
 	return &AddActivityByPoolIDParams{
 		HTTPClient: client,
 	}
 }
 
-/*AddActivityByPoolIDParams contains all the parameters to send to the API endpoint
-for the add activity by pool ID operation typically these are written to a http.Request
+/* AddActivityByPoolIDParams contains all the parameters to send to the API endpoint
+   for the add activity by pool ID operation.
+
+   Typically these are written to a http.Request.
 */
 type AddActivityByPoolIDParams struct {
 
-	/*Activity*/
+	// Activity.
 	Activity *models.Activity
-	/*PoolID*/
+
+	// PoolID.
 	PoolID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the add activity by pool ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *AddActivityByPoolIDParams) WithDefaults() *AddActivityByPoolIDParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the add activity by pool ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *AddActivityByPoolIDParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the add activity by pool ID params
@@ -134,7 +149,6 @@ func (o *AddActivityByPoolIDParams) WriteToRequest(r runtime.ClientRequest, reg 
 		return err
 	}
 	var res []error
-
 	if o.Activity != nil {
 		if err := r.SetBodyParam(o.Activity); err != nil {
 			return err

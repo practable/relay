@@ -18,56 +18,70 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/models"
 )
 
-// NewImportPoolStoreParams creates a new ImportPoolStoreParams object
-// with the default values initialized.
+// NewImportPoolStoreParams creates a new ImportPoolStoreParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewImportPoolStoreParams() *ImportPoolStoreParams {
-	var ()
 	return &ImportPoolStoreParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewImportPoolStoreParamsWithTimeout creates a new ImportPoolStoreParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewImportPoolStoreParamsWithTimeout(timeout time.Duration) *ImportPoolStoreParams {
-	var ()
 	return &ImportPoolStoreParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewImportPoolStoreParamsWithContext creates a new ImportPoolStoreParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewImportPoolStoreParamsWithContext(ctx context.Context) *ImportPoolStoreParams {
-	var ()
 	return &ImportPoolStoreParams{
-
 		Context: ctx,
 	}
 }
 
 // NewImportPoolStoreParamsWithHTTPClient creates a new ImportPoolStoreParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewImportPoolStoreParamsWithHTTPClient(client *http.Client) *ImportPoolStoreParams {
-	var ()
 	return &ImportPoolStoreParams{
 		HTTPClient: client,
 	}
 }
 
-/*ImportPoolStoreParams contains all the parameters to send to the API endpoint
-for the import pool store operation typically these are written to a http.Request
+/* ImportPoolStoreParams contains all the parameters to send to the API endpoint
+   for the import pool store operation.
+
+   Typically these are written to a http.Request.
 */
 type ImportPoolStoreParams struct {
 
-	/*Poolstore*/
+	// Poolstore.
 	Poolstore *models.Poolstore
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the import pool store params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *ImportPoolStoreParams) WithDefaults() *ImportPoolStoreParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the import pool store params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *ImportPoolStoreParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the import pool store params
@@ -121,7 +135,6 @@ func (o *ImportPoolStoreParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		return err
 	}
 	var res []error
-
 	if o.Poolstore != nil {
 		if err := r.SetBodyParam(o.Poolstore); err != nil {
 			return err

@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -15,11 +17,13 @@ import (
 // Stream stream
 //
 // Represents an assigned, valid booking slot for an individual piece of equipment
+// Example: {"for":"video","token":"ey....","url":"https://relay-access.practable.io/session/abc123"}
 //
 // swagger:model stream
 type Stream struct {
 
 	// Describes the stream, and doubles as template key in the URL
+	// Example: video
 	// Required: true
 	For *string `json:"for"`
 
@@ -31,10 +35,12 @@ type Stream struct {
 	Token string `json:"token,omitempty"`
 
 	// URL at which to obtain access to the stream (getting a redirect URL containing a one time code)
+	// Example: https://relay-access.practable.io/session/abc123
 	// Required: true
 	URL *string `json:"url"`
 
 	// HTPP verb to use when making request to the URL
+	// Example: POST
 	Verb *string `json:"verb,omitempty"`
 }
 
@@ -91,6 +97,34 @@ func (m *Stream) validateURL(formats strfmt.Registry) error {
 
 	if err := validate.Required("url", "body", m.URL); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this stream based on the context it is used
+func (m *Stream) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidatePermission(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Stream) contextValidatePermission(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Permission != nil {
+		if err := m.Permission.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("permission")
+			}
+			return err
+		}
 	}
 
 	return nil

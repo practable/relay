@@ -16,56 +16,70 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewGetGroupDescriptionByIDParams creates a new GetGroupDescriptionByIDParams object
-// with the default values initialized.
+// NewGetGroupDescriptionByIDParams creates a new GetGroupDescriptionByIDParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetGroupDescriptionByIDParams() *GetGroupDescriptionByIDParams {
-	var ()
 	return &GetGroupDescriptionByIDParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetGroupDescriptionByIDParamsWithTimeout creates a new GetGroupDescriptionByIDParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewGetGroupDescriptionByIDParamsWithTimeout(timeout time.Duration) *GetGroupDescriptionByIDParams {
-	var ()
 	return &GetGroupDescriptionByIDParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewGetGroupDescriptionByIDParamsWithContext creates a new GetGroupDescriptionByIDParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewGetGroupDescriptionByIDParamsWithContext(ctx context.Context) *GetGroupDescriptionByIDParams {
-	var ()
 	return &GetGroupDescriptionByIDParams{
-
 		Context: ctx,
 	}
 }
 
 // NewGetGroupDescriptionByIDParamsWithHTTPClient creates a new GetGroupDescriptionByIDParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewGetGroupDescriptionByIDParamsWithHTTPClient(client *http.Client) *GetGroupDescriptionByIDParams {
-	var ()
 	return &GetGroupDescriptionByIDParams{
 		HTTPClient: client,
 	}
 }
 
-/*GetGroupDescriptionByIDParams contains all the parameters to send to the API endpoint
-for the get group description by ID operation typically these are written to a http.Request
+/* GetGroupDescriptionByIDParams contains all the parameters to send to the API endpoint
+   for the get group description by ID operation.
+
+   Typically these are written to a http.Request.
 */
 type GetGroupDescriptionByIDParams struct {
 
-	/*GroupID*/
+	// GroupID.
 	GroupID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the get group description by ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetGroupDescriptionByIDParams) WithDefaults() *GetGroupDescriptionByIDParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the get group description by ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetGroupDescriptionByIDParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get group description by ID params

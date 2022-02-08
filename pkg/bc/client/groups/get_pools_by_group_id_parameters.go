@@ -16,56 +16,70 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewGetPoolsByGroupIDParams creates a new GetPoolsByGroupIDParams object
-// with the default values initialized.
+// NewGetPoolsByGroupIDParams creates a new GetPoolsByGroupIDParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetPoolsByGroupIDParams() *GetPoolsByGroupIDParams {
-	var ()
 	return &GetPoolsByGroupIDParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetPoolsByGroupIDParamsWithTimeout creates a new GetPoolsByGroupIDParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewGetPoolsByGroupIDParamsWithTimeout(timeout time.Duration) *GetPoolsByGroupIDParams {
-	var ()
 	return &GetPoolsByGroupIDParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewGetPoolsByGroupIDParamsWithContext creates a new GetPoolsByGroupIDParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewGetPoolsByGroupIDParamsWithContext(ctx context.Context) *GetPoolsByGroupIDParams {
-	var ()
 	return &GetPoolsByGroupIDParams{
-
 		Context: ctx,
 	}
 }
 
 // NewGetPoolsByGroupIDParamsWithHTTPClient creates a new GetPoolsByGroupIDParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewGetPoolsByGroupIDParamsWithHTTPClient(client *http.Client) *GetPoolsByGroupIDParams {
-	var ()
 	return &GetPoolsByGroupIDParams{
 		HTTPClient: client,
 	}
 }
 
-/*GetPoolsByGroupIDParams contains all the parameters to send to the API endpoint
-for the get pools by group ID operation typically these are written to a http.Request
+/* GetPoolsByGroupIDParams contains all the parameters to send to the API endpoint
+   for the get pools by group ID operation.
+
+   Typically these are written to a http.Request.
 */
 type GetPoolsByGroupIDParams struct {
 
-	/*GroupID*/
+	// GroupID.
 	GroupID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the get pools by group ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetPoolsByGroupIDParams) WithDefaults() *GetPoolsByGroupIDParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the get pools by group ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetPoolsByGroupIDParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get pools by group ID params

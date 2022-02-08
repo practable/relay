@@ -39,7 +39,6 @@ func (o *DeleteActivityByIDReader) ReadResponse(response runtime.ClientResponse,
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -50,7 +49,7 @@ func NewDeleteActivityByIDUnauthorized() *DeleteActivityByIDUnauthorized {
 	return &DeleteActivityByIDUnauthorized{}
 }
 
-/*DeleteActivityByIDUnauthorized handles this case with default header values.
+/* DeleteActivityByIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -61,7 +60,6 @@ type DeleteActivityByIDUnauthorized struct {
 func (o *DeleteActivityByIDUnauthorized) Error() string {
 	return fmt.Sprintf("[DELETE /pools/{pool_id}/activities/{activity_id}][%d] deleteActivityByIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *DeleteActivityByIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -81,7 +79,7 @@ func NewDeleteActivityByIDNotFound() *DeleteActivityByIDNotFound {
 	return &DeleteActivityByIDNotFound{}
 }
 
-/*DeleteActivityByIDNotFound handles this case with default header values.
+/* DeleteActivityByIDNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -92,7 +90,6 @@ type DeleteActivityByIDNotFound struct {
 func (o *DeleteActivityByIDNotFound) Error() string {
 	return fmt.Sprintf("[DELETE /pools/{pool_id}/activities/{activity_id}][%d] deleteActivityByIdNotFound  %+v", 404, o.Payload)
 }
-
 func (o *DeleteActivityByIDNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -112,7 +109,7 @@ func NewDeleteActivityByIDInternalServerError() *DeleteActivityByIDInternalServe
 	return &DeleteActivityByIDInternalServerError{}
 }
 
-/*DeleteActivityByIDInternalServerError handles this case with default header values.
+/* DeleteActivityByIDInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -123,7 +120,6 @@ type DeleteActivityByIDInternalServerError struct {
 func (o *DeleteActivityByIDInternalServerError) Error() string {
 	return fmt.Sprintf("[DELETE /pools/{pool_id}/activities/{activity_id}][%d] deleteActivityByIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *DeleteActivityByIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

@@ -17,64 +17,79 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewGetAllPoolsParams creates a new GetAllPoolsParams object
-// with the default values initialized.
+// NewGetAllPoolsParams creates a new GetAllPoolsParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAllPoolsParams() *GetAllPoolsParams {
-	var ()
 	return &GetAllPoolsParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetAllPoolsParamsWithTimeout creates a new GetAllPoolsParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewGetAllPoolsParamsWithTimeout(timeout time.Duration) *GetAllPoolsParams {
-	var ()
 	return &GetAllPoolsParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewGetAllPoolsParamsWithContext creates a new GetAllPoolsParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewGetAllPoolsParamsWithContext(ctx context.Context) *GetAllPoolsParams {
-	var ()
 	return &GetAllPoolsParams{
-
 		Context: ctx,
 	}
 }
 
 // NewGetAllPoolsParamsWithHTTPClient creates a new GetAllPoolsParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewGetAllPoolsParamsWithHTTPClient(client *http.Client) *GetAllPoolsParams {
-	var ()
 	return &GetAllPoolsParams{
 		HTTPClient: client,
 	}
 }
 
-/*GetAllPoolsParams contains all the parameters to send to the API endpoint
-for the get all pools operation typically these are written to a http.Request
+/* GetAllPoolsParams contains all the parameters to send to the API endpoint
+   for the get all pools operation.
+
+   Typically these are written to a http.Request.
 */
 type GetAllPoolsParams struct {
 
-	/*Exact
-	  Limit search to pools with exact match to the name (meaningless on own)
+	/* Exact.
 
+	   Limit search to pools with exact match to the name (meaningless on own)
 	*/
 	Exact *bool
-	/*Name
-	  Limit search to pools with name containing this string (case sensitive)
 
+	/* Name.
+
+	   Limit search to pools with name containing this string (case sensitive)
 	*/
 	Name *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the get all pools params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetAllPoolsParams) WithDefaults() *GetAllPoolsParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the get all pools params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetAllPoolsParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get all pools params
@@ -144,32 +159,34 @@ func (o *GetAllPoolsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.R
 
 		// query param exact
 		var qrExact bool
+
 		if o.Exact != nil {
 			qrExact = *o.Exact
 		}
 		qExact := swag.FormatBool(qrExact)
 		if qExact != "" {
+
 			if err := r.SetQueryParam("exact", qExact); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	if o.Name != nil {
 
 		// query param name
 		var qrName string
+
 		if o.Name != nil {
 			qrName = *o.Name
 		}
 		qName := qrName
 		if qName != "" {
+
 			if err := r.SetQueryParam("name", qName); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	if len(res) > 0 {

@@ -47,7 +47,6 @@ func (o *GetPoolsByGroupIDReader) ReadResponse(response runtime.ClientResponse, 
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewGetPoolsByGroupIDOK() *GetPoolsByGroupIDOK {
 	return &GetPoolsByGroupIDOK{}
 }
 
-/*GetPoolsByGroupIDOK handles this case with default header values.
+/* GetPoolsByGroupIDOK describes a response with status code 200, with default header values.
 
 GetPoolsByGroupIDOK get pools by group Id o k
 */
@@ -69,7 +68,6 @@ type GetPoolsByGroupIDOK struct {
 func (o *GetPoolsByGroupIDOK) Error() string {
 	return fmt.Sprintf("[GET /groups/{group_id}/pools][%d] getPoolsByGroupIdOK  %+v", 200, o.Payload)
 }
-
 func (o *GetPoolsByGroupIDOK) GetPayload() models.IDList {
 	return o.Payload
 }
@@ -89,7 +87,7 @@ func NewGetPoolsByGroupIDUnauthorized() *GetPoolsByGroupIDUnauthorized {
 	return &GetPoolsByGroupIDUnauthorized{}
 }
 
-/*GetPoolsByGroupIDUnauthorized handles this case with default header values.
+/* GetPoolsByGroupIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -100,7 +98,6 @@ type GetPoolsByGroupIDUnauthorized struct {
 func (o *GetPoolsByGroupIDUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /groups/{group_id}/pools][%d] getPoolsByGroupIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *GetPoolsByGroupIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -120,7 +117,7 @@ func NewGetPoolsByGroupIDNotFound() *GetPoolsByGroupIDNotFound {
 	return &GetPoolsByGroupIDNotFound{}
 }
 
-/*GetPoolsByGroupIDNotFound handles this case with default header values.
+/* GetPoolsByGroupIDNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -131,7 +128,6 @@ type GetPoolsByGroupIDNotFound struct {
 func (o *GetPoolsByGroupIDNotFound) Error() string {
 	return fmt.Sprintf("[GET /groups/{group_id}/pools][%d] getPoolsByGroupIdNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetPoolsByGroupIDNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -151,7 +147,7 @@ func NewGetPoolsByGroupIDInternalServerError() *GetPoolsByGroupIDInternalServerE
 	return &GetPoolsByGroupIDInternalServerError{}
 }
 
-/*GetPoolsByGroupIDInternalServerError handles this case with default header values.
+/* GetPoolsByGroupIDInternalServerError describes a response with status code 500, with default header values.
 
 GetPoolsByGroupIDInternalServerError get pools by group Id internal server error
 */
@@ -162,7 +158,6 @@ type GetPoolsByGroupIDInternalServerError struct {
 func (o *GetPoolsByGroupIDInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /groups/{group_id}/pools][%d] getPoolsByGroupIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetPoolsByGroupIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

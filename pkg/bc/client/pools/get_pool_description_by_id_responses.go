@@ -41,7 +41,6 @@ func (o *GetPoolDescriptionByIDReader) ReadResponse(response runtime.ClientRespo
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewGetPoolDescriptionByIDOK() *GetPoolDescriptionByIDOK {
 	return &GetPoolDescriptionByIDOK{}
 }
 
-/*GetPoolDescriptionByIDOK handles this case with default header values.
+/* GetPoolDescriptionByIDOK describes a response with status code 200, with default header values.
 
 GetPoolDescriptionByIDOK get pool description by Id o k
 */
@@ -63,7 +62,6 @@ type GetPoolDescriptionByIDOK struct {
 func (o *GetPoolDescriptionByIDOK) Error() string {
 	return fmt.Sprintf("[GET /pools/{pool_id}][%d] getPoolDescriptionByIdOK  %+v", 200, o.Payload)
 }
-
 func (o *GetPoolDescriptionByIDOK) GetPayload() *models.Description {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewGetPoolDescriptionByIDUnauthorized() *GetPoolDescriptionByIDUnauthorized
 	return &GetPoolDescriptionByIDUnauthorized{}
 }
 
-/*GetPoolDescriptionByIDUnauthorized handles this case with default header values.
+/* GetPoolDescriptionByIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -96,7 +94,6 @@ type GetPoolDescriptionByIDUnauthorized struct {
 func (o *GetPoolDescriptionByIDUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /pools/{pool_id}][%d] getPoolDescriptionByIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *GetPoolDescriptionByIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -116,7 +113,7 @@ func NewGetPoolDescriptionByIDInternalServerError() *GetPoolDescriptionByIDInter
 	return &GetPoolDescriptionByIDInternalServerError{}
 }
 
-/*GetPoolDescriptionByIDInternalServerError handles this case with default header values.
+/* GetPoolDescriptionByIDInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -127,7 +124,6 @@ type GetPoolDescriptionByIDInternalServerError struct {
 func (o *GetPoolDescriptionByIDInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /pools/{pool_id}][%d] getPoolDescriptionByIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetPoolDescriptionByIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

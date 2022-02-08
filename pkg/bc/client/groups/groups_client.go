@@ -25,23 +25,26 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
 // ClientService is the interface for Client methods
 type ClientService interface {
-	AddNewGroup(params *AddNewGroupParams, authInfo runtime.ClientAuthInfoWriter) (*AddNewGroupOK, error)
+	AddNewGroup(params *AddNewGroupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*AddNewGroupOK, error)
 
-	AddPoolsByGroupID(params *AddPoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter) (*AddPoolsByGroupIDOK, error)
+	AddPoolsByGroupID(params *AddPoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*AddPoolsByGroupIDOK, error)
 
-	DeleteGroup(params *DeleteGroupParams, authInfo runtime.ClientAuthInfoWriter) error
+	DeleteGroup(params *DeleteGroupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) error
 
-	DeletePoolsByGroupID(params *DeletePoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter) (*DeletePoolsByGroupIDOK, error)
+	DeletePoolsByGroupID(params *DeletePoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeletePoolsByGroupIDOK, error)
 
-	GetGroupDescriptionByID(params *GetGroupDescriptionByIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetGroupDescriptionByIDOK, error)
+	GetGroupDescriptionByID(params *GetGroupDescriptionByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGroupDescriptionByIDOK, error)
 
-	GetGroupIDByName(params *GetGroupIDByNameParams, authInfo runtime.ClientAuthInfoWriter) (*GetGroupIDByNameOK, error)
+	GetGroupIDByName(params *GetGroupIDByNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGroupIDByNameOK, error)
 
-	GetPoolsByGroupID(params *GetPoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetPoolsByGroupIDOK, error)
+	GetPoolsByGroupID(params *GetPoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPoolsByGroupIDOK, error)
 
-	ReplacePoolsByGroupID(params *ReplacePoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter) (*ReplacePoolsByGroupIDOK, error)
+	ReplacePoolsByGroupID(params *ReplacePoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ReplacePoolsByGroupIDOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -51,13 +54,12 @@ type ClientService interface {
 
   Create new group
 */
-func (a *Client) AddNewGroup(params *AddNewGroupParams, authInfo runtime.ClientAuthInfoWriter) (*AddNewGroupOK, error) {
+func (a *Client) AddNewGroup(params *AddNewGroupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*AddNewGroupOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewAddNewGroupParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "addNewGroup",
 		Method:             "POST",
 		PathPattern:        "/groups",
@@ -69,7 +71,12 @@ func (a *Client) AddNewGroup(params *AddNewGroupParams, authInfo runtime.ClientA
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -88,13 +95,12 @@ func (a *Client) AddNewGroup(params *AddNewGroupParams, authInfo runtime.ClientA
 
   Add a list of pool_ids in the group (keep existing). Return new complete list.
 */
-func (a *Client) AddPoolsByGroupID(params *AddPoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter) (*AddPoolsByGroupIDOK, error) {
+func (a *Client) AddPoolsByGroupID(params *AddPoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*AddPoolsByGroupIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewAddPoolsByGroupIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "addPoolsByGroupID",
 		Method:             "POST",
 		PathPattern:        "/groups/{group_id}/pools",
@@ -106,7 +112,12 @@ func (a *Client) AddPoolsByGroupID(params *AddPoolsByGroupIDParams, authInfo run
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -125,13 +136,12 @@ func (a *Client) AddPoolsByGroupID(params *AddPoolsByGroupIDParams, authInfo run
 
   Delete this group, but not the pools associated with it.
 */
-func (a *Client) DeleteGroup(params *DeleteGroupParams, authInfo runtime.ClientAuthInfoWriter) error {
+func (a *Client) DeleteGroup(params *DeleteGroupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeleteGroupParams()
 	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "deleteGroup",
 		Method:             "DELETE",
 		PathPattern:        "/groups/{group_id}",
@@ -143,7 +153,12 @@ func (a *Client) DeleteGroup(params *DeleteGroupParams, authInfo runtime.ClientA
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	_, err := a.transport.Submit(op)
 	if err != nil {
 		return err
 	}
@@ -155,13 +170,12 @@ func (a *Client) DeleteGroup(params *DeleteGroupParams, authInfo runtime.ClientA
 
   Delete one or more pool_ids in the group. Return new complete list.
 */
-func (a *Client) DeletePoolsByGroupID(params *DeletePoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter) (*DeletePoolsByGroupIDOK, error) {
+func (a *Client) DeletePoolsByGroupID(params *DeletePoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeletePoolsByGroupIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeletePoolsByGroupIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "deletePoolsByGroupID",
 		Method:             "DELETE",
 		PathPattern:        "/groups/{group_id}/pools",
@@ -173,7 +187,12 @@ func (a *Client) DeletePoolsByGroupID(params *DeletePoolsByGroupIDParams, authIn
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -192,13 +211,12 @@ func (a *Client) DeletePoolsByGroupID(params *DeletePoolsByGroupIDParams, authIn
 
   Gets a description of a group
 */
-func (a *Client) GetGroupDescriptionByID(params *GetGroupDescriptionByIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetGroupDescriptionByIDOK, error) {
+func (a *Client) GetGroupDescriptionByID(params *GetGroupDescriptionByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGroupDescriptionByIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetGroupDescriptionByIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getGroupDescriptionByID",
 		Method:             "GET",
 		PathPattern:        "/groups/{group_id}",
@@ -210,7 +228,12 @@ func (a *Client) GetGroupDescriptionByID(params *GetGroupDescriptionByIDParams, 
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -229,13 +252,12 @@ func (a *Client) GetGroupDescriptionByID(params *GetGroupDescriptionByIDParams, 
 
   Gets group id for a given group name
 */
-func (a *Client) GetGroupIDByName(params *GetGroupIDByNameParams, authInfo runtime.ClientAuthInfoWriter) (*GetGroupIDByNameOK, error) {
+func (a *Client) GetGroupIDByName(params *GetGroupIDByNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGroupIDByNameOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetGroupIDByNameParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getGroupIDByName",
 		Method:             "GET",
 		PathPattern:        "/groups",
@@ -247,7 +269,12 @@ func (a *Client) GetGroupIDByName(params *GetGroupIDByNameParams, authInfo runti
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -266,13 +293,12 @@ func (a *Client) GetGroupIDByName(params *GetGroupIDByNameParams, authInfo runti
 
   Gets a list of pool_ids in the group
 */
-func (a *Client) GetPoolsByGroupID(params *GetPoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetPoolsByGroupIDOK, error) {
+func (a *Client) GetPoolsByGroupID(params *GetPoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPoolsByGroupIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetPoolsByGroupIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getPoolsByGroupID",
 		Method:             "GET",
 		PathPattern:        "/groups/{group_id}/pools",
@@ -284,7 +310,12 @@ func (a *Client) GetPoolsByGroupID(params *GetPoolsByGroupIDParams, authInfo run
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -303,13 +334,12 @@ func (a *Client) GetPoolsByGroupID(params *GetPoolsByGroupIDParams, authInfo run
 
   Update list of pool_ids in the group (replace existing). Return new complete list.
 */
-func (a *Client) ReplacePoolsByGroupID(params *ReplacePoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter) (*ReplacePoolsByGroupIDOK, error) {
+func (a *Client) ReplacePoolsByGroupID(params *ReplacePoolsByGroupIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ReplacePoolsByGroupIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewReplacePoolsByGroupIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "replacePoolsByGroupID",
 		Method:             "PUT",
 		PathPattern:        "/groups/{group_id}/pools",
@@ -321,7 +351,12 @@ func (a *Client) ReplacePoolsByGroupID(params *ReplacePoolsByGroupIDParams, auth
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}

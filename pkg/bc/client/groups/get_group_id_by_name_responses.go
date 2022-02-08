@@ -39,7 +39,6 @@ func (o *GetGroupIDByNameReader) ReadResponse(response runtime.ClientResponse, c
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -50,7 +49,7 @@ func NewGetGroupIDByNameOK() *GetGroupIDByNameOK {
 	return &GetGroupIDByNameOK{}
 }
 
-/*GetGroupIDByNameOK handles this case with default header values.
+/* GetGroupIDByNameOK describes a response with status code 200, with default header values.
 
 GetGroupIDByNameOK get group Id by name o k
 */
@@ -61,7 +60,6 @@ type GetGroupIDByNameOK struct {
 func (o *GetGroupIDByNameOK) Error() string {
 	return fmt.Sprintf("[GET /groups][%d] getGroupIdByNameOK  %+v", 200, o.Payload)
 }
-
 func (o *GetGroupIDByNameOK) GetPayload() []string {
 	return o.Payload
 }
@@ -81,7 +79,7 @@ func NewGetGroupIDByNameUnauthorized() *GetGroupIDByNameUnauthorized {
 	return &GetGroupIDByNameUnauthorized{}
 }
 
-/*GetGroupIDByNameUnauthorized handles this case with default header values.
+/* GetGroupIDByNameUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -92,7 +90,6 @@ type GetGroupIDByNameUnauthorized struct {
 func (o *GetGroupIDByNameUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /groups][%d] getGroupIdByNameUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *GetGroupIDByNameUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -112,7 +109,7 @@ func NewGetGroupIDByNameInternalServerError() *GetGroupIDByNameInternalServerErr
 	return &GetGroupIDByNameInternalServerError{}
 }
 
-/*GetGroupIDByNameInternalServerError handles this case with default header values.
+/* GetGroupIDByNameInternalServerError describes a response with status code 500, with default header values.
 
 GetGroupIDByNameInternalServerError get group Id by name internal server error
 */
@@ -123,7 +120,6 @@ type GetGroupIDByNameInternalServerError struct {
 func (o *GetGroupIDByNameInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /groups][%d] getGroupIdByNameInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetGroupIDByNameInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }
