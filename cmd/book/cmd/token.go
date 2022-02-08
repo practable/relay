@@ -50,6 +50,7 @@ bearer=$(book token)
 		viper.SetDefault("admin", "false")
 		viper.SetDefault("audience", "https://book.practable.io")
 		viper.SetDefault("groups", "everyone")
+		viper.SetDefault("addscope", "")
 
 		lifetime := viper.GetInt64("lifetime")
 		audience := viper.GetString("audience")
@@ -57,6 +58,7 @@ bearer=$(book token)
 		rawgroups := viper.GetString("groups")
 		groups := strings.Split(rawgroups, " ")
 		admin := viper.GetBool("admin")
+		addscope := viper.GetString("addscope")
 
 		// check inputs
 
@@ -84,6 +86,10 @@ bearer=$(book token)
 			scopes = []string{"login:admin"}
 		} else {
 			scopes = []string{"login:user"}
+		}
+
+		if addscope != "" {
+			scopes = append(scopes, addscope)
 		}
 
 		iat := time.Now().Unix() - 1 //ensure immediately usable
