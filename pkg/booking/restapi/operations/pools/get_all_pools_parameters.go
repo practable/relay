@@ -16,7 +16,8 @@ import (
 )
 
 // NewGetAllPoolsParams creates a new GetAllPoolsParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetAllPoolsParams() GetAllPoolsParams {
 
 	return GetAllPoolsParams{}
@@ -61,7 +62,6 @@ func (o *GetAllPoolsParams) BindRequest(r *http.Request, route *middleware.Match
 	if err := o.bindName(qName, qhkName, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -77,6 +77,7 @@ func (o *GetAllPoolsParams) bindExact(rawData []string, hasKey bool, formats str
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -99,10 +100,10 @@ func (o *GetAllPoolsParams) bindName(rawData []string, hasKey bool, formats strf
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.Name = &raw
 
 	return nil

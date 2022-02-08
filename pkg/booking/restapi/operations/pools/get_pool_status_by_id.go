@@ -29,7 +29,7 @@ func NewGetPoolStatusByID(ctx *middleware.Context, handler GetPoolStatusByIDHand
 	return &GetPoolStatusByID{Context: ctx, Handler: handler}
 }
 
-/*GetPoolStatusByID swagger:route GET /pools/{pool_id}/status pools getPoolStatusById
+/* GetPoolStatusByID swagger:route GET /pools/{pool_id}/status pools getPoolStatusById
 
 Gets the status of the pool's activities
 
@@ -47,7 +47,6 @@ func (o *GetPoolStatusByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewGetPoolStatusByIDParams()
-
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
@@ -58,7 +57,7 @@ func (o *GetPoolStatusByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var principal interface{}
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
@@ -67,7 +66,6 @@ func (o *GetPoolStatusByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	res := o.Handler.Handle(Params, principal) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

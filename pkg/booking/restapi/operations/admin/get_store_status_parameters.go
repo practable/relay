@@ -13,7 +13,8 @@ import (
 )
 
 // NewGetStoreStatusParams creates a new GetStoreStatusParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetStoreStatusParams() GetStoreStatusParams {
 
 	return GetStoreStatusParams{}

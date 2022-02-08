@@ -13,7 +13,8 @@ import (
 )
 
 // NewDeletePoolStoreParams creates a new DeletePoolStoreParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewDeletePoolStoreParams() DeletePoolStoreParams {
 
 	return DeletePoolStoreParams{}

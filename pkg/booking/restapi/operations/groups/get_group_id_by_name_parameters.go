@@ -16,7 +16,8 @@ import (
 )
 
 // NewGetGroupIDByNameParams creates a new GetGroupIDByNameParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetGroupIDByNameParams() GetGroupIDByNameParams {
 
 	return GetGroupIDByNameParams{}
@@ -53,7 +54,6 @@ func (o *GetGroupIDByNameParams) BindRequest(r *http.Request, route *middleware.
 	if err := o.bindName(qName, qhkName, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -72,10 +72,10 @@ func (o *GetGroupIDByNameParams) bindName(rawData []string, hasKey bool, formats
 
 	// Required: true
 	// AllowEmptyValue: false
+
 	if err := validate.RequiredString("name", "query", raw); err != nil {
 		return err
 	}
-
 	o.Name = raw
 
 	return nil

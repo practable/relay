@@ -29,7 +29,7 @@ func NewGetActivityByID(ctx *middleware.Context, handler GetActivityByIDHandler)
 	return &GetActivityByID{Context: ctx, Handler: handler}
 }
 
-/*GetActivityByID swagger:route GET /pools/{pool_id}/activities/{activity_id} pools getActivityById
+/* GetActivityByID swagger:route GET /pools/{pool_id}/activities/{activity_id} pools getActivityById
 
 Get activity description
 
@@ -47,7 +47,6 @@ func (o *GetActivityByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewGetActivityByIDParams()
-
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
@@ -58,7 +57,7 @@ func (o *GetActivityByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var principal interface{}
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
@@ -67,7 +66,6 @@ func (o *GetActivityByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	res := o.Handler.Handle(Params, principal) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

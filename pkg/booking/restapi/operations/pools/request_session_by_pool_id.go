@@ -29,7 +29,7 @@ func NewRequestSessionByPoolID(ctx *middleware.Context, handler RequestSessionBy
 	return &RequestSessionByPoolID{Context: ctx, Handler: handler}
 }
 
-/*RequestSessionByPoolID swagger:route POST /pools/{pool_id}/sessions pools requestSessionByPoolId
+/* RequestSessionByPoolID swagger:route POST /pools/{pool_id}/sessions pools requestSessionByPoolId
 
 Requests a session from a pool
 
@@ -47,7 +47,6 @@ func (o *RequestSessionByPoolID) ServeHTTP(rw http.ResponseWriter, r *http.Reque
 		r = rCtx
 	}
 	var Params = NewRequestSessionByPoolIDParams()
-
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
@@ -58,7 +57,7 @@ func (o *RequestSessionByPoolID) ServeHTTP(rw http.ResponseWriter, r *http.Reque
 	}
 	var principal interface{}
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
@@ -67,7 +66,6 @@ func (o *RequestSessionByPoolID) ServeHTTP(rw http.ResponseWriter, r *http.Reque
 	}
 
 	res := o.Handler.Handle(Params, principal) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

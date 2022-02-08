@@ -868,6 +868,8 @@ definitions:
     description: An activity represents connection details to instances of pre-agreed resource types such as video, data streams and user interfaces.
     type: object
     properties:
+      config:
+        $ref: '#/definitions/config'
       description:
         $ref: '#/definitions/description'
       exp:
@@ -968,6 +970,21 @@ definitions:
     - sub
     - groups
     - scopes
+
+  config:
+    title: config
+    description: a link to a configuration object hosted elsewhere
+    example:
+      url: experiments/pvna/pvna01-0.0.json
+    type: object
+    properties:
+      url:
+        description: URL at which to GET the configuration object
+        example: https://assets.practable.io/config/experiments/pvna/pvna01-0.0.json
+        type: string
+    required:
+    - url
+
     
   description:
     title: description

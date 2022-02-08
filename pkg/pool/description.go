@@ -38,6 +38,25 @@ func NewDescriptionFromModel(md *models.Description) *Description {
 	return d
 }
 
+func NewConfigFromModel(mc *models.Config) *Config {
+
+	var url string
+
+	if mc == nil {
+		return &Config{}
+	}
+
+	if mc.URL != nil {
+		url = *mc.URL
+	}
+
+	c := &Config{
+		URL: url,
+	}
+
+	return c
+}
+
 func (d *Description) ConvertToModel() *models.Description {
 
 	// avoid pointers to the original description

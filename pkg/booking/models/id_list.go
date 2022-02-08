@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/strfmt"
 )
 
@@ -18,5 +20,10 @@ type IDList []string
 
 // Validate validates this id list
 func (m IDList) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this id list based on context it is used
+func (m IDList) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }

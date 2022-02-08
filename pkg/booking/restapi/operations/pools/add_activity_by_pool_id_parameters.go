@@ -6,6 +6,7 @@ package pools
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"io"
 	"net/http"
 
@@ -13,12 +14,14 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 
 	"github.com/timdrysdale/relay/pkg/booking/models"
 )
 
 // NewAddActivityByPoolIDParams creates a new AddActivityByPoolIDParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewAddActivityByPoolIDParams() AddActivityByPoolIDParams {
 
 	return AddActivityByPoolIDParams{}
@@ -69,6 +72,11 @@ func (o *AddActivityByPoolIDParams) BindRequest(r *http.Request, route *middlewa
 				res = append(res, err)
 			}
 
+			ctx := validate.WithOperationRequest(context.Background())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
 			if len(res) == 0 {
 				o.Activity = &body
 			}
@@ -76,11 +84,11 @@ func (o *AddActivityByPoolIDParams) BindRequest(r *http.Request, route *middlewa
 	} else {
 		res = append(res, errors.Required("activity", "body", ""))
 	}
+
 	rPoolID, rhkPoolID, _ := route.Params.GetOK("pool_id")
 	if err := o.bindPoolID(rPoolID, rhkPoolID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -96,7 +104,6 @@ func (o *AddActivityByPoolIDParams) bindPoolID(rawData []string, hasKey bool, fo
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.PoolID = raw
 
 	return nil

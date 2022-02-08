@@ -6,6 +6,7 @@ package pools
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"io"
 	"net/http"
 
@@ -13,12 +14,14 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 
 	"github.com/timdrysdale/relay/pkg/booking/models"
 )
 
 // NewUpdateActivityByIDParams creates a new UpdateActivityByIDParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewUpdateActivityByIDParams() UpdateActivityByIDParams {
 
 	return UpdateActivityByIDParams{}
@@ -74,6 +77,11 @@ func (o *UpdateActivityByIDParams) BindRequest(r *http.Request, route *middlewar
 				res = append(res, err)
 			}
 
+			ctx := validate.WithOperationRequest(context.Background())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
 			if len(res) == 0 {
 				o.Activity = &body
 			}
@@ -81,6 +89,7 @@ func (o *UpdateActivityByIDParams) BindRequest(r *http.Request, route *middlewar
 	} else {
 		res = append(res, errors.Required("activity", "body", ""))
 	}
+
 	rActivityID, rhkActivityID, _ := route.Params.GetOK("activity_id")
 	if err := o.bindActivityID(rActivityID, rhkActivityID, route.Formats); err != nil {
 		res = append(res, err)
@@ -90,7 +99,6 @@ func (o *UpdateActivityByIDParams) BindRequest(r *http.Request, route *middlewar
 	if err := o.bindPoolID(rPoolID, rhkPoolID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -106,7 +114,6 @@ func (o *UpdateActivityByIDParams) bindActivityID(rawData []string, hasKey bool,
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.ActivityID = raw
 
 	return nil
@@ -121,7 +128,6 @@ func (o *UpdateActivityByIDParams) bindPoolID(rawData []string, hasKey bool, for
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.PoolID = raw
 
 	return nil
