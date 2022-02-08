@@ -278,4 +278,6 @@ func TestUploadManifest(t *testing.T) {
 		fmt.Println(string(pretty))
 	}
 
+	// check we get a config entry in the penduino activity
+
 }

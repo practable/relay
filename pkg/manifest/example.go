@@ -110,7 +110,10 @@ func Example(exp int64) *Manifest {
 		Scopes:         []string{"read", "write"},
 	}
 
+	cfg0 := Config{URL: "https://assets.practable.io/config/experiments/penduino/penduino00-0.0.json"}
+
 	M.Activities["penduino-activity-00"] = &Activity{
+		Config:      cfg0,
 		Description: "penduino-activity-v1.0",
 		UISet:       "penduino",
 		ExpiresAt:   exp,
@@ -137,7 +140,10 @@ func Example(exp int64) *Manifest {
 		Scopes:         []string{"read", "write"},
 	}
 
+	cfg1 := Config{URL: "https://assets.practable.io/config/experiments/penduino/penduino01-0.0.json"}
+
 	M.Activities["penduino-activity-01"] = &Activity{
+		Config:      cfg1,
 		Description: "penduino-activity-v1.0",
 		UISet:       "penduino",
 		ExpiresAt:   exp,
@@ -164,7 +170,10 @@ func Example(exp int64) *Manifest {
 		Scopes:         []string{"read", "write"},
 	}
 
+	cfg2 := Config{URL: "https://assets.practable.io/config/experiments/penduino/penduino02-0.0.json"}
+
 	M.Activities["penduino-activity-02"] = &Activity{
+		Config:      cfg2,
 		Description: "penduino-activity-v1.0",
 		UISet:       "penduino",
 		ExpiresAt:   exp,

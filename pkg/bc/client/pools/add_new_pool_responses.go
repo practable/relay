@@ -47,7 +47,6 @@ func (o *AddNewPoolReader) ReadResponse(response runtime.ClientResponse, consume
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewAddNewPoolOK() *AddNewPoolOK {
 	return &AddNewPoolOK{}
 }
 
-/*AddNewPoolOK handles this case with default header values.
+/* AddNewPoolOK describes a response with status code 200, with default header values.
 
 AddNewPoolOK add new pool o k
 */
@@ -69,7 +68,6 @@ type AddNewPoolOK struct {
 func (o *AddNewPoolOK) Error() string {
 	return fmt.Sprintf("[POST /pools][%d] addNewPoolOK  %+v", 200, o.Payload)
 }
-
 func (o *AddNewPoolOK) GetPayload() *models.ID {
 	return o.Payload
 }
@@ -91,7 +89,7 @@ func NewAddNewPoolUnauthorized() *AddNewPoolUnauthorized {
 	return &AddNewPoolUnauthorized{}
 }
 
-/*AddNewPoolUnauthorized handles this case with default header values.
+/* AddNewPoolUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -102,7 +100,6 @@ type AddNewPoolUnauthorized struct {
 func (o *AddNewPoolUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /pools][%d] addNewPoolUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *AddNewPoolUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -122,7 +119,7 @@ func NewAddNewPoolNotFound() *AddNewPoolNotFound {
 	return &AddNewPoolNotFound{}
 }
 
-/*AddNewPoolNotFound handles this case with default header values.
+/* AddNewPoolNotFound describes a response with status code 404, with default header values.
 
 Unauthorized
 */
@@ -133,7 +130,6 @@ type AddNewPoolNotFound struct {
 func (o *AddNewPoolNotFound) Error() string {
 	return fmt.Sprintf("[POST /pools][%d] addNewPoolNotFound  %+v", 404, o.Payload)
 }
-
 func (o *AddNewPoolNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -153,7 +149,7 @@ func NewAddNewPoolInternalServerError() *AddNewPoolInternalServerError {
 	return &AddNewPoolInternalServerError{}
 }
 
-/*AddNewPoolInternalServerError handles this case with default header values.
+/* AddNewPoolInternalServerError describes a response with status code 500, with default header values.
 
 AddNewPoolInternalServerError add new pool internal server error
 */
@@ -164,7 +160,6 @@ type AddNewPoolInternalServerError struct {
 func (o *AddNewPoolInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /pools][%d] addNewPoolInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *AddNewPoolInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

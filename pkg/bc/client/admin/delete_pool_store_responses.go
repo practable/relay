@@ -39,7 +39,6 @@ func (o *DeletePoolStoreReader) ReadResponse(response runtime.ClientResponse, co
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -50,7 +49,7 @@ func NewDeletePoolStoreUnauthorized() *DeletePoolStoreUnauthorized {
 	return &DeletePoolStoreUnauthorized{}
 }
 
-/*DeletePoolStoreUnauthorized handles this case with default header values.
+/* DeletePoolStoreUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -61,7 +60,6 @@ type DeletePoolStoreUnauthorized struct {
 func (o *DeletePoolStoreUnauthorized) Error() string {
 	return fmt.Sprintf("[DELETE /admin/poolstore][%d] deletePoolStoreUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *DeletePoolStoreUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -81,7 +79,7 @@ func NewDeletePoolStoreNotFound() *DeletePoolStoreNotFound {
 	return &DeletePoolStoreNotFound{}
 }
 
-/*DeletePoolStoreNotFound handles this case with default header values.
+/* DeletePoolStoreNotFound describes a response with status code 404, with default header values.
 
 Unauthorized
 */
@@ -92,7 +90,6 @@ type DeletePoolStoreNotFound struct {
 func (o *DeletePoolStoreNotFound) Error() string {
 	return fmt.Sprintf("[DELETE /admin/poolstore][%d] deletePoolStoreNotFound  %+v", 404, o.Payload)
 }
-
 func (o *DeletePoolStoreNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -112,7 +109,7 @@ func NewDeletePoolStoreInternalServerError() *DeletePoolStoreInternalServerError
 	return &DeletePoolStoreInternalServerError{}
 }
 
-/*DeletePoolStoreInternalServerError handles this case with default header values.
+/* DeletePoolStoreInternalServerError describes a response with status code 500, with default header values.
 
 DeletePoolStoreInternalServerError delete pool store internal server error
 */
@@ -123,7 +120,6 @@ type DeletePoolStoreInternalServerError struct {
 func (o *DeletePoolStoreInternalServerError) Error() string {
 	return fmt.Sprintf("[DELETE /admin/poolstore][%d] deletePoolStoreInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *DeletePoolStoreInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -24,9 +26,11 @@ type UserInterface struct {
 	Description *Description `json:"description"`
 
 	// list of names of required streams
+	// Example: ["data","video"]
 	StreamsRequired []string `json:"streamsRequired"`
 
 	// URL of the user interface
+	// Example: https://static.practable.io/ui/penduino-basic.html?video={{video}}\u0026data={{data}}
 	// Required: true
 	URL *string `json:"url"`
 }
@@ -71,6 +75,34 @@ func (m *UserInterface) validateURL(formats strfmt.Registry) error {
 
 	if err := validate.Required("url", "body", m.URL); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this user interface based on the context it is used
+func (m *UserInterface) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateDescription(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *UserInterface) contextValidateDescription(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Description != nil {
+		if err := m.Description.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("description")
+			}
+			return err
+		}
 	}
 
 	return nil

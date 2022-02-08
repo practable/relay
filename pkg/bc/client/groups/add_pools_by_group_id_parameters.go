@@ -18,58 +18,73 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/models"
 )
 
-// NewAddPoolsByGroupIDParams creates a new AddPoolsByGroupIDParams object
-// with the default values initialized.
+// NewAddPoolsByGroupIDParams creates a new AddPoolsByGroupIDParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewAddPoolsByGroupIDParams() *AddPoolsByGroupIDParams {
-	var ()
 	return &AddPoolsByGroupIDParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewAddPoolsByGroupIDParamsWithTimeout creates a new AddPoolsByGroupIDParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewAddPoolsByGroupIDParamsWithTimeout(timeout time.Duration) *AddPoolsByGroupIDParams {
-	var ()
 	return &AddPoolsByGroupIDParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewAddPoolsByGroupIDParamsWithContext creates a new AddPoolsByGroupIDParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewAddPoolsByGroupIDParamsWithContext(ctx context.Context) *AddPoolsByGroupIDParams {
-	var ()
 	return &AddPoolsByGroupIDParams{
-
 		Context: ctx,
 	}
 }
 
 // NewAddPoolsByGroupIDParamsWithHTTPClient creates a new AddPoolsByGroupIDParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewAddPoolsByGroupIDParamsWithHTTPClient(client *http.Client) *AddPoolsByGroupIDParams {
-	var ()
 	return &AddPoolsByGroupIDParams{
 		HTTPClient: client,
 	}
 }
 
-/*AddPoolsByGroupIDParams contains all the parameters to send to the API endpoint
-for the add pools by group ID operation typically these are written to a http.Request
+/* AddPoolsByGroupIDParams contains all the parameters to send to the API endpoint
+   for the add pools by group ID operation.
+
+   Typically these are written to a http.Request.
 */
 type AddPoolsByGroupIDParams struct {
 
-	/*GroupID*/
+	// GroupID.
 	GroupID string
-	/*Pools*/
+
+	// Pools.
 	Pools models.IDList
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the add pools by group ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *AddPoolsByGroupIDParams) WithDefaults() *AddPoolsByGroupIDParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the add pools by group ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *AddPoolsByGroupIDParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the add pools by group ID params
@@ -139,7 +154,6 @@ func (o *AddPoolsByGroupIDParams) WriteToRequest(r runtime.ClientRequest, reg st
 	if err := r.SetPathParam("group_id", o.GroupID); err != nil {
 		return err
 	}
-
 	if o.Pools != nil {
 		if err := r.SetBodyParam(o.Pools); err != nil {
 			return err

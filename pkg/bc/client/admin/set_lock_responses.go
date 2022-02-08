@@ -41,7 +41,6 @@ func (o *SetLockReader) ReadResponse(response runtime.ClientResponse, consumer r
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewSetLockOK() *SetLockOK {
 	return &SetLockOK{}
 }
 
-/*SetLockOK handles this case with default header values.
+/* SetLockOK describes a response with status code 200, with default header values.
 
 SetLockOK set lock o k
 */
@@ -63,7 +62,6 @@ type SetLockOK struct {
 func (o *SetLockOK) Error() string {
 	return fmt.Sprintf("[POST /admin/status][%d] setLockOK  %+v", 200, o.Payload)
 }
-
 func (o *SetLockOK) GetPayload() *models.StoreStatus {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewSetLockUnauthorized() *SetLockUnauthorized {
 	return &SetLockUnauthorized{}
 }
 
-/*SetLockUnauthorized handles this case with default header values.
+/* SetLockUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -96,7 +94,6 @@ type SetLockUnauthorized struct {
 func (o *SetLockUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /admin/status][%d] setLockUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *SetLockUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -116,7 +113,7 @@ func NewSetLockInternalServerError() *SetLockInternalServerError {
 	return &SetLockInternalServerError{}
 }
 
-/*SetLockInternalServerError handles this case with default header values.
+/* SetLockInternalServerError describes a response with status code 500, with default header values.
 
 SetLockInternalServerError set lock internal server error
 */
@@ -127,7 +124,6 @@ type SetLockInternalServerError struct {
 func (o *SetLockInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /admin/status][%d] setLockInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *SetLockInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

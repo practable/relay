@@ -18,56 +18,70 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/models"
 )
 
-// NewAddNewPoolParams creates a new AddNewPoolParams object
-// with the default values initialized.
+// NewAddNewPoolParams creates a new AddNewPoolParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewAddNewPoolParams() *AddNewPoolParams {
-	var ()
 	return &AddNewPoolParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewAddNewPoolParamsWithTimeout creates a new AddNewPoolParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewAddNewPoolParamsWithTimeout(timeout time.Duration) *AddNewPoolParams {
-	var ()
 	return &AddNewPoolParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewAddNewPoolParamsWithContext creates a new AddNewPoolParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewAddNewPoolParamsWithContext(ctx context.Context) *AddNewPoolParams {
-	var ()
 	return &AddNewPoolParams{
-
 		Context: ctx,
 	}
 }
 
 // NewAddNewPoolParamsWithHTTPClient creates a new AddNewPoolParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewAddNewPoolParamsWithHTTPClient(client *http.Client) *AddNewPoolParams {
-	var ()
 	return &AddNewPoolParams{
 		HTTPClient: client,
 	}
 }
 
-/*AddNewPoolParams contains all the parameters to send to the API endpoint
-for the add new pool operation typically these are written to a http.Request
+/* AddNewPoolParams contains all the parameters to send to the API endpoint
+   for the add new pool operation.
+
+   Typically these are written to a http.Request.
 */
 type AddNewPoolParams struct {
 
-	/*Pool*/
+	// Pool.
 	Pool *models.Pool
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the add new pool params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *AddNewPoolParams) WithDefaults() *AddNewPoolParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the add new pool params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *AddNewPoolParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the add new pool params
@@ -121,7 +135,6 @@ func (o *AddNewPoolParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Re
 		return err
 	}
 	var res []error
-
 	if o.Pool != nil {
 		if err := r.SetBodyParam(o.Pool); err != nil {
 			return err

@@ -41,7 +41,6 @@ func (o *GetPoolStatusByIDReader) ReadResponse(response runtime.ClientResponse, 
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewGetPoolStatusByIDOK() *GetPoolStatusByIDOK {
 	return &GetPoolStatusByIDOK{}
 }
 
-/*GetPoolStatusByIDOK handles this case with default header values.
+/* GetPoolStatusByIDOK describes a response with status code 200, with default header values.
 
 GetPoolStatusByIDOK get pool status by Id o k
 */
@@ -63,7 +62,6 @@ type GetPoolStatusByIDOK struct {
 func (o *GetPoolStatusByIDOK) Error() string {
 	return fmt.Sprintf("[GET /pools/{pool_id}/status][%d] getPoolStatusByIdOK  %+v", 200, o.Payload)
 }
-
 func (o *GetPoolStatusByIDOK) GetPayload() *models.Status {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewGetPoolStatusByIDUnauthorized() *GetPoolStatusByIDUnauthorized {
 	return &GetPoolStatusByIDUnauthorized{}
 }
 
-/*GetPoolStatusByIDUnauthorized handles this case with default header values.
+/* GetPoolStatusByIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -96,7 +94,6 @@ type GetPoolStatusByIDUnauthorized struct {
 func (o *GetPoolStatusByIDUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /pools/{pool_id}/status][%d] getPoolStatusByIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *GetPoolStatusByIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -116,7 +113,7 @@ func NewGetPoolStatusByIDInternalServerError() *GetPoolStatusByIDInternalServerE
 	return &GetPoolStatusByIDInternalServerError{}
 }
 
-/*GetPoolStatusByIDInternalServerError handles this case with default header values.
+/* GetPoolStatusByIDInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -127,7 +124,6 @@ type GetPoolStatusByIDInternalServerError struct {
 func (o *GetPoolStatusByIDInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /pools/{pool_id}/status][%d] getPoolStatusByIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetPoolStatusByIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

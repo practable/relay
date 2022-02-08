@@ -41,7 +41,6 @@ func (o *ExportPoolStoreReader) ReadResponse(response runtime.ClientResponse, co
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewExportPoolStoreOK() *ExportPoolStoreOK {
 	return &ExportPoolStoreOK{}
 }
 
-/*ExportPoolStoreOK handles this case with default header values.
+/* ExportPoolStoreOK describes a response with status code 200, with default header values.
 
 ExportPoolStoreOK export pool store o k
 */
@@ -63,7 +62,6 @@ type ExportPoolStoreOK struct {
 func (o *ExportPoolStoreOK) Error() string {
 	return fmt.Sprintf("[GET /admin/poolstore][%d] exportPoolStoreOK  %+v", 200, o.Payload)
 }
-
 func (o *ExportPoolStoreOK) GetPayload() *models.Poolstore {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewExportPoolStoreUnauthorized() *ExportPoolStoreUnauthorized {
 	return &ExportPoolStoreUnauthorized{}
 }
 
-/*ExportPoolStoreUnauthorized handles this case with default header values.
+/* ExportPoolStoreUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -96,7 +94,6 @@ type ExportPoolStoreUnauthorized struct {
 func (o *ExportPoolStoreUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /admin/poolstore][%d] exportPoolStoreUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *ExportPoolStoreUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -116,7 +113,7 @@ func NewExportPoolStoreInternalServerError() *ExportPoolStoreInternalServerError
 	return &ExportPoolStoreInternalServerError{}
 }
 
-/*ExportPoolStoreInternalServerError handles this case with default header values.
+/* ExportPoolStoreInternalServerError describes a response with status code 500, with default header values.
 
 ExportPoolStoreInternalServerError export pool store internal server error
 */
@@ -127,7 +124,6 @@ type ExportPoolStoreInternalServerError struct {
 func (o *ExportPoolStoreInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /admin/poolstore][%d] exportPoolStoreInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *ExportPoolStoreInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

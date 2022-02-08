@@ -16,52 +16,66 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewExportPoolStoreParams creates a new ExportPoolStoreParams object
-// with the default values initialized.
+// NewExportPoolStoreParams creates a new ExportPoolStoreParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewExportPoolStoreParams() *ExportPoolStoreParams {
-
 	return &ExportPoolStoreParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewExportPoolStoreParamsWithTimeout creates a new ExportPoolStoreParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewExportPoolStoreParamsWithTimeout(timeout time.Duration) *ExportPoolStoreParams {
-
 	return &ExportPoolStoreParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewExportPoolStoreParamsWithContext creates a new ExportPoolStoreParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewExportPoolStoreParamsWithContext(ctx context.Context) *ExportPoolStoreParams {
-
 	return &ExportPoolStoreParams{
-
 		Context: ctx,
 	}
 }
 
 // NewExportPoolStoreParamsWithHTTPClient creates a new ExportPoolStoreParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewExportPoolStoreParamsWithHTTPClient(client *http.Client) *ExportPoolStoreParams {
-
 	return &ExportPoolStoreParams{
 		HTTPClient: client,
 	}
 }
 
-/*ExportPoolStoreParams contains all the parameters to send to the API endpoint
-for the export pool store operation typically these are written to a http.Request
+/* ExportPoolStoreParams contains all the parameters to send to the API endpoint
+   for the export pool store operation.
+
+   Typically these are written to a http.Request.
 */
 type ExportPoolStoreParams struct {
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the export pool store params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *ExportPoolStoreParams) WithDefaults() *ExportPoolStoreParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the export pool store params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *ExportPoolStoreParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the export pool store params

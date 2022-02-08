@@ -49,11 +49,16 @@ func (m *Manifest) GetActivityModel(aref Ref) *models.Activity {
 	exp := float64(a.ExpiresAt)
 
 	return &models.Activity{
+		Config:      GetConfigModel(a.Config),
 		Description: d.ToModel(),
 		Exp:         &exp,
 		Uis:         m.GetUISetModel(a.UISet),
 		Streams:     GetStreamsModel(a.Streams),
 	}
+}
+
+func GetConfigModel(c Config) *models.Config {
+	return &models.Config{URL: &c.URL}
 }
 
 func GetStreamsModel(streams map[string]*Stream) []*models.Stream {
