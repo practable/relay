@@ -24,6 +24,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/client/admin"
 	groups "github.com/timdrysdale/relay/pkg/bc/client/groups"
 	login "github.com/timdrysdale/relay/pkg/bc/client/login"
+	"github.com/timdrysdale/relay/pkg/bc/client/pools"
 	"github.com/timdrysdale/relay/pkg/bc/models"
 	"github.com/timdrysdale/relay/pkg/booking"
 	"github.com/timdrysdale/relay/pkg/bookingstore"
@@ -33,7 +34,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var auth runtime.ClientAuthInfoWriter
+var auth, userauth runtime.ClientAuthInfoWriter
 var debug bool
 var l *bookingstore.Limit
 var ps *pool.PoolStore
@@ -42,6 +43,7 @@ var useLocal bool
 var bearer, secret string
 var bc *apiclient.Bc
 var timeout time.Duration
+var userBearer string
 
 func init() {
 
@@ -108,6 +110,12 @@ func TestMain(m *testing.M) {
 			panic(err)
 		}
 
+		lt = lit.NewToken(audience, []string{"everyone"}, []string{}, []string{"login:user"}, iat, nbf, exp)
+		userBearer, err = lit.Signed(lt, secret)
+		if err != nil {
+			panic(err)
+		}
+
 		cfg = apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{"http"})
 
 	} else { //remote
@@ -121,6 +129,12 @@ func TestMain(m *testing.M) {
 
 		lt = lit.NewToken("https://book.practable.io", []string{"everyone"}, []string{}, []string{"login:admin"}, iat, nbf, exp)
 		loginBearer, err = lit.Signed(lt, secret)
+		if err != nil {
+			panic(err)
+		}
+
+		lt = lit.NewToken("https://book.practable.io", []string{"everyone"}, []string{}, []string{"login:user"}, iat, nbf, exp)
+		userBearer, err = lit.Signed(lt, secret)
 		if err != nil {
 			panic(err)
 		}
@@ -144,6 +158,8 @@ func TestMain(m *testing.M) {
 	bearer = *resp.GetPayload().Token
 
 	auth = httptransport.APIKeyAuth("Authorization", "header", bearer)
+
+	//don't get user auth here because there are no pool ids available to it yet
 
 	exitVal := m.Run()
 
@@ -278,6 +294,57 @@ func TestUploadManifest(t *testing.T) {
 		fmt.Println(string(pretty))
 	}
 
-	// check we get a config entry in the penduino activity
+	// check we get a config entry in the penduino activity - needs a few steps though
 
+	// get user auth for later as well
+	loginAuth := httptransport.APIKeyAuth("Authorization", "header", userBearer)
+
+	params := login.NewLoginParams().WithTimeout(timeout)
+	resp, err := bc.Login.Login(params, loginAuth)
+	if err != nil {
+		panic(err)
+	}
+
+	bearer := *resp.GetPayload().Token
+
+	userauth = httptransport.APIKeyAuth("Authorization", "header", bearer)
+
+	// first get the pool ids
+	pids, err := bc.Pools.GetAllPools(pools.NewGetAllPoolsParams().
+		WithTimeout(timeout),
+		auth)
+	assert.NoError(t, err)
+	log.Infof("%+v", pids)
+
+	var ppid string
+
+	// find one with penduinos in it
+	for _, pid := range pids.Payload {
+		d, err := bc.Pools.GetPoolDescriptionByID(pools.NewGetPoolDescriptionByIDParams().
+			WithTimeout(timeout).
+			WithPoolID(pid),
+			auth)
+		if err != nil { //probably not authorised
+			break
+		}
+
+		log.Infof("Pool %s: %s", pid, *(d.Payload.Name))
+
+		if *(d.Payload.Name) == "Penduino (Everyone)" {
+			log.Infof("Penduino pool id is %s", pid)
+			ppid = pid
+		}
+	}
+	assert.True(t, ppid != "", "Did not find penduino pool ID")
+
+	a, err := bc.Pools.RequestSessionByPoolID(pools.NewRequestSessionByPoolIDParams().
+		WithTimeout(timeout).
+		WithPoolID(ppid).
+		WithDuration(3000),
+		userauth)
+	assert.NoError(t, err)
+	log.Infof("%+v", a.Payload)
+	u := *a.Payload.Config.URL
+	//there are three possibilities, so just check that the first bit is correct
+	assert.Equal(t, "https://assets.practable.io/config/experiments/penduino/penduino", u[0:64])
 }
