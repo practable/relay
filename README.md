@@ -18,24 +18,26 @@ Relay is a set of tools and services to let you to host remote lab experiments, 
 Relay is the new core of the [practable.io](https://practable.io) remote laboratory ecosystem. Some of the educational thinking behind this ecosystem can be found [here](https://www.tandfonline.com/doi/full/10.1080/23752696.2020.1816845). If you cannot access the full-text of this paper (although please try, to show support for this idea), you can find an unformatted author final version in this repo at `docs/education`
   
 To cite the paper:
->Timothy D. Drysdale, Simon Kelley, Anne-Marie Scott, Victoria Dishon, Andrew Weightman, Richard James Lewis & Stephen Watts (2020) Opinion piece: non-traditional practical work for traditional campuses, Higher Education Pedagogies, 5:1, 210-222, DOI: 10.1080/23752696.2020.1816845
+>Timothy D. Drysdale (corresponding author), Simon Kelley, Anne-Marie Scott, Victoria Dishon, Andrew Weightman, Richard James Lewis & Stephen Watts (2020) Opinion piece: non-traditional practical work for traditional campuses, Higher Education Pedagogies, 5:1, 210-222, DOI: 10.1080/23752696.2020.1816845 
 
 ## Status
- 
- Relay v1.0 is being built to a February 2021 deadline and should be considered as having an unstable API until such time as this notice says otherwise.
-  
-  Having said that, the API is more or less in place now, and I expect to modify it only to suit immediate operational requirements that emerge in coming weeks.
-  
-  Once I've produced documentation to support my first batch of users, I will then improve this README to explain how it all hangs together from the point of view of developers - which let's face it, if you are here, you probably are. Meanwhile, feel free to browse in the repo to `pkg/crossbar` and `pkg/vw` where you can see (dated) introductions to key parts.
-  
-Just to match that theme of under-construction, here are some remote lab boxes part way through construction.
-  
- ![alt text][boxes] 
-  
+
+The system is currently suitable for single-tenacy operations, with a single administrative "zone". Additional automation of experiment and system provision has been developed and will be released once secret-handling has been separated out.
+
+We've successfully used this code to run assessed coursework for over 250 students during Q1/Q2 of 2021, alongside some student recruitment events.
+
+David P. Reid, Joshua Burridge, David B. Lowe, and Timothy D. Drysdale (corresponding author), Open-source remote laboratory experiments for controls engineering education, International Journal of Mechanical Engineering Education, Accepted 22 Jan 2022. 
 
 
-[status]: https://img.shields.io/badge/status-development-yellow "status; development"
+ >  We describe and evaluate the use of a remote laboratory with approximately 250 third-year students in the ‘Controls and Instrumentation Engineering 3’ course in the School of Engineering at the University of Edinburgh. The remote laboratory was created using the first iteration of a new open-source infrastructure. A key component of the implementation is a secure video and data relay that permits experiments to be hosted on restricted networks and accessed from a wide range of browsers, so as to minimise the technical support burden on course staff. A heterogeneous set of twelve spinning disks driven by DC motors were provided to students via an online catalogue permitting instant and exclusive access to an individual experiment for up to 90 minutes a session. The student experience was evaluated via a survey, which comprised both qualitative and quantitative questions. Survey participation was optional and included some in-depth questions targeting the students’ experience from a UX perspective. The link between quantitative and qualitative results allows us to draw useful conclusions about the experiences of the students participating in the survey. Our main findings are that the overall experience was positive for the survey respondents, and that they perceive a distinction between having control over the equipment and control over the task. Our work indicates there is a need to better understand the implications of students making this distinction, and the effect it will have on future designs of remote laboratory tasks, user interfaces, and evaluations.
+
+
+We've got over 50 experiments under management at the present time - with some of our latest in our new 1:6 scale ISO containers:
+
+![containers](./img/AGB_Spinners.jpg)
+
+[status]: https://img.shields.io/badge/status-operating-green "status; development"
 [coverage]: https://img.shields.io/badge/coverage-44%25-orange "Test coverage 44%"
 [logo]: ./assets/images/logo.png "Relay ecosystem logo - hexagons connected in a network to a letter R"
-[boxes]: ./assets/images/boxes-700x525.jpg "Boxes under construction"
+
 
