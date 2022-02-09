@@ -17,63 +17,79 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewGetActivityByIDParams creates a new GetActivityByIDParams object
-// with the default values initialized.
+// NewGetActivityByIDParams creates a new GetActivityByIDParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetActivityByIDParams() *GetActivityByIDParams {
-	var ()
 	return &GetActivityByIDParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetActivityByIDParamsWithTimeout creates a new GetActivityByIDParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewGetActivityByIDParamsWithTimeout(timeout time.Duration) *GetActivityByIDParams {
-	var ()
 	return &GetActivityByIDParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewGetActivityByIDParamsWithContext creates a new GetActivityByIDParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewGetActivityByIDParamsWithContext(ctx context.Context) *GetActivityByIDParams {
-	var ()
 	return &GetActivityByIDParams{
-
 		Context: ctx,
 	}
 }
 
 // NewGetActivityByIDParamsWithHTTPClient creates a new GetActivityByIDParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewGetActivityByIDParamsWithHTTPClient(client *http.Client) *GetActivityByIDParams {
-	var ()
 	return &GetActivityByIDParams{
 		HTTPClient: client,
 	}
 }
 
-/*GetActivityByIDParams contains all the parameters to send to the API endpoint
-for the get activity by ID operation typically these are written to a http.Request
+/* GetActivityByIDParams contains all the parameters to send to the API endpoint
+   for the get activity by ID operation.
+
+   Typically these are written to a http.Request.
 */
 type GetActivityByIDParams struct {
 
-	/*ActivityID*/
+	// ActivityID.
 	ActivityID string
-	/*Details
-	  True returns all available details, false just description.
 
+	/* Details.
+
+	   True returns all available details, false just description.
 	*/
 	Details *bool
-	/*PoolID*/
+
+	// PoolID.
 	PoolID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the get activity by ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetActivityByIDParams) WithDefaults() *GetActivityByIDParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the get activity by ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetActivityByIDParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get activity by ID params
@@ -159,16 +175,17 @@ func (o *GetActivityByIDParams) WriteToRequest(r runtime.ClientRequest, reg strf
 
 		// query param details
 		var qrDetails bool
+
 		if o.Details != nil {
 			qrDetails = *o.Details
 		}
 		qDetails := swag.FormatBool(qrDetails)
 		if qDetails != "" {
+
 			if err := r.SetQueryParam("details", qDetails); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	// path param pool_id

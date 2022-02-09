@@ -17,7 +17,8 @@ import (
 )
 
 // NewRequestSessionByPoolIDParams creates a new RequestSessionByPoolIDParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewRequestSessionByPoolIDParams() RequestSessionByPoolIDParams {
 
 	return RequestSessionByPoolIDParams{}
@@ -64,7 +65,6 @@ func (o *RequestSessionByPoolIDParams) BindRequest(r *http.Request, route *middl
 	if err := o.bindPoolID(rPoolID, rhkPoolID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -83,6 +83,7 @@ func (o *RequestSessionByPoolIDParams) bindDuration(rawData []string, hasKey boo
 
 	// Required: true
 	// AllowEmptyValue: false
+
 	if err := validate.RequiredString("duration", "query", raw); err != nil {
 		return err
 	}
@@ -105,7 +106,6 @@ func (o *RequestSessionByPoolIDParams) bindPoolID(rawData []string, hasKey bool,
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.PoolID = raw
 
 	return nil

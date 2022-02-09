@@ -54,6 +54,8 @@ pools:
     - spinner-activity-00
 activities:
   penduino-activity-00:
+    config:
+      url: https://assets.practable.io/config/experiments/penduino/penduino00-0.0.json
     description: penduino-activity-v1.0
     UISet: penduino
     exp: 1613256113
@@ -78,6 +80,8 @@ activities:
         - read
         - write
   penduino-activity-01:
+    config:
+      url: https://assets.practable.io/config/experiments/penduino/penduino01-0.0.json
     description: penduino-activity-v1.0
     UISet: penduino
     exp: 1613256113
@@ -102,6 +106,8 @@ activities:
         - read
         - write
   penduino-activity-02:
+    config:
+      url: https://assets.practable.io/config/experiments/penduino/penduino02-0.0.json
     description: penduino-activity-v1.0
     UISet: penduino
     exp: 1613256113

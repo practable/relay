@@ -100,6 +100,7 @@ func NewActivityFromModel(ma *models.Activity) *Activity {
 
 	return &Activity{
 		&sync.RWMutex{},
+		*NewConfigFromModel(ma.Config),
 		*NewDescriptionFromModel(ma.Description),
 		exp,
 		NewStreamsFromModel(ma.Streams),
@@ -247,6 +248,7 @@ func (a *Activity) ConvertToModel() *models.Activity {
 
 	return &models.Activity{
 		Description: a.Description.ConvertToModel(),
+		Config:      ConfigToModel(a.Config),
 		Exp:         &exp,
 		Streams:     StreamsToModel(a.Streams),
 		Uis:         UIsToModel(a.UI),
@@ -284,6 +286,13 @@ func StreamsToModel(streams map[string]*Stream) []*models.Stream {
 	return ms
 }
 
+func ConfigToModel(config Config) *models.Config {
+
+	return &models.Config{
+		URL: &config.URL,
+	}
+}
+
 func SingleUIToModel(u *UI) *models.UserInterface {
 	if u == nil {
 		return &models.UserInterface{}
@@ -312,6 +321,7 @@ func UIsToModel(uis []*UI) []*models.UserInterface {
 func NewActivity(name string, expires int64) *Activity {
 	return &Activity{
 		&sync.RWMutex{},
+		Config{},
 		*NewDescription(name),
 		expires,
 		make(map[string]*Stream),

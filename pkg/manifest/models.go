@@ -35,7 +35,13 @@ type Pool struct {
 	Activities []Ref
 }
 
+type Config struct {
+	URL string `yaml:"url"`
+}
+
 type Activity struct {
+	Config Config `yaml:"config"`
+
 	Description Ref `yaml:"description"`
 
 	UISet Ref `yaml:"UISet"`

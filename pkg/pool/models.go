@@ -42,6 +42,10 @@ type Pool struct {
 	Now           func() int64         `json:"-" yaml:"-"`
 }
 
+type Config struct {
+	URL string `json:"url"`
+}
+
 type Description struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -51,6 +55,7 @@ type Description struct {
 
 type Activity struct {
 	*sync.RWMutex `json:"-"`
+	Config        Config `json:"config"`
 	Description   `json:"description"`
 	ExpiresAt     int64              `json:"exp"`
 	Streams       map[string]*Stream `json:"streams"`

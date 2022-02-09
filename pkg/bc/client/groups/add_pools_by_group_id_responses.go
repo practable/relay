@@ -47,7 +47,6 @@ func (o *AddPoolsByGroupIDReader) ReadResponse(response runtime.ClientResponse, 
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewAddPoolsByGroupIDOK() *AddPoolsByGroupIDOK {
 	return &AddPoolsByGroupIDOK{}
 }
 
-/*AddPoolsByGroupIDOK handles this case with default header values.
+/* AddPoolsByGroupIDOK describes a response with status code 200, with default header values.
 
 AddPoolsByGroupIDOK add pools by group Id o k
 */
@@ -69,7 +68,6 @@ type AddPoolsByGroupIDOK struct {
 func (o *AddPoolsByGroupIDOK) Error() string {
 	return fmt.Sprintf("[POST /groups/{group_id}/pools][%d] addPoolsByGroupIdOK  %+v", 200, o.Payload)
 }
-
 func (o *AddPoolsByGroupIDOK) GetPayload() models.IDList {
 	return o.Payload
 }
@@ -89,7 +87,7 @@ func NewAddPoolsByGroupIDUnauthorized() *AddPoolsByGroupIDUnauthorized {
 	return &AddPoolsByGroupIDUnauthorized{}
 }
 
-/*AddPoolsByGroupIDUnauthorized handles this case with default header values.
+/* AddPoolsByGroupIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -100,7 +98,6 @@ type AddPoolsByGroupIDUnauthorized struct {
 func (o *AddPoolsByGroupIDUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /groups/{group_id}/pools][%d] addPoolsByGroupIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *AddPoolsByGroupIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -120,7 +117,7 @@ func NewAddPoolsByGroupIDNotFound() *AddPoolsByGroupIDNotFound {
 	return &AddPoolsByGroupIDNotFound{}
 }
 
-/*AddPoolsByGroupIDNotFound handles this case with default header values.
+/* AddPoolsByGroupIDNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -141,7 +138,7 @@ func NewAddPoolsByGroupIDInternalServerError() *AddPoolsByGroupIDInternalServerE
 	return &AddPoolsByGroupIDInternalServerError{}
 }
 
-/*AddPoolsByGroupIDInternalServerError handles this case with default header values.
+/* AddPoolsByGroupIDInternalServerError describes a response with status code 500, with default header values.
 
 AddPoolsByGroupIDInternalServerError add pools by group Id internal server error
 */
@@ -152,7 +149,6 @@ type AddPoolsByGroupIDInternalServerError struct {
 func (o *AddPoolsByGroupIDInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /groups/{group_id}/pools][%d] addPoolsByGroupIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *AddPoolsByGroupIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

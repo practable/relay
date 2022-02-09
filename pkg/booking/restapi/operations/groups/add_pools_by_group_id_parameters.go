@@ -6,6 +6,7 @@ package groups
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"io"
 	"net/http"
 
@@ -13,12 +14,14 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 
 	"github.com/timdrysdale/relay/pkg/booking/models"
 )
 
 // NewAddPoolsByGroupIDParams creates a new AddPoolsByGroupIDParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewAddPoolsByGroupIDParams() AddPoolsByGroupIDParams {
 
 	return AddPoolsByGroupIDParams{}
@@ -74,6 +77,11 @@ func (o *AddPoolsByGroupIDParams) BindRequest(r *http.Request, route *middleware
 				res = append(res, err)
 			}
 
+			ctx := validate.WithOperationRequest(context.Background())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
 			if len(res) == 0 {
 				o.Pools = body
 			}
@@ -96,7 +104,6 @@ func (o *AddPoolsByGroupIDParams) bindGroupID(rawData []string, hasKey bool, for
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.GroupID = raw
 
 	return nil

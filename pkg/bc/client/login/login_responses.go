@@ -6,6 +6,7 @@ package login
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -42,7 +43,6 @@ func (o *LoginReader) ReadResponse(response runtime.ClientResponse, consumer run
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -53,7 +53,7 @@ func NewLoginOK() *LoginOK {
 	return &LoginOK{}
 }
 
-/*LoginOK handles this case with default header values.
+/* LoginOK describes a response with status code 200, with default header values.
 
 LoginOK login o k
 */
@@ -64,7 +64,6 @@ type LoginOK struct {
 func (o *LoginOK) Error() string {
 	return fmt.Sprintf("[POST /login][%d] loginOK  %+v", 200, o.Payload)
 }
-
 func (o *LoginOK) GetPayload() *models.Bookingtoken {
 	return o.Payload
 }
@@ -86,7 +85,7 @@ func NewLoginUnauthorized() *LoginUnauthorized {
 	return &LoginUnauthorized{}
 }
 
-/*LoginUnauthorized handles this case with default header values.
+/* LoginUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -97,7 +96,6 @@ type LoginUnauthorized struct {
 func (o *LoginUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /login][%d] loginUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *LoginUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -117,7 +115,7 @@ func NewLoginInternalServerError() *LoginInternalServerError {
 	return &LoginInternalServerError{}
 }
 
-/*LoginInternalServerError handles this case with default header values.
+/* LoginInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -128,7 +126,6 @@ type LoginInternalServerError struct {
 func (o *LoginInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /login][%d] loginInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *LoginInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }
@@ -149,11 +146,17 @@ swagger:model LoginBody
 type LoginBody struct {
 
 	// booking token
+	// Example: ey...
 	Token string `json:"token,omitempty"`
 }
 
 // Validate validates this login body
 func (o *LoginBody) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this login body based on context it is used
+func (o *LoginBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

@@ -41,7 +41,6 @@ func (o *ImportPoolStoreReader) ReadResponse(response runtime.ClientResponse, co
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewImportPoolStoreOK() *ImportPoolStoreOK {
 	return &ImportPoolStoreOK{}
 }
 
-/*ImportPoolStoreOK handles this case with default header values.
+/* ImportPoolStoreOK describes a response with status code 200, with default header values.
 
 ImportPoolStoreOK import pool store o k
 */
@@ -63,7 +62,6 @@ type ImportPoolStoreOK struct {
 func (o *ImportPoolStoreOK) Error() string {
 	return fmt.Sprintf("[POST /admin/poolstore][%d] importPoolStoreOK  %+v", 200, o.Payload)
 }
-
 func (o *ImportPoolStoreOK) GetPayload() *models.StoreStatus {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewImportPoolStoreUnauthorized() *ImportPoolStoreUnauthorized {
 	return &ImportPoolStoreUnauthorized{}
 }
 
-/*ImportPoolStoreUnauthorized handles this case with default header values.
+/* ImportPoolStoreUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -96,7 +94,6 @@ type ImportPoolStoreUnauthorized struct {
 func (o *ImportPoolStoreUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /admin/poolstore][%d] importPoolStoreUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *ImportPoolStoreUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -116,7 +113,7 @@ func NewImportPoolStoreInternalServerError() *ImportPoolStoreInternalServerError
 	return &ImportPoolStoreInternalServerError{}
 }
 
-/*ImportPoolStoreInternalServerError handles this case with default header values.
+/* ImportPoolStoreInternalServerError describes a response with status code 500, with default header values.
 
 ImportPoolStoreInternalServerError import pool store internal server error
 */
@@ -127,7 +124,6 @@ type ImportPoolStoreInternalServerError struct {
 func (o *ImportPoolStoreInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /admin/poolstore][%d] importPoolStoreInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *ImportPoolStoreInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

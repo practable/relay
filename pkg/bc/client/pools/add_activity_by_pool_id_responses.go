@@ -47,7 +47,6 @@ func (o *AddActivityByPoolIDReader) ReadResponse(response runtime.ClientResponse
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewAddActivityByPoolIDOK() *AddActivityByPoolIDOK {
 	return &AddActivityByPoolIDOK{}
 }
 
-/*AddActivityByPoolIDOK handles this case with default header values.
+/* AddActivityByPoolIDOK describes a response with status code 200, with default header values.
 
 AddActivityByPoolIDOK add activity by pool Id o k
 */
@@ -69,7 +68,6 @@ type AddActivityByPoolIDOK struct {
 func (o *AddActivityByPoolIDOK) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/activities][%d] addActivityByPoolIdOK  %+v", 200, o.Payload)
 }
-
 func (o *AddActivityByPoolIDOK) GetPayload() *models.ID {
 	return o.Payload
 }
@@ -91,7 +89,7 @@ func NewAddActivityByPoolIDUnauthorized() *AddActivityByPoolIDUnauthorized {
 	return &AddActivityByPoolIDUnauthorized{}
 }
 
-/*AddActivityByPoolIDUnauthorized handles this case with default header values.
+/* AddActivityByPoolIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -102,7 +100,6 @@ type AddActivityByPoolIDUnauthorized struct {
 func (o *AddActivityByPoolIDUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/activities][%d] addActivityByPoolIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *AddActivityByPoolIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -122,7 +119,7 @@ func NewAddActivityByPoolIDNotFound() *AddActivityByPoolIDNotFound {
 	return &AddActivityByPoolIDNotFound{}
 }
 
-/*AddActivityByPoolIDNotFound handles this case with default header values.
+/* AddActivityByPoolIDNotFound describes a response with status code 404, with default header values.
 
 Not Available
 */
@@ -133,7 +130,6 @@ type AddActivityByPoolIDNotFound struct {
 func (o *AddActivityByPoolIDNotFound) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/activities][%d] addActivityByPoolIdNotFound  %+v", 404, o.Payload)
 }
-
 func (o *AddActivityByPoolIDNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -153,7 +149,7 @@ func NewAddActivityByPoolIDInternalServerError() *AddActivityByPoolIDInternalSer
 	return &AddActivityByPoolIDInternalServerError{}
 }
 
-/*AddActivityByPoolIDInternalServerError handles this case with default header values.
+/* AddActivityByPoolIDInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -164,7 +160,6 @@ type AddActivityByPoolIDInternalServerError struct {
 func (o *AddActivityByPoolIDInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /pools/{pool_id}/activities][%d] addActivityByPoolIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *AddActivityByPoolIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

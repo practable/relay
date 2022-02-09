@@ -25,11 +25,14 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
 // ClientService is the interface for Client methods
 type ClientService interface {
-	GetCurrentBookings(params *GetCurrentBookingsParams, authInfo runtime.ClientAuthInfoWriter) (*GetCurrentBookingsOK, error)
+	GetCurrentBookings(params *GetCurrentBookingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetCurrentBookingsOK, error)
 
-	Login(params *LoginParams, authInfo runtime.ClientAuthInfoWriter) (*LoginOK, error)
+	Login(params *LoginParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*LoginOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -39,13 +42,12 @@ type ClientService interface {
 
   Get details of currently held bookings and max number of bookings that can be held
 */
-func (a *Client) GetCurrentBookings(params *GetCurrentBookingsParams, authInfo runtime.ClientAuthInfoWriter) (*GetCurrentBookingsOK, error) {
+func (a *Client) GetCurrentBookings(params *GetCurrentBookingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetCurrentBookingsOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetCurrentBookingsParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getCurrentBookings",
 		Method:             "GET",
 		PathPattern:        "/login",
@@ -57,7 +59,12 @@ func (a *Client) GetCurrentBookings(params *GetCurrentBookingsParams, authInfo r
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +83,12 @@ func (a *Client) GetCurrentBookings(params *GetCurrentBookingsParams, authInfo r
 
   Login with a class token to get an individual booking token, usable for a finite period.
 */
-func (a *Client) Login(params *LoginParams, authInfo runtime.ClientAuthInfoWriter) (*LoginOK, error) {
+func (a *Client) Login(params *LoginParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*LoginOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewLoginParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "login",
 		Method:             "POST",
 		PathPattern:        "/login",
@@ -94,7 +100,12 @@ func (a *Client) Login(params *LoginParams, authInfo runtime.ClientAuthInfoWrite
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}

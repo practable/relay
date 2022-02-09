@@ -16,7 +16,8 @@ import (
 )
 
 // NewGetActivityByIDParams creates a new GetActivityByIDParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetActivityByIDParams() GetActivityByIDParams {
 
 	return GetActivityByIDParams{}
@@ -72,7 +73,6 @@ func (o *GetActivityByIDParams) BindRequest(r *http.Request, route *middleware.M
 	if err := o.bindPoolID(rPoolID, rhkPoolID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -88,7 +88,6 @@ func (o *GetActivityByIDParams) bindActivityID(rawData []string, hasKey bool, fo
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.ActivityID = raw
 
 	return nil
@@ -103,6 +102,7 @@ func (o *GetActivityByIDParams) bindDetails(rawData []string, hasKey bool, forma
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -125,7 +125,6 @@ func (o *GetActivityByIDParams) bindPoolID(rawData []string, hasKey bool, format
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.PoolID = raw
 
 	return nil

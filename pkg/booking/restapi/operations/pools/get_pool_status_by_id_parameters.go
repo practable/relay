@@ -16,7 +16,8 @@ import (
 )
 
 // NewGetPoolStatusByIDParams creates a new GetPoolStatusByIDParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetPoolStatusByIDParams() GetPoolStatusByIDParams {
 
 	return GetPoolStatusByIDParams{}
@@ -62,7 +63,6 @@ func (o *GetPoolStatusByIDParams) BindRequest(r *http.Request, route *middleware
 	if err := o.bindPoolID(rPoolID, rhkPoolID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -78,6 +78,7 @@ func (o *GetPoolStatusByIDParams) bindDuration(rawData []string, hasKey bool, fo
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -100,7 +101,6 @@ func (o *GetPoolStatusByIDParams) bindPoolID(rawData []string, hasKey bool, form
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.PoolID = raw
 
 	return nil

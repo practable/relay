@@ -14,7 +14,8 @@ import (
 )
 
 // NewDeleteActivityByIDParams creates a new DeleteActivityByIDParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewDeleteActivityByIDParams() DeleteActivityByIDParams {
 
 	return DeleteActivityByIDParams{}
@@ -59,7 +60,6 @@ func (o *DeleteActivityByIDParams) BindRequest(r *http.Request, route *middlewar
 	if err := o.bindPoolID(rPoolID, rhkPoolID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -75,7 +75,6 @@ func (o *DeleteActivityByIDParams) bindActivityID(rawData []string, hasKey bool,
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.ActivityID = raw
 
 	return nil
@@ -90,7 +89,6 @@ func (o *DeleteActivityByIDParams) bindPoolID(rawData []string, hasKey bool, for
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.PoolID = raw
 
 	return nil

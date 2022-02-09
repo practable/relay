@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -50,6 +52,7 @@ type Bookingtoken struct {
 	Sub *string `json:"sub"`
 
 	// booking token
+	// Example: ey...
 	// Required: true
 	Token *string `json:"token"`
 }
@@ -152,6 +155,11 @@ func (m *Bookingtoken) validateToken(formats strfmt.Registry) error {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this bookingtoken based on context it is used
+func (m *Bookingtoken) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

@@ -39,7 +39,6 @@ func (o *DeletePoolReader) ReadResponse(response runtime.ClientResponse, consume
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -50,7 +49,7 @@ func NewDeletePoolUnauthorized() *DeletePoolUnauthorized {
 	return &DeletePoolUnauthorized{}
 }
 
-/*DeletePoolUnauthorized handles this case with default header values.
+/* DeletePoolUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -61,7 +60,6 @@ type DeletePoolUnauthorized struct {
 func (o *DeletePoolUnauthorized) Error() string {
 	return fmt.Sprintf("[DELETE /pools/{pool_id}][%d] deletePoolUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *DeletePoolUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -81,7 +79,7 @@ func NewDeletePoolNotFound() *DeletePoolNotFound {
 	return &DeletePoolNotFound{}
 }
 
-/*DeletePoolNotFound handles this case with default header values.
+/* DeletePoolNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -92,7 +90,6 @@ type DeletePoolNotFound struct {
 func (o *DeletePoolNotFound) Error() string {
 	return fmt.Sprintf("[DELETE /pools/{pool_id}][%d] deletePoolNotFound  %+v", 404, o.Payload)
 }
-
 func (o *DeletePoolNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -112,7 +109,7 @@ func NewDeletePoolInternalServerError() *DeletePoolInternalServerError {
 	return &DeletePoolInternalServerError{}
 }
 
-/*DeletePoolInternalServerError handles this case with default header values.
+/* DeletePoolInternalServerError describes a response with status code 500, with default header values.
 
 DeletePoolInternalServerError delete pool internal server error
 */
@@ -123,7 +120,6 @@ type DeletePoolInternalServerError struct {
 func (o *DeletePoolInternalServerError) Error() string {
 	return fmt.Sprintf("[DELETE /pools/{pool_id}][%d] deletePoolInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *DeletePoolInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }
