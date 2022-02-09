@@ -25,27 +25,30 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
 // ClientService is the interface for Client methods
 type ClientService interface {
-	AddActivityByPoolID(params *AddActivityByPoolIDParams, authInfo runtime.ClientAuthInfoWriter) (*AddActivityByPoolIDOK, error)
+	AddActivityByPoolID(params *AddActivityByPoolIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*AddActivityByPoolIDOK, error)
 
-	AddNewPool(params *AddNewPoolParams, authInfo runtime.ClientAuthInfoWriter) (*AddNewPoolOK, error)
+	AddNewPool(params *AddNewPoolParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*AddNewPoolOK, error)
 
-	DeleteActivityByID(params *DeleteActivityByIDParams, authInfo runtime.ClientAuthInfoWriter) error
+	DeleteActivityByID(params *DeleteActivityByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) error
 
-	DeletePool(params *DeletePoolParams, authInfo runtime.ClientAuthInfoWriter) error
+	DeletePool(params *DeletePoolParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) error
 
-	GetActivityByID(params *GetActivityByIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetActivityByIDOK, error)
+	GetActivityByID(params *GetActivityByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetActivityByIDOK, error)
 
-	GetAllPools(params *GetAllPoolsParams, authInfo runtime.ClientAuthInfoWriter) (*GetAllPoolsOK, error)
+	GetAllPools(params *GetAllPoolsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAllPoolsOK, error)
 
-	GetPoolDescriptionByID(params *GetPoolDescriptionByIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetPoolDescriptionByIDOK, error)
+	GetPoolDescriptionByID(params *GetPoolDescriptionByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPoolDescriptionByIDOK, error)
 
-	GetPoolStatusByID(params *GetPoolStatusByIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetPoolStatusByIDOK, error)
+	GetPoolStatusByID(params *GetPoolStatusByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPoolStatusByIDOK, error)
 
-	RequestSessionByPoolID(params *RequestSessionByPoolIDParams, authInfo runtime.ClientAuthInfoWriter) (*RequestSessionByPoolIDOK, error)
+	RequestSessionByPoolID(params *RequestSessionByPoolIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RequestSessionByPoolIDOK, error)
 
-	UpdateActivityByID(params *UpdateActivityByIDParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateActivityByIDOK, error)
+	UpdateActivityByID(params *UpdateActivityByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*UpdateActivityByIDOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -55,13 +58,12 @@ type ClientService interface {
 
   Adds an activity to a pool (activty must include valid exp field)
 */
-func (a *Client) AddActivityByPoolID(params *AddActivityByPoolIDParams, authInfo runtime.ClientAuthInfoWriter) (*AddActivityByPoolIDOK, error) {
+func (a *Client) AddActivityByPoolID(params *AddActivityByPoolIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*AddActivityByPoolIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewAddActivityByPoolIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "addActivityByPoolID",
 		Method:             "POST",
 		PathPattern:        "/pools/{pool_id}/activities",
@@ -73,7 +75,12 @@ func (a *Client) AddActivityByPoolID(params *AddActivityByPoolIDParams, authInfo
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -92,13 +99,12 @@ func (a *Client) AddActivityByPoolID(params *AddActivityByPoolIDParams, authInfo
 
   Add a pool to the poolstore, using details in body
 */
-func (a *Client) AddNewPool(params *AddNewPoolParams, authInfo runtime.ClientAuthInfoWriter) (*AddNewPoolOK, error) {
+func (a *Client) AddNewPool(params *AddNewPoolParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*AddNewPoolOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewAddNewPoolParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "addNewPool",
 		Method:             "POST",
 		PathPattern:        "/pools",
@@ -110,7 +116,12 @@ func (a *Client) AddNewPool(params *AddNewPoolParams, authInfo runtime.ClientAut
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -129,13 +140,12 @@ func (a *Client) AddNewPool(params *AddNewPoolParams, authInfo runtime.ClientAut
 
   Delete activity by activity ID
 */
-func (a *Client) DeleteActivityByID(params *DeleteActivityByIDParams, authInfo runtime.ClientAuthInfoWriter) error {
+func (a *Client) DeleteActivityByID(params *DeleteActivityByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeleteActivityByIDParams()
 	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "deleteActivityByID",
 		Method:             "DELETE",
 		PathPattern:        "/pools/{pool_id}/activities/{activity_id}",
@@ -147,7 +157,12 @@ func (a *Client) DeleteActivityByID(params *DeleteActivityByIDParams, authInfo r
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	_, err := a.transport.Submit(op)
 	if err != nil {
 		return err
 	}
@@ -159,13 +174,12 @@ func (a *Client) DeleteActivityByID(params *DeleteActivityByIDParams, authInfo r
 
   Delete this pool and all its data (including activities)
 */
-func (a *Client) DeletePool(params *DeletePoolParams, authInfo runtime.ClientAuthInfoWriter) error {
+func (a *Client) DeletePool(params *DeletePoolParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeletePoolParams()
 	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "deletePool",
 		Method:             "DELETE",
 		PathPattern:        "/pools/{pool_id}",
@@ -177,7 +191,12 @@ func (a *Client) DeletePool(params *DeletePoolParams, authInfo runtime.ClientAut
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	_, err := a.transport.Submit(op)
 	if err != nil {
 		return err
 	}
@@ -189,13 +208,12 @@ func (a *Client) DeletePool(params *DeletePoolParams, authInfo runtime.ClientAut
 
   Get activity description by activity ID
 */
-func (a *Client) GetActivityByID(params *GetActivityByIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetActivityByIDOK, error) {
+func (a *Client) GetActivityByID(params *GetActivityByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetActivityByIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetActivityByIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getActivityByID",
 		Method:             "GET",
 		PathPattern:        "/pools/{pool_id}/activities/{activity_id}",
@@ -207,7 +225,12 @@ func (a *Client) GetActivityByID(params *GetActivityByIDParams, authInfo runtime
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -226,13 +249,12 @@ func (a *Client) GetActivityByID(params *GetActivityByIDParams, authInfo runtime
 
   Gets a list of all pool_ids
 */
-func (a *Client) GetAllPools(params *GetAllPoolsParams, authInfo runtime.ClientAuthInfoWriter) (*GetAllPoolsOK, error) {
+func (a *Client) GetAllPools(params *GetAllPoolsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAllPoolsOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetAllPoolsParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getAllPools",
 		Method:             "GET",
 		PathPattern:        "/pools",
@@ -244,7 +266,12 @@ func (a *Client) GetAllPools(params *GetAllPoolsParams, authInfo runtime.ClientA
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -263,13 +290,12 @@ func (a *Client) GetAllPools(params *GetAllPoolsParams, authInfo runtime.ClientA
 
   Gets a description of the pool
 */
-func (a *Client) GetPoolDescriptionByID(params *GetPoolDescriptionByIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetPoolDescriptionByIDOK, error) {
+func (a *Client) GetPoolDescriptionByID(params *GetPoolDescriptionByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPoolDescriptionByIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetPoolDescriptionByIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getPoolDescriptionByID",
 		Method:             "GET",
 		PathPattern:        "/pools/{pool_id}",
@@ -281,7 +307,12 @@ func (a *Client) GetPoolDescriptionByID(params *GetPoolDescriptionByIDParams, au
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -300,13 +331,12 @@ func (a *Client) GetPoolDescriptionByID(params *GetPoolDescriptionByIDParams, au
 
   Gets the status of pool's activities
 */
-func (a *Client) GetPoolStatusByID(params *GetPoolStatusByIDParams, authInfo runtime.ClientAuthInfoWriter) (*GetPoolStatusByIDOK, error) {
+func (a *Client) GetPoolStatusByID(params *GetPoolStatusByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPoolStatusByIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetPoolStatusByIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getPoolStatusByID",
 		Method:             "GET",
 		PathPattern:        "/pools/{pool_id}/status",
@@ -318,7 +348,12 @@ func (a *Client) GetPoolStatusByID(params *GetPoolStatusByIDParams, authInfo run
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -337,13 +372,12 @@ func (a *Client) GetPoolStatusByID(params *GetPoolStatusByIDParams, authInfo run
 
   Request a session on an activity from the pool
 */
-func (a *Client) RequestSessionByPoolID(params *RequestSessionByPoolIDParams, authInfo runtime.ClientAuthInfoWriter) (*RequestSessionByPoolIDOK, error) {
+func (a *Client) RequestSessionByPoolID(params *RequestSessionByPoolIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RequestSessionByPoolIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewRequestSessionByPoolIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "requestSessionByPoolID",
 		Method:             "POST",
 		PathPattern:        "/pools/{pool_id}/sessions",
@@ -355,7 +389,12 @@ func (a *Client) RequestSessionByPoolID(params *RequestSessionByPoolIDParams, au
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -374,13 +413,12 @@ func (a *Client) RequestSessionByPoolID(params *RequestSessionByPoolIDParams, au
 
   Updates an activity in a pool (or adds one with a specific ID if does not exist)
 */
-func (a *Client) UpdateActivityByID(params *UpdateActivityByIDParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateActivityByIDOK, error) {
+func (a *Client) UpdateActivityByID(params *UpdateActivityByIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*UpdateActivityByIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewUpdateActivityByIDParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "updateActivityByID",
 		Method:             "PUT",
 		PathPattern:        "/pools/{pool_id}/activities/{activity_id}",
@@ -392,7 +430,12 @@ func (a *Client) UpdateActivityByID(params *UpdateActivityByIDParams, authInfo r
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}

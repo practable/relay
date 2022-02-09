@@ -1736,7 +1736,16 @@ func TestAddActivityToPoolID(t *testing.T) {
 		StreamsRequired: StreamsRequired,
 	}
 
+	// add config URL - in this check we only find out if it causes an error
+	// not if it is properly recorded - so we should check it elsewhere
+	configURL := "https://somewhere.com/config/config.json"
+
+	cfg := models.Config{
+		URL: &configURL,
+	}
+
 	ma := &models.Activity{
+		Config:      &cfg,
 		Description: &ad0,
 		Exp:         &Exp,
 		Streams:     []*models.Stream{&s0, &s1},
@@ -1785,9 +1794,9 @@ func TestAddActivityToPoolID(t *testing.T) {
 	assert.NoError(t, err)
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
-	if debug {
-		fmt.Println(string(body))
-	}
+
+	log.Debugf("Description returned: %s", string(body))
+
 	ad := models.Description{}
 	err = json.Unmarshal(body, &ad)
 	assert.NoError(t, err)
@@ -2217,6 +2226,10 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	a := pool.NewActivity("a", ps2.Now()+3600)
 
+	cu0 := "https://somewhere.com/config/config0.json"
+
+	a.Config = pool.Config{URL: cu0}
+
 	p0.AddActivity(a)
 	defer p0.DeleteActivity(a)
 
@@ -2245,6 +2258,10 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	a.AddStream("video", s1)
 
 	a2 := pool.NewActivity("a2", ps2.Now()+3600)
+
+	cu1 := "https://somewhere.com/config/config1.json"
+	a2.Config = pool.Config{URL: cu1}
+
 	p0.AddActivity(a2)
 	defer p0.DeleteActivity(a2)
 
@@ -2494,6 +2511,14 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	if ma == nil {
 		t.Fatal("no token returned")
 	}
+
+	assert.True(t, ma.Config.URL != nil)
+	assert.True(t, ma.Description.Name != nil)
+
+	assert.True(t, (*ma.Config.URL == cu0 && *ma.Description.Name == "a") || (*ma.Config.URL == cu1 && *ma.Description.Name == "a2"))
+
+	log.Debugf("Config:%s", *ma.Config.URL)
+	log.Debugf("Name:%s\n", *ma.Description.Name)
 
 	streamTokenString0 := (ma.Streams[0]).Token
 

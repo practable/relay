@@ -47,7 +47,6 @@ func (o *ReplacePoolsByGroupIDReader) ReadResponse(response runtime.ClientRespon
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewReplacePoolsByGroupIDOK() *ReplacePoolsByGroupIDOK {
 	return &ReplacePoolsByGroupIDOK{}
 }
 
-/*ReplacePoolsByGroupIDOK handles this case with default header values.
+/* ReplacePoolsByGroupIDOK describes a response with status code 200, with default header values.
 
 ReplacePoolsByGroupIDOK replace pools by group Id o k
 */
@@ -69,7 +68,6 @@ type ReplacePoolsByGroupIDOK struct {
 func (o *ReplacePoolsByGroupIDOK) Error() string {
 	return fmt.Sprintf("[PUT /groups/{group_id}/pools][%d] replacePoolsByGroupIdOK  %+v", 200, o.Payload)
 }
-
 func (o *ReplacePoolsByGroupIDOK) GetPayload() models.IDList {
 	return o.Payload
 }
@@ -89,7 +87,7 @@ func NewReplacePoolsByGroupIDUnauthorized() *ReplacePoolsByGroupIDUnauthorized {
 	return &ReplacePoolsByGroupIDUnauthorized{}
 }
 
-/*ReplacePoolsByGroupIDUnauthorized handles this case with default header values.
+/* ReplacePoolsByGroupIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -100,7 +98,6 @@ type ReplacePoolsByGroupIDUnauthorized struct {
 func (o *ReplacePoolsByGroupIDUnauthorized) Error() string {
 	return fmt.Sprintf("[PUT /groups/{group_id}/pools][%d] replacePoolsByGroupIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *ReplacePoolsByGroupIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -120,7 +117,7 @@ func NewReplacePoolsByGroupIDNotFound() *ReplacePoolsByGroupIDNotFound {
 	return &ReplacePoolsByGroupIDNotFound{}
 }
 
-/*ReplacePoolsByGroupIDNotFound handles this case with default header values.
+/* ReplacePoolsByGroupIDNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -141,7 +138,7 @@ func NewReplacePoolsByGroupIDInternalServerError() *ReplacePoolsByGroupIDInterna
 	return &ReplacePoolsByGroupIDInternalServerError{}
 }
 
-/*ReplacePoolsByGroupIDInternalServerError handles this case with default header values.
+/* ReplacePoolsByGroupIDInternalServerError describes a response with status code 500, with default header values.
 
 ReplacePoolsByGroupIDInternalServerError replace pools by group Id internal server error
 */
@@ -152,7 +149,6 @@ type ReplacePoolsByGroupIDInternalServerError struct {
 func (o *ReplacePoolsByGroupIDInternalServerError) Error() string {
 	return fmt.Sprintf("[PUT /groups/{group_id}/pools][%d] replacePoolsByGroupIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *ReplacePoolsByGroupIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

@@ -47,7 +47,6 @@ func (o *UpdateActivityByIDReader) ReadResponse(response runtime.ClientResponse,
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewUpdateActivityByIDOK() *UpdateActivityByIDOK {
 	return &UpdateActivityByIDOK{}
 }
 
-/*UpdateActivityByIDOK handles this case with default header values.
+/* UpdateActivityByIDOK describes a response with status code 200, with default header values.
 
 OK
 */
@@ -69,7 +68,6 @@ type UpdateActivityByIDOK struct {
 func (o *UpdateActivityByIDOK) Error() string {
 	return fmt.Sprintf("[PUT /pools/{pool_id}/activities/{activity_id}][%d] updateActivityByIdOK  %+v", 200, o.Payload)
 }
-
 func (o *UpdateActivityByIDOK) GetPayload() *models.ID {
 	return o.Payload
 }
@@ -91,7 +89,7 @@ func NewUpdateActivityByIDUnauthorized() *UpdateActivityByIDUnauthorized {
 	return &UpdateActivityByIDUnauthorized{}
 }
 
-/*UpdateActivityByIDUnauthorized handles this case with default header values.
+/* UpdateActivityByIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -102,7 +100,6 @@ type UpdateActivityByIDUnauthorized struct {
 func (o *UpdateActivityByIDUnauthorized) Error() string {
 	return fmt.Sprintf("[PUT /pools/{pool_id}/activities/{activity_id}][%d] updateActivityByIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *UpdateActivityByIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -122,7 +119,7 @@ func NewUpdateActivityByIDNotFound() *UpdateActivityByIDNotFound {
 	return &UpdateActivityByIDNotFound{}
 }
 
-/*UpdateActivityByIDNotFound handles this case with default header values.
+/* UpdateActivityByIDNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -133,7 +130,6 @@ type UpdateActivityByIDNotFound struct {
 func (o *UpdateActivityByIDNotFound) Error() string {
 	return fmt.Sprintf("[PUT /pools/{pool_id}/activities/{activity_id}][%d] updateActivityByIdNotFound  %+v", 404, o.Payload)
 }
-
 func (o *UpdateActivityByIDNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -153,7 +149,7 @@ func NewUpdateActivityByIDInternalServerError() *UpdateActivityByIDInternalServe
 	return &UpdateActivityByIDInternalServerError{}
 }
 
-/*UpdateActivityByIDInternalServerError handles this case with default header values.
+/* UpdateActivityByIDInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -164,7 +160,6 @@ type UpdateActivityByIDInternalServerError struct {
 func (o *UpdateActivityByIDInternalServerError) Error() string {
 	return fmt.Sprintf("[PUT /pools/{pool_id}/activities/{activity_id}][%d] updateActivityByIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *UpdateActivityByIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

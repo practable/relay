@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -52,6 +54,34 @@ func (m *Pool) validateDescription(formats strfmt.Registry) error {
 
 	if m.Description != nil {
 		if err := m.Description.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("description")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this pool based on the context it is used
+func (m *Pool) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateDescription(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Pool) contextValidateDescription(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Description != nil {
+		if err := m.Description.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("description")
 			}

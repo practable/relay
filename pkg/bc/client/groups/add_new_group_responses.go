@@ -41,7 +41,6 @@ func (o *AddNewGroupReader) ReadResponse(response runtime.ClientResponse, consum
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewAddNewGroupOK() *AddNewGroupOK {
 	return &AddNewGroupOK{}
 }
 
-/*AddNewGroupOK handles this case with default header values.
+/* AddNewGroupOK describes a response with status code 200, with default header values.
 
 AddNewGroupOK add new group o k
 */
@@ -63,7 +62,6 @@ type AddNewGroupOK struct {
 func (o *AddNewGroupOK) Error() string {
 	return fmt.Sprintf("[POST /groups][%d] addNewGroupOK  %+v", 200, o.Payload)
 }
-
 func (o *AddNewGroupOK) GetPayload() *models.ID {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewAddNewGroupUnauthorized() *AddNewGroupUnauthorized {
 	return &AddNewGroupUnauthorized{}
 }
 
-/*AddNewGroupUnauthorized handles this case with default header values.
+/* AddNewGroupUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -96,7 +94,6 @@ type AddNewGroupUnauthorized struct {
 func (o *AddNewGroupUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /groups][%d] addNewGroupUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *AddNewGroupUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -116,7 +113,7 @@ func NewAddNewGroupInternalServerError() *AddNewGroupInternalServerError {
 	return &AddNewGroupInternalServerError{}
 }
 
-/*AddNewGroupInternalServerError handles this case with default header values.
+/* AddNewGroupInternalServerError describes a response with status code 500, with default header values.
 
 AddNewGroupInternalServerError add new group internal server error
 */
@@ -127,7 +124,6 @@ type AddNewGroupInternalServerError struct {
 func (o *AddNewGroupInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /groups][%d] addNewGroupInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *AddNewGroupInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

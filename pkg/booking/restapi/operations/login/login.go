@@ -6,6 +6,7 @@ package login
 // Editing this file might prove futile when you re-run the generate command
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -31,7 +32,7 @@ func NewLogin(ctx *middleware.Context, handler LoginHandler) *Login {
 	return &Login{Context: ctx, Handler: handler}
 }
 
-/*Login swagger:route POST /login login login
+/* Login swagger:route POST /login login login
 
 login
 
@@ -49,7 +50,6 @@ func (o *Login) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewLoginParams()
-
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
@@ -60,7 +60,7 @@ func (o *Login) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var principal interface{}
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
@@ -69,7 +69,6 @@ func (o *Login) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	res := o.Handler.Handle(Params, principal) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }
@@ -80,11 +79,17 @@ func (o *Login) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 type LoginBody struct {
 
 	// booking token
+	// Example: ey...
 	Token string `json:"token,omitempty"`
 }
 
 // Validate validates this login body
 func (o *LoginBody) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this login body based on context it is used
+func (o *LoginBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

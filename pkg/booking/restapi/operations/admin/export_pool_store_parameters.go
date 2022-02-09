@@ -13,7 +13,8 @@ import (
 )
 
 // NewExportPoolStoreParams creates a new ExportPoolStoreParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewExportPoolStoreParams() ExportPoolStoreParams {
 
 	return ExportPoolStoreParams{}

@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -33,6 +34,7 @@ type Bookings struct {
 	Max *int64 `json:"max"`
 
 	// message of the day, typically to explain any current or upcoming locked periods
+	// Example: Preview Access: sessions will be available from 10am - 5pm GMT today
 	Msg string `json:"msg,omitempty"`
 }
 
@@ -83,6 +85,38 @@ func (m *Bookings) validateMax(formats strfmt.Registry) error {
 
 	if err := validate.Required("max", "body", m.Max); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this bookings based on the context it is used
+func (m *Bookings) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateActivities(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Bookings) contextValidateActivities(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Activities); i++ {
+
+		if m.Activities[i] != nil {
+			if err := m.Activities[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("activities" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil

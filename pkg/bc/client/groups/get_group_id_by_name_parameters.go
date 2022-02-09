@@ -16,59 +16,73 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewGetGroupIDByNameParams creates a new GetGroupIDByNameParams object
-// with the default values initialized.
+// NewGetGroupIDByNameParams creates a new GetGroupIDByNameParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetGroupIDByNameParams() *GetGroupIDByNameParams {
-	var ()
 	return &GetGroupIDByNameParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetGroupIDByNameParamsWithTimeout creates a new GetGroupIDByNameParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewGetGroupIDByNameParamsWithTimeout(timeout time.Duration) *GetGroupIDByNameParams {
-	var ()
 	return &GetGroupIDByNameParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewGetGroupIDByNameParamsWithContext creates a new GetGroupIDByNameParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewGetGroupIDByNameParamsWithContext(ctx context.Context) *GetGroupIDByNameParams {
-	var ()
 	return &GetGroupIDByNameParams{
-
 		Context: ctx,
 	}
 }
 
 // NewGetGroupIDByNameParamsWithHTTPClient creates a new GetGroupIDByNameParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewGetGroupIDByNameParamsWithHTTPClient(client *http.Client) *GetGroupIDByNameParams {
-	var ()
 	return &GetGroupIDByNameParams{
 		HTTPClient: client,
 	}
 }
 
-/*GetGroupIDByNameParams contains all the parameters to send to the API endpoint
-for the get group ID by name operation typically these are written to a http.Request
+/* GetGroupIDByNameParams contains all the parameters to send to the API endpoint
+   for the get group ID by name operation.
+
+   Typically these are written to a http.Request.
 */
 type GetGroupIDByNameParams struct {
 
-	/*Name
-	  Search by group name
+	/* Name.
 
+	   Search by group name
 	*/
 	Name string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the get group ID by name params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetGroupIDByNameParams) WithDefaults() *GetGroupIDByNameParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the get group ID by name params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetGroupIDByNameParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get group ID by name params
@@ -127,6 +141,7 @@ func (o *GetGroupIDByNameParams) WriteToRequest(r runtime.ClientRequest, reg str
 	qrName := o.Name
 	qName := qrName
 	if qName != "" {
+
 		if err := r.SetQueryParam("name", qName); err != nil {
 			return err
 		}

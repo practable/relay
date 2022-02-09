@@ -47,7 +47,6 @@ func (o *DeletePoolsByGroupIDReader) ReadResponse(response runtime.ClientRespons
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewDeletePoolsByGroupIDOK() *DeletePoolsByGroupIDOK {
 	return &DeletePoolsByGroupIDOK{}
 }
 
-/*DeletePoolsByGroupIDOK handles this case with default header values.
+/* DeletePoolsByGroupIDOK describes a response with status code 200, with default header values.
 
 DeletePoolsByGroupIDOK delete pools by group Id o k
 */
@@ -69,7 +68,6 @@ type DeletePoolsByGroupIDOK struct {
 func (o *DeletePoolsByGroupIDOK) Error() string {
 	return fmt.Sprintf("[DELETE /groups/{group_id}/pools][%d] deletePoolsByGroupIdOK  %+v", 200, o.Payload)
 }
-
 func (o *DeletePoolsByGroupIDOK) GetPayload() models.IDList {
 	return o.Payload
 }
@@ -89,7 +87,7 @@ func NewDeletePoolsByGroupIDUnauthorized() *DeletePoolsByGroupIDUnauthorized {
 	return &DeletePoolsByGroupIDUnauthorized{}
 }
 
-/*DeletePoolsByGroupIDUnauthorized handles this case with default header values.
+/* DeletePoolsByGroupIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -100,7 +98,6 @@ type DeletePoolsByGroupIDUnauthorized struct {
 func (o *DeletePoolsByGroupIDUnauthorized) Error() string {
 	return fmt.Sprintf("[DELETE /groups/{group_id}/pools][%d] deletePoolsByGroupIdUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *DeletePoolsByGroupIDUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -120,7 +117,7 @@ func NewDeletePoolsByGroupIDNotFound() *DeletePoolsByGroupIDNotFound {
 	return &DeletePoolsByGroupIDNotFound{}
 }
 
-/*DeletePoolsByGroupIDNotFound handles this case with default header values.
+/* DeletePoolsByGroupIDNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -141,7 +138,7 @@ func NewDeletePoolsByGroupIDInternalServerError() *DeletePoolsByGroupIDInternalS
 	return &DeletePoolsByGroupIDInternalServerError{}
 }
 
-/*DeletePoolsByGroupIDInternalServerError handles this case with default header values.
+/* DeletePoolsByGroupIDInternalServerError describes a response with status code 500, with default header values.
 
 DeletePoolsByGroupIDInternalServerError delete pools by group Id internal server error
 */
@@ -152,7 +149,6 @@ type DeletePoolsByGroupIDInternalServerError struct {
 func (o *DeletePoolsByGroupIDInternalServerError) Error() string {
 	return fmt.Sprintf("[DELETE /groups/{group_id}/pools][%d] deletePoolsByGroupIdInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *DeletePoolsByGroupIDInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

@@ -59,6 +59,7 @@ func init() {
         "operationId": "exportPoolStore",
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/poolstore"
             }
@@ -68,6 +69,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -98,6 +100,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/store_status"
             }
@@ -107,6 +110,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -136,6 +140,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -159,6 +164,7 @@ func init() {
         "operationId": "getStoreStatus",
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/store_status"
             }
@@ -168,6 +174,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -204,6 +211,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/store_status"
             }
@@ -213,6 +221,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -245,6 +254,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "type": "array",
               "items": {
@@ -259,6 +269,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -290,6 +301,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id"
             }
@@ -299,6 +311,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -330,6 +343,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/description"
             }
@@ -343,6 +357,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -379,6 +394,7 @@ func init() {
             "description": "Not Found"
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -410,6 +426,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -423,6 +440,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -460,6 +478,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -472,6 +491,7 @@ func init() {
             "description": "Not Found"
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -509,6 +529,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -521,6 +542,7 @@ func init() {
             "description": "Not Found"
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -558,6 +580,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -570,6 +593,7 @@ func init() {
             "description": "Not Found"
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -593,6 +617,7 @@ func init() {
         "operationId": "getCurrentBookings",
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/bookings"
             }
@@ -644,6 +669,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/bookingtoken"
             }
@@ -691,6 +717,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -736,6 +763,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id"
             }
@@ -749,6 +777,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -780,6 +809,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/description"
             }
@@ -828,6 +858,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -867,6 +898,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id"
             }
@@ -1080,6 +1112,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/activity"
             }
@@ -1135,6 +1168,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/status"
             }
@@ -1163,6 +1197,9 @@ func init() {
         "uis"
       ],
       "properties": {
+        "config": {
+          "$ref": "#/definitions/config"
+        },
         "description": {
           "$ref": "#/definitions/description"
         },
@@ -1285,6 +1322,24 @@ func init() {
           "type": "string",
           "example": "ey..."
         }
+      }
+    },
+    "config": {
+      "description": "a link to a configuration object hosted elsewhere",
+      "type": "object",
+      "title": "config",
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "url": {
+          "description": "URL at which to GET the configuration object",
+          "type": "string",
+          "example": "https://assets.practable.io/config/experiments/pvna/pvna01-0.0.json"
+        }
+      },
+      "example": {
+        "url": "experiments/pvna/pvna01-0.0.json"
       }
     },
     "description": {
@@ -1667,6 +1722,7 @@ func init() {
         "operationId": "exportPoolStore",
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/poolstore"
             }
@@ -1676,6 +1732,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -1706,6 +1763,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/store_status"
             }
@@ -1715,6 +1773,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -1744,6 +1803,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -1767,6 +1827,7 @@ func init() {
         "operationId": "getStoreStatus",
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/store_status"
             }
@@ -1776,6 +1837,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -1812,6 +1874,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/store_status"
             }
@@ -1821,6 +1884,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -1853,6 +1917,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "type": "array",
               "items": {
@@ -1867,6 +1932,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -1898,6 +1964,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id"
             }
@@ -1907,6 +1974,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -1938,6 +2006,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/description"
             }
@@ -1951,6 +2020,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -1987,6 +2057,7 @@ func init() {
             "description": "Not Found"
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -2018,6 +2089,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -2031,6 +2103,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -2068,6 +2141,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -2080,6 +2154,7 @@ func init() {
             "description": "Not Found"
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -2117,6 +2192,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -2129,6 +2205,7 @@ func init() {
             "description": "Not Found"
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -2166,6 +2243,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -2178,6 +2256,7 @@ func init() {
             "description": "Not Found"
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -2201,6 +2280,7 @@ func init() {
         "operationId": "getCurrentBookings",
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/bookings"
             }
@@ -2252,6 +2332,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/bookingtoken"
             }
@@ -2299,6 +2380,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id_list"
             }
@@ -2344,6 +2426,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id"
             }
@@ -2357,6 +2440,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -2388,6 +2472,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/description"
             }
@@ -2436,6 +2521,7 @@ func init() {
             "schema": {}
           },
           "500": {
+            "description": "",
             "schema": {}
           }
         }
@@ -2475,6 +2561,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/id"
             }
@@ -2688,6 +2775,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/activity"
             }
@@ -2743,6 +2831,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "$ref": "#/definitions/status"
             }
@@ -2771,6 +2860,9 @@ func init() {
         "uis"
       ],
       "properties": {
+        "config": {
+          "$ref": "#/definitions/config"
+        },
         "description": {
           "$ref": "#/definitions/description"
         },
@@ -2893,6 +2985,24 @@ func init() {
           "type": "string",
           "example": "ey..."
         }
+      }
+    },
+    "config": {
+      "description": "a link to a configuration object hosted elsewhere",
+      "type": "object",
+      "title": "config",
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "url": {
+          "description": "URL at which to GET the configuration object",
+          "type": "string",
+          "example": "https://assets.practable.io/config/experiments/pvna/pvna01-0.0.json"
+        }
+      },
+      "example": {
+        "url": "experiments/pvna/pvna01-0.0.json"
       }
     },
     "description": {

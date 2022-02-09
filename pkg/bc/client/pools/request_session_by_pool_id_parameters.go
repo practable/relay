@@ -17,61 +17,78 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewRequestSessionByPoolIDParams creates a new RequestSessionByPoolIDParams object
-// with the default values initialized.
+// NewRequestSessionByPoolIDParams creates a new RequestSessionByPoolIDParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewRequestSessionByPoolIDParams() *RequestSessionByPoolIDParams {
-	var ()
 	return &RequestSessionByPoolIDParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewRequestSessionByPoolIDParamsWithTimeout creates a new RequestSessionByPoolIDParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewRequestSessionByPoolIDParamsWithTimeout(timeout time.Duration) *RequestSessionByPoolIDParams {
-	var ()
 	return &RequestSessionByPoolIDParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewRequestSessionByPoolIDParamsWithContext creates a new RequestSessionByPoolIDParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewRequestSessionByPoolIDParamsWithContext(ctx context.Context) *RequestSessionByPoolIDParams {
-	var ()
 	return &RequestSessionByPoolIDParams{
-
 		Context: ctx,
 	}
 }
 
 // NewRequestSessionByPoolIDParamsWithHTTPClient creates a new RequestSessionByPoolIDParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewRequestSessionByPoolIDParamsWithHTTPClient(client *http.Client) *RequestSessionByPoolIDParams {
-	var ()
 	return &RequestSessionByPoolIDParams{
 		HTTPClient: client,
 	}
 }
 
-/*RequestSessionByPoolIDParams contains all the parameters to send to the API endpoint
-for the request session by pool ID operation typically these are written to a http.Request
+/* RequestSessionByPoolIDParams contains all the parameters to send to the API endpoint
+   for the request session by pool ID operation.
+
+   Typically these are written to a http.Request.
 */
 type RequestSessionByPoolIDParams struct {
 
-	/*Duration
-	  duration of requested booking in seconds
+	/* Duration.
 
+	   duration of requested booking in seconds
+
+	   Format: int64
 	*/
 	Duration int64
-	/*PoolID*/
+
+	// PoolID.
 	PoolID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the request session by pool ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *RequestSessionByPoolIDParams) WithDefaults() *RequestSessionByPoolIDParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the request session by pool ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *RequestSessionByPoolIDParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the request session by pool ID params
@@ -141,6 +158,7 @@ func (o *RequestSessionByPoolIDParams) WriteToRequest(r runtime.ClientRequest, r
 	qrDuration := o.Duration
 	qDuration := swag.FormatInt64(qrDuration)
 	if qDuration != "" {
+
 		if err := r.SetQueryParam("duration", qDuration); err != nil {
 			return err
 		}

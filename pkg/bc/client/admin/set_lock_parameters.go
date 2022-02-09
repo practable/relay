@@ -17,64 +17,79 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewSetLockParams creates a new SetLockParams object
-// with the default values initialized.
+// NewSetLockParams creates a new SetLockParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewSetLockParams() *SetLockParams {
-	var ()
 	return &SetLockParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewSetLockParamsWithTimeout creates a new SetLockParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewSetLockParamsWithTimeout(timeout time.Duration) *SetLockParams {
-	var ()
 	return &SetLockParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewSetLockParamsWithContext creates a new SetLockParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewSetLockParamsWithContext(ctx context.Context) *SetLockParams {
-	var ()
 	return &SetLockParams{
-
 		Context: ctx,
 	}
 }
 
 // NewSetLockParamsWithHTTPClient creates a new SetLockParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewSetLockParamsWithHTTPClient(client *http.Client) *SetLockParams {
-	var ()
 	return &SetLockParams{
 		HTTPClient: client,
 	}
 }
 
-/*SetLockParams contains all the parameters to send to the API endpoint
-for the set lock operation typically these are written to a http.Request
+/* SetLockParams contains all the parameters to send to the API endpoint
+   for the set lock operation.
+
+   Typically these are written to a http.Request.
 */
 type SetLockParams struct {
 
-	/*Lock
-	  set booking lock
+	/* Lock.
 
+	   set booking lock
 	*/
 	Lock bool
-	/*Msg
-	  set message of the day (use query so it can be seen in server logs)
 
+	/* Msg.
+
+	   set message of the day (use query so it can be seen in server logs)
 	*/
 	Msg *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the set lock params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *SetLockParams) WithDefaults() *SetLockParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the set lock params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *SetLockParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the set lock params
@@ -144,6 +159,7 @@ func (o *SetLockParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regis
 	qrLock := o.Lock
 	qLock := swag.FormatBool(qrLock)
 	if qLock != "" {
+
 		if err := r.SetQueryParam("lock", qLock); err != nil {
 			return err
 		}
@@ -153,16 +169,17 @@ func (o *SetLockParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regis
 
 		// query param msg
 		var qrMsg string
+
 		if o.Msg != nil {
 			qrMsg = *o.Msg
 		}
 		qMsg := qrMsg
 		if qMsg != "" {
+
 			if err := r.SetQueryParam("msg", qMsg); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	if len(res) > 0 {

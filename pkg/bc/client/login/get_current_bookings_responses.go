@@ -47,7 +47,6 @@ func (o *GetCurrentBookingsReader) ReadResponse(response runtime.ClientResponse,
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewGetCurrentBookingsOK() *GetCurrentBookingsOK {
 	return &GetCurrentBookingsOK{}
 }
 
-/*GetCurrentBookingsOK handles this case with default header values.
+/* GetCurrentBookingsOK describes a response with status code 200, with default header values.
 
 GetCurrentBookingsOK get current bookings o k
 */
@@ -69,7 +68,6 @@ type GetCurrentBookingsOK struct {
 func (o *GetCurrentBookingsOK) Error() string {
 	return fmt.Sprintf("[GET /login][%d] getCurrentBookingsOK  %+v", 200, o.Payload)
 }
-
 func (o *GetCurrentBookingsOK) GetPayload() *models.Bookings {
 	return o.Payload
 }
@@ -91,7 +89,7 @@ func NewGetCurrentBookingsUnauthorized() *GetCurrentBookingsUnauthorized {
 	return &GetCurrentBookingsUnauthorized{}
 }
 
-/*GetCurrentBookingsUnauthorized handles this case with default header values.
+/* GetCurrentBookingsUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -102,7 +100,6 @@ type GetCurrentBookingsUnauthorized struct {
 func (o *GetCurrentBookingsUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /login][%d] getCurrentBookingsUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *GetCurrentBookingsUnauthorized) GetPayload() interface{} {
 	return o.Payload
 }
@@ -122,7 +119,7 @@ func NewGetCurrentBookingsNotFound() *GetCurrentBookingsNotFound {
 	return &GetCurrentBookingsNotFound{}
 }
 
-/*GetCurrentBookingsNotFound handles this case with default header values.
+/* GetCurrentBookingsNotFound describes a response with status code 404, with default header values.
 
 Not Found
 */
@@ -133,7 +130,6 @@ type GetCurrentBookingsNotFound struct {
 func (o *GetCurrentBookingsNotFound) Error() string {
 	return fmt.Sprintf("[GET /login][%d] getCurrentBookingsNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetCurrentBookingsNotFound) GetPayload() interface{} {
 	return o.Payload
 }
@@ -153,7 +149,7 @@ func NewGetCurrentBookingsInternalServerError() *GetCurrentBookingsInternalServe
 	return &GetCurrentBookingsInternalServerError{}
 }
 
-/*GetCurrentBookingsInternalServerError handles this case with default header values.
+/* GetCurrentBookingsInternalServerError describes a response with status code 500, with default header values.
 
 Internal Error
 */
@@ -164,7 +160,6 @@ type GetCurrentBookingsInternalServerError struct {
 func (o *GetCurrentBookingsInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /login][%d] getCurrentBookingsInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetCurrentBookingsInternalServerError) GetPayload() interface{} {
 	return o.Payload
 }

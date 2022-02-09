@@ -14,7 +14,8 @@ import (
 )
 
 // NewGetPoolDescriptionByIDParams creates a new GetPoolDescriptionByIDParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetPoolDescriptionByIDParams() GetPoolDescriptionByIDParams {
 
 	return GetPoolDescriptionByIDParams{}
@@ -49,7 +50,6 @@ func (o *GetPoolDescriptionByIDParams) BindRequest(r *http.Request, route *middl
 	if err := o.bindPoolID(rPoolID, rhkPoolID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -65,7 +65,6 @@ func (o *GetPoolDescriptionByIDParams) bindPoolID(rawData []string, hasKey bool,
 
 	// Required: true
 	// Parameter is provided by construction from the route
-
 	o.PoolID = raw
 
 	return nil

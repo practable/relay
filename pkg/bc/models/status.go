@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -15,21 +17,26 @@ import (
 // Status status
 //
 // Status of a pool
+// Example: {"available":3,"inuse":5,"wait":0}
 //
 // swagger:model status
 type Status struct {
 
 	// Number of available kits
+	// Example: 3
 	// Required: true
 	Available *int64 `json:"available"`
 
 	// Kit available later?
+	// Example: true
 	Later bool `json:"later,omitempty"`
 
 	// Number of kits in use
+	// Example: 5
 	Used int64 `json:"used,omitempty"`
 
 	// Wait time in seconds until first kit available later
+	// Example: 3200
 	Wait int64 `json:"wait,omitempty"`
 }
 
@@ -53,6 +60,11 @@ func (m *Status) validateAvailable(formats strfmt.Registry) error {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this status based on context it is used
+func (m *Status) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

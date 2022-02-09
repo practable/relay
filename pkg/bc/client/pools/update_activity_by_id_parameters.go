@@ -18,60 +18,76 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/models"
 )
 
-// NewUpdateActivityByIDParams creates a new UpdateActivityByIDParams object
-// with the default values initialized.
+// NewUpdateActivityByIDParams creates a new UpdateActivityByIDParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewUpdateActivityByIDParams() *UpdateActivityByIDParams {
-	var ()
 	return &UpdateActivityByIDParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewUpdateActivityByIDParamsWithTimeout creates a new UpdateActivityByIDParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewUpdateActivityByIDParamsWithTimeout(timeout time.Duration) *UpdateActivityByIDParams {
-	var ()
 	return &UpdateActivityByIDParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewUpdateActivityByIDParamsWithContext creates a new UpdateActivityByIDParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewUpdateActivityByIDParamsWithContext(ctx context.Context) *UpdateActivityByIDParams {
-	var ()
 	return &UpdateActivityByIDParams{
-
 		Context: ctx,
 	}
 }
 
 // NewUpdateActivityByIDParamsWithHTTPClient creates a new UpdateActivityByIDParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewUpdateActivityByIDParamsWithHTTPClient(client *http.Client) *UpdateActivityByIDParams {
-	var ()
 	return &UpdateActivityByIDParams{
 		HTTPClient: client,
 	}
 }
 
-/*UpdateActivityByIDParams contains all the parameters to send to the API endpoint
-for the update activity by ID operation typically these are written to a http.Request
+/* UpdateActivityByIDParams contains all the parameters to send to the API endpoint
+   for the update activity by ID operation.
+
+   Typically these are written to a http.Request.
 */
 type UpdateActivityByIDParams struct {
 
-	/*Activity*/
+	// Activity.
 	Activity *models.Activity
-	/*ActivityID*/
+
+	// ActivityID.
 	ActivityID string
-	/*PoolID*/
+
+	// PoolID.
 	PoolID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the update activity by ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *UpdateActivityByIDParams) WithDefaults() *UpdateActivityByIDParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the update activity by ID params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *UpdateActivityByIDParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the update activity by ID params
@@ -147,7 +163,6 @@ func (o *UpdateActivityByIDParams) WriteToRequest(r runtime.ClientRequest, reg s
 		return err
 	}
 	var res []error
-
 	if o.Activity != nil {
 		if err := r.SetBodyParam(o.Activity); err != nil {
 			return err
