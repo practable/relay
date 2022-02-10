@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// SetDebug changes logging options and format
 func SetDebug(debug bool) {
 
 	if debug {
