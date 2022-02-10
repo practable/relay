@@ -5,6 +5,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/permission"
 )
 
+// Token returns a signed JWT token
 func Token(audience, ct, topic, secret string, scopes []string, iat, nbf, exp int64) (string, error) {
 
 	var claims permission.Token

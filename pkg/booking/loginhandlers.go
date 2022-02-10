@@ -137,9 +137,9 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 		// group (pool assigned to multiple groups is expected)
 		pidmap := make(map[string]bool)
 
-		for _, group_name := range bookingClaims.Groups {
+		for _, groupName := range bookingClaims.Groups {
 
-			gps, err := ps.GetGroupsByName(group_name)
+			gps, err := ps.GetGroupsByName(groupName)
 			if err != nil {
 				// don't throw error in case other groups are valid
 				continue
@@ -155,7 +155,7 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 
 		pids := []string{}
 
-		for pid, _ := range pidmap {
+		for pid := range pidmap {
 			pids = append(pids, pid)
 		}
 
