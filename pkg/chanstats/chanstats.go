@@ -24,32 +24,35 @@ import (
 	"github.com/eclesh/welford"
 )
 
-// Structs for recording stats
+// ChanStats represents recorded channel statistics
 type ChanStats struct {
 	ConnectedAt time.Time
 	Rx          Messages
 	Tx          Messages
 }
 
+// Messages represents statistics for messages
 type Messages struct {
 	Last  time.Time
 	Bytes *welford.Stats
 	Dt    *welford.Stats
 }
 
-// Structs for (un)marshalling stats into JSON
+// Report represents overally statistics for a topic
 type Report struct {
 	Connected string  `json:"connected"`
 	Tx        Details `json:"tx"`
 	Rx        Details `json:"rx"`
 }
 
+// Details represents detailed statistics
 type Details struct {
 	Last  string       `json:"last"` //how many seconds ago...
 	Bytes WelfordStats `json:"bytes"`
 	Dt    WelfordStats `json:"dt"`
 }
 
+// WelfordStats represents statistical values
 type WelfordStats struct {
 	Count    uint64  `json:"count"`
 	Min      float64 `json:"min"`
@@ -59,6 +62,7 @@ type WelfordStats struct {
 	Variance float64 `json:"variance"`
 }
 
+// New returns a pointer to new ChanStats struct with statistics initialised
 func New() *ChanStats {
 	c := &ChanStats{}
 	c.ConnectedAt = time.Now() //expect user to update if appropriate
@@ -67,6 +71,7 @@ func New() *ChanStats {
 	return c
 }
 
+// NewReport represents a new report on channel statistics
 func NewReport(s *ChanStats) *Report {
 	r := &Report{
 		Connected: s.ConnectedAt.String(),
@@ -76,6 +81,7 @@ func NewReport(s *ChanStats) *Report {
 	return r
 }
 
+// NewDetails holds detailed information on channel statistics in one direction
 func NewDetails(m *Messages) *Details {
 	d := &Details{
 		Last:  m.Last.String(),
@@ -85,6 +91,7 @@ func NewDetails(m *Messages) *Details {
 	return d
 }
 
+// NewWelford initialises a new statistics structure
 func NewWelford(w *welford.Stats) *WelfordStats {
 	r := &WelfordStats{
 		Count:    w.Count(),
