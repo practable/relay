@@ -549,8 +549,8 @@ func TestStreamGetsFeedMessges(t *testing.T) {
 
 	rxCount := 0
 
-	rx_from_c1 := false
-	rx_from_c2 := false
+	rxFromC1 := false
+	rxFromC2 := false
 
 	go func() {
 		timer := time.NewTimer(5 * time.Millisecond)
@@ -573,10 +573,10 @@ func TestStreamGetsFeedMessges(t *testing.T) {
 					t.Error("Wrong data in message")
 				}
 				if msg.Sender == *c1 {
-					rx_from_c1 = true
+					rxFromC1 = true
 				}
 				if msg.Sender == *c2 {
-					rx_from_c2 = true
+					rxFromC2 = true
 				}
 			case <-c3.Send:
 				t.Error("Wrong client received message")
@@ -594,10 +594,10 @@ func TestStreamGetsFeedMessges(t *testing.T) {
 	if rxCount != 2 {
 		t.Error("Receiver did not receive message in correct quantity, wanted 2 got ", rxCount)
 	}
-	if !rx_from_c1 {
+	if !rxFromC1 {
 		t.Error("Did not get message from c1")
 	}
-	if !rx_from_c2 {
+	if !rxFromC2 {
 		t.Error("Did not get message from c2")
 	}
 }
@@ -645,9 +645,9 @@ func TestStreamWithRuleChange(t *testing.T) {
 
 	rxCount := 0
 
-	rx_from_c1 := false
-	rx_from_c2 := false
-	rx_from_c3 := false
+	rxFromC1 := false
+	rxFromC2 := false
+	rxFromC3 := false
 
 	stopRx := make(chan struct{})
 
@@ -676,13 +676,13 @@ func TestStreamWithRuleChange(t *testing.T) {
 					t.Error("Wrong data in message", msg.Sender.Topic, len(msg.Data))
 				}
 				if msg.Sender == *c1 {
-					rx_from_c1 = true
+					rxFromC1 = true
 				}
 				if msg.Sender == *c2 {
-					rx_from_c2 = true
+					rxFromC2 = true
 				}
 				if msg.Sender == *c3 {
-					rx_from_c3 = true
+					rxFromC3 = true
 				}
 			case <-timer.C:
 				break COLLECT
@@ -705,7 +705,6 @@ func TestStreamWithRuleChange(t *testing.T) {
 
 	time.Sleep(time.Millisecond)
 	time.Sleep(time.Millisecond)
-
 	h.Broadcast <- *m1
 	h.Broadcast <- *m2
 	h.Broadcast <- *m3
@@ -716,13 +715,13 @@ func TestStreamWithRuleChange(t *testing.T) {
 	if rxCount != 3 {
 		t.Error("Receiver did not receive message in correct quantity, wanted 3 got ", rxCount)
 	}
-	if !rx_from_c1 {
+	if !rxFromC1 {
 		t.Error("Did not get message from c1")
 	}
-	if !rx_from_c2 {
+	if !rxFromC2 {
 		t.Error("Did not get message from c2")
 	}
-	if !rx_from_c3 {
+	if !rxFromC3 {
 		t.Error("Did not get message from c3")
 	}
 }
