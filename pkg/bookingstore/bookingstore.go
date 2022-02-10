@@ -23,6 +23,7 @@ type confirmation struct {
 	expiresAt int64
 }
 
+// Limit represents allocation of limited resources
 type Limit struct {
 	*sync.Mutex `json:"-"`
 
@@ -92,6 +93,7 @@ type Limit struct {
 	Now func() int64 `json:"-"`
 }
 
+// CopyStore moves the contents of one Limit(store) to another
 func CopyStore(from, to *Limit) {
 	to.Lock()
 	from.Lock()
@@ -115,12 +117,18 @@ func CopyStore(from, to *Limit) {
 	to.Now = from.Now
 }
 
+type key int
+
+const (
+	id key = iota
+)
+
 // New creates a new Limit with optional
 // hourly flushing to avoid memory leakage
 func New(ctx context.Context) *Limit {
 
 	// value for debugging context swaps...
-	ctxNew := context.WithValue(ctx, "id", uuid.New().String()[0:6])
+	ctxNew := context.WithValue(ctx, id, uuid.New().String()[0:6])
 
 	ctxServices, cancelServices := context.WithCancel(ctxNew)
 
@@ -155,6 +163,7 @@ func New(ctx context.Context) *Limit {
 	return l
 }
 
+// Reset the limit store to its original default state (loses all data)
 func (l *Limit) Reset() {
 	lbe := time.Now().Unix() - 1
 	lastFlush := time.Now().Unix() - 1
@@ -166,6 +175,7 @@ func (l *Limit) Reset() {
 	l.LastFlush = &lastFlush
 }
 
+// ExportAll returns the store marshalled into a json []byte
 func (l *Limit) ExportAll() ([]byte, error) {
 	return json.Marshal(l)
 }
@@ -233,7 +243,7 @@ func (l *Limit) PostImportEssential(ctx context.Context) {
 
 	l.Mutex = &sync.Mutex{}
 	l.register = make(chan confirmation)
-	ctxNew := context.WithValue(ctx, "id", uuid.New().String()[0:6])
+	ctxNew := context.WithValue(ctx, id, uuid.New().String()[0:6])
 	ctxServices, cancelServices := context.WithCancel(ctxNew)
 	l.ctxServices = ctxServices
 	l.cancelServices = cancelServices
@@ -380,6 +390,7 @@ func (l *Limit) WithMax(max int) *Limit {
 	return l
 }
 
+//GetMax returns Limit.Max
 func (l *Limit) GetMax() int {
 	l.Lock()
 	defer l.Unlock()
@@ -395,12 +406,14 @@ func (l *Limit) WithNow(now func() int64) *Limit {
 	return l
 }
 
+// SetNow sets the function used to get the current time
 func (l *Limit) SetNow(now func() int64) {
 	l.Lock()
 	defer l.Unlock()
 	l.Now = now
 }
 
+// LockBookings prevents new bookings
 func (l *Limit) LockBookings() {
 	l.Lock()
 	defer l.Unlock()
@@ -408,6 +421,7 @@ func (l *Limit) LockBookings() {
 	*l.Locked = true
 }
 
+// UnlockBookings allows new bookings
 func (l *Limit) UnlockBookings() {
 	l.Lock()
 	defer l.Unlock()
@@ -415,6 +429,7 @@ func (l *Limit) UnlockBookings() {
 	*l.Locked = false
 }
 
+// GetLockBookings returns bookings are locked (true is locked)
 func (l *Limit) GetLockBookings() bool {
 	l.Lock()
 	defer l.Unlock()
@@ -422,12 +437,14 @@ func (l *Limit) GetLockBookings() bool {
 	return *l.Locked
 }
 
+// SetMessage sets the message of the day
 func (l *Limit) SetMessage(msg string) {
 	l.Lock()
 	defer l.Unlock()
 	*l.Message = msg
 }
 
+// GetMessage returns the message of the day
 func (l *Limit) GetMessage() string {
 	l.Lock()
 	defer l.Unlock()
@@ -462,6 +479,7 @@ func (l *Limit) GetAllActivities() map[string]*models.Activity {
 	return l.ActivityBySession
 }
 
+// GetAllActivitiesCount returns a count of how many activities there are
 func (l *Limit) GetAllActivitiesCount() int {
 	l.FlushAll()
 	l.Lock()
@@ -480,7 +498,7 @@ func (l *Limit) GetLastBookingEnds() int64 {
 	return *l.LastBookingEnds
 }
 
-// Get all sessionCount is primarily an admin function
+// GetAllSessionCount is primarily an admin function
 // for a bit of dashboard eye-candy, but there is no reason
 // that users can't see this too
 func (l *Limit) GetAllSessionCount() int {
@@ -529,7 +547,7 @@ func (l *Limit) FlushAll() {
 	}
 
 	sessions := l.Sessions
-	for userID, _ := range sessions {
+	for userID := range sessions {
 		l.flushUser(userID)
 	}
 
