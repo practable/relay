@@ -9,6 +9,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/hub"
 )
 
+// New returns a pointer to a new aggregating hub
 func New() *Hub {
 
 	h := &Hub{
@@ -27,14 +28,17 @@ func New() *Hub {
 
 }
 
+// Run starts the aggregrating hub without collecting usage statistics
 func (h *Hub) Run(closed chan struct{}) {
 	h.RunOptionalStats(closed, false)
 }
 
+//RunWithStats starts the aggegrating hub whilst collecting usage statistics
 func (h *Hub) RunWithStats(closed chan struct{}) {
 	h.RunOptionalStats(closed, true)
 }
 
+//RunOptionalStats start the aggegrating hub, with a choice of collecting usage statistics or not
 func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
 
 	//start the hub
@@ -173,7 +177,7 @@ func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
 	}
 }
 
-// relay messages from subClient to Client
+// RelayTo relays messages from subClient to Client
 func (sc *SubClient) RelayTo(c *hub.Client) {
 	for {
 		select {
