@@ -1,18 +1,4 @@
-// Package shellaccess provides an API for accessing shellbar.
-// Shellaccess is aware of the roles of hosts and clients in
-// establishing ssh connections, and will allocate unique
-// connections to new clients. It requires shellbar to trigger
-// the SSH host to connect AFTER the client has connected,
-// because SSH is a server-speaks-first protocol. Hence shellaccess
-// does not need to transmit the URI of the unique connection to the host
-// because shellbar will do this when the client makes its
-// websocket connection. There is no guarantee a host is connected
-// at any given time, and if it drops its management channel
-// which is connected to the base session_id, then it cannot be
-// reached. As shellbar puts a websocket wrapper around the
-// already-encrypted TCP/IP, the communication remains encrypted
-// end-to-end. For more details on SSH security properties, see
-// https://docstore.mik.ua/orelly/networking_2ndEd/ssh/ch03_01.htm
+// Package booking provides an API for booking experiments
 package booking
 
 import (
