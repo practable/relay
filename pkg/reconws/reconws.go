@@ -36,6 +36,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/chanstats"
 )
 
+// WsMessage represents a websocket message
 type WsMessage struct {
 	Data []byte
 	Type int
@@ -43,18 +44,19 @@ type WsMessage struct {
 	From string
 }
 
+// ReconWs represents a websocket client that will reconnect if the connection is closed
 // connects (retrying/reconnecting if necessary) to websocket server at url
-
 type ReconWs struct {
 	ForwardIncoming bool
 	In              chan WsMessage
 	Out             chan WsMessage
 	Retry           RetryConfig
 	Stats           *chanstats.ChanStats
-	Url             string
+	URL             string
 	ID              string
 }
 
+// RetryConfig represents the parameters for when to retry to connect
 type RetryConfig struct {
 	Factor  float64
 	Jitter  bool
@@ -63,6 +65,7 @@ type RetryConfig struct {
 	Timeout time.Duration
 }
 
+// New returns a pointer to a new reconnecting websocket client ReconWs
 func New() *ReconWs {
 	r := &ReconWs{
 		In:              make(chan WsMessage),
@@ -79,6 +82,7 @@ func New() *ReconWs {
 	return r
 }
 
+// Reconnect sets URL to connect to, and runs the client
 // run this in a separate goroutine so that the connection can be
 // ended from where it was initialised, by close((* ReconWs).Stop)
 func (r *ReconWs) Reconnect(ctx context.Context, url string) {
@@ -117,6 +121,8 @@ func (r *ReconWs) Reconnect(ctx context.Context, url string) {
 	}
 }
 
+// ReconnectAuth reconnects to a relay instance that uses an access server
+// to gatekeep access to the websocket relay
 // run this in a separate goroutine so that the connection can be
 // ended from where it was initialised, by close((* ReconWs).Stop)
 func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
