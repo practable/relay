@@ -4,6 +4,7 @@ import (
 	"sync"
 )
 
+// Shellbar runs ssh relay with the given configuration
 func Shellbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
 
 	var wg sync.WaitGroup
