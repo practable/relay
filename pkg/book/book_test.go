@@ -425,6 +425,7 @@ func TestGetGroupDescriptionByID(t *testing.T) {
 	req.Header.Add("Authorization", bearer)
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
+	assert.NoError(t, err)
 	body, err := ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
@@ -497,6 +498,7 @@ func TestGetAllPools(t *testing.T) {
 	req.Header.Add("Authorization", bearer)
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
+	assert.NoError(t, err)
 	body, err := ioutil.ReadAll(resp.Body)
 	if false {
 		t.Log(resp.Status, string(body))
@@ -519,6 +521,7 @@ func TestGetAllPools(t *testing.T) {
 	q.Add("name", "stuff0")
 	req.URL.RawQuery = q.Encode()
 	resp, err = client.Do(req)
+	assert.NoError(t, err)
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	r = []string{}
@@ -535,6 +538,7 @@ func TestGetAllPools(t *testing.T) {
 	q.Add("exact", "true")
 	req.URL.RawQuery = q.Encode()
 	resp, err = client.Do(req)
+	assert.NoError(t, err)
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	r = []string{}
@@ -675,11 +679,14 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	a := pool.NewActivity("a", ps.Now()+3600)
 	b := pool.NewActivity("b", ps.Now()+7200)
 	c := pool.NewActivity("b", ps.Now()+7200)
-	p0.AddActivity(a)
+	err = p0.AddActivity(a)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(a)
-	p0.AddActivity(b)
+	err = p0.AddActivity(b)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(b)
-	p0.AddActivity(c)
+	err = p0.AddActivity(c)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(c)
 
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
@@ -831,7 +838,9 @@ func TestRequestSessionByPoolID(t *testing.T) {
 
 	a := pool.NewActivity("a", ps.Now()+3600)
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
@@ -984,7 +993,7 @@ func TestRequestSessionByPoolID(t *testing.T) {
 	}
 
 	stc, ok := streamToken.Claims.(*permission.Token)
-
+	assert.True(t, ok)
 	assert.Equal(t, pt0.Audience, stc.Audience)
 	assert.Equal(t, pt0.ConnectionType, stc.ConnectionType)
 	assert.True(t, pt0.Topic == stc.Topic || pt1.Topic == stc.Topic)
@@ -1057,7 +1066,9 @@ func TestLimits(t *testing.T) {
 
 	a := pool.NewActivity("a", ps.Now()+3600)
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
@@ -1085,7 +1096,9 @@ func TestLimits(t *testing.T) {
 	a.AddStream("video", s1)
 
 	a2 := pool.NewActivity("a2", ps.Now()+3600)
-	p0.AddActivity(a2)
+	err = p0.AddActivity(a2)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a2)
 
 	pt2 := permission.Token{
@@ -1339,6 +1352,7 @@ func TestLimits(t *testing.T) {
 	}
 
 	stc, ok := streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// save this to check we get both activities (check data stream permission topic from each request)
 	stcTopic0 := stc.Topic
@@ -1382,6 +1396,7 @@ func TestLimits(t *testing.T) {
 	}
 
 	stc, ok = streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// just check the two topics are what we expect from the data permission tokens
 	stcTopic1 := stc.Topic
@@ -1530,6 +1545,7 @@ func TestAddNewPool(t *testing.T) {
 	reqBody, err := json.Marshal(p)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1545,6 +1561,7 @@ func TestAddNewPool(t *testing.T) {
 
 	// get ID back, use ID to get description, and compare...
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
@@ -1628,6 +1645,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	reqBody, err := json.Marshal(p)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1644,6 +1662,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 
 	// get ID back, use ID to get description, and compare...
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
@@ -1766,6 +1785,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	reqBody2, err := json.Marshal(ma)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+poolID+"/activities", bytes.NewBuffer(reqBody2))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1788,6 +1808,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 
 	// Get activity description and compare
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1818,6 +1839,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	reqBody3, err := json.Marshal(ma)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("PUT", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, bytes.NewBuffer(reqBody3))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1833,6 +1855,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 
 	// Now get activity again and check name has changed
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1882,7 +1905,8 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 
 	a := pool.NewActivity("a", ps.Now()+3600)
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
@@ -1910,7 +1934,8 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	a.AddStream("video", s1)
 
 	a2 := pool.NewActivity("a2", ps.Now()+3600)
-	p0.AddActivity(a2)
+	err = p0.AddActivity(a2)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(a2)
 
 	pt2 := permission.Token{
@@ -2054,6 +2079,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	}
 
 	stc, ok := streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// save this to check we get both activities (check data stream permission topic from each request)
 	stcTopic0 := stc.Topic
@@ -2096,6 +2122,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	}
 
 	stc, ok = streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// just check the two topics are what we expect from the data permission tokens
 	stcTopic1 := stc.Topic
@@ -2230,7 +2257,9 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	a.Config = pool.Config{URL: cu0}
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
@@ -2262,7 +2291,9 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	cu1 := "https://somewhere.com/config/config1.json"
 	a2.Config = pool.Config{URL: cu1}
 
-	p0.AddActivity(a2)
+	err = p0.AddActivity(a2)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a2)
 
 	pt2 := permission.Token{
@@ -2307,6 +2338,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ps2, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println("LOCAL POOL STORE")
 		fmt.Println(string(pretty))
 		fmt.Println("LOCAL POOL STORE marshalled to bytes")
@@ -2321,6 +2353,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		err = json.Unmarshal(poolDec, pscheck)
 		assert.NoError(t, err)
 		pretty, err = json.MarshalIndent(pscheck, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println("LOCAL POOL STORE Unmarshalled")
 		fmt.Println(string(pretty))
 	}
@@ -2392,6 +2425,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	//             |_|
 
 	reqBody, err := json.Marshal(store)
+	assert.NoError(t, err)
 
 	req, err = http.NewRequest("POST", host+"/api/v1/admin/poolstore", bytes.NewBuffer(reqBody))
 	assert.NoError(t, err)
@@ -2476,6 +2510,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(claims, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println("Login token claims")
 		fmt.Println(string(pretty))
 	}
@@ -2536,6 +2571,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	}
 
 	stc, ok := streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// save this to check we get both activities (check data stream permission topic from each request)
 	stcTopic0 := stc.Topic
@@ -2578,6 +2614,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	}
 
 	stc, ok = streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// just check the two topics are what we expect from the data permission tokens
 	stcTopic1 := stc.Topic
@@ -2676,6 +2713,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -2740,6 +2778,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(act0, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -2896,6 +2935,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -2940,6 +2980,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err := json.Marshal(p0)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -2982,6 +3023,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(p1)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3032,6 +3074,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(mg)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/groups", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3075,6 +3118,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -3112,6 +3156,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(p3)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3134,6 +3179,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(ids)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3202,6 +3248,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(ids)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("DELETE", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3279,6 +3326,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(ids)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("PUT", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3352,6 +3400,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	// Delete pool1 altogether
 	req, err = http.NewRequest("DELETE", host+"/api/v1/pools/"+pid1, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
@@ -3515,6 +3564,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -3569,7 +3619,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-	body, err = ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
 	// check no activity...
@@ -3589,6 +3639,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -3604,7 +3655,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-	body, err = ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
 	// Get store status and check group is gone but pools stay
@@ -3623,6 +3674,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
