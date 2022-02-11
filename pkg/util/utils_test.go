@@ -7,18 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// This test fails so don't run it
-func testUnorderedEqual(t *testing.T) {
-
-	assert.True(t, unorderedEqual([]string{"aa"}, []string{"aa"}))
-	assert.False(t, unorderedEqual([]string{"aa"}, []string{"bb"}))
-	assert.False(t, unorderedEqual([]string{"aa"}, []string{"bb", "cc"}))
-	assert.True(t, unorderedEqual([]string{"cc", "bb"}, []string{"bb", "cc"}))
-	assert.True(t, unorderedEqual([]string{"aa", "cc", "bb"}, []string{"aa", "bb", "cc"}))
-	// this test fails, because the func is inadequate
-	assert.False(t, unorderedEqual([]string{"aa", "cc", "bb"}, []string{"aa", "bb", "bb"}))
-}
-
 func TestSortCompare(t *testing.T) {
 
 	assert.True(t, SortCompare([]string{"aa"}, []string{"aa"}))
