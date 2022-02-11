@@ -13,7 +13,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func addActivityByPoolID(ps *pool.PoolStore) func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
+func addActivityByPoolID(ps *pool.Store) func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
 
 		log.Trace("started")
@@ -60,7 +60,7 @@ func addActivityByPoolID(ps *pool.PoolStore) func(params pools.AddActivityByPool
 	}
 }
 
-func addNewPool(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
+func addNewPool(ps *pool.Store) func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 	return func(params pools.AddNewPoolParams, principal interface{}) middleware.Responder {
 
 		_, err := isBookingAdmin(principal)
@@ -104,7 +104,7 @@ func addNewPool(ps *pool.PoolStore) func(params pools.AddNewPoolParams, principa
 	}
 }
 
-func deleteActivityByID(ps *pool.PoolStore) func(pools.DeleteActivityByIDParams, interface{}) middleware.Responder {
+func deleteActivityByID(ps *pool.Store) func(pools.DeleteActivityByIDParams, interface{}) middleware.Responder {
 	return func(params pools.DeleteActivityByIDParams, principal interface{}) middleware.Responder {
 		_, err := isBookingAdmin(principal)
 
@@ -134,7 +134,7 @@ func deleteActivityByID(ps *pool.PoolStore) func(pools.DeleteActivityByIDParams,
 	}
 }
 
-func deletePool(ps *pool.PoolStore) func(pools.DeletePoolParams, interface{}) middleware.Responder {
+func deletePool(ps *pool.Store) func(pools.DeletePoolParams, interface{}) middleware.Responder {
 	return func(params pools.DeletePoolParams, principal interface{}) middleware.Responder {
 		_, err := isBookingAdmin(principal)
 
@@ -155,7 +155,7 @@ func deletePool(ps *pool.PoolStore) func(pools.DeletePoolParams, interface{}) mi
 
 // Function getAllPools returns all pools, all pools starting with the name string, or all pools exactly matching the name string
 // This is an admin-only task.
-func getAllPools(ps *pool.PoolStore) func(params pools.GetAllPoolsParams, principal interface{}) middleware.Responder {
+func getAllPools(ps *pool.Store) func(params pools.GetAllPoolsParams, principal interface{}) middleware.Responder {
 
 	return func(params pools.GetAllPoolsParams, principal interface{}) middleware.Responder {
 
@@ -200,7 +200,7 @@ func getAllPools(ps *pool.PoolStore) func(params pools.GetAllPoolsParams, princi
 	}
 }
 
-func getActivityByID(ps *pool.PoolStore) func(params pools.GetActivityByIDParams, principal interface{}) middleware.Responder {
+func getActivityByID(ps *pool.Store) func(params pools.GetActivityByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetActivityByIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -241,7 +241,7 @@ func getActivityByID(ps *pool.PoolStore) func(params pools.GetActivityByIDParams
 	}
 }
 
-func getPoolDescriptionByID(ps *pool.PoolStore) func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
+func getPoolDescriptionByID(ps *pool.Store) func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolDescriptionByIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -278,7 +278,7 @@ func getPoolDescriptionByID(ps *pool.PoolStore) func(params pools.GetPoolDescrip
 	}
 }
 
-func getPoolStatusByID(ps *pool.PoolStore) func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
+func getPoolStatusByID(ps *pool.Store) func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.GetPoolStatusByIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -325,7 +325,7 @@ func getPoolStatusByID(ps *pool.PoolStore) func(params pools.GetPoolStatusByIDPa
 	}
 }
 
-func requestSessionByPoolID(ps *pool.PoolStore, l *bookingstore.Limit) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
+func requestSessionByPoolID(ps *pool.Store, l *bookingstore.Limit) func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
 	return func(params pools.RequestSessionByPoolIDParams, principal interface{}) middleware.Responder {
 
@@ -502,7 +502,7 @@ func requestSessionByPoolID(ps *pool.PoolStore, l *bookingstore.Limit) func(para
 	}
 }
 
-func updateActivityByID(ps *pool.PoolStore) func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
+func updateActivityByID(ps *pool.Store) func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
 	return func(params pools.UpdateActivityByIDParams, principal interface{}) middleware.Responder {
 
 		_, err := isBookingAdmin(principal)

@@ -10,7 +10,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func deletePoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.DeletePoolStoreParams, interface{}) middleware.Responder {
+func deletePoolStore(ps *pool.Store, l *bookingstore.Limit) func(admin.DeletePoolStoreParams, interface{}) middleware.Responder {
 	return func(params admin.DeletePoolStoreParams, principal interface{}) middleware.Responder {
 		_, err := isBookingAdmin(principal)
 
@@ -26,7 +26,7 @@ func deletePoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.Delet
 	}
 }
 
-func exportPoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.ExportPoolStoreParams, interface{}) middleware.Responder {
+func exportPoolStore(ps *pool.Store, l *bookingstore.Limit) func(admin.ExportPoolStoreParams, interface{}) middleware.Responder {
 
 	return func(params admin.ExportPoolStoreParams, principal interface{}) middleware.Responder {
 
@@ -59,7 +59,7 @@ func exportPoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.Expor
 	}
 }
 
-func getStoreStatus(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.GetStoreStatusParams, interface{}) middleware.Responder {
+func getStoreStatus(ps *pool.Store, l *bookingstore.Limit) func(admin.GetStoreStatusParams, interface{}) middleware.Responder {
 
 	return func(params admin.GetStoreStatusParams, principal interface{}) middleware.Responder {
 		//need admin status!
@@ -83,7 +83,7 @@ func getStoreStatus(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.GetSto
 	}
 }
 
-func importPoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.ImportPoolStoreParams, interface{}) middleware.Responder {
+func importPoolStore(ps *pool.Store, l *bookingstore.Limit) func(admin.ImportPoolStoreParams, interface{}) middleware.Responder {
 
 	return func(params admin.ImportPoolStoreParams, principal interface{}) middleware.Responder {
 
@@ -148,7 +148,7 @@ func importPoolStore(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.Impor
 	}
 }
 
-func setLock(ps *pool.PoolStore, l *bookingstore.Limit) func(admin.SetLockParams, interface{}) middleware.Responder {
+func setLock(ps *pool.Store, l *bookingstore.Limit) func(admin.SetLockParams, interface{}) middleware.Responder {
 	return func(params admin.SetLockParams, principal interface{}) middleware.Responder {
 		_, err := isBookingAdmin(principal)
 

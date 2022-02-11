@@ -11,7 +11,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func getCurrentBookings(ps *pool.PoolStore, l *bookingstore.Limit) func(login.GetCurrentBookingsParams, interface{}) middleware.Responder {
+func getCurrentBookings(ps *pool.Store, l *bookingstore.Limit) func(login.GetCurrentBookingsParams, interface{}) middleware.Responder {
 	return func(params login.GetCurrentBookingsParams, principal interface{}) middleware.Responder {
 
 		claims, err := isBookingUser(principal)
@@ -51,7 +51,7 @@ func getCurrentBookings(ps *pool.PoolStore, l *bookingstore.Limit) func(login.Ge
 	}
 }
 
-func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middleware.Responder {
+func loginHandler(ps *pool.Store) func(login.LoginParams, interface{}) middleware.Responder {
 	return func(params login.LoginParams, principal interface{}) middleware.Responder {
 
 		token, ok := principal.(*jwt.Token)

@@ -27,7 +27,7 @@ import (
 // @secret- HMAC shared secret which incoming tokens will be signed with
 // @cs - pointer to the CodeStore this API shares with the shellbar websocket relay
 // @options - for future backwards compatibility (no options currently available)
-func API(ctx context.Context, port int, host, secret string, ps *pool.PoolStore, l *bookingstore.Limit) {
+func API(ctx context.Context, port int, host, secret string, ps *pool.Store, l *bookingstore.Limit) {
 
 	// TODO
 
