@@ -15,7 +15,7 @@ import (
 // bookingDuration seconds.
 func Book(ctx context.Context, port int, bookingDuration int64, host, secret string) {
 
-	ps := pool.NewPoolStore().
+	ps := pool.NewStore().
 		WithSecret(secret).
 		WithBookingTokenDuration(bookingDuration)
 
