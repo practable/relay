@@ -11,6 +11,7 @@ import (
 // - Scopes
 // - Audience
 
+// Token represents a JWT token
 type Token struct {
 
 	// Topic identifies the communication channel;
@@ -41,6 +42,7 @@ type Token struct {
 	jwt.StandardClaims `yaml:",omitempty"`
 }
 
+// NewToken returns a Token populated with the supplied information
 func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf, exp int64) Token {
 	return Token{
 		Topic:          topic,
@@ -55,14 +57,17 @@ func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf,
 	}
 }
 
+// SetTopicSalt sets the salt for token topic
 func SetTopicSalt(token *Token, salt string) {
 	token.TopicSalt = salt
 }
 
+// SetAlertHost sets the boolean value of AlertHost
 func SetAlertHost(token *Token, alertHost bool) {
 	token.AlertHost = alertHost
 }
 
+// HasRequiredClaims returns false if the Token is missing any required elements
 func HasRequiredClaims(token Token) bool {
 
 	if token.Topic == "" ||
