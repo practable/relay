@@ -32,7 +32,7 @@ import (
 
 var debug bool
 var l *bookingstore.Limit
-var ps *pool.PoolStore
+var ps *pool.Store
 var host, secret string
 var bookingDuration, mocktime, startime int64
 
@@ -76,7 +76,7 @@ func TestMain(m *testing.M) {
 	mocktime = time.Now().Unix()
 	startime = mocktime
 
-	ps = pool.NewPoolStore().
+	ps = pool.NewStore().
 		WithSecret(secret).
 		WithBookingTokenDuration(bookingDuration).
 		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
@@ -508,7 +508,7 @@ func TestGetAllPools(t *testing.T) {
 	err = json.Unmarshal(body, &r)
 	assert.NoError(t, err)
 
-	// note the order can change in PoolStore - that's ok
+	// note the order can change in pool.Store - that's ok
 	assert.True(t, util.SortCompare([]string{p0.ID, p1.ID, p2.ID, p3.ID}, r))
 
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/", nil)
@@ -577,7 +577,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	// login
 	loginClaims := &lit.Token{}
 	loginClaims.Audience = host
-	//check that missing group "everyone" in PoolStore does not stop login
+	//check that missing group "everyone" in pool.Store does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
 	loginClaims.IssuedAt = ps.GetTime() - 1
@@ -1943,7 +1943,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	p, err := json.Marshal(ps)
 	assert.NoError(t, err)
 
-	ps2 := &pool.PoolStore{}
+	ps2 := &pool.Store{}
 
 	err = json.Unmarshal(p, &ps2)
 	assert.NoError(t, err)
@@ -2202,7 +2202,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps2 := pool.NewPoolStore().
+	ps2 := pool.NewStore().
 		WithSecret(secret).
 		WithBookingTokenDuration(bookingDuration).
 		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
@@ -2317,7 +2317,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		poolDec, err := base64.StdEncoding.DecodeString(poolEnc)
 		assert.NoError(t, err)
 		fmt.Println(string(poolDec))
-		pscheck := &pool.PoolStore{}
+		pscheck := &pool.Store{}
 		err = json.Unmarshal(poolDec, pscheck)
 		assert.NoError(t, err)
 		pretty, err = json.MarshalIndent(pscheck, "", "\t")
@@ -2771,7 +2771,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	bookingBytes, err := base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool := &pool.PoolStore{}
+	exportedPool := &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3177,7 +3177,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err := base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool := &pool.PoolStore{}
+	exportedPool := &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3245,7 +3245,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool = &pool.PoolStore{}
+	exportedPool = &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3323,7 +3323,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool = &pool.PoolStore{}
+	exportedPool = &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3388,7 +3388,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool = &pool.PoolStore{}
+	exportedPool = &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3546,7 +3546,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool = &pool.PoolStore{}
+	exportedPool = &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
