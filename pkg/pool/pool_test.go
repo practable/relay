@@ -461,7 +461,7 @@ func TestAddRequestCountActivity(t *testing.T) {
 
 func TestAddGetDeletePools(t *testing.T) {
 
-	ps := NewPoolStore().WithSecret("foo")
+	ps := NewStore().WithSecret("foo")
 
 	assert.Equal(t, []byte("foo"), ps.GetSecret())
 
@@ -514,7 +514,7 @@ func TestAddGetDeletePools(t *testing.T) {
 
 func TestAddGetDeleteGroups(t *testing.T) {
 
-	ps := NewPoolStore().WithSecret("bar")
+	ps := NewStore().WithSecret("bar")
 
 	assert.Equal(t, []byte("bar"), ps.GetSecret())
 
@@ -619,7 +619,7 @@ func TestImportExport(t *testing.T) {
 
 	mocktime := time.Now().Unix()
 
-	ps := NewPoolStore().WithSecret("bar")
+	ps := NewStore().WithSecret("bar")
 
 	name := "stuff"
 	g0 := NewGroup(name)
@@ -694,7 +694,7 @@ func TestImportExport(t *testing.T) {
 	assert.NoError(t, err)
 
 	// kill the poolstore
-	ps = &PoolStore{
+	ps = &Store{
 		RWMutex: &sync.RWMutex{},
 	}
 

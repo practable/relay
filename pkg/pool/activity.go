@@ -18,6 +18,7 @@ import (
 // Use .WithNewRandomID() if this is a new activity that
 // should have a new random ID associated with it
 
+// CheckActivity throws an error if any essential elements are missing from an Activity
 func CheckActivity(a *Activity) error {
 
 	if a == nil {
@@ -86,6 +87,7 @@ func CheckActivity(a *Activity) error {
 	return nil
 }
 
+// NewActivityFromModel creates a new Activity from the API's model representation
 func NewActivityFromModel(ma *models.Activity) *Activity {
 	if ma == nil {
 		return &Activity{
@@ -108,6 +110,7 @@ func NewActivityFromModel(ma *models.Activity) *Activity {
 	}
 }
 
+// NewUIsFromModel creates an array of pointers to UI from the API's model representation
 func NewUIsFromModel(modelUIs []*models.UserInterface) []*UI {
 
 	poolStoreUIs := []*UI{}
@@ -118,6 +121,7 @@ func NewUIsFromModel(modelUIs []*models.UserInterface) []*UI {
 	return poolStoreUIs
 }
 
+// NewSingleUIFromModel returns a pointer to a UI created from the API's model representation
 func NewSingleUIFromModel(mui *models.UserInterface) *UI {
 
 	if mui == nil {
@@ -137,6 +141,7 @@ func NewSingleUIFromModel(mui *models.UserInterface) *UI {
 
 }
 
+// NewStreamsFromModel returns a map of streams from the API's model representation
 func NewStreamsFromModel(modelStreams []*models.Stream) map[string]*Stream {
 
 	poolStoreStreams := make(map[string]*Stream)
@@ -161,6 +166,7 @@ func NewStreamsFromModel(modelStreams []*models.Stream) map[string]*Stream {
 	return poolStoreStreams
 }
 
+// NewSingleStreamFromModel returns a pointer to a Stream created from the API's model representation
 func NewSingleStreamFromModel(ms *models.Stream) *Stream {
 
 	if ms == nil {
@@ -218,6 +224,7 @@ func NewSingleStreamFromModel(ms *models.Stream) *Stream {
 	}
 }
 
+// WithNewRandomID adds a new random ID to the activity
 func (a *Activity) WithNewRandomID() *Activity {
 	a.Lock()
 	defer a.Unlock()
@@ -225,6 +232,7 @@ func (a *Activity) WithNewRandomID() *Activity {
 	return a
 }
 
+// MakeClaims creates claims from the API's model.Permission
 func MakeClaims(mp *models.Permission) permission.Token {
 
 	if mp == nil {
@@ -242,6 +250,7 @@ func MakeClaims(mp *models.Permission) permission.Token {
 
 }
 
+// ConvertToModel returns a pointer to an Activity represented in the API's model
 func (a *Activity) ConvertToModel() *models.Activity {
 
 	exp := float64(a.ExpiresAt)
@@ -256,6 +265,7 @@ func (a *Activity) ConvertToModel() *models.Activity {
 
 }
 
+// SingleStreamToModel returns a pointer to a Stream represented in the API's model
 func SingleStreamToModel(s *Stream) *models.Stream {
 	if s == nil {
 		return &models.Stream{}
@@ -275,6 +285,7 @@ func SingleStreamToModel(s *Stream) *models.Stream {
 
 }
 
+// StreamsToModel returns an array of pointers to Streams represented in the API's model
 func StreamsToModel(streams map[string]*Stream) []*models.Stream {
 
 	ms := []*models.Stream{}
@@ -286,6 +297,7 @@ func StreamsToModel(streams map[string]*Stream) []*models.Stream {
 	return ms
 }
 
+// ConfigToModel returns a pointer to a Config represented in the API's model
 func ConfigToModel(config Config) *models.Config {
 
 	return &models.Config{
@@ -293,6 +305,7 @@ func ConfigToModel(config Config) *models.Config {
 	}
 }
 
+// SingleUIToModel returns a pointer to a UI represented in the API's model
 func SingleUIToModel(u *UI) *models.UserInterface {
 	if u == nil {
 		return &models.UserInterface{}
@@ -307,6 +320,7 @@ func SingleUIToModel(u *UI) *models.UserInterface {
 	}
 }
 
+// UIsToModel returns an array of pointers to UI represented in the API's model
 func UIsToModel(uis []*UI) []*models.UserInterface {
 	muis := []*models.UserInterface{}
 
@@ -318,6 +332,7 @@ func UIsToModel(uis []*UI) []*models.UserInterface {
 
 }
 
+// NewActivity returns a pointer to an activity that is populated with a name and expiry datetime.
 func NewActivity(name string, expires int64) *Activity {
 	return &Activity{
 		&sync.RWMutex{},
@@ -329,6 +344,7 @@ func NewActivity(name string, expires int64) *Activity {
 	}
 }
 
+// WithID adds an ID to the Activity
 func (a *Activity) WithID(id string) *Activity {
 	a.Lock()
 	defer a.Unlock()
@@ -336,18 +352,21 @@ func (a *Activity) WithID(id string) *Activity {
 	return a
 }
 
+// SetID sets the ID of the Activity
 func (a *Activity) SetID(id string) {
 	a.Lock()
 	defer a.Unlock()
 	a.ID = id
 }
 
+// GetID returns the ID string of the Activity
 func (a *Activity) GetID() string {
 	a.Lock()
 	defer a.Unlock()
 	return a.ID
 }
 
+// AddID sets the ID of the activity to a randomly generated UUID
 func (a *Activity) AddID() string {
 	a.Lock()
 	defer a.Unlock()
@@ -356,6 +375,7 @@ func (a *Activity) AddID() string {
 	return id
 }
 
+// AddStream adds a stream to the Activity
 func (a *Activity) AddStream(key string, stream *Stream) {
 	a.Lock()
 	defer a.Unlock()
@@ -365,11 +385,13 @@ func (a *Activity) AddStream(key string, stream *Stream) {
 	a.Streams = s
 }
 
+// AddUI adds a UI to the activity
 func (a *Activity) AddUI(ui *UI) {
 
 	a.UI = append(a.UI, ui)
 }
 
+// NewStream returns a pointer to a new empty Stream
 func NewStream(url string) *Stream {
 	s := &Stream{
 		&sync.RWMutex{},
@@ -382,6 +404,7 @@ func NewStream(url string) *Stream {
 	return s
 }
 
+// WithPermission adds a permission to the Stream
 func (s *Stream) WithPermission(p permission.Token) *Stream {
 	s.Lock()
 	defer s.Unlock()
@@ -389,29 +412,34 @@ func (s *Stream) WithPermission(p permission.Token) *Stream {
 	return s
 }
 
+// GetPermission returns the permission (token) of the Stream
 func (s *Stream) GetPermission() permission.Token {
 	s.Lock()
 	defer s.Unlock()
 	return s.Permission
 }
 
+// SetPermission sets the permission (token) for the Stream
 func (s *Stream) SetPermission(p permission.Token) {
 	s.Lock()
 	defer s.Unlock()
 	s.Permission = p
 }
 
+// NewUI returns a pointer to a UI with the given URL
 func NewUI(url string) *UI {
 	return &UI{
 		URL: url,
 	}
 }
 
+// WithStreamsRequired adds required streams to the UI
 func (u *UI) WithStreamsRequired(names []string) *UI {
 	u.StreamsRequired = names
 	return u
 }
 
+// WithDescription adds a description to the UI
 func (u *UI) WithDescription(d Description) *UI {
 	u.Description = d
 	return u
