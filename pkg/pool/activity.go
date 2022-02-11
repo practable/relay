@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/timdrysdale/relay/pkg/booking/models"
 	"github.com/timdrysdale/relay/pkg/permission"

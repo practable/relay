@@ -3,7 +3,7 @@ package booking
 import (
 	"fmt"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"

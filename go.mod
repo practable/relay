@@ -3,7 +3,6 @@ module github.com/timdrysdale/relay
 go 1.14
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclesh/welford v0.0.0-20150116075914-eec62615b1f0
 	github.com/go-openapi/errors v0.20.2
 	github.com/go-openapi/loads v0.21.1
@@ -13,6 +12,7 @@ require (
 	github.com/go-openapi/swag v0.21.1
 	github.com/go-openapi/validate v0.20.3
 	github.com/gobwas/ws v1.1.0
+	github.com/golang-jwt/jwt/v4 v4.3.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2

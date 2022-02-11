@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
