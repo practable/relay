@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
-	_ "net/http/pprof"
 	"time"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
-func (app *App) startHttp() {
+func (app *App) startHTTP() {
 	defer app.WaitGroup.Done()
 	log.WithField("opts", app.Opts).Debug("http.Server looking at opts....")
 	log.WithField("port", app.Opts.Port).Debug("http.Server listening port set")
 
-	srv := app.startHttpServer(app.Opts.Port)
+	srv := app.startHTTPServer(app.Opts.Port)
 
 	log.Debug("Started http.Server")
 
@@ -28,7 +27,7 @@ func (app *App) startHttp() {
 		log.WithField("error", err).Fatal("Failure/timeout shutting down the http.Server gracefully")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(app.Opts.HttpWaitMs)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(app.Opts.HTTPWaitMs)*time.Millisecond)
 	defer cancel()
 
 	srv.SetKeepAlivesEnabled(false)
@@ -38,9 +37,9 @@ func (app *App) startHttp() {
 
 	log.Debug("Stopped http.Server")
 
-} // startHttp
+} // startHTTP
 
-func (app *App) startHttpServer(port int) *http.Server {
+func (app *App) startHTTPServer(port int) *http.Server {
 
 	addr := fmt.Sprintf(":%d", port)
 	srv := &http.Server{Addr: addr}
@@ -58,7 +57,7 @@ func (app *App) startHttpServer(port int) *http.Server {
 	router.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
 	router.Handle("/debug/pprof/block", pprof.Handler("block"))
 
-	router.HandleFunc("/api", app.handleApi)
+	router.HandleFunc("/api", app.handleAPI)
 	router.HandleFunc("/api/destinations", app.handleDestinationAdd).Methods("PUT", "POST", "UPDATE")
 	router.HandleFunc(`/api/destinations/{id:[a-zA-Z0-9\-\/]+}`, app.handleDestinationDelete).Methods("DELETE")
 	router.HandleFunc("/api/destinations/all", app.handleDestinationShowAll).Methods("GET")

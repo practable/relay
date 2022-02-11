@@ -31,6 +31,7 @@ var rootCmd = &cobra.Command{
 	Long:  `VW receives MPEG TS streams via http, then forwards combinations of those streams to websocket servers`,
 }
 
+// Execute runs root command
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

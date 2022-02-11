@@ -130,8 +130,8 @@ func TestInternalAPIDestinationAdd(t *testing.T) {
 	if got.Destination != "wss://video.practable.io:443/large" {
 		t.Error("Wrong destination")
 	}
-	if got.Id != "00" {
-		t.Error("Wrong Id")
+	if got.ID != "00" {
+		t.Error("Wrong ID")
 	}
 }
 
@@ -158,7 +158,7 @@ func TestInternalAPIDestinationDelete(t *testing.T) {
 	got := <-a.Websocket.Delete
 
 	if got != "00" {
-		t.Error("Wrong Id")
+		t.Error("Wrong ID")
 	}
 }
 
@@ -169,7 +169,7 @@ func TestInternalAPIDestinationDeleteAPIRule(t *testing.T) {
 	cmd := []byte(`{"verb":"delete","what":"destination","which":"apiRule"}`)
 
 	// note prefix / on stream is removed
-	expected := errNoDeleteApiRule //will be put into error message by internalAPI
+	expected := errNoDeleteAPIRule //will be put into error message by internalAPI
 
 	_, err := a.handleAdminMessage(cmd)
 	if err == nil {
@@ -204,12 +204,12 @@ func TestInternalAPIDestinationDeleteAll(t *testing.T) {
 	got := <-a.Websocket.Delete
 
 	if got != "deleteAll" {
-		t.Error("Wrong Id")
+		t.Error("Wrong ID")
 	}
 
 	added := <-a.Websocket.Add
 
-	if added.Id != "apiRule" {
+	if added.ID != "apiRule" {
 		t.Error("Did not reinstate apiRule")
 	}
 	if added.Destination != a.Opts.API {
@@ -221,7 +221,7 @@ func TestInternalAPIDestinationShow(t *testing.T) {
 
 	a := testApp(false)
 	a.Websocket.Rules = make(map[string]rwc.Rule)
-	a.Websocket.Rules["00"] = rwc.Rule{Destination: "wss://video.practable.io:443/large", Stream: "stream/large", Id: "00"}
+	a.Websocket.Rules["00"] = rwc.Rule{Destination: "wss://video.practable.io:443/large", Stream: "stream/large", ID: "00"}
 
 	cmd := []byte(`{"verb":"list","what":"destination","which":"00"}`)
 	expected := []byte(`{"id":"00","stream":"stream/large","destination":"wss://video.practable.io:443/large","token":"","file":""}`)
@@ -243,10 +243,10 @@ func TestInternalAPIDestinationShowAll(t *testing.T) {
 	a.Websocket.Rules = make(map[string]rwc.Rule)
 	a.Websocket.Rules["stream/large"] = rwc.Rule{Stream: "stream/large",
 		Destination: "wss://somewhere",
-		Id:          "00"}
+		ID:          "00"}
 	a.Websocket.Rules["stream/medium"] = rwc.Rule{Stream: "stream/medium",
 		Destination: "wss://overthere",
-		Id:          "01"}
+		ID:          "01"}
 
 	cmd := []byte(`{"verb":"list","what":"destination","which":"all"}`)
 	expected := []byte(`{"stream/large":{"id":"00","stream":"stream/large","destination":"wss://somewhere","token":"","file":""},"stream/medium":{"id":"01","stream":"stream/medium","destination":"wss://overthere","token":"","file":""}}`)
