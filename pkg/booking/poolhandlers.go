@@ -175,7 +175,7 @@ func getAllPools(ps *pool.Store) func(params pools.GetAllPoolsParams, principal 
 			exact = *params.Exact
 		}
 
-		pl := []*pool.Pool{}
+		var pl []*pool.Pool
 
 		if name == "" {
 
@@ -184,9 +184,15 @@ func getAllPools(ps *pool.Store) func(params pools.GetAllPoolsParams, principal 
 		} else {
 			if exact {
 				pl, err = ps.GetPoolsByName(name)
+				if err != nil {
+					return pools.NewGetAllPoolsNotFound()
+				}
 				log.Tracef("pools named exactly %s requested, found  %d", name, len(pl))
 			} else {
 				pl, err = ps.GetPoolsByNamePrefix(name)
+				if err != nil {
+					return pools.NewGetAllPoolsNotFound()
+				}
 				log.Tracef("pools prefixed with %s requested, found  %d", name, len(pl))
 			}
 		}
