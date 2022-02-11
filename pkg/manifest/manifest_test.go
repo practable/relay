@@ -38,18 +38,20 @@ var auth, userauth runtime.ClientAuthInfoWriter
 var debug bool
 var l *bookingstore.Limit
 var ps *pool.Store
-var bookingDuration, mocktime, startime int64
 var useLocal bool
 var bearer, secret string
 var bc *apiclient.Bc
 var timeout time.Duration
 var userBearer string
+var updateExample bool
 
 func init() {
 
 	useLocal = true
 
 	debug = false
+
+	updateExample = false // use this if there is a breaking change, to update "expected" result (needs checking by hand)
 
 	if debug {
 		os.Setenv("DEBUG", "true") //for apiclient
@@ -167,6 +169,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestExample(t *testing.T) {
+
+	if updateExample {
+		produceExample(t)
+	}
+
 	exp := int64(1613256113)
 	m0 := Example(exp)
 
@@ -185,10 +192,10 @@ func TestExample(t *testing.T) {
 
 }
 
-// TestProduceExample is only used to generate the example
+// produceExample is only used to generate the example
 // after a breaking update, and should be checked by hand
 // This "fails" if enabled
-func testProduceExample(t *testing.T) {
+func produceExample(t *testing.T) {
 	// This fails if enabled"
 
 	exp := int64(1613256113)
@@ -203,7 +210,7 @@ func testProduceExample(t *testing.T) {
 	assert.NoError(t, err)
 
 	if err == nil {
-		fmt.Println("Examples file successfully written to testdata/example.yaml")
+		fmt.Println("Examples file successfully written to testdata/example.yaml\n manually check example correct before using as expected result")
 	}
 
 	// ensure we notice if enabled accidentally
