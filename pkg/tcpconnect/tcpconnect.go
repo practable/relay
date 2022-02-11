@@ -26,6 +26,7 @@ type mutexBuffer struct {
 	b   bytes.Buffer
 }
 
+// TCPconnect represents a TCP connection
 type TCPconnect struct {
 	// In channel carries messages FROM TCP conn
 	In chan []byte
@@ -46,6 +47,7 @@ type TCPconnect struct {
 	Conn *net.Conn
 }
 
+// New returns a pointer to new TCPconnect struct
 func New() *TCPconnect {
 	return &TCPconnect{
 		In:            make(chan []byte),
@@ -55,15 +57,20 @@ func New() *TCPconnect {
 	}
 }
 
+// WithMaxFrameBytes sets the maximum bytes that can be sent per frame
+// this impacts memory usage (larger max frame sizes require more memory for the buffer)
 func (c *TCPconnect) WithMaxFrameBytes(max int) *TCPconnect {
 	c.MaxFrameBytes = max
 	return c
 }
+
+// WithConn sets which net.Conn is used
 func (c *TCPconnect) WithConn(conn *net.Conn) *TCPconnect {
 	c.Conn = conn
 	return c
 }
 
+// Dial starts a connection to the given URI
 func (c *TCPconnect) Dial(ctx context.Context, uri string) {
 
 	id := "tcpconnect.Dial(" + c.ID + ")"
@@ -139,6 +146,7 @@ func (c *TCPconnect) Listen(ctx context.Context, uri string, handler func(contex
 
 }
 
+// SpeakThenEchoHandler is used for testing (it says something then echoes)
 func SpeakThenEchoHandler(ctx context.Context, c *TCPconnect) {
 
 	id := "tcpconnect.SpeakThenEchoHandler(" + c.ID + ")"
@@ -169,6 +177,7 @@ func SpeakThenEchoHandler(ctx context.Context, c *TCPconnect) {
 
 }
 
+// EchoHandler is for testing (it echoes messages)
 func EchoHandler(ctx context.Context, c *TCPconnect) {
 
 	id := "tcpconnect.EchoHandler(" + c.ID + ")"
@@ -195,6 +204,7 @@ func EchoHandler(ctx context.Context, c *TCPconnect) {
 
 }
 
+// Echo echoes messages (used for testing)
 func (c *TCPconnect) Echo(ctx context.Context, uri string) {
 
 	id := "tcpconnect.Echo(" + c.ID + ")"
@@ -258,6 +268,7 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) {
 
 }
 
+// HandleConn handles connections, including reading and writing
 func (c *TCPconnect) HandleConn(ctx context.Context, conn net.Conn) {
 
 	id := "tcpconnect.handleConn(" + c.ID + ")"
