@@ -4,11 +4,13 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/models"
 )
 
+// GetPool returns a pointer to the referenced pool
 func (m *Manifest) GetPool(pref Ref) *models.Pool {
 
 	return m.Pools[pref].ToModel()
 }
 
+// ToModel returns a pointer of type models.Pool type, representing the referenced pool
 func (p *Pool) ToModel() *models.Pool {
 
 	return &models.Pool{
@@ -40,6 +42,7 @@ func (m *Manifest) GetActivitiesInPool(pref Ref) []*models.Activity {
 	return mas
 }
 
+// GetActivityModel returns a pointer of type models.Activity type representing the referenced activity
 func (m *Manifest) GetActivityModel(aref Ref) *models.Activity {
 
 	a := m.Activities[aref]
@@ -57,10 +60,12 @@ func (m *Manifest) GetActivityModel(aref Ref) *models.Activity {
 	}
 }
 
+// GetConfigModel returns a pointer of type model.Config representing the configuration
 func GetConfigModel(c Config) *models.Config {
 	return &models.Config{URL: &c.URL}
 }
 
+// GetStreamsModel returns an array of pointers to models.Streams representing the stream map
 func GetStreamsModel(streams map[string]*Stream) []*models.Stream {
 
 	mss := []*models.Stream{}
@@ -71,6 +76,7 @@ func GetStreamsModel(streams map[string]*Stream) []*models.Stream {
 	return mss
 }
 
+// ToModel returns a pointer of type models.Stream representing the stream
 func (s *Stream) ToModel() *models.Stream {
 	if s == nil {
 		return &models.Stream{}
@@ -88,6 +94,7 @@ func (s *Stream) ToModel() *models.Stream {
 	}
 }
 
+// GetUISetModel returns an array of pointers type models.UserInterface representing the referenced UISet
 func (m *Manifest) GetUISetModel(usref Ref) []*models.UserInterface {
 
 	uirefs := m.UISets[usref]
@@ -101,6 +108,7 @@ func (m *Manifest) GetUISetModel(usref Ref) []*models.UserInterface {
 	return uis
 }
 
+// GetUIModel returns a pointer to the referenced UI as type models.UserInterface
 func (m *Manifest) GetUIModel(uiref Ref) *models.UserInterface {
 
 	ui := m.UIs[uiref]
@@ -113,6 +121,7 @@ func (m *Manifest) GetUIModel(uiref Ref) *models.UserInterface {
 
 }
 
+// ToModel returns a pointer of type models.Description representing the description
 func (d *Description) ToModel() *models.Description {
 
 	if d == nil {

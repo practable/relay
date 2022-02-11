@@ -1,5 +1,6 @@
 package manifest
 
+// Example returns a pointer to an example manifest (used for testing)
 func Example(exp int64) *Manifest {
 
 	M := &Manifest{}
