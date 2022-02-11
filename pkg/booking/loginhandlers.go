@@ -24,7 +24,7 @@ func getCurrentBookings(ps *pool.Store, l *bookingstore.Limit) func(login.GetCur
 			return login.NewGetCurrentBookingsUnauthorized().WithPayload("no subject in token (userID)")
 		}
 
-		actmap := make(map[string]*models.Activity)
+		var actmap map[string]*models.Activity
 
 		actmap, _ = l.GetUserActivities(claims.Subject)
 

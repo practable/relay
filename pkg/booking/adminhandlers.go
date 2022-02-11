@@ -156,7 +156,7 @@ func setLock(ps *pool.Store, l *bookingstore.Limit) func(admin.SetLockParams, in
 			return admin.NewSetLockUnauthorized().WithPayload(err.Error())
 		}
 
-		if params.Lock == true {
+		if params.Lock {
 			l.LockBookings()
 		} else {
 			l.UnlockBookings()
