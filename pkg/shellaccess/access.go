@@ -232,6 +232,7 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 	}
 }
 
+// Token returns a signed token
 func Token(audience, ct, topic, secret string, scopes []string, iat, nbf, exp int64) (string, error) {
 
 	var claims permission.Token
