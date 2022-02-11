@@ -18,8 +18,8 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/reconws"
 	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/timdrysdale/relay/pkg/reconws"
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
