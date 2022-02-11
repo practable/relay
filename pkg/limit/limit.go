@@ -12,8 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO - add periodic cleaning to avoid memory leak from single-use users
-
+// Limit represents a limit store
 type Limit struct {
 	*sync.Mutex
 
@@ -45,6 +44,7 @@ func New() *Limit {
 	return l
 }
 
+// WithFlush adds a regular flushing action that occurs every interval
 func (l *Limit) WithFlush(ctx context.Context, interval time.Duration) *Limit {
 
 	log.Trace("limit.WithFlush(): setting up")
@@ -71,6 +71,7 @@ func (l *Limit) WithFlush(ctx context.Context, interval time.Duration) *Limit {
 	return l
 }
 
+// WithProvisionalPeriod specifies the provisional period for provisional bookings
 func (l *Limit) WithProvisionalPeriod(interval time.Duration) *Limit {
 
 	log.Tracef("limit.WithProvisionalPeriod(): set interval to %v", interval)
@@ -83,6 +84,7 @@ func (l *Limit) WithProvisionalPeriod(interval time.Duration) *Limit {
 	return l
 }
 
+// WithMax sets the maximum number of bookings per user
 func (l *Limit) WithMax(max int) *Limit {
 	l.Lock()
 	defer l.Unlock()
@@ -90,6 +92,7 @@ func (l *Limit) WithMax(max int) *Limit {
 	return l
 }
 
+// WithNow sets the function used to obtain the current time (required for testing)
 func (l *Limit) WithNow(now func() int64) *Limit {
 	l.Lock()
 	defer l.Unlock()
@@ -97,6 +100,7 @@ func (l *Limit) WithNow(now func() int64) *Limit {
 	return l
 }
 
+// GetSessions returns the current sessions for a user
 func (l *Limit) GetSessions(user string) int {
 
 	sessions, ok := l.sessions[user]
@@ -108,7 +112,7 @@ func (l *Limit) GetSessions(user string) int {
 	return len(sessions)
 }
 
-// Flushall removes all stale entries
+// FlushAll removes all stale entries
 func (l *Limit) FlushAll() {
 	l.Lock()
 	defer l.Unlock()
@@ -140,6 +144,7 @@ func (l *Limit) flush(stale map[string]int64) map[string]int64 {
 	return fresh //stale is a reference so _should_ update
 }
 
+// Confirm confirms a provisional booking
 func Confirm(confirm chan<- struct{}) func() {
 	return func() {
 		close(confirm)
@@ -220,6 +225,7 @@ func (l *Limit) ProvisionalRequest(who string, exp int64) (func(), error) {
 	// granted, only that this one was.
 }
 
+// Request makes a provisional request, and immediately confirms it. Used for testing.
 func (l *Limit) Request(who string, exp int64) bool {
 
 	confirm, err := l.ProvisionalRequest(who, exp)
