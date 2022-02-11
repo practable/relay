@@ -1,9 +1,5 @@
-// Package shellhost manages connections between
-//  a shellrelay and a host machine accepting login shell
-// connections, such as sshd. Such protocols are server speak first
-// so the relay alerts shellhost when a new client has connected
-// to the relay. Shellhost then makes a new dediated connection
-// to the login shell port, and the relay.
+// Package shellclient provides a client which listens on a local tcp port and for each incoming
+// connection makes a unique connection to a remote shellrelay
 package shellclient
 
 import (
@@ -18,8 +14,8 @@ import (
 	"github.com/timdrysdale/relay/pkg/tcpconnect"
 )
 
-// Shellclient listens on a local tcp port and for each incoming
-// connection makes a unique connection to a remote shellrelay
+// Client runs a listener for local ssh connections on a local tcp port
+// and for each incoming connection makes a unique connection to a remote shellrelay
 // Run multiple instances to listen on multiple ports
 func Client(ctx context.Context, listen int, remote, token string) {
 
