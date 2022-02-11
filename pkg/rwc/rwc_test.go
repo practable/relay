@@ -93,7 +93,7 @@ func TestAddRuleAuth(t *testing.T) {
 	stream := "stream/large"
 	destination := "ws" + strings.TrimPrefix(s.URL, "http") //s.URL //"ws://localhost:8081"
 	token := "some.test.token"
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination,
 		Token:       token,
@@ -133,7 +133,7 @@ func TestAddRule(t *testing.T) {
 	stream := "stream/large"
 	destination := "ws" + strings.TrimPrefix(s.URL, "http") //s.URL //"ws://localhost:8081"
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination}
 
@@ -175,7 +175,7 @@ func TestCannotAddDeleteAllRule(t *testing.T) {
 	stream := "stream/large"
 	destination := "ws" + strings.TrimPrefix(s.URL, "http") //s.URL //"ws://localhost:8081"
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination}
 
@@ -219,7 +219,7 @@ func TestAddRules(t *testing.T) {
 	stream := "stream/large"
 	destination := "ws" + strings.TrimPrefix(s1.URL, "http") //s1.URL //"ws://localhost:8081"
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination}
 
@@ -231,7 +231,7 @@ func TestAddRules(t *testing.T) {
 	stream2 := "stream/medium"
 	destination2 := "ws" + strings.TrimPrefix(s2.URL, "http") //s2.URL //"ws://localhost:8082"
 
-	r2 := &Rule{Id: id2,
+	r2 := &Rule{ID: id2,
 		Stream:      stream2,
 		Destination: destination2}
 
@@ -301,7 +301,7 @@ func TestAddDupeRule(t *testing.T) {
 	stream := "stream/large"
 	destination := "ws" + strings.TrimPrefix(s1.URL, "http") //s.URL //"ws://localhost:8082"
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination}
 
@@ -313,7 +313,7 @@ func TestAddDupeRule(t *testing.T) {
 	stream = "stream/medium"
 	destination = "ws" + strings.TrimPrefix(s2.URL, "http") //://localhost:8082"
 
-	r = &Rule{Id: id,
+	r = &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination}
 
@@ -365,7 +365,7 @@ func TestDeleteRule(t *testing.T) {
 	stream := "stream/large"
 	destination := "ws" + strings.TrimPrefix(s1.URL, "http") //s1.URL //"ws://localhost:8081"
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination}
 
@@ -377,7 +377,7 @@ func TestDeleteRule(t *testing.T) {
 	stream2 := "stream/medium"
 	destination2 := "ws" + strings.TrimPrefix(s2.URL, "http") //s2.URL //"ws://localhost:8082"
 
-	r2 := &Rule{Id: id2,
+	r2 := &Rule{ID: id2,
 		Stream:      stream2,
 		Destination: destination2}
 
@@ -459,7 +459,7 @@ func TestDeleteAllRule(t *testing.T) {
 	stream := "stream/large"
 	destination := "ws" + strings.TrimPrefix(s1.URL, "http") //s1.URL //"ws://localhost:8081"
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination}
 
@@ -471,7 +471,7 @@ func TestDeleteAllRule(t *testing.T) {
 	stream2 := "stream/medium"
 	destination2 := "ws" + strings.TrimPrefix(s2.URL, "http") //s2.URL //"ws://localhost:8082"
 
-	r2 := &Rule{Id: id2,
+	r2 := &Rule{ID: id2,
 		Stream:      stream2,
 		Destination: destination2}
 
@@ -585,7 +585,7 @@ func TestConnectAuth(t *testing.T) {
 	stream := "medium"
 	token := bearer
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination,
 		Token:       token,
@@ -650,7 +650,7 @@ func TestWriteToFile(t *testing.T) {
 	destination := "ws" + strings.TrimPrefix(s.URL, "http")
 	file := "test.bin"
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination,
 		File:        file}
@@ -737,7 +737,7 @@ func TestSendMessageTopic(t *testing.T) {
 	stream := "medium"
 	destination := "ws" + strings.TrimPrefix(s.URL, "http")
 
-	r := &Rule{Id: id,
+	r := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination}
 
@@ -834,7 +834,7 @@ func TestSendMessageStream(t *testing.T) {
 	stream := "stream/medium"
 	destination0 := "ws" + strings.TrimPrefix(s0.URL, "http")
 
-	r0 := &Rule{Id: id,
+	r0 := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination0}
 
@@ -959,11 +959,11 @@ func TestSendMessageToChangingDestination(t *testing.T) {
 	feeds := []string{"video0", "audio"}
 	streamRule := &agg.Rule{Stream: stream, Feeds: feeds}
 
-	r0 := &Rule{Id: id,
+	r0 := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination0}
 
-	r1 := &Rule{Id: id,
+	r1 := &Rule{ID: id,
 		Stream:      stream,
 		Destination: destination1}
 
