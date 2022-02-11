@@ -417,7 +417,7 @@ func deny(w http.ResponseWriter, r *http.Request, c chan int) {
 
 func connectAfterTrying(w http.ResponseWriter, r *http.Request, n *int, connectAt int, c chan int) {
 
-	defer func() { *n += 1 }()
+	defer func() { *n++ }()
 
 	c <- *n
 
@@ -449,8 +449,6 @@ func displayLog() {
 func okString(ok bool) string {
 	if ok {
 		return "  ok"
-	} else {
-		return "  FAILED"
 	}
-
+	return "  FAILED"
 }
