@@ -8,8 +8,9 @@ import (
 	"time"
 )
 
-func NewPoolStore() *PoolStore {
-	return &PoolStore{
+// NewStore creates a new Store with default settings
+func NewStore() *Store {
+	return &Store{
 		&sync.RWMutex{},
 		make(map[string]*Group),
 		make(map[string]*Pool),
@@ -19,25 +20,26 @@ func NewPoolStore() *PoolStore {
 	}
 }
 
-func (p *PoolStore) Reset() {
+// Reset removes all pools and groups but does not change min/max session durations
+func (p *Store) Reset() {
 
 	p.Groups = make(map[string]*Group)
 	p.Pools = make(map[string]*Pool)
 }
 
 // PostImportEssential sets up mutexes and Now() functions
-func (p *PoolStore) PostImportEssential() {
+func (p *Store) PostImportEssential() {
 	// we're creating mutexes for first time, so we
 	// don't need to take the lock just now.
 	// This should be done before making
-	// this the "live" PoolStore or else
+	// this the "live" Store or else
 	// other conurrent handlers will try to take
 	// locks with pointers to mutexes that don't exist...
 	// TODO ... consider stopping other handlers during import.
 	// Could set a flag for validateHeader ...
 	// risk locking ourselves out though... TBC ....
 
-	// PoolStore
+	// Store
 	p.RWMutex = &sync.RWMutex{}
 	p.Now = func() int64 { return time.Now().Unix() }
 
@@ -61,7 +63,8 @@ func (p *PoolStore) PostImportEssential() {
 	}
 }
 
-func CopyStore(from, to *PoolStore) {
+// CopyStore copys pools, groups, secret, booking token duration and now function from one Store to another
+func CopyStore(from, to *Store) {
 	to.RWMutex = from.RWMutex
 	to.Groups = from.Groups
 	to.Pools = from.Pools
@@ -70,13 +73,17 @@ func CopyStore(from, to *PoolStore) {
 	to.Now = from.Now
 }
 
-func (p *PoolStore) ExportAll() ([]byte, error) {
+// ExportAll marshalls the Store to JSON and returns the []byte representation
+// note that elements such as mutexes cannot be serialised and are omitted
+func (p *Store) ExportAll() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func ImportAll(b []byte) (*PoolStore, error) {
+// ImportAll imports a Store from a serialised JSON representation in []byte format
+// It creates all necessary mutexes so the store can operate properly after the import
+func ImportAll(b []byte) (*Store, error) {
 
-	new := &PoolStore{}
+	new := &Store{}
 
 	err := json.Unmarshal(b, new)
 
@@ -93,7 +100,7 @@ func ImportAll(b []byte) (*PoolStore, error) {
 // PostImportSetNow applies a custom Now() func to the poolstore
 // and all pools - useful for mocking time in tests which
 // involve import/export
-func (p *PoolStore) PostImportSetNow(now func() int64) {
+func (p *Store) PostImportSetNow(now func() int64) {
 	p.Lock()
 	defer p.Unlock()
 	p.Now = now
@@ -104,21 +111,24 @@ func (p *PoolStore) PostImportSetNow(now func() int64) {
 	}
 }
 
-func (p *PoolStore) WithSecret(secret string) *PoolStore {
+// WithSecret sets the secret used by the booking store
+func (p *Store) WithSecret(secret string) *Store {
 	p.Lock()
 	defer p.Unlock()
 	p.Secret = []byte(secret)
 	return p
 }
 
-func (p *PoolStore) WithNow(now func() int64) *PoolStore {
+// WithNow sets the function that returns the datetime in seconds at the current time (useful for testing)
+func (p *Store) WithNow(now func() int64) *Store {
 	p.Lock()
 	defer p.Unlock()
 	p.Now = now
 	return p
 }
 
-func (p *PoolStore) WithBookingTokenDuration(duration int64) *PoolStore {
+// WithBookingTokenDuration sets the duration for which booking tokens are valid
+func (p *Store) WithBookingTokenDuration(duration int64) *Store {
 	p.Lock()
 	defer p.Unlock()
 	p.BookingTokenDuration = duration
@@ -127,17 +137,19 @@ func (p *PoolStore) WithBookingTokenDuration(duration int64) *PoolStore {
 
 // GetTime allows flexibility in choosing clock source
 // default is internal clock of the server
-func (p *PoolStore) GetTime() int64 {
+func (p *Store) GetTime() int64 {
 	return p.Now()
 }
 
-func (p *PoolStore) GetSecret() []byte {
+// GetSecret returns the secret used to check tokens
+func (p *Store) GetSecret() []byte {
 	p.RLock()
 	defer p.RUnlock()
 	return p.Secret
 }
 
-func (p *PoolStore) GetGroupByID(id string) (*Group, error) {
+//GetGroupByID returns a pointer to the Group with the given ID, or an error
+func (p *Store) GetGroupByID(id string) (*Group, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -148,7 +160,8 @@ func (p *PoolStore) GetGroupByID(id string) (*Group, error) {
 	return group, nil
 }
 
-func (p *PoolStore) GetGroupsByNamePrefix(prefix string) ([]*Group, error) {
+// GetGroupsByNamePrefix returns groups with a given string at the start of their name, or an error
+func (p *Store) GetGroupsByNamePrefix(prefix string) ([]*Group, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -167,7 +180,8 @@ func (p *PoolStore) GetGroupsByNamePrefix(prefix string) ([]*Group, error) {
 	return groups, nil
 }
 
-func (p *PoolStore) GetGroupsByName(name string) ([]*Group, error) {
+// GetGroupsByName returns all groups with the given name
+func (p *Store) GetGroupsByName(name string) ([]*Group, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -186,7 +200,8 @@ func (p *PoolStore) GetGroupsByName(name string) ([]*Group, error) {
 	return groups, nil
 }
 
-func (p *PoolStore) GetPoolByID(id string) (*Pool, error) {
+// GetPoolByID returns a pointer to a Pool with the given ID, or an error
+func (p *Store) GetPoolByID(id string) (*Pool, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -197,7 +212,8 @@ func (p *PoolStore) GetPoolByID(id string) (*Pool, error) {
 	return pool, nil
 }
 
-func (p *PoolStore) GetPoolsByNamePrefix(prefix string) ([]*Pool, error) {
+// GetPoolsByNamePrefix returns all pools with names starting with a given string
+func (p *Store) GetPoolsByNamePrefix(prefix string) ([]*Pool, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -216,7 +232,8 @@ func (p *PoolStore) GetPoolsByNamePrefix(prefix string) ([]*Pool, error) {
 	return pools, nil
 }
 
-func (p *PoolStore) GetPoolsByName(name string) ([]*Pool, error) {
+// GetPoolsByName returns all pools with a given name
+func (p *Store) GetPoolsByName(name string) ([]*Pool, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -235,7 +252,8 @@ func (p *PoolStore) GetPoolsByName(name string) ([]*Pool, error) {
 	return pools, nil
 }
 
-func (p *PoolStore) GetAllPools() []*Pool {
+// GetAllPools returns all pools in the Store
+func (p *Store) GetAllPools() []*Pool {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -247,31 +265,35 @@ func (p *PoolStore) GetAllPools() []*Pool {
 	return pools
 }
 
-func (p *PoolStore) GetAllPoolCount() int {
+// GetAllPoolCount returns a count of how many pools are in the store
+func (p *Store) GetAllPoolCount() int {
 	p.RLock()
 	defer p.RUnlock()
 	return len(p.Pools)
 }
 
-func (p *PoolStore) GetAllGroupsCount() int {
+// GetAllGroupsCount returns a count of how many groups there are in the store
+func (p *Store) GetAllGroupsCount() int {
 	p.RLock()
 	defer p.RUnlock()
 	return len(p.Groups)
 }
 
-func (p *PoolStore) GetAllPoolIDs() []string {
+// GetAllPoolIDs returns an array containing all the IDs of pools in the store
+func (p *Store) GetAllPoolIDs() []string {
 	p.RLock()
 	defer p.RUnlock()
 
 	ids := []string{}
 
-	for k, _ := range p.Pools {
+	for k := range p.Pools {
 		ids = append(ids, k)
 	}
 	return ids
 }
 
-func (p *PoolStore) DeletePool(pool *Pool) {
+// DeletePool removes a pool from the store
+func (p *Store) DeletePool(pool *Pool) {
 	p.Lock()
 	defer p.Unlock()
 	pools := p.Pools
@@ -279,7 +301,8 @@ func (p *PoolStore) DeletePool(pool *Pool) {
 	p.Pools = pools
 }
 
-func (p *PoolStore) DeleteGroup(group *Group) {
+// DeleteGroup removes a group from the store
+func (p *Store) DeleteGroup(group *Group) {
 	p.Lock()
 	defer p.Unlock()
 	groups := p.Groups
@@ -287,7 +310,8 @@ func (p *PoolStore) DeleteGroup(group *Group) {
 	p.Groups = groups
 }
 
-func (p *PoolStore) AddPool(pool *Pool) {
+// AddPool adds a pool to the Store  (but does not associate it with a group)
+func (p *Store) AddPool(pool *Pool) {
 	p.Lock()
 	defer p.Unlock()
 	pools := p.Pools
@@ -295,7 +319,8 @@ func (p *PoolStore) AddPool(pool *Pool) {
 	p.Pools = pools
 }
 
-func (p *PoolStore) AddGroup(group *Group) {
+// AddGroup adds a group to the Store
+func (p *Store) AddGroup(group *Group) {
 	p.Lock()
 	defer p.Unlock()
 	groups := p.Groups
@@ -303,13 +328,16 @@ func (p *PoolStore) AddGroup(group *Group) {
 	p.Groups = groups
 }
 
-func (p *PoolStore) SetSecret(secret string) {
+// SetSecret sets the secret used to check token validity
+// and sign tokens for streaming
+func (p *Store) SetSecret(secret string) {
 	p.Lock()
 	defer p.Unlock()
 	p.Secret = []byte(secret)
 }
 
-func (p *PoolStore) GetAvailableActivitiesCount() int {
+// GetAvailableActivitiesCount returns a count of how many activities are available
+func (p *Store) GetAvailableActivitiesCount() int {
 	p.Lock()
 	defer p.Unlock()
 
