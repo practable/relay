@@ -37,7 +37,7 @@ import (
 var auth, userauth runtime.ClientAuthInfoWriter
 var debug bool
 var l *bookingstore.Limit
-var ps *pool.PoolStore
+var ps *pool.Store
 var bookingDuration, mocktime, startime int64
 var useLocal bool
 var bearer, secret string
@@ -85,7 +85,7 @@ func TestMain(m *testing.M) {
 
 		secret = "somesecret"
 
-		ps = pool.NewPoolStore().
+		ps = pool.NewStore().
 			WithSecret(secret).
 			WithBookingTokenDuration(int64(180))
 
