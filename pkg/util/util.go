@@ -5,6 +5,7 @@ import (
 	"sort"
 )
 
+// Pretty returns a pretty printed version of an interface{} via Marshalling into JSON
 func Pretty(t interface{}) string {
 
 	json, err := json.MarshalIndent(t, "", "\t")
@@ -14,6 +15,8 @@ func Pretty(t interface{}) string {
 
 	return string(json)
 }
+
+// Compact returns a compact printed version of an interface{} via marshalling into JSON
 func Compact(t interface{}) string {
 
 	json, err := json.Marshal(t)
@@ -42,11 +45,13 @@ func unorderedEqual(first, second []string) bool {
 	return true
 }
 
-// run it twice and it becomes correct...
+// DoubleUnorderedEqual compares two arrays of strings to see they have the same member
+// it runs unorderedEqual twice to get a correct result
 func DoubleUnorderedEqual(a, b []string) bool {
 	return unorderedEqual(a, b) && unorderedEqual(b, a)
 }
 
+// SortCompare sorts and then compares arrays of strings
 // putting Husain's code into a function...
 // BTW this is 10x faster for a few dozen entries in each list
 func SortCompare(a, b []string) bool {
