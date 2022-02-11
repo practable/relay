@@ -581,7 +581,6 @@ func (l *Limit) flushUser(user string) {
 		log.WithFields(lf).Trace("bookingstore:flush:sessions:removed")
 	}
 
-	return
 }
 
 // confim registers the activity details over the confirm channel, if called by the booker
