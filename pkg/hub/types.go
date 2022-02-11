@@ -22,10 +22,11 @@ type Hub struct {
 	// Unregister requests from clients.
 	Unregister chan *Client
 
-	Stats HubStats
+	Stats Stats
 }
 
-type HubStats struct {
+// Stats represents overall statistics for the hub
+type Stats struct {
 	Started  time.Time
 	Last     time.Time
 	Audience *welford.Stats
@@ -34,8 +35,8 @@ type HubStats struct {
 	Dt       *welford.Stats
 }
 
-// Stats that we report externally
-type HubReport struct {
+// Report represents statistics that we report externally
+type Report struct {
 	Started  string       `json:"started"`
 	Last     string       `json:"last"`
 	Audience WelfordStats `json:"audience"`
@@ -44,6 +45,7 @@ type HubReport struct {
 	Dt       WelfordStats `json:"dt"`
 }
 
+// WelfordStats represents the statistical values we record
 type WelfordStats struct {
 	Count    uint64  `json:"count"`
 	Min      float64 `json:"min"`
@@ -53,7 +55,8 @@ type WelfordStats struct {
 	Variance float64 `json:"variance"`
 }
 
-// messages will be wrapped in this struct for muxing
+// Message represents a message that is wrapped and ready for multiplexing
+// unwrapped messages cannot be multiplexed
 type Message struct {
 	Data   []byte //text data are converted to/from bytes as needed
 	Sender Client
@@ -71,31 +74,34 @@ type Client struct {
 	Done  chan struct{}
 }
 
-// Stats that we keep internally
+// ClientStats represents statistics that we keep internally
 type ClientStats struct {
 	ConnectedAt time.Time
 	Rx          *Frames
 	Tx          *Frames
 }
 
+// Frames represents statistics on (video) frames
 type Frames struct {
 	Last time.Time
 	Size *welford.Stats
 	Dt   *welford.Stats
 }
 
-// Stats that we report externally
+// ClientReport represents statistics that we report externally
 type ClientReport struct {
 	Topic     string     `json:"topic"`
 	Connected string     `json:"connected"`
 	Stats     ClientRxTx `json:"stats"`
 }
 
+// ClientRxTx represents statistics on a particular client's communications
 type ClientRxTx struct {
 	Tx ChannelStats `json:"tx"`
 	Rx ChannelStats `json:"rx"`
 }
 
+// ChannelStats represents statistics on a particular channel's communications
 type ChannelStats struct {
 	Last  string  `json:"last"` //how many seconds ago...
 	Bytes float64 `json:"bytes"`

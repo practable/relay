@@ -6,19 +6,21 @@ import (
 	"github.com/eclesh/welford"
 )
 
+// New returns a pointer to an initiatialised Hub
 func New() *Hub {
 	return &Hub{
 		Broadcast:  make(chan Message),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Clients:    make(map[string]map[*Client]bool),
-		Stats: HubStats{Audience: welford.New(),
+		Stats: Stats{Audience: welford.New(),
 			Bytes:   welford.New(),
 			Latency: welford.New(),
 			Dt:      welford.New()},
 	}
 }
 
+// NewClientStats returns a pointer to a new initialised ClientStats
 func NewClientStats() *ClientStats {
 
 	c := &ClientStats{}
@@ -29,6 +31,7 @@ func NewClientStats() *ClientStats {
 	return c
 }
 
+// Run starts the hub
 func (h *Hub) Run(closed chan struct{}) {
 	for {
 		select {
@@ -59,6 +62,7 @@ func (h *Hub) Run(closed chan struct{}) {
 	}
 }
 
+//RunWithStats starts the hub, and records statistics
 func (h *Hub) RunWithStats(closed chan struct{}) {
 	for {
 		select {
