@@ -9,6 +9,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
+// Relay runs a websocket relay
 func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPort int, audience, secret, target string) {
 
 	var wg sync.WaitGroup
