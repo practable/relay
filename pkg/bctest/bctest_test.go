@@ -22,13 +22,11 @@ import (
 	"github.com/xtgo/uuid"
 )
 
-var debug bool
 var l *bookingstore.Limit
 var ps *pool.Store
-var bookingDuration, mocktime, startime int64
+var mocktime, startime int64
 var useLocal bool
 var adminBearer, userBearer string
-var bc *apiclient.Bc
 var secret string
 
 func init() {
