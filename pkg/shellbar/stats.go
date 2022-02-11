@@ -172,9 +172,9 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 		if err != nil {
 			log.WithField("error", err).Error("statsReporter marshalling JSON")
 			return
-		} else {
-			// broadcast stats back to the hub (i.e. and anyone listening to this topic)
-			c.hub.broadcast <- message{sender: *c, data: reportsData, mt: websocket.TextMessage}
 		}
+		// broadcast stats back to the hub (i.e. and anyone listening to this topic)
+		c.hub.broadcast <- message{sender: *c, data: reportsData, mt: websocket.TextMessage}
+
 	}
 }

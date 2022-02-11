@@ -13,8 +13,10 @@ import (
 	"github.com/timdrysdale/relay/pkg/permission"
 )
 
+// ConnectionType represents whether the connection is for Session, Shell or Unsupported
 type ConnectionType int
 
+// Enumerated connection types
 const (
 	Session ConnectionType = iota
 	Shell
