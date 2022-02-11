@@ -380,6 +380,7 @@ func TestAddRequestCountActivity(t *testing.T) {
 	}
 
 	aa, err := p.GetActivityByID(a.ID)
+	assert.NoError(t, err)
 
 	assert.Equal(t, a.Name, aa.Name)
 
@@ -425,7 +426,7 @@ func TestAddRequestCountActivity(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(0), wait)
 
-	wait, err = p.ActivityWaitDuration(5000) //none left, b will be expired before session ends
+	_, err = p.ActivityWaitDuration(5000) //none left, b will be expired before session ends
 	assert.Error(t, err)
 
 	wait, err = p.ActivityWaitDuration(1000) //a is left
@@ -440,7 +441,7 @@ func TestAddRequestCountActivity(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(5000), wait)
 
-	id, err = p.ActivityRequestAny(1000) // none left!
+	_, err = p.ActivityRequestAny(1000) // none left!
 	assert.Error(t, err)
 
 	time = starttime + 2001 // a just finished
@@ -473,13 +474,13 @@ func TestAddGetDeletePools(t *testing.T) {
 	ps.AddPool(p1)
 	ps.AddPool(p2)
 
-	pool, err := ps.GetPoolByID("definitelyNotAPoolIDBecauseNotAUUID")
+	_, err := ps.GetPoolByID("definitelyNotAPoolIDBecauseNotAUUID")
 
 	assert.Error(t, err)
 
 	assert.Equal(t, "not found", err.Error())
 
-	pool, err = ps.GetPoolByID(p0.ID)
+	pool, err := ps.GetPoolByID(p0.ID)
 
 	assert.NoError(t, err)
 
@@ -492,13 +493,13 @@ func TestAddGetDeletePools(t *testing.T) {
 	assert.Equal(t, 3, len(ids))
 
 	pools, err = ps.GetPoolsByName("stuff1")
-
+	assert.NoError(t, err)
 	assert.Equal(t, 1, len(pools))
 
 	assert.Equal(t, p1.Name, (pools[0]).Name)
 
 	pools, err = ps.GetPoolsByNamePrefix("stuff")
-
+	assert.NoError(t, err)
 	assert.Equal(t, 2, len(pools))
 
 	ps.DeletePool(p0)
@@ -506,7 +507,7 @@ func TestAddGetDeletePools(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(pools))
 	ps.DeletePool(p1)
-	pools, err = ps.GetPoolsByNamePrefix("stuff")
+	_, err = ps.GetPoolsByNamePrefix("stuff")
 	assert.Error(t, err)
 	assert.Equal(t, "not found", err.Error())
 
@@ -526,26 +527,26 @@ func TestAddGetDeleteGroups(t *testing.T) {
 	ps.AddGroup(g1)
 	ps.AddGroup(g2)
 
-	group, err := ps.GetGroupByID("definitelyNotAGroupIDBecauseNotAUUID")
+	_, err := ps.GetGroupByID("definitelyNotAGroupIDBecauseNotAUUID")
 
 	assert.Error(t, err)
 
 	assert.Equal(t, "not found", err.Error())
 
-	group, err = ps.GetGroupByID(g0.ID)
+	group, err := ps.GetGroupByID(g0.ID)
 
 	assert.NoError(t, err)
 
 	assert.Equal(t, g0.Name, group.Name)
 
 	groups, err := ps.GetGroupsByName("stuff1")
-
+	assert.NoError(t, err)
 	assert.Equal(t, 1, len(groups))
 
 	assert.Equal(t, g1.Name, (groups[0]).Name)
 
 	groups, err = ps.GetGroupsByNamePrefix("stuff")
-
+	assert.NoError(t, err)
 	assert.Equal(t, 2, len(groups))
 
 	ps.DeleteGroup(g0)
@@ -556,7 +557,7 @@ func TestAddGetDeleteGroups(t *testing.T) {
 
 	ps.DeleteGroup(g1)
 
-	groups, err = ps.GetGroupsByNamePrefix("stuff")
+	_, err = ps.GetGroupsByNamePrefix("stuff")
 	assert.Error(t, err)
 	assert.Equal(t, "not found", err.Error())
 
@@ -633,7 +634,9 @@ func TestImportExport(t *testing.T) {
 
 	a := NewActivity("a", ps.Now()+3600)
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
@@ -661,7 +664,8 @@ func TestImportExport(t *testing.T) {
 	a.AddStream("video", s1)
 
 	a2 := NewActivity("a2", ps.Now()+3600)
-	p0.AddActivity(a2)
+	err = p0.AddActivity(a2)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(a2)
 
 	pt2 := permission.Token{
@@ -699,11 +703,13 @@ func TestImportExport(t *testing.T) {
 	}
 
 	// check it's dead
-	p, err := ps.GetPoolByID(p0.ID)
+	_, err = ps.GetPoolByID(p0.ID)
 	assert.Error(t, err)
 
 	// restore the poolstore
 	ps2, err := ImportAll(b)
+	assert.NoError(t, err)
+
 	ps2.PostImportSetNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
 	ps = ps2
 
@@ -711,19 +717,20 @@ func TestImportExport(t *testing.T) {
 
 	mocktime = time.Now().Unix()
 
-	p, err = ps.GetPoolByID(p0.ID)
+	p, err := ps.GetPoolByID(p0.ID)
 
 	assert.NoError(t, err)
 
 	aID0, err := p.ActivityRequestAny(2000)
+	assert.NoError(t, err)
 
 	agot0, err := p.GetActivityByID(aID0)
-
+	assert.NoError(t, err)
 	// now request a second activity from the same user ...
 	aID1, err := p.ActivityRequestAny(2000)
-
+	assert.NoError(t, err)
 	agot1, err := p.GetActivityByID(aID1)
-
+	assert.NoError(t, err)
 	topic0 := agot0.Streams["data"].Permission.Topic
 	topic1 := agot1.Streams["data"].Permission.Topic
 
