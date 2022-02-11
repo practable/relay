@@ -24,7 +24,6 @@ import (
 
 var l *bookingstore.Limit
 var ps *pool.Store
-var mocktime, startime int64
 var useLocal bool
 var adminBearer, userBearer string
 var secret string
