@@ -13,8 +13,10 @@ import (
 	"github.com/timdrysdale/relay/pkg/util"
 )
 
+// ConnectionType represents whether the connection is session, shell, or unsupported
 type ConnectionType int
 
+// Session, Shell and Unsupported are enumerated values of ConnectionType
 const (
 	Session ConnectionType = iota
 	Shell
