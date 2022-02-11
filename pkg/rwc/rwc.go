@@ -1,3 +1,6 @@
+// package rwc provides a re-connecting websocket client which can be used to make outgoing connections
+// from a hub.
+
 package rwc
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/reconws"
 )
 
+// New returns a pointer to a new Hub
 // pass in the messaging hub as a parameter
 // assume it is already running
 func New(messages *agg.Hub) *Hub {
@@ -26,6 +30,7 @@ func New(messages *agg.Hub) *Hub {
 	return h
 }
 
+// Run starts the Hub
 func (h *Hub) Run(closed chan struct{}) {
 
 	defer func() {
@@ -43,24 +48,24 @@ func (h *Hub) Run(closed chan struct{}) {
 			return
 		case rule := <-h.Add:
 
-			if rule.Id == "deleteAll" {
+			if rule.ID == "deleteAll" {
 				break //reserved id (for deleting all rules)
 			}
 
 			// Allow multiple destinations for a stream;
 			// allow multiple streams per destination;
-			// allow only one client per rule.Id.
-			// Delete any pre-existing client for this rule.Id
+			// allow only one client per rule.ID.
+			// Delete any pre-existing client for this rule.ID
 			// because it just became superseded
-			if client, ok := h.Clients[rule.Id]; ok {
+			if client, ok := h.Clients[rule.ID]; ok {
 				h.Messages.Unregister <- client.Messages
 				client.Cancel() //stop RelayIn() & RelayOut()
-				delete(h.Clients, rule.Id)
+				delete(h.Clients, rule.ID)
 			}
-			delete(h.Rules, rule.Id)
+			delete(h.Rules, rule.ID)
 
 			//record the new rule for later convenience in reporting
-			h.Rules[rule.Id] = rule
+			h.Rules[rule.ID] = rule
 
 			// create new reconnecting websocket client
 			ws := reconws.New()
@@ -85,7 +90,7 @@ func (h *Hub) Run(closed chan struct{}) {
 				File:      rule.File,
 			}
 
-			h.Clients[rule.Id] = client
+			h.Clients[rule.ID] = client
 
 			h.Messages.Register <- client.Messages //register for messages from hub
 
@@ -103,9 +108,9 @@ func (h *Hub) Run(closed chan struct{}) {
 			// an RPC style return on start is of limited value because clients are long lived
 			// so we'll need to check the stats later anyway; better just to do things one way
 
-		case ruleId := <-h.Delete:
+		case ruleID := <-h.Delete:
 
-			if ruleId == "deleteAll" {
+			if ruleID == "deleteAll" {
 				for _, client := range h.Clients {
 					h.Messages.Unregister <- client.Messages
 					client.Cancel() //stop RelayIn() & RelayOut()
@@ -114,13 +119,13 @@ func (h *Hub) Run(closed chan struct{}) {
 				h.Rules = make(map[string]Rule)
 
 			} else {
-				if client, ok := h.Clients[ruleId]; ok {
+				if client, ok := h.Clients[ruleID]; ok {
 					h.Messages.Unregister <- client.Messages
 					client.Cancel() //stop RelayIn() & RelayOut()
-					delete(h.Clients, ruleId)
+					delete(h.Clients, ruleID)
 				}
 
-				delete(h.Rules, ruleId)
+				delete(h.Rules, ruleID)
 
 			}
 		}
@@ -129,7 +134,7 @@ func (h *Hub) Run(closed chan struct{}) {
 
 //use label to break from the for?
 
-// relay messages from the hub to the websocket client until stopped
+// RelayOut relays messages from the hub to the websocket client until stopped
 func (c *Client) RelayOut(ctx context.Context) {
 
 	writeToFile := false
@@ -165,7 +170,7 @@ LOOP:
 	}
 }
 
-// relay messages from websocket server to the hub until stopped
+// RelayIn relays from websocket server to the hub until stopped
 func (c *Client) RelayIn(ctx context.Context) {
 LOOP:
 	for {
