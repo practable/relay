@@ -847,8 +847,8 @@ func TestRequestSessionByPoolID(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "123",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: []string{"https://example.com"},
 		},
 	}
 	s0 := pool.NewStream("https://example.com/session/123data")
@@ -859,8 +859,8 @@ func TestRequestSessionByPoolID(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "456",
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: []string{"https://example.com"},
 		},
 	}
 	s1 := pool.NewStream("https://example.com/session/456video")
@@ -1075,8 +1075,8 @@ func TestLimits(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: []string{"https://example.com"},
 		},
 	}
 	s0 := pool.NewStream("https://example.com/session/123data")
