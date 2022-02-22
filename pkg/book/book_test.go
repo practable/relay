@@ -101,12 +101,14 @@ func TestMain(m *testing.M) {
 
 func TestGetSetLockedMessage(t *testing.T) {
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"stuff", "everyone"}
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -127,6 +129,10 @@ func TestGetSetLockedMessage(t *testing.T) {
 	assert.NoError(t, err)
 
 	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -217,12 +223,16 @@ func TestBooking(t *testing.T) {
 	g1.AddPool(p0) //add to both groups - should only see it once though
 
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"somecourse", "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -253,7 +263,7 @@ func TestBooking(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 	bookingTokenReturned := *(btr.Token)
@@ -270,8 +280,11 @@ func TestBooking(t *testing.T) {
 
 	assert.Equal(t, []string{"somecourse", "everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
-	assert.True(t, claims.ExpiresAt < ps.Now()+bookingDuration+15)
-	assert.True(t, claims.ExpiresAt > ps.Now()+bookingDuration-15)
+
+	plus15 := time.Now().Add(time.Duration(bookingDuration+15) * time.Second)
+	minus15 := time.Now().Add(time.Duration(bookingDuration-15) * time.Second)
+	assert.True(t, claims.ExpiresAt.Before(plus15))
+	assert.True(t, claims.ExpiresAt.After(minus15))
 	assert.True(t, len(claims.Subject) >= 35)
 
 	subject := claims.Subject //save for next test
@@ -279,12 +292,15 @@ func TestBooking(t *testing.T) {
 	// Now login again with previous booking token in body and see that subject is retained
 	// but that only groups in new token are returned
 	newLoginClaims := &lit.Token{}
-	newLoginClaims.Audience = host
+	newLoginClaims.Audience = jwt.ClaimStrings{host}
 	newLoginClaims.Groups = []string{"othercourse", "everyone"}
 	newLoginClaims.Scopes = []string{"login:user"}
-	newLoginClaims.IssuedAt = ps.GetTime() - 1
-	newLoginClaims.NotBefore = ps.GetTime() - 1
-	newLoginClaims.ExpiresAt = newLoginClaims.NotBefore + ps.BookingTokenDuration
+	now = jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later = jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	newLoginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, newLoginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -321,8 +337,12 @@ func TestBooking(t *testing.T) {
 	//note groups are different  somecourse -> othercourse
 	assert.Equal(t, []string{"othercourse", "everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
-	assert.True(t, claims.ExpiresAt < ps.Now()+bookingDuration+15)
-	assert.True(t, claims.ExpiresAt > ps.Now()+bookingDuration-15)
+
+	plus15 = time.Now().Add(time.Duration(bookingDuration+15) * time.Second)
+	minus15 = time.Now().Add(time.Duration(bookingDuration-15) * time.Second)
+	assert.True(t, claims.ExpiresAt.Before(plus15))
+	assert.True(t, claims.ExpiresAt.After(minus15))
+
 	assert.True(t, len(claims.Subject) >= 35)
 
 	// key test
@@ -342,12 +362,15 @@ func TestGetGroupIDByName(t *testing.T) {
 	defer ps.DeleteGroup(g1)
 
 	claims := &lit.Token{}
-	claims.Audience = host
+	claims.Audience = jwt.ClaimStrings{host}
 	claims.Groups = []string{"stuff"}
 	claims.Scopes = []string{"booking:user"}
-	claims.IssuedAt = ps.GetTime() - 1
-	claims.NotBefore = ps.GetTime() - 1
-	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	claims.IssuedAt = now
+	claims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	claims.ExpiresAt = later
 
 	// sign user token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -371,7 +394,9 @@ func TestGetGroupIDByName(t *testing.T) {
 	err = json.Unmarshal(body, &ids)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(ids))
-	assert.Equal(t, g0.ID, ids[0])
+	if len(ids) > 0 {
+		assert.Equal(t, g0.ID, ids[0])
+	}
 
 	// check request fails if group not in groups
 	req, err = http.NewRequest("GET", host+"/api/v1/groups", nil)
@@ -406,12 +431,14 @@ func TestGetGroupDescriptionByID(t *testing.T) {
 	defer ps.DeleteGroup(g0)
 
 	claims := &lit.Token{}
-	claims.Audience = host
+	claims.Audience = jwt.ClaimStrings{host}
 	claims.Groups = []string{name}
 	claims.Scopes = []string{"booking:user"}
-	claims.IssuedAt = ps.GetTime() - 1
-	claims.NotBefore = ps.GetTime() - 1
-	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	claims.IssuedAt = now
+	claims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	claims.ExpiresAt = later
 
 	// sign user token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -479,12 +506,15 @@ func TestGetAllPools(t *testing.T) {
 	ps.Unlock()
 
 	claims := &lit.Token{}
-	claims.Audience = host
+	claims.Audience = jwt.ClaimStrings{host}
 	claims.Groups = []string{name}
 	claims.Scopes = []string{"booking:admin"}
-	claims.IssuedAt = ps.GetTime() - 1
-	claims.NotBefore = ps.GetTime() - 1
-	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	claims.IssuedAt = now
+	claims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	claims.ExpiresAt = later
 
 	// sign user token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -580,13 +610,16 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 
 	// login
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in pool.Store does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -607,7 +640,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -905,13 +938,17 @@ func TestRequestSessionByPoolID(t *testing.T) {
 
 	// login
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+
+	t0 := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = t0
+	loginClaims.NotBefore = t0
+	t1 := jwt.NewNumericDate(time.Unix(ps.GetTime()+bookingDuration, 0))
+	loginClaims.ExpiresAt = t1
+
 	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -933,7 +970,7 @@ func TestRequestSessionByPoolID(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -999,7 +1036,7 @@ func TestRequestSessionByPoolID(t *testing.T) {
 	assert.Equal(t, pt0.Audience, stc.Audience)
 	assert.Equal(t, pt0.ConnectionType, stc.ConnectionType)
 	assert.True(t, pt0.Topic == stc.Topic || pt1.Topic == stc.Topic)
-	assert.Equal(t, (*stc.ExpiresAt), *(jwt.NewNumericDate(now.Add(2000 * time.Second).Round(time.Second))))
+	assert.Equal(t, (*stc.ExpiresAt), *(jwt.NewNumericDate(now.Add(2000 * time.Second))))
 
 	// streams could come in either order, so check each item matches one or other
 	// TODO: improve this test so it detects weird mistakes like mixing up stream data
@@ -1138,12 +1175,15 @@ func TestLimits(t *testing.T) {
 	//                                          |___/
 
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -1165,7 +1205,7 @@ func TestLimits(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -1206,13 +1246,16 @@ func TestLimits(t *testing.T) {
 	// user login
 
 	loginClaims = &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now = jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later = jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken = jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -1236,7 +1279,7 @@ func TestLimits(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -1426,7 +1469,7 @@ func TestLimits(t *testing.T) {
 	err = json.Unmarshal(body, btr2)
 	assert.NoError(t, err)
 
-	if btr2 == nil {
+	if btr2.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -1490,12 +1533,15 @@ func TestAddNewPool(t *testing.T) {
 
 	// make an admin user login token, swap for booking token
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"everything"} //not an actual group
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -1513,7 +1559,7 @@ func TestAddNewPool(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 	adminBearer := *(btr.Token)
@@ -1589,12 +1635,16 @@ func TestAddActivityToPoolID(t *testing.T) {
 	// make pool, add to pool store
 	// make an admin user login token, swap for booking token
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"everything"} //not an actual group
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -1612,7 +1662,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 	adminBearer := *(btr.Token)
@@ -1998,13 +2048,16 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 
 	// login
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -2026,7 +2079,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2148,7 +2201,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	err = json.Unmarshal(body, btr2)
 	assert.NoError(t, err)
 
-	if btr2 == nil {
+	if btr2.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2369,12 +2422,15 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	//                                          |___/
 
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -2394,7 +2450,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2469,13 +2525,16 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	// login
 	loginClaims = &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now = jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later = jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken = jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -2497,7 +2556,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2640,7 +2699,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	err = json.Unmarshal(body, btr2)
 	assert.NoError(t, err)
 
-	if btr2 == nil {
+	if btr2.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2862,12 +2921,16 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	// Admin login
 
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"everyone"}
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -2887,7 +2950,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
