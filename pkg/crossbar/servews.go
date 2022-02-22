@@ -96,21 +96,28 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	now := config.CodeStore.GetTime()
 
-	if token.NotBefore > now {
+	if token.NotBefore.After(time.Unix(now, 0)) {
 		log.WithField("topic", topic).Info("Unauthorized - Too early")
 		return
 	}
 
-	ttl := token.ExpiresAt - now
+	ttl := token.ExpiresAt.Unix() - now
 
 	log.WithFields(log.Fields{"ttl": ttl, "topic": topic}).Trace()
 
-	audienceBad := (config.Audience != token.Audience)
+	audok := false
+
+	for _, aud := range token.Audience {
+		if aud == config.Audience {
+			audok = true
+		}
+	}
+
 	topicBad := (topic != token.Topic)
 	expired := ttl < 0
 
-	if audienceBad || topicBad || expired {
-		log.WithFields(log.Fields{"audienceBad": audienceBad, "topicBad": topicBad, "expired": expired, "topic": topic}).Trace("Token invalid")
+	if (!audok) || topicBad || expired {
+		log.WithFields(log.Fields{"audienceOK": audok, "topicOK": !topicBad, "expired": expired, "topic": topic}).Trace("Token invalid")
 		return
 	}
 
