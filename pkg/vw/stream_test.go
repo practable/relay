@@ -350,11 +350,12 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 
 	// bearer tokens for the connections
 	var claims permission.Token
-
-	claims.IssuedAt = time.Now().Unix() - 1
-	claims.NotBefore = time.Now().Unix() - 1
-	claims.ExpiresAt = time.Now().Unix() + 30
-	claims.Audience = audience
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after := jwt.NewNumericDate(time.Now().Add(30 * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after
+	claims.Audience = jwt.ClaimStrings{audience}
 	claims.Topic = "123"
 	claims.ConnectionType = "session"
 	claims.Scopes = []string{"write"}
