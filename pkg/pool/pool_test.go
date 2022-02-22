@@ -254,7 +254,7 @@ func TestTypeConversion(t *testing.T) {
 
 	assert.Equal(t, reflect.TypeOf(permission.Token{}), reflect.TypeOf(pt))
 
-	assert.Equal(t, Audience, pt.Audience)
+	assert.Equal(t, Audience, pt.Audience[0])
 	assert.Equal(t, Topic, pt.Topic)
 	assert.Equal(t, ConnectionType, pt.ConnectionType)
 	assert.Equal(t, Scopes, pt.Scopes)
@@ -299,8 +299,8 @@ func TestTypeConversion(t *testing.T) {
 	err = CheckActivity(a)
 	assert.Equal(t, "empty topic", err.Error())
 
-	a.Streams[For].Permission.Topic = "Topic" //fix that ...
-	a.Streams[For].Permission.Audience = ""   //break this
+	a.Streams[For].Permission.Topic = "Topic"               //fix that ...
+	a.Streams[For].Permission.Audience = jwt.ClaimStrings{} //break this (by setting no audience)
 
 	err = CheckActivity(a)
 	assert.Error(t, err)
@@ -603,8 +603,8 @@ func TestAddPermissionsToStream(t *testing.T) {
 	p := permission.Token{
 		ConnectionType: "session",
 		Topic:          "123",
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 
@@ -643,8 +643,8 @@ func TestImportExport(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s0 := NewStream("https://example.com/session/123data")
@@ -655,8 +655,8 @@ func TestImportExport(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s1 := NewStream("https://example.com/session/456video")
@@ -672,8 +672,8 @@ func TestImportExport(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 
@@ -685,8 +685,8 @@ func TestImportExport(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s3 := NewStream("https://example.com/session/456video")
