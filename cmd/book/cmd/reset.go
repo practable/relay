@@ -26,9 +26,9 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/ory/viper"
 	"github.com/spf13/cobra"
-	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
-	"github.com/timdrysdale/relay/pkg/bc/client/admin"
-	"github.com/timdrysdale/relay/pkg/bc/client/login"
+	apiclient "github.com/practable/relay/internal/bc/client"
+	"github.com/practable/relay/internal/bc/client/admin"
+	"github.com/practable/relay/internal/bc/client/login"
 )
 
 // resetCmd represents the reset command
