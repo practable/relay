@@ -899,7 +899,9 @@ func TestRequestSessionByPoolID(t *testing.T) {
 
 	a.AddUI(u1)
 
-	mocktime = time.Now().Unix()
+	now := time.Now()
+
+	mocktime = now.Unix()
 
 	// login
 	loginClaims := &lit.Token{}
@@ -997,7 +999,7 @@ func TestRequestSessionByPoolID(t *testing.T) {
 	assert.Equal(t, pt0.Audience, stc.Audience)
 	assert.Equal(t, pt0.ConnectionType, stc.ConnectionType)
 	assert.True(t, pt0.Topic == stc.Topic || pt1.Topic == stc.Topic)
-	assert.Equal(t, ps.Now()+2000, stc.ExpiresAt)
+	assert.Equal(t, (*stc.ExpiresAt), *(jwt.NewNumericDate(now.Add(2000 * time.Second).Round(time.Second))))
 
 	// streams could come in either order, so check each item matches one or other
 	// TODO: improve this test so it detects weird mistakes like mixing up stream data
@@ -1087,8 +1089,8 @@ func TestLimits(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s1 := pool.NewStream("https://example.com/session/456video")
@@ -1105,8 +1107,8 @@ func TestLimits(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 
@@ -1118,8 +1120,8 @@ func TestLimits(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s3 := pool.NewStream("https://example.com/session/456video")
@@ -1913,8 +1915,8 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s0 := pool.NewStream("https://example.com/session/123data")
@@ -1925,8 +1927,8 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s1 := pool.NewStream("https://example.com/session/456video")
@@ -1942,8 +1944,8 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 
@@ -1955,8 +1957,8 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s3 := pool.NewStream("https://example.com/session/456video")
@@ -2266,8 +2268,8 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s0 := pool.NewStream("https://example.com/session/123data")
@@ -2278,8 +2280,8 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s1 := pool.NewStream("https://example.com/session/456video")
@@ -2300,8 +2302,8 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 
@@ -2313,8 +2315,8 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s3 := pool.NewStream("https://example.com/session/456video")
