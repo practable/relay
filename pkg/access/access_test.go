@@ -77,10 +77,13 @@ func TestAPI(t *testing.T) {
 
 	var claims permission.Token
 
-	claims.IssuedAt = time.Now().Unix() - 1
-	claims.NotBefore = time.Now().Unix() - 1
-	claims.ExpiresAt = time.Now().Unix() + 5
-	claims.Audience = audience
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after5 := jwt.NewNumericDate(time.Now().Add(5 * time.Second))
+
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after5
+	claims.Audience = jwt.ClaimStrings{audience}
 	claims.Topic = "123"
 	claims.ConnectionType = "session"
 	claims.Scopes = []string{"read", "write"}
