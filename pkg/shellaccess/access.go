@@ -216,25 +216,16 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 			return nil, fmt.Errorf("token invalid")
 		}
 
-		found := false
+		if cc, ok := token.Claims.(*permission.Token); ok {
 
-		for _, aud := range claims.Audience {
-			if aud == host {
-				found = true
+			if !cc.RegisteredClaims.VerifyAudience(host, true) {
+				log.WithFields(log.Fields{"aud": cc.RegisteredClaims.Audience, "host": host}).Info("aud does not match this host")
+				return nil, fmt.Errorf("aud %s does not match this host %s", cc.RegisteredClaims.Audience, host)
 			}
 
-		}
-
-		if !found {
-
-			log.WithFields(log.Fields{"aud": claims.Audience, "host": host}).Info("aud does not match this host")
-			return nil, fmt.Errorf("aud %s does not match this host %s", claims.Audience, host)
-		}
-
-		// already checked but belt and braces ....
-		if claims.ExpiresAt.Before(time.Now()) {
-			log.Info(fmt.Sprintf("Expired at %s", claims.ExpiresAt.String()))
-			return nil, fmt.Errorf("expired at %s", claims.ExpiresAt.String())
+		} else {
+			log.WithFields(log.Fields{"token": bearerToken, "host": host}).Info("Error parsing token")
+			return nil, err
 		}
 
 		return token, nil
