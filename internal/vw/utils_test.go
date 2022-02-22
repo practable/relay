@@ -4,8 +4,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/timdrysdale/relay/pkg/agg"
-	"github.com/timdrysdale/relay/pkg/rwc"
+	"github.com/practable/relay/internal/agg"
+	"github.com/practable/relay/internal/rwc"
 )
 
 var unix = "foo\r\n"

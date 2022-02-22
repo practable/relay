@@ -15,7 +15,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/timdrysdale/relay/pkg/bc/models"
+	"github.com/practable/relay/internal/bc/models"
 )
 
 // NewAddActivityByPoolIDParams creates a new AddActivityByPoolIDParams object,

@@ -8,9 +8,9 @@ import (
 
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/agg"
-	"github.com/timdrysdale/relay/pkg/hub"
-	"github.com/timdrysdale/relay/pkg/rwc"
+	"github.com/practable/relay/internal/agg"
+	"github.com/practable/relay/internal/hub"
+	"github.com/practable/relay/internal/rwc"
 )
 
 func (app *App) internalAPI(topic string) {

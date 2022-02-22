@@ -7,14 +7,14 @@ import (
 
 	"github.com/go-openapi/loads"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/booking/restapi"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/admin"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
-	"github.com/timdrysdale/relay/pkg/bookingstore"
-	"github.com/timdrysdale/relay/pkg/pool"
+	"github.com/practable/relay/internal/booking/restapi"
+	"github.com/practable/relay/internal/booking/restapi/operations"
+	"github.com/practable/relay/internal/booking/restapi/operations/admin"
+	"github.com/practable/relay/internal/booking/restapi/operations/groups"
+	"github.com/practable/relay/internal/booking/restapi/operations/login"
+	"github.com/practable/relay/internal/booking/restapi/operations/pools"
+	"github.com/practable/relay/internal/bookingstore"
+	"github.com/practable/relay/internal/pool"
 )
 
 // API starts the API

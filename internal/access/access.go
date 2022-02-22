@@ -10,10 +10,10 @@ import (
 	"github.com/go-openapi/runtime/security"
 	"github.com/golang-jwt/jwt/v4"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/access/restapi"
-	"github.com/timdrysdale/relay/pkg/access/restapi/operations"
-	"github.com/timdrysdale/relay/pkg/permission"
-	"github.com/timdrysdale/relay/pkg/ttlcode"
+	"github.com/practable/relay/internal/access/restapi"
+	"github.com/practable/relay/internal/access/restapi/operations"
+	"github.com/practable/relay/internal/permission"
+	"github.com/practable/relay/internal/ttlcode"
 )
 
 // API starts the API

@@ -12,11 +12,11 @@ import (
 
 	"github.com/go-openapi/runtime"
 	log "github.com/sirupsen/logrus"
-	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
-	"github.com/timdrysdale/relay/pkg/bc/client/admin"
-	"github.com/timdrysdale/relay/pkg/bc/client/groups"
-	"github.com/timdrysdale/relay/pkg/bc/client/pools"
-	"github.com/timdrysdale/relay/pkg/bc/models"
+	apiclient "github.com/practable/relay/internal/bc/client"
+	"github.com/practable/relay/internal/bc/client/admin"
+	"github.com/practable/relay/internal/bc/client/groups"
+	"github.com/practable/relay/internal/bc/client/pools"
+	"github.com/practable/relay/internal/bc/models"
 )
 
 // UploadManifest uploads a manifest to the booking server

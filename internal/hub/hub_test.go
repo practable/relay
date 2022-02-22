@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/counter"
+	"github.com/practable/relay/internal/counter"
 )
 
 func TestInstantiateHub(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/timdrysdale/relay/pkg/agg"
-	"github.com/timdrysdale/relay/pkg/rwc"
+	"github.com/practable/relay/internal/agg"
+	"github.com/practable/relay/internal/rwc"
 
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"

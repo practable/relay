@@ -19,11 +19,11 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/permission"
-	"github.com/timdrysdale/relay/pkg/reconws"
-	"github.com/timdrysdale/relay/pkg/shellbar"
-	"github.com/timdrysdale/relay/pkg/shellrelay"
-	"github.com/timdrysdale/relay/pkg/tcpconnect"
+	"github.com/practable/relay/internal/permission"
+	"github.com/practable/relay/internal/reconws"
+	"github.com/practable/relay/internal/shellbar"
+	"github.com/practable/relay/internal/shellrelay"
+	"github.com/practable/relay/internal/tcpconnect"
 )
 
 func init() {

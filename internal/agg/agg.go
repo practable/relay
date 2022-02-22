@@ -6,7 +6,7 @@ import (
 
 	"github.com/jinzhu/copier"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/hub"
+	"github.com/practable/relay/internal/hub"
 )
 
 // New returns a pointer to a new aggregating hub

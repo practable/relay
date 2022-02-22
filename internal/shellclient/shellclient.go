@@ -10,8 +10,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/reconws"
-	"github.com/timdrysdale/relay/pkg/tcpconnect"
+	"github.com/practable/relay/internal/reconws"
+	"github.com/practable/relay/internal/tcpconnect"
 )
 
 // Client runs a listener for local ssh connections on a local tcp port

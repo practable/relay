@@ -1,7 +1,7 @@
 package manifest
 
 import (
-	"github.com/timdrysdale/relay/pkg/bc/models"
+	"github.com/practable/relay/internal/bc/models"
 )
 
 // GetPool returns a pointer to the referenced pool

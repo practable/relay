@@ -55,7 +55,7 @@ func NewAccessAPI(spec *loads.Document) *AccessAPI {
 	}
 }
 
-/*AccessAPI API for accessing github.com/timdrysdale/relay/pkg/shellbar websocket relay */
+/*AccessAPI API for accessing github.com/practable/relay/internal/shellbar websocket relay */
 type AccessAPI struct {
 	spec            *loads.Document
 	context         *middleware.Context

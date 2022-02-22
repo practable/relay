@@ -8,10 +8,10 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/booking/models"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
-	"github.com/timdrysdale/relay/pkg/bookingstore"
-	"github.com/timdrysdale/relay/pkg/pool"
+	"github.com/practable/relay/internal/booking/models"
+	"github.com/practable/relay/internal/booking/restapi/operations/pools"
+	"github.com/practable/relay/internal/bookingstore"
+	"github.com/practable/relay/internal/pool"
 )
 
 func addActivityByPoolID(ps *pool.Store) func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {

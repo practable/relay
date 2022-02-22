@@ -10,7 +10,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	"github.com/timdrysdale/relay/pkg/shellaccess/restapi/operations"
+	"github.com/practable/relay/internal/shellaccess/restapi/operations"
 )
 
 //go:generate swagger generate server --target ../../shellaccess --name Access --spec ../../../api/openapi-spec/shellaccess.yml --principal interface{} --exclude-main

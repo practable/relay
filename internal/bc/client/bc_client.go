@@ -10,10 +10,10 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/timdrysdale/relay/pkg/bc/client/admin"
-	"github.com/timdrysdale/relay/pkg/bc/client/groups"
-	"github.com/timdrysdale/relay/pkg/bc/client/login"
-	"github.com/timdrysdale/relay/pkg/bc/client/pools"
+	"github.com/practable/relay/internal/bc/client/admin"
+	"github.com/practable/relay/internal/bc/client/groups"
+	"github.com/practable/relay/internal/bc/client/login"
+	"github.com/practable/relay/internal/bc/client/pools"
 )
 
 // Default bc HTTP client.

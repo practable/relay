@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/timdrysdale/relay/pkg/hub"
+	"github.com/practable/relay/internal/hub"
 )
 
 func TestInstantiateHub(t *testing.T) {

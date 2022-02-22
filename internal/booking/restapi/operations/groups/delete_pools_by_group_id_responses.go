@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/timdrysdale/relay/pkg/booking/models"
+	"github.com/practable/relay/internal/booking/models"
 )
 
 // DeletePoolsByGroupIDOKCode is the HTTP code returned for type DeletePoolsByGroupIDOK

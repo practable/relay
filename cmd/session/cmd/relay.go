@@ -24,7 +24,7 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/relay"
+	"github.com/practable/relay/internal/relay"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

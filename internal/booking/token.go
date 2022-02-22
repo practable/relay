@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/practable/relay/internal/permission"
 )
 
 // Token returns a signed JWT token

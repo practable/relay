@@ -4,10 +4,10 @@ import (
 	b64 "encoding/base64"
 
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/timdrysdale/relay/pkg/booking/models"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/admin"
-	"github.com/timdrysdale/relay/pkg/bookingstore"
-	"github.com/timdrysdale/relay/pkg/pool"
+	"github.com/practable/relay/internal/booking/models"
+	"github.com/practable/relay/internal/booking/restapi/operations/admin"
+	"github.com/practable/relay/internal/bookingstore"
+	"github.com/practable/relay/internal/pool"
 )
 
 func deletePoolStore(ps *pool.Store, l *bookingstore.Limit) func(admin.DeletePoolStoreParams, interface{}) middleware.Responder {

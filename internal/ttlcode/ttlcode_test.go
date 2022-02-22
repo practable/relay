@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/permission"
-	"github.com/timdrysdale/relay/pkg/ttlcode"
+	"github.com/practable/relay/internal/permission"
+	"github.com/practable/relay/internal/ttlcode"
 )
 
 func createToken() permission.Token {

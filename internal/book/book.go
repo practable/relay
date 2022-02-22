@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/timdrysdale/relay/pkg/booking"
-	"github.com/timdrysdale/relay/pkg/bookingstore"
-	"github.com/timdrysdale/relay/pkg/pool"
+	"github.com/practable/relay/internal/booking"
+	"github.com/practable/relay/internal/bookingstore"
+	"github.com/practable/relay/internal/pool"
 )
 
 // Book creates a new bookingstore server listening at host:port,
