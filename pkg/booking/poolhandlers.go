@@ -2,9 +2,10 @@ package booking
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/booking/models"
@@ -457,9 +458,9 @@ func requestSessionByPoolID(ps *pool.Store, l *bookingstore.Limit) func(params p
 
 			claims := pool.MakeClaims(s.Permission)
 
-			claims.IssuedAt = iat
-			claims.NotBefore = nbf
-			claims.ExpiresAt = exp
+			claims.IssuedAt = jwt.NewNumericDate(time.Unix(iat, 0))
+			claims.NotBefore = jwt.NewNumericDate(time.Unix(nbf, 0))
+			claims.ExpiresAt = jwt.NewNumericDate(time.Unix(exp, 0))
 
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 			bearer, err := token.SignedString(ps.Secret)

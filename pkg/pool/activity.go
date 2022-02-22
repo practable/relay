@@ -57,11 +57,12 @@ func CheckActivity(a *Activity) error {
 		// and that is not be desirable for that case
 
 		p := s.Permission
-		if p.Audience == "" {
+		if len(p.Audience) <= 0 {
 			return fmt.Errorf("empty audience")
 		}
 
-		_, err := url.ParseRequestURI(p.Audience)
+		// we parse the first audience because we only accept single-audience tokens
+		_, err := url.ParseRequestURI(p.Audience[0])
 		if err != nil {
 			return fmt.Errorf("audience not an url because %s", err.Error())
 		}
@@ -217,8 +218,8 @@ func NewSingleStreamFromModel(ms *models.Stream) *Stream {
 			Topic:          *ms.Permission.Topic,
 			ConnectionType: *ms.Permission.ConnectionType,
 			Scopes:         ms.Permission.Scopes,
-			StandardClaims: jwt.StandardClaims{
-				Audience: *ms.Permission.Audience,
+			RegisteredClaims: jwt.RegisteredClaims{
+				Audience: jwt.ClaimStrings{*ms.Permission.Audience},
 			},
 		},
 	}
@@ -240,8 +241,8 @@ func MakeClaims(mp *models.Permission) permission.Token {
 	}
 
 	return permission.Token{
-		StandardClaims: jwt.StandardClaims{
-			Audience: *mp.Audience,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{*mp.Audience},
 		},
 		ConnectionType: *mp.ConnectionType,
 		Scopes:         mp.Scopes,
@@ -279,7 +280,7 @@ func SingleStreamToModel(s *Stream) *models.Stream {
 			Topic:          &s.Permission.Topic,
 			ConnectionType: &s.Permission.ConnectionType,
 			Scopes:         s.Permission.Scopes,
-			Audience:       &s.Permission.Audience,
+			Audience:       &s.Permission.Audience[0],
 		},
 	}
 
