@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/timdrysdale/relay/pkg/agg"
-	"github.com/timdrysdale/relay/pkg/hub"
-	"github.com/timdrysdale/relay/pkg/rwc"
+	"github.com/practable/relay/internal/agg"
+	"github.com/practable/relay/internal/hub"
+	"github.com/practable/relay/internal/rwc"
 )
 
 // Commands that we are testing ...

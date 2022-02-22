@@ -29,7 +29,7 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "API for accessing github.com/timdrysdale/relay/pkg/shellbar websocket relay",
+    "description": "API for accessing github.com/practable/relay/internal/shellbar websocket relay",
     "title": "Shellaccess",
     "contact": {
       "name": "Timothy Drysdale",
@@ -107,7 +107,7 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "API for accessing github.com/timdrysdale/relay/pkg/shellbar websocket relay",
+    "description": "API for accessing github.com/practable/relay/internal/shellbar websocket relay",
     "title": "Shellaccess",
     "contact": {
       "name": "Timothy Drysdale",

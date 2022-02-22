@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/hub"
+	"github.com/practable/relay/internal/hub"
 )
 
 func (app *App) handleTs(w http.ResponseWriter, r *http.Request) {

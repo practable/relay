@@ -2,7 +2,7 @@
 
 // Package restapi Shellaccess
 //
-//  API for accessing github.com/timdrysdale/relay/pkg/shellbar websocket relay
+//  API for accessing github.com/practable/relay/internal/shellbar websocket relay
 //  Schemes:
 //    http
 //  Host: localhost

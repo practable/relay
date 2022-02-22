@@ -32,8 +32,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jpillora/backoff"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/access/restapi/operations"
-	"github.com/timdrysdale/relay/pkg/chanstats"
+	"github.com/practable/relay/internal/access/restapi/operations"
+	"github.com/practable/relay/internal/chanstats"
 )
 
 // WsMessage represents a websocket message

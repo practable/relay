@@ -13,12 +13,12 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
-	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
-	login "github.com/timdrysdale/relay/pkg/bc/client/login"
-	"github.com/timdrysdale/relay/pkg/booking"
-	"github.com/timdrysdale/relay/pkg/bookingstore"
-	lit "github.com/timdrysdale/relay/pkg/login"
-	"github.com/timdrysdale/relay/pkg/pool"
+	apiclient "github.com/practable/relay/internal/bc/client"
+	login "github.com/practable/relay/internal/bc/client/login"
+	"github.com/practable/relay/internal/booking"
+	"github.com/practable/relay/internal/bookingstore"
+	lit "github.com/practable/relay/internal/login"
+	"github.com/practable/relay/internal/pool"
 	"github.com/xtgo/uuid"
 )
 

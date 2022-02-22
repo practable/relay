@@ -25,7 +25,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 	"golang.org/x/net/netutil"
 
-	"github.com/timdrysdale/relay/pkg/shellaccess/restapi/operations"
+	"github.com/practable/relay/internal/shellaccess/restapi/operations"
 )
 
 const (

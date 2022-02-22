@@ -9,8 +9,8 @@ import (
 	"github.com/eclesh/welford"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/permission"
-	"github.com/timdrysdale/relay/pkg/util"
+	"github.com/practable/relay/internal/permission"
+	"github.com/practable/relay/internal/util"
 )
 
 // ConnectionType represents whether the connection is session, shell, or unsupported

@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/booking/models"
+	"github.com/practable/relay/internal/booking/models"
 )
 
 // TODO - add periodic cleaning to avoid memory leak from single-use users

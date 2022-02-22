@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/practable/relay/internal/permission"
 )
 
 // ConnectionType represents whether the connection is for Session, Shell or Unsupported

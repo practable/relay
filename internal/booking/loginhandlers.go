@@ -6,11 +6,11 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/timdrysdale/relay/pkg/booking/models"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
-	"github.com/timdrysdale/relay/pkg/bookingstore"
-	lit "github.com/timdrysdale/relay/pkg/login"
-	"github.com/timdrysdale/relay/pkg/pool"
+	"github.com/practable/relay/internal/booking/models"
+	"github.com/practable/relay/internal/booking/restapi/operations/login"
+	"github.com/practable/relay/internal/bookingstore"
+	lit "github.com/practable/relay/internal/login"
+	"github.com/practable/relay/internal/pool"
 )
 
 func getCurrentBookings(ps *pool.Store, l *bookingstore.Limit) func(login.GetCurrentBookingsParams, interface{}) middleware.Responder {

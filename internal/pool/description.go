@@ -2,7 +2,7 @@ package pool
 
 import (
 	"github.com/google/uuid"
-	"github.com/timdrysdale/relay/pkg/booking/models"
+	"github.com/practable/relay/internal/booking/models"
 )
 
 // NewDescriptionFromModel returns a pointer to a Description converted from the API's model

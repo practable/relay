@@ -19,10 +19,10 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/admin"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
+	"github.com/practable/relay/internal/booking/restapi/operations/admin"
+	"github.com/practable/relay/internal/booking/restapi/operations/groups"
+	"github.com/practable/relay/internal/booking/restapi/operations/login"
+	"github.com/practable/relay/internal/booking/restapi/operations/pools"
 )
 
 // NewBookingAPI creates a new Booking instance

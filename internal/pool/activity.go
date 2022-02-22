@@ -9,8 +9,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/timdrysdale/relay/pkg/booking/models"
-	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/practable/relay/internal/booking/models"
+	"github.com/practable/relay/internal/permission"
 )
 
 // NewActivityFromModel converts from pkg/booking type to

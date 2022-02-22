@@ -16,7 +16,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 
-	"github.com/timdrysdale/relay/pkg/booking/models"
+	"github.com/practable/relay/internal/booking/models"
 )
 
 // NewUpdateActivityByIDParams creates a new UpdateActivityByIDParams object

@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/validate"
 
-	"github.com/timdrysdale/relay/pkg/booking/models"
+	"github.com/practable/relay/internal/booking/models"
 )
 
 // NewAddNewPoolParams creates a new AddNewPoolParams object

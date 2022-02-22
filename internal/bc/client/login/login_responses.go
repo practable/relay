@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/timdrysdale/relay/pkg/bc/models"
+	"github.com/practable/relay/internal/bc/models"
 )
 
 // LoginReader is a Reader for the Login structure.

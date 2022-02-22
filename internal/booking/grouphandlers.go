@@ -2,9 +2,9 @@ package booking
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/timdrysdale/relay/pkg/booking/models"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
-	"github.com/timdrysdale/relay/pkg/pool"
+	"github.com/practable/relay/internal/booking/models"
+	"github.com/practable/relay/internal/booking/restapi/operations/groups"
+	"github.com/practable/relay/internal/pool"
 )
 
 func addNewGroup(ps *pool.Store) func(groups.AddNewGroupParams, interface{}) middleware.Responder {

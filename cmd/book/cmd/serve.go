@@ -25,7 +25,7 @@ import (
 	"github.com/ory/viper"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/timdrysdale/relay/pkg/book"
+	"github.com/practable/relay/internal/book"
 )
 
 // serveCmd represents the serve command

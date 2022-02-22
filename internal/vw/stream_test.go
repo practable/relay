@@ -23,11 +23,11 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/agg"
-	"github.com/timdrysdale/relay/pkg/permission"
-	"github.com/timdrysdale/relay/pkg/reconws"
-	"github.com/timdrysdale/relay/pkg/relay"
-	"github.com/timdrysdale/relay/pkg/rwc"
+	"github.com/practable/relay/internal/agg"
+	"github.com/practable/relay/internal/permission"
+	"github.com/practable/relay/internal/reconws"
+	"github.com/practable/relay/internal/relay"
+	"github.com/practable/relay/internal/rwc"
 )
 
 func TestStreamUsingInternals(t *testing.T) {

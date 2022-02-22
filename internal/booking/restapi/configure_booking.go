@@ -10,11 +10,11 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/admin"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/groups"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
-	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/pools"
+	"github.com/practable/relay/internal/booking/restapi/operations"
+	"github.com/practable/relay/internal/booking/restapi/operations/admin"
+	"github.com/practable/relay/internal/booking/restapi/operations/groups"
+	"github.com/practable/relay/internal/booking/restapi/operations/login"
+	"github.com/practable/relay/internal/booking/restapi/operations/pools"
 )
 
 //go:generate swagger generate server --target ../../booking --name Booking --spec ../../../api/openapi-spec/booking.yml --principal interface{} --exclude-main

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/timdrysdale/relay/pkg/rwc"
+	"github.com/practable/relay/internal/rwc"
 )
 
 // These tests do not start the hub or the websocket client

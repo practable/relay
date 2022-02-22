@@ -13,8 +13,8 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/timdrysdale/relay/pkg/booking/models"
-	"github.com/timdrysdale/relay/pkg/util"
+	"github.com/practable/relay/internal/booking/models"
+	"github.com/practable/relay/internal/util"
 	"github.com/xtgo/uuid"
 )
 

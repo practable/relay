@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/relay/pkg/rwc"
+	"github.com/practable/relay/internal/rwc"
 )
 
 // curl -X GET http://localhost:8888/api/destinations/all

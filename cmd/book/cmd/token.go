@@ -24,7 +24,7 @@ import (
 
 	"github.com/ory/viper"
 	"github.com/spf13/cobra"
-	"github.com/timdrysdale/relay/pkg/login"
+	"github.com/practable/relay/internal/login"
 )
 
 // tokenCmd represents the token command

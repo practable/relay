@@ -3,7 +3,7 @@ package pool
 import (
 	"sync"
 
-	"github.com/timdrysdale/relay/pkg/permission"
+	"github.com/practable/relay/internal/permission"
 )
 
 // Store represents Activities stored according to Pool and Group
