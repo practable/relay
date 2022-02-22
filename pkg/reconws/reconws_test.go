@@ -36,10 +36,12 @@ func makeTestToken(audience, secret string, ttl int64) (string, error) {
 
 	var claims permission.Token
 
-	claims.IssuedAt = time.Now().Unix() - 1
-	claims.NotBefore = time.Now().Unix() - 1
-	claims.ExpiresAt = time.Now().Unix() + ttl
-	claims.Audience = audience
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	afterTTL := jwt.NewNumericDate(time.Now().Add(time.Duration(ttl) * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = afterTTL
+	claims.Audience = jwt.ClaimStrings{audience}
 	claims.Topic = "123"
 	claims.ConnectionType = "session"
 	claims.Scopes = []string{"read", "write"}
