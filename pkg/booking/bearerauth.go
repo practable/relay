@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/go-openapi/runtime/security"
+	"github.com/golang-jwt/jwt/v4"
 	log "github.com/sirupsen/logrus"
 	lit "github.com/timdrysdale/relay/pkg/login"
 )
@@ -132,16 +132,25 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 			return nil, fmt.Errorf("token invalid")
 		}
 
-		if claims.Audience != host {
+		found := false
+
+		for _, aud := range claims.Audience {
+			if aud == host {
+				found = true
+			}
+
+		}
+
+		if !found {
 
 			log.WithFields(log.Fields{"aud": claims.Audience, "host": host}).Info("aud does not match this host")
 			return nil, fmt.Errorf("aud %s does not match this host %s", claims.Audience, host)
 		}
 
 		// already checked but belt and braces ....
-		if claims.ExpiresAt <= time.Now().Unix() {
-			log.Info(fmt.Sprintf("Expired at %d", claims.ExpiresAt))
-			return nil, fmt.Errorf("expired at %d", claims.ExpiresAt)
+		if claims.ExpiresAt.Before(time.Now()) {
+			log.Info(fmt.Sprintf("Expired at %s", claims.ExpiresAt.String()))
+			return nil, fmt.Errorf("expired at %s", claims.ExpiresAt.String())
 		}
 
 		return token, nil
