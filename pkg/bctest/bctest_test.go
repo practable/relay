@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
@@ -160,7 +160,7 @@ func TestBearers(t *testing.T) {
 
 	assert.Equal(t, []string{"everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:admin"}, claims.Scopes)
-	assert.True(t, claims.ExpiresAt > time.Now().Unix()+30)
+	assert.True(t, claims.ExpiresAt.After(time.Now().Add(30*time.Second)))
 
 	_, err = uuid.Parse(claims.Subject)
 	assert.NoError(t, err)
@@ -178,8 +178,7 @@ func TestBearers(t *testing.T) {
 
 	assert.Equal(t, []string{"everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
-	assert.True(t, claims.ExpiresAt > time.Now().Unix()+30)
-
+	assert.True(t, claims.ExpiresAt.After(time.Now().Add(30*time.Second)))
 	_, err = uuid.Parse(claims.Subject)
 	assert.NoError(t, err)
 
