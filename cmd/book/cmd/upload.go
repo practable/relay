@@ -26,9 +26,9 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/ory/viper"
 	"github.com/spf13/cobra"
-	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
-	"github.com/timdrysdale/relay/pkg/bc/client/login"
-	"github.com/timdrysdale/relay/pkg/manifest"
+	apiclient "github.com/practable/relay/internal/bc/client"
+	"github.com/practable/relay/internal/bc/client/login"
+	"github.com/practable/relay/internal/manifest"
 	"gopkg.in/yaml.v2"
 )
 

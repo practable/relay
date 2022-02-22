@@ -27,7 +27,7 @@ jobs:
       - name: nancy
         uses: sonatype-nexus-community/nancy-github-action@main
         with:
-          nancyCommand: sleuth --exclude-vulnerability CVE-2020-15114,CVE-2020-15136,CVE-2020-15115
+          nancyCommand: sleuth --exclude-vulnerability CVE-2020-15114,CVE-2020-15136,CVE-2020-15115,CVE-2020-26160
       - name: Unit Tests
         run: |
           go test -race -cover -coverprofile=coverage.txt -covermode=atomic -cpu 1,2 -bench . -benchmem > test.log

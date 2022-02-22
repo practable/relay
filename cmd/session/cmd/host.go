@@ -18,7 +18,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/timdrysdale/relay/pkg/vw"
+	"github.com/practable/relay/internal/vw"
 )
 
 // hostCmd represents the host command
