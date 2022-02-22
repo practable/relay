@@ -86,7 +86,7 @@ func API(ctx context.Context, port int, host, secret string, ps *pool.Store, l *
 	api.PoolsUpdateActivityByIDHandler = pools.UpdateActivityByIDHandlerFunc(updateActivityByID(ps))
 
 	// *** USERS *** //
-	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandler(ps))
+	api.LoginLoginHandler = login.LoginHandlerFunc(loginHandler(ps, host))
 	api.LoginGetCurrentBookingsHandler = login.GetCurrentBookingsHandlerFunc(getCurrentBookings(ps, l))
 
 	// *** NOT IN API YET ***
