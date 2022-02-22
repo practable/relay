@@ -1,9 +1,11 @@
+// Package crossbar provides a message broker with topics
 package crossbar
 
 import (
 	"sync"
 )
 
+// Crossbar creates and runs a new crossbar instance
 func Crossbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
 
 	var wg sync.WaitGroup

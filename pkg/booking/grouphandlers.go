@@ -7,7 +7,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func addNewGroup(ps *pool.PoolStore) func(groups.AddNewGroupParams, interface{}) middleware.Responder {
+func addNewGroup(ps *pool.Store) func(groups.AddNewGroupParams, interface{}) middleware.Responder {
 	return func(params groups.AddNewGroupParams, principal interface{}) middleware.Responder {
 
 		_, err := isBookingAdmin(principal)
@@ -49,7 +49,7 @@ func addNewGroup(ps *pool.PoolStore) func(groups.AddNewGroupParams, interface{})
 	}
 }
 
-func addPoolsByGroupID(ps *pool.PoolStore) func(groups.AddPoolsByGroupIDParams, interface{}) middleware.Responder {
+func addPoolsByGroupID(ps *pool.Store) func(groups.AddPoolsByGroupIDParams, interface{}) middleware.Responder {
 	return func(params groups.AddPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 
 		_, err := isBookingAdmin(principal)
@@ -84,7 +84,7 @@ func addPoolsByGroupID(ps *pool.PoolStore) func(groups.AddPoolsByGroupIDParams, 
 	}
 }
 
-func deleteGroup(ps *pool.PoolStore) func(groups.DeleteGroupParams, interface{}) middleware.Responder {
+func deleteGroup(ps *pool.Store) func(groups.DeleteGroupParams, interface{}) middleware.Responder {
 	return func(params groups.DeleteGroupParams, principal interface{}) middleware.Responder {
 
 		_, err := isBookingAdmin(principal)
@@ -106,7 +106,7 @@ func deleteGroup(ps *pool.PoolStore) func(groups.DeleteGroupParams, interface{})
 	}
 }
 
-func deletePoolsByGroupID(ps *pool.PoolStore) func(groups.DeletePoolsByGroupIDParams, interface{}) middleware.Responder {
+func deletePoolsByGroupID(ps *pool.Store) func(groups.DeletePoolsByGroupIDParams, interface{}) middleware.Responder {
 	return func(params groups.DeletePoolsByGroupIDParams, principal interface{}) middleware.Responder {
 
 		_, err := isBookingAdmin(principal)
@@ -138,7 +138,7 @@ func deletePoolsByGroupID(ps *pool.PoolStore) func(groups.DeletePoolsByGroupIDPa
 	}
 }
 
-func getPoolsByGroupID(ps *pool.PoolStore) func(params groups.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
+func getPoolsByGroupID(ps *pool.Store) func(params groups.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 	return func(params groups.GetPoolsByGroupIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -177,7 +177,7 @@ func getPoolsByGroupID(ps *pool.PoolStore) func(params groups.GetPoolsByGroupIDP
 	}
 }
 
-func getGroupDescriptionByID(ps *pool.PoolStore) func(groups.GetGroupDescriptionByIDParams, interface{}) middleware.Responder {
+func getGroupDescriptionByID(ps *pool.Store) func(groups.GetGroupDescriptionByIDParams, interface{}) middleware.Responder {
 	return func(params groups.GetGroupDescriptionByIDParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -212,7 +212,7 @@ func getGroupDescriptionByID(ps *pool.PoolStore) func(groups.GetGroupDescription
 	}
 }
 
-func getGroupIDByName(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
+func getGroupIDByName(ps *pool.Store) func(groups.GetGroupIDByNameParams, interface{}) middleware.Responder {
 	return func(params groups.GetGroupIDByNameParams, principal interface{}) middleware.Responder {
 
 		isAdmin, claims, err := isBookingAdminOrUser(principal)
@@ -250,7 +250,7 @@ func getGroupIDByName(ps *pool.PoolStore) func(groups.GetGroupIDByNameParams, in
 	}
 }
 
-func replacePoolsByGroupID(ps *pool.PoolStore) func(groups.ReplacePoolsByGroupIDParams, interface{}) middleware.Responder {
+func replacePoolsByGroupID(ps *pool.Store) func(groups.ReplacePoolsByGroupIDParams, interface{}) middleware.Responder {
 
 	return func(params groups.ReplacePoolsByGroupIDParams, principal interface{}) middleware.Responder {
 

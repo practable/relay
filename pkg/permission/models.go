@@ -1,7 +1,9 @@
 package permission
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	"time"
+
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 // Permission represents claims required in the apiKey JWT
@@ -11,6 +13,7 @@ import (
 // - Scopes
 // - Audience
 
+// Token represents a JWT token
 type Token struct {
 
 	// Topic identifies the communication channel;
@@ -38,38 +41,43 @@ type Token struct {
 	// This is needed for ssh hosts in shellbar
 	AlertHost bool `json:"alertHost,omitempty" yaml:",omitempty"`
 
-	jwt.StandardClaims `yaml:",omitempty"`
+	jwt.RegisteredClaims `yaml:",omitempty"`
 }
 
+// NewToken returns a Token populated with the supplied information
 func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf, exp int64) Token {
+
 	return Token{
 		Topic:          topic,
 		Scopes:         scopes,
 		ConnectionType: connectionType,
-		StandardClaims: jwt.StandardClaims{
-			IssuedAt:  iat,
-			NotBefore: nbf,
-			ExpiresAt: exp,
-			Audience:  audience,
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Unix(iat, 0)),
+			NotBefore: jwt.NewNumericDate(time.Unix(nbf, 0)),
+			ExpiresAt: jwt.NewNumericDate(time.Unix(exp, 0)),
+			Audience:  []string{audience},
 		},
 	}
 }
 
+// SetTopicSalt sets the salt for token topic
 func SetTopicSalt(token *Token, salt string) {
 	token.TopicSalt = salt
 }
 
+// SetAlertHost sets the boolean value of AlertHost
 func SetAlertHost(token *Token, alertHost bool) {
 	token.AlertHost = alertHost
 }
 
+// HasRequiredClaims returns false if the Token is missing any required elements
 func HasRequiredClaims(token Token) bool {
 
 	if token.Topic == "" ||
 		len(token.Scopes) == 0 ||
 		token.ConnectionType == "" ||
-		token.Audience == "" ||
-		token.ExpiresAt == 0 {
+		len(token.RegisteredClaims.Audience) == 0 ||
+		(*token.RegisteredClaims.ExpiresAt).IsZero() {
 		return false
 	}
 	return true

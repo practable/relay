@@ -9,7 +9,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/permission"
 )
 
-// Token represents a token and its expiry time.
+// ExpToken represents a token and its expiry time.
 // Tokens are assumed valid from time of submission.
 type ExpToken struct {
 
@@ -53,11 +53,12 @@ func GetTime() int64 {
 	return time.Now().Unix()
 }
 
+// GetTime gets the current time as used by the CodeStore
 func (c *CodeStore) GetTime() int64 {
 	return GetTime()
 }
 
-// NewDefaultCodeSTore returns a codestore with code lifetime of 30seconds.
+// NewDefaultCodeStore returns a codestore with code lifetime of 30seconds.
 func NewDefaultCodeStore() *CodeStore {
 	c := &CodeStore{
 		store:  make(map[string]ExpToken),
@@ -74,6 +75,7 @@ func (c *CodeStore) WithTTL(ttl int64) *CodeStore {
 	return c
 }
 
+// Close stops the codestore
 func (c *CodeStore) Close() {
 	c.Lock()
 	defer c.Unlock()
@@ -132,10 +134,12 @@ func (c *CodeStore) CleanExpired() {
 	}
 }
 
+// GetTTL returns the TTL for the codestore
 func (c *CodeStore) GetTTL() int64 {
 	return c.ttl
 }
 
+// GetCodeCount counts the number of tokens in the store
 func (c *CodeStore) GetCodeCount() int {
 	return len(c.store)
 }

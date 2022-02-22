@@ -13,8 +13,10 @@ import (
 	"github.com/timdrysdale/relay/pkg/permission"
 )
 
+// ConnectionType represents whether the connection is for Session, Shell or Unsupported
 type ConnectionType int
 
+// Enumerated connection types
 const (
 	Session ConnectionType = iota
 	Shell
@@ -86,19 +88,28 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	now := config.CodeStore.GetTime()
 
-	if token.NotBefore > now {
+	if token.NotBefore.After(time.Unix(now, 0)) {
 		log.WithField("topic", topic).Infof("%s: Unauthorized - Too early", id)
 		return
 	}
 
-	ttl := token.ExpiresAt - now
+	ttl := token.ExpiresAt.Unix() - now
 
-	audienceBad := (config.Audience != token.Audience)
+	log.WithFields(log.Fields{"ttl": ttl, "topic": topic}).Trace()
+
+	audok := false
+
+	for _, aud := range token.Audience {
+		if aud == config.Audience {
+			audok = true
+		}
+	}
+
 	topicBad := (topic != token.Topic)
 	expired := ttl < 0
 
-	if audienceBad || topicBad || expired {
-		log.WithFields(log.Fields{"audienceBad": audienceBad, "topicBad": topicBad, "expired": expired, "topic": topic}).Tracef("%s: Token invalid", id)
+	if (!audok) || topicBad || expired {
+		log.WithFields(log.Fields{"audienceOK": audok, "topicOK": !topicBad, "expired": expired, "topic": topic}).Trace("Token invalid")
 		return
 	}
 
@@ -177,7 +188,9 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 			}
 
 			// same URL as client used, but different code (and leave out the salt)
-			hostAlertURI := token.Audience + "/" + token.ConnectionType + "/" + token.Topic + "?code=" + code
+			// note the token could have multiple audiences, whereas we are checking validity against
+			// only one audience, the config audience, so use that to generate our URI
+			hostAlertURI := config.Audience + "/" + token.ConnectionType + "/" + token.Topic + "?code=" + code
 			ca := ConnectionAction{
 				Action: "connect",
 				URI:    hostAlertURI,

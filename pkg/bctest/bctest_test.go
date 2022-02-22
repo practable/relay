@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
@@ -22,13 +22,10 @@ import (
 	"github.com/xtgo/uuid"
 )
 
-var debug bool
 var l *bookingstore.Limit
-var ps *pool.PoolStore
-var bookingDuration, mocktime, startime int64
+var ps *pool.Store
 var useLocal bool
 var adminBearer, userBearer string
-var bc *apiclient.Bc
 var secret string
 
 func init() {
@@ -55,7 +52,7 @@ func TestMain(m *testing.M) {
 
 		secret = "somesecret"
 
-		ps = pool.NewPoolStore().
+		ps = pool.NewStore().
 			WithSecret(secret).
 			WithBookingTokenDuration(int64(180))
 
@@ -163,7 +160,7 @@ func TestBearers(t *testing.T) {
 
 	assert.Equal(t, []string{"everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:admin"}, claims.Scopes)
-	assert.True(t, claims.ExpiresAt > time.Now().Unix()+30)
+	assert.True(t, claims.ExpiresAt.After(time.Now().Add(30*time.Second)))
 
 	_, err = uuid.Parse(claims.Subject)
 	assert.NoError(t, err)
@@ -181,8 +178,7 @@ func TestBearers(t *testing.T) {
 
 	assert.Equal(t, []string{"everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
-	assert.True(t, claims.ExpiresAt > time.Now().Unix()+30)
-
+	assert.True(t, claims.ExpiresAt.After(time.Now().Add(30*time.Second)))
 	_, err = uuid.Parse(claims.Subject)
 	assert.NoError(t, err)
 

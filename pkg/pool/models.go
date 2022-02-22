@@ -6,7 +6,8 @@ import (
 	"github.com/timdrysdale/relay/pkg/permission"
 )
 
-type PoolStore struct {
+// Store represents Activities stored according to Pool and Group
+type Store struct {
 	*sync.RWMutex `json:"-" yaml:"-"`
 
 	// Groups represent non-exclusive combinations of pools
@@ -25,12 +26,18 @@ type PoolStore struct {
 	Now func() int64 `json:"-" yaml:"-"`
 }
 
+// Group represents a group of Pools
 type Group struct {
 	*sync.RWMutex `json:"-" yaml:"-"`
 	Description   `json:"description"`
 	Pools         []*Pool `json:"pools"`
 }
 
+// Pool represents the booking status of the activities in a pool
+// Note that each pool can have a different minSession / MaxSession duration
+// but that users are limited to fixed maximum number of sessions they can book
+// across the system to prevent users with access with more pools booking even more
+// experiments simultaneously.
 type Pool struct {
 	*sync.RWMutex `json:"-" yaml:"-"`
 	Description   `json:"description"`
@@ -42,10 +49,12 @@ type Pool struct {
 	Now           func() int64         `json:"-" yaml:"-"`
 }
 
+// Config represents a UI configuration file URL
 type Config struct {
 	URL string `json:"url"`
 }
 
+// Description represents an Activity Description
 type Description struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -53,6 +62,7 @@ type Description struct {
 	DisplayInfo
 }
 
+// Activity represents an individual activity that can be booked
 type Activity struct {
 	*sync.RWMutex `json:"-"`
 	Config        Config `json:"config"`
@@ -62,6 +72,7 @@ type Activity struct {
 	UI            []*UI              `json:"ui"`
 }
 
+// UI represents a UI that can be used with an Activity
 type UI struct {
 	// URL with moustache {{key}} templating for stream connections
 	Description     `json:"description"`
@@ -94,6 +105,7 @@ type Stream struct {
 	Permission permission.Token `json:"permission,omitempty"`
 }
 
+// DisplayInfo represents information about an Activity that is displayed to users
 type DisplayInfo struct {
 	Short   string `json:"short,omitempty"`
 	Long    string `json:"long,omitempty"`

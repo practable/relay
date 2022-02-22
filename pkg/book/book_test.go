@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -32,7 +32,7 @@ import (
 
 var debug bool
 var l *bookingstore.Limit
-var ps *pool.PoolStore
+var ps *pool.Store
 var host, secret string
 var bookingDuration, mocktime, startime int64
 
@@ -76,7 +76,7 @@ func TestMain(m *testing.M) {
 	mocktime = time.Now().Unix()
 	startime = mocktime
 
-	ps = pool.NewPoolStore().
+	ps = pool.NewStore().
 		WithSecret(secret).
 		WithBookingTokenDuration(bookingDuration).
 		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
@@ -101,12 +101,14 @@ func TestMain(m *testing.M) {
 
 func TestGetSetLockedMessage(t *testing.T) {
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"stuff", "everyone"}
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -127,6 +129,10 @@ func TestGetSetLockedMessage(t *testing.T) {
 	assert.NoError(t, err)
 
 	if btr == nil {
+		t.Fatal("no token returned")
+	}
+
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -217,12 +223,16 @@ func TestBooking(t *testing.T) {
 	g1.AddPool(p0) //add to both groups - should only see it once though
 
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"somecourse", "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -253,7 +263,7 @@ func TestBooking(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 	bookingTokenReturned := *(btr.Token)
@@ -270,8 +280,11 @@ func TestBooking(t *testing.T) {
 
 	assert.Equal(t, []string{"somecourse", "everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
-	assert.True(t, claims.ExpiresAt < ps.Now()+bookingDuration+15)
-	assert.True(t, claims.ExpiresAt > ps.Now()+bookingDuration-15)
+
+	plus15 := time.Now().Add(time.Duration(bookingDuration+15) * time.Second)
+	minus15 := time.Now().Add(time.Duration(bookingDuration-15) * time.Second)
+	assert.True(t, claims.ExpiresAt.Before(plus15))
+	assert.True(t, claims.ExpiresAt.After(minus15))
 	assert.True(t, len(claims.Subject) >= 35)
 
 	subject := claims.Subject //save for next test
@@ -279,12 +292,15 @@ func TestBooking(t *testing.T) {
 	// Now login again with previous booking token in body and see that subject is retained
 	// but that only groups in new token are returned
 	newLoginClaims := &lit.Token{}
-	newLoginClaims.Audience = host
+	newLoginClaims.Audience = jwt.ClaimStrings{host}
 	newLoginClaims.Groups = []string{"othercourse", "everyone"}
 	newLoginClaims.Scopes = []string{"login:user"}
-	newLoginClaims.IssuedAt = ps.GetTime() - 1
-	newLoginClaims.NotBefore = ps.GetTime() - 1
-	newLoginClaims.ExpiresAt = newLoginClaims.NotBefore + ps.BookingTokenDuration
+	now = jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later = jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	newLoginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, newLoginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -321,8 +337,12 @@ func TestBooking(t *testing.T) {
 	//note groups are different  somecourse -> othercourse
 	assert.Equal(t, []string{"othercourse", "everyone"}, claims.Groups)
 	assert.Equal(t, []string{"booking:user"}, claims.Scopes)
-	assert.True(t, claims.ExpiresAt < ps.Now()+bookingDuration+15)
-	assert.True(t, claims.ExpiresAt > ps.Now()+bookingDuration-15)
+
+	plus15 = time.Now().Add(time.Duration(bookingDuration+15) * time.Second)
+	minus15 = time.Now().Add(time.Duration(bookingDuration-15) * time.Second)
+	assert.True(t, claims.ExpiresAt.Before(plus15))
+	assert.True(t, claims.ExpiresAt.After(minus15))
+
 	assert.True(t, len(claims.Subject) >= 35)
 
 	// key test
@@ -342,12 +362,15 @@ func TestGetGroupIDByName(t *testing.T) {
 	defer ps.DeleteGroup(g1)
 
 	claims := &lit.Token{}
-	claims.Audience = host
+	claims.Audience = jwt.ClaimStrings{host}
 	claims.Groups = []string{"stuff"}
 	claims.Scopes = []string{"booking:user"}
-	claims.IssuedAt = ps.GetTime() - 1
-	claims.NotBefore = ps.GetTime() - 1
-	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	claims.IssuedAt = now
+	claims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	claims.ExpiresAt = later
 
 	// sign user token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -371,7 +394,9 @@ func TestGetGroupIDByName(t *testing.T) {
 	err = json.Unmarshal(body, &ids)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(ids))
-	assert.Equal(t, g0.ID, ids[0])
+	if len(ids) > 0 {
+		assert.Equal(t, g0.ID, ids[0])
+	}
 
 	// check request fails if group not in groups
 	req, err = http.NewRequest("GET", host+"/api/v1/groups", nil)
@@ -406,12 +431,14 @@ func TestGetGroupDescriptionByID(t *testing.T) {
 	defer ps.DeleteGroup(g0)
 
 	claims := &lit.Token{}
-	claims.Audience = host
+	claims.Audience = jwt.ClaimStrings{host}
 	claims.Groups = []string{name}
 	claims.Scopes = []string{"booking:user"}
-	claims.IssuedAt = ps.GetTime() - 1
-	claims.NotBefore = ps.GetTime() - 1
-	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	claims.IssuedAt = now
+	claims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	claims.ExpiresAt = later
 
 	// sign user token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -425,6 +452,7 @@ func TestGetGroupDescriptionByID(t *testing.T) {
 	req.Header.Add("Authorization", bearer)
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
+	assert.NoError(t, err)
 	body, err := ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
@@ -478,12 +506,15 @@ func TestGetAllPools(t *testing.T) {
 	ps.Unlock()
 
 	claims := &lit.Token{}
-	claims.Audience = host
+	claims.Audience = jwt.ClaimStrings{host}
 	claims.Groups = []string{name}
 	claims.Scopes = []string{"booking:admin"}
-	claims.IssuedAt = ps.GetTime() - 1
-	claims.NotBefore = ps.GetTime() - 1
-	claims.ExpiresAt = claims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	claims.IssuedAt = now
+	claims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	claims.ExpiresAt = later
 
 	// sign user token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -497,6 +528,7 @@ func TestGetAllPools(t *testing.T) {
 	req.Header.Add("Authorization", bearer)
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
+	assert.NoError(t, err)
 	body, err := ioutil.ReadAll(resp.Body)
 	if false {
 		t.Log(resp.Status, string(body))
@@ -508,7 +540,7 @@ func TestGetAllPools(t *testing.T) {
 	err = json.Unmarshal(body, &r)
 	assert.NoError(t, err)
 
-	// note the order can change in PoolStore - that's ok
+	// note the order can change in pool.Store - that's ok
 	assert.True(t, util.SortCompare([]string{p0.ID, p1.ID, p2.ID, p3.ID}, r))
 
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/", nil)
@@ -519,6 +551,7 @@ func TestGetAllPools(t *testing.T) {
 	q.Add("name", "stuff0")
 	req.URL.RawQuery = q.Encode()
 	resp, err = client.Do(req)
+	assert.NoError(t, err)
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	r = []string{}
@@ -535,6 +568,7 @@ func TestGetAllPools(t *testing.T) {
 	q.Add("exact", "true")
 	req.URL.RawQuery = q.Encode()
 	resp, err = client.Do(req)
+	assert.NoError(t, err)
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	r = []string{}
@@ -576,13 +610,16 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 
 	// login
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
-	//check that missing group "everyone" in PoolStore does not stop login
+	loginClaims.Audience = jwt.ClaimStrings{host}
+	//check that missing group "everyone" in pool.Store does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -603,7 +640,7 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -675,11 +712,14 @@ func TestGetPoolsAtLoginDescriptionStatusByID(t *testing.T) {
 	a := pool.NewActivity("a", ps.Now()+3600)
 	b := pool.NewActivity("b", ps.Now()+7200)
 	c := pool.NewActivity("b", ps.Now()+7200)
-	p0.AddActivity(a)
+	err = p0.AddActivity(a)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(a)
-	p0.AddActivity(b)
+	err = p0.AddActivity(b)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(b)
-	p0.AddActivity(c)
+	err = p0.AddActivity(c)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(c)
 
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+p0.ID+"/status", nil)
@@ -831,15 +871,17 @@ func TestRequestSessionByPoolID(t *testing.T) {
 
 	a := pool.NewActivity("a", ps.Now()+3600)
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
 		ConnectionType: "session",
 		Topic:          "123",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: []string{"https://example.com"},
 		},
 	}
 	s0 := pool.NewStream("https://example.com/session/123data")
@@ -850,8 +892,8 @@ func TestRequestSessionByPoolID(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "456",
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: []string{"https://example.com"},
 		},
 	}
 	s1 := pool.NewStream("https://example.com/session/456video")
@@ -890,17 +932,23 @@ func TestRequestSessionByPoolID(t *testing.T) {
 
 	a.AddUI(u1)
 
-	mocktime = time.Now().Unix()
+	now := time.Now()
+
+	mocktime = now.Unix()
 
 	// login
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+
+	t0 := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = t0
+	loginClaims.NotBefore = t0
+	t1 := jwt.NewNumericDate(time.Unix(ps.GetTime()+bookingDuration, 0))
+	loginClaims.ExpiresAt = t1
+
 	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -922,7 +970,7 @@ func TestRequestSessionByPoolID(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -984,11 +1032,11 @@ func TestRequestSessionByPoolID(t *testing.T) {
 	}
 
 	stc, ok := streamToken.Claims.(*permission.Token)
-
+	assert.True(t, ok)
 	assert.Equal(t, pt0.Audience, stc.Audience)
 	assert.Equal(t, pt0.ConnectionType, stc.ConnectionType)
 	assert.True(t, pt0.Topic == stc.Topic || pt1.Topic == stc.Topic)
-	assert.Equal(t, ps.Now()+2000, stc.ExpiresAt)
+	assert.Equal(t, (*stc.ExpiresAt), *(jwt.NewNumericDate(now.Add(2000 * time.Second))))
 
 	// streams could come in either order, so check each item matches one or other
 	// TODO: improve this test so it detects weird mistakes like mixing up stream data
@@ -1057,15 +1105,17 @@ func TestLimits(t *testing.T) {
 
 	a := pool.NewActivity("a", ps.Now()+3600)
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
 		ConnectionType: "session",
 		Topic:          "foo",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: []string{"https://example.com"},
 		},
 	}
 	s0 := pool.NewStream("https://example.com/session/123data")
@@ -1076,8 +1126,8 @@ func TestLimits(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s1 := pool.NewStream("https://example.com/session/456video")
@@ -1085,15 +1135,17 @@ func TestLimits(t *testing.T) {
 	a.AddStream("video", s1)
 
 	a2 := pool.NewActivity("a2", ps.Now()+3600)
-	p0.AddActivity(a2)
+	err = p0.AddActivity(a2)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a2)
 
 	pt2 := permission.Token{
 		ConnectionType: "session",
 		Topic:          "bar",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 
@@ -1105,8 +1157,8 @@ func TestLimits(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s3 := pool.NewStream("https://example.com/session/456video")
@@ -1123,12 +1175,15 @@ func TestLimits(t *testing.T) {
 	//                                          |___/
 
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -1150,7 +1205,7 @@ func TestLimits(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -1191,13 +1246,16 @@ func TestLimits(t *testing.T) {
 	// user login
 
 	loginClaims = &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now = jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later = jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken = jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -1221,7 +1279,7 @@ func TestLimits(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -1339,6 +1397,7 @@ func TestLimits(t *testing.T) {
 	}
 
 	stc, ok := streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// save this to check we get both activities (check data stream permission topic from each request)
 	stcTopic0 := stc.Topic
@@ -1382,6 +1441,7 @@ func TestLimits(t *testing.T) {
 	}
 
 	stc, ok = streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// just check the two topics are what we expect from the data permission tokens
 	stcTopic1 := stc.Topic
@@ -1409,7 +1469,7 @@ func TestLimits(t *testing.T) {
 	err = json.Unmarshal(body, btr2)
 	assert.NoError(t, err)
 
-	if btr2 == nil {
+	if btr2.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -1473,12 +1533,15 @@ func TestAddNewPool(t *testing.T) {
 
 	// make an admin user login token, swap for booking token
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"everything"} //not an actual group
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -1496,7 +1559,7 @@ func TestAddNewPool(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 	adminBearer := *(btr.Token)
@@ -1530,6 +1593,7 @@ func TestAddNewPool(t *testing.T) {
 	reqBody, err := json.Marshal(p)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1545,6 +1609,7 @@ func TestAddNewPool(t *testing.T) {
 
 	// get ID back, use ID to get description, and compare...
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
@@ -1570,12 +1635,16 @@ func TestAddActivityToPoolID(t *testing.T) {
 	// make pool, add to pool store
 	// make an admin user login token, swap for booking token
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"everything"} //not an actual group
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -1593,7 +1662,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 	adminBearer := *(btr.Token)
@@ -1628,6 +1697,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	reqBody, err := json.Marshal(p)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1644,6 +1714,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 
 	// get ID back, use ID to get description, and compare...
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+*pid.ID, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
@@ -1766,6 +1837,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	reqBody2, err := json.Marshal(ma)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools/"+poolID+"/activities", bytes.NewBuffer(reqBody2))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1788,6 +1860,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 
 	// Get activity description and compare
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1818,6 +1891,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 	reqBody3, err := json.Marshal(ma)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("PUT", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, bytes.NewBuffer(reqBody3))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1833,6 +1907,7 @@ func TestAddActivityToPoolID(t *testing.T) {
 
 	// Now get activity again and check name has changed
 	req, err = http.NewRequest("GET", host+"/api/v1/pools/"+poolID+"/activities/"+activityID, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -1882,15 +1957,16 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 
 	a := pool.NewActivity("a", ps.Now()+3600)
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
 		ConnectionType: "session",
 		Topic:          "foo",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s0 := pool.NewStream("https://example.com/session/123data")
@@ -1901,8 +1977,8 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s1 := pool.NewStream("https://example.com/session/456video")
@@ -1910,15 +1986,16 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	a.AddStream("video", s1)
 
 	a2 := pool.NewActivity("a2", ps.Now()+3600)
-	p0.AddActivity(a2)
+	err = p0.AddActivity(a2)
+	assert.NoError(t, err)
 	defer p0.DeleteActivity(a2)
 
 	pt2 := permission.Token{
 		ConnectionType: "session",
 		Topic:          "bar",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 
@@ -1930,8 +2007,8 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s3 := pool.NewStream("https://example.com/session/456video")
@@ -1943,7 +2020,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	p, err := json.Marshal(ps)
 	assert.NoError(t, err)
 
-	ps2 := &pool.PoolStore{}
+	ps2 := &pool.Store{}
 
 	err = json.Unmarshal(p, &ps2)
 	assert.NoError(t, err)
@@ -1971,13 +2048,16 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 
 	// login
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -1999,7 +2079,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2054,6 +2134,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	}
 
 	stc, ok := streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// save this to check we get both activities (check data stream permission topic from each request)
 	stcTopic0 := stc.Topic
@@ -2096,6 +2177,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	}
 
 	stc, ok = streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// just check the two topics are what we expect from the data permission tokens
 	stcTopic1 := stc.Topic
@@ -2119,7 +2201,7 @@ func TestUnmarshalMarshalPoolStore(t *testing.T) {
 	err = json.Unmarshal(body, btr2)
 	assert.NoError(t, err)
 
-	if btr2 == nil {
+	if btr2.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2202,7 +2284,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps2 := pool.NewPoolStore().
+	ps2 := pool.NewStore().
 		WithSecret(secret).
 		WithBookingTokenDuration(bookingDuration).
 		WithNow(func() int64 { return func(now *int64) int64 { return *now }(&mocktime) })
@@ -2230,15 +2312,17 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	a.Config = pool.Config{URL: cu0}
 
-	p0.AddActivity(a)
+	err := p0.AddActivity(a)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a)
 
 	pt0 := permission.Token{
 		ConnectionType: "session",
 		Topic:          "foo",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s0 := pool.NewStream("https://example.com/session/123data")
@@ -2249,8 +2333,8 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "foo", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s1 := pool.NewStream("https://example.com/session/456video")
@@ -2262,15 +2346,17 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	cu1 := "https://somewhere.com/config/config1.json"
 	a2.Config = pool.Config{URL: cu1}
 
-	p0.AddActivity(a2)
+	err = p0.AddActivity(a2)
+	assert.NoError(t, err)
+
 	defer p0.DeleteActivity(a2)
 
 	pt2 := permission.Token{
 		ConnectionType: "session",
 		Topic:          "bar",
 		Scopes:         []string{"read", "write"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 
@@ -2282,8 +2368,8 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		ConnectionType: "session",
 		Topic:          "bar", //would not normally set same as other stream - testing convenience
 		Scopes:         []string{"read"},
-		StandardClaims: jwt.StandardClaims{
-			Audience: "https://example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience: jwt.ClaimStrings{"https://example.com"},
 		},
 	}
 	s3 := pool.NewStream("https://example.com/session/456video")
@@ -2307,6 +2393,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ps2, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println("LOCAL POOL STORE")
 		fmt.Println(string(pretty))
 		fmt.Println("LOCAL POOL STORE marshalled to bytes")
@@ -2317,10 +2404,11 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 		poolDec, err := base64.StdEncoding.DecodeString(poolEnc)
 		assert.NoError(t, err)
 		fmt.Println(string(poolDec))
-		pscheck := &pool.PoolStore{}
+		pscheck := &pool.Store{}
 		err = json.Unmarshal(poolDec, pscheck)
 		assert.NoError(t, err)
 		pretty, err = json.MarshalIndent(pscheck, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println("LOCAL POOL STORE Unmarshalled")
 		fmt.Println(string(pretty))
 	}
@@ -2334,12 +2422,15 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	//                                          |___/
 
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -2359,7 +2450,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2392,6 +2483,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	//             |_|
 
 	reqBody, err := json.Marshal(store)
+	assert.NoError(t, err)
 
 	req, err = http.NewRequest("POST", host+"/api/v1/admin/poolstore", bytes.NewBuffer(reqBody))
 	assert.NoError(t, err)
@@ -2433,13 +2525,16 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	// login
 	loginClaims = &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	//check that missing group "everyone" in PoolStore does not stop login
 	loginClaims.Groups = []string{name, "everyone"}
 	loginClaims.Scopes = []string{"login:user"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+	now = jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later = jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	// sign user token
 	loginToken = jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	// Sign and get the complete encoded token as a string using the secret
@@ -2461,7 +2556,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2476,6 +2571,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(claims, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println("Login token claims")
 		fmt.Println(string(pretty))
 	}
@@ -2536,6 +2632,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	}
 
 	stc, ok := streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// save this to check we get both activities (check data stream permission topic from each request)
 	stcTopic0 := stc.Topic
@@ -2578,6 +2675,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	}
 
 	stc, ok = streamToken.Claims.(*permission.Token)
+	assert.True(t, ok)
 
 	// just check the two topics are what we expect from the data permission tokens
 	stcTopic1 := stc.Topic
@@ -2601,7 +2699,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	err = json.Unmarshal(body, btr2)
 	assert.NoError(t, err)
 
-	if btr2 == nil {
+	if btr2.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2676,6 +2774,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -2740,6 +2839,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(act0, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -2771,7 +2871,7 @@ func TestImportExportPoolStoreGetCurrentBookings(t *testing.T) {
 	bookingBytes, err := base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool := &pool.PoolStore{}
+	exportedPool := &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -2821,12 +2921,16 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	// Admin login
 
 	loginClaims := &lit.Token{}
-	loginClaims.Audience = host
+	loginClaims.Audience = jwt.ClaimStrings{host}
 	loginClaims.Groups = []string{"everyone"}
 	loginClaims.Scopes = []string{"login:admin"}
-	loginClaims.IssuedAt = ps.GetTime() - 1
-	loginClaims.NotBefore = ps.GetTime() - 1
-	loginClaims.ExpiresAt = loginClaims.NotBefore + ps.BookingTokenDuration
+
+	now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+	loginClaims.IssuedAt = now
+	loginClaims.NotBefore = now
+	later := jwt.NewNumericDate(now.Add(time.Duration(ps.BookingTokenDuration) * time.Second))
+	loginClaims.ExpiresAt = later
+
 	loginToken := jwt.NewWithClaims(jwt.SigningMethodHS256, loginClaims)
 	loginBearer, err := loginToken.SignedString([]byte(ps.Secret))
 	assert.NoError(t, err)
@@ -2846,7 +2950,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	err = json.Unmarshal(body, btr)
 	assert.NoError(t, err)
 
-	if btr == nil {
+	if btr.Token == nil {
 		t.Fatal("no token returned")
 	}
 
@@ -2896,6 +3000,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -2940,6 +3045,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err := json.Marshal(p0)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -2982,6 +3088,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(p1)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3032,6 +3139,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(mg)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/groups", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3075,6 +3183,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -3112,6 +3221,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(p3)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3134,6 +3244,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(ids)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("POST", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3177,7 +3288,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err := base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool := &pool.PoolStore{}
+	exportedPool := &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3202,6 +3313,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(ids)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("DELETE", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3245,7 +3357,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool = &pool.PoolStore{}
+	exportedPool = &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3279,6 +3391,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	reqBody, err = json.Marshal(ids)
 	assert.NoError(t, err)
 	req, err = http.NewRequest("PUT", host+"/api/v1/groups/"+gid+"/pools", bytes.NewBuffer(reqBody))
+	assert.NoError(t, err)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
@@ -3323,7 +3436,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool = &pool.PoolStore{}
+	exportedPool = &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3352,6 +3465,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	// Delete pool1 altogether
 	req, err = http.NewRequest("DELETE", host+"/api/v1/pools/"+pid1, nil)
+	assert.NoError(t, err)
 	req.Header.Add("Authorization", adminBearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
@@ -3388,7 +3502,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool = &pool.PoolStore{}
+	exportedPool = &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3515,6 +3629,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -3546,7 +3661,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	bookingBytes, err = base64.StdEncoding.DecodeString(*export.Booking)
 	assert.NoError(t, err)
 
-	exportedPool = &pool.PoolStore{}
+	exportedPool = &pool.Store{}
 
 	err = json.Unmarshal(poolBytes, exportedPool)
 	assert.NoError(t, err)
@@ -3569,7 +3684,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-	body, err = ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
 	// check no activity...
@@ -3589,6 +3704,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 
@@ -3604,7 +3720,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-	body, err = ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
 	// Get store status and check group is gone but pools stay
@@ -3623,6 +3739,7 @@ func TestAddDeleteGroupPoolActivity(t *testing.T) {
 
 	if veryVerbose {
 		pretty, err = json.MarshalIndent(ms, "", "\t")
+		assert.NoError(t, err)
 		fmt.Println(string(pretty))
 	}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/ttlcode"
 )
 
-//let configuration be passed as argument to permit testing
+//Config represents configuration of the relay & lets configuration be passed as argument to permit testing
 type Config struct {
 
 	// Listen is the listening port
@@ -25,6 +25,7 @@ type Config struct {
 	CodeStore *ttlcode.CodeStore
 }
 
+// NewDefaultConfig returns a pointer to a new, default, Config
 func NewDefaultConfig() *Config {
 	c := &Config{}
 	c.Listen = 3000
@@ -32,22 +33,26 @@ func NewDefaultConfig() *Config {
 	return c
 }
 
+// WithListen sets the listening port in the Config
 func (c *Config) WithListen(listen int) *Config {
 	c.Listen = listen
 	return c
 }
 
+// WithAudience sets the audience in the Config
 func (c *Config) WithAudience(audience string) *Config {
 	c.Audience = audience
 	return c
 }
 
+// WithCodeStoreTTL sets the TTL of the codestore
 func (c *Config) WithCodeStoreTTL(ttl int64) *Config {
 	c.CodeStore = ttlcode.NewDefaultCodeStore().
 		WithTTL(ttl)
 	return c
 }
 
+// ConnectionAction represents an action happening on a  connection
 type ConnectionAction struct {
 	Action string `json:"action"`
 	URI    string `json:"uri"`
@@ -95,11 +100,13 @@ type Client struct {
 	clearToSend chan struct{}
 }
 
+// RxTx represents statistics for both receive and transmit
 type RxTx struct {
 	Tx ReportStats `json:"tx"`
 	Rx ReportStats `json:"rx"`
 }
 
+// ReportStats represents statistics to be reported on a connection
 type ReportStats struct {
 	Last string `json:"last"` //how many seconds ago...
 
@@ -108,7 +115,7 @@ type ReportStats struct {
 	Fps float64 `json:"fps"`
 }
 
-// Client report omits non-serialisable internal references
+// ClientReport represents statistics on a client, and omits non-serialisable internal references
 type ClientReport struct {
 	Topic string `json:"topic"`
 
@@ -125,10 +132,12 @@ type ClientReport struct {
 	Stats RxTx `json:"stats"`
 }
 
+// StatsCommand represents a command relating to collection of statistics
 type StatsCommand struct {
 	Command string `json:"cmd"`
 }
 
+// Stats represents statistics for (video) frames received and transmitted
 type Stats struct {
 	connectedAt time.Time
 
@@ -137,6 +146,7 @@ type Stats struct {
 	tx *Frames
 }
 
+// Frames represents statistics for (video) frames
 type Frames struct {
 	last time.Time
 

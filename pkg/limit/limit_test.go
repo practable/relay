@@ -60,10 +60,6 @@ func TestNewWithFlush(t *testing.T) {
 
 }
 
-func mockTime(now *int64) int64 {
-	return *now
-}
-
 func TestNewHitLimit(t *testing.T) {
 	// can mock time in this test
 	t.Parallel()

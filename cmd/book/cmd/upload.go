@@ -91,10 +91,13 @@ book upload your_manifest.yml
 		auth := httptransport.APIKeyAuth("Authorization", "header", *resp.GetPayload().Token)
 
 		status, err := manifest.UploadManifest(bc, auth, timeout, *m)
-
-		pretty, err := json.MarshalIndent(status, "", "\t")
 		if err != nil {
 			fmt.Printf("Error: failed to upload manifest because %s\n", err.Error())
+			os.Exit(1)
+		}
+		pretty, err := json.MarshalIndent(status, "", "\t")
+		if err != nil {
+			fmt.Printf("Error: failed to upmarshal status because %s\n", err.Error())
 			os.Exit(1)
 		}
 		fmt.Println(string(pretty))

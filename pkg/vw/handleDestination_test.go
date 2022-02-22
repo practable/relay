@@ -54,8 +54,8 @@ func TestHandleDestinationAdd(t *testing.T) {
 	if got.Destination != "wss://video.practable.io:443/large" {
 		t.Error("Wrong destination")
 	}
-	if got.Id != "00" {
-		t.Error("Wrong Id")
+	if got.ID != "00" {
+		t.Error("Wrong ID")
 	}
 
 }
@@ -88,7 +88,7 @@ func TestHandleDestinationDelete(t *testing.T) {
 	got := <-a.Websocket.Delete
 
 	if got != "00" {
-		t.Error("Wrong Id")
+		t.Error("Wrong ID")
 	}
 
 }
@@ -144,7 +144,7 @@ func TestHandleDestinationShow(t *testing.T) {
 	handler := http.HandlerFunc(a.handleDestinationShow)
 
 	a.Websocket.Rules = make(map[string]rwc.Rule)
-	a.Websocket.Rules["00"] = rwc.Rule{Destination: "wss://video.practable.io:443/large", Stream: "/stream/large", Id: "00"}
+	a.Websocket.Rules["00"] = rwc.Rule{Destination: "wss://video.practable.io:443/large", Stream: "/stream/large", ID: "00"}
 
 	handler.ServeHTTP(rr, req)
 
@@ -177,10 +177,10 @@ func TestHandleDestinationShowAll(t *testing.T) {
 	a.Websocket.Rules = make(map[string]rwc.Rule)
 	a.Websocket.Rules["stream/large"] = rwc.Rule{Stream: "/stream/large",
 		Destination: "wss://somewhere",
-		Id:          "00"}
+		ID:          "00"}
 	a.Websocket.Rules["stream/medium"] = rwc.Rule{Stream: "/stream/medium",
 		Destination: "wss://overthere",
-		Id:          "01"}
+		ID:          "01"}
 
 	handler.ServeHTTP(rr, req)
 

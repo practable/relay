@@ -1,8 +1,10 @@
 package booking
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	"time"
+
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/timdrysdale/relay/pkg/booking/models"
 	"github.com/timdrysdale/relay/pkg/booking/restapi/operations/login"
@@ -11,7 +13,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/pool"
 )
 
-func getCurrentBookings(ps *pool.PoolStore, l *bookingstore.Limit) func(login.GetCurrentBookingsParams, interface{}) middleware.Responder {
+func getCurrentBookings(ps *pool.Store, l *bookingstore.Limit) func(login.GetCurrentBookingsParams, interface{}) middleware.Responder {
 	return func(params login.GetCurrentBookingsParams, principal interface{}) middleware.Responder {
 
 		claims, err := isBookingUser(principal)
@@ -24,7 +26,7 @@ func getCurrentBookings(ps *pool.PoolStore, l *bookingstore.Limit) func(login.Ge
 			return login.NewGetCurrentBookingsUnauthorized().WithPayload("no subject in token (userID)")
 		}
 
-		actmap := make(map[string]*models.Activity)
+		var actmap map[string]*models.Activity
 
 		actmap, _ = l.GetUserActivities(claims.Subject)
 
@@ -51,7 +53,7 @@ func getCurrentBookings(ps *pool.PoolStore, l *bookingstore.Limit) func(login.Ge
 	}
 }
 
-func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middleware.Responder {
+func loginHandler(ps *pool.Store, host string) func(login.LoginParams, interface{}) middleware.Responder {
 	return func(params login.LoginParams, principal interface{}) middleware.Responder {
 
 		token, ok := principal.(*jwt.Token)
@@ -122,10 +124,11 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 		bookingClaims := claims
 		//keep groups and any other fields added
 		bookingClaims.Scopes = scopes //update scopes
-
-		bookingClaims.IssuedAt = ps.GetTime() - 1
-		bookingClaims.NotBefore = ps.GetTime() - 1
-		bookingClaims.ExpiresAt = bookingClaims.NotBefore + ps.BookingTokenDuration
+		now := jwt.NewNumericDate(time.Unix(ps.GetTime()-1, 0))
+		later := jwt.NewNumericDate(time.Unix(ps.GetTime()+ps.BookingTokenDuration, 0))
+		bookingClaims.IssuedAt = now
+		bookingClaims.NotBefore = now
+		bookingClaims.ExpiresAt = later
 		bookingClaims.Subject = subject
 
 		// ignore old pools, and Use only pools that are currently
@@ -137,9 +140,9 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 		// group (pool assigned to multiple groups is expected)
 		pidmap := make(map[string]bool)
 
-		for _, group_name := range bookingClaims.Groups {
+		for _, groupName := range bookingClaims.Groups {
 
-			gps, err := ps.GetGroupsByName(group_name)
+			gps, err := ps.GetGroupsByName(groupName)
 			if err != nil {
 				// don't throw error in case other groups are valid
 				continue
@@ -155,7 +158,7 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 
 		pids := []string{}
 
-		for pid, _ := range pidmap {
+		for pid := range pidmap {
 			pids = append(pids, pid)
 		}
 
@@ -174,13 +177,16 @@ func loginHandler(ps *pool.PoolStore) func(login.LoginParams, interface{}) middl
 			return login.NewLoginInternalServerError().WithPayload("Could Not Generate Booking Token")
 		}
 
-		exp := float64(bookingClaims.ExpiresAt)
-		iat := float64(bookingClaims.ExpiresAt)
-		nbf := float64(bookingClaims.ExpiresAt)
+		// If I recall correctly, using float64 here is a limitation of swagger
+		exp := float64(bookingClaims.ExpiresAt.Unix())
+		iat := float64(bookingClaims.ExpiresAt.Unix())
+		nbf := float64(bookingClaims.ExpiresAt.Unix())
 
+		// The login token may have multiple audiences, but the booking token
+		// we issue is only valid for us, so we pass our host as the only audience.
 		return login.NewLoginOK().WithPayload(
 			&models.Bookingtoken{
-				Aud:    &bookingClaims.Audience,
+				Aud:    &host,
 				Exp:    &exp,
 				Groups: bookingClaims.Groups,
 				Iat:    iat,
