@@ -3,6 +3,7 @@ package login
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -21,7 +22,7 @@ type Token struct {
 	// Pools is a list of pool_id for the pools in the groups
 	Pools []string `json:"pools"`
 
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 // TokenInBody represents a token marshalled into a string
@@ -47,11 +48,11 @@ func NewToken(audience string, groups, pools []string, scopes []string, iat, nbf
 		Groups: groups,
 		Scopes: scopes,
 		Pools:  pools,
-		StandardClaims: jwt.StandardClaims{
-			IssuedAt:  iat,
-			NotBefore: nbf,
-			ExpiresAt: exp,
-			Audience:  audience,
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Unix(iat, 0)),
+			NotBefore: jwt.NewNumericDate(time.Unix(nbf, 0)),
+			ExpiresAt: jwt.NewNumericDate(time.Unix(exp, 0)),
+			Audience:  jwt.ClaimStrings{audience},
 		},
 	}
 }
