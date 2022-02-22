@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -41,7 +41,7 @@ func TestTokenGeneration(t *testing.T) {
 	scopes := []string{"host"}
 	secret := "somesecret"
 
-	expected := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b3BpYyI6ImY3NTU4ZGUwLWNiMGQtNGNiNS05NTE4LWFjNzFkMDQ0ODAwYiIsInByZWZpeCI6InNoZWxsIiwic2NvcGVzIjpbImhvc3QiXSwiYXVkIjoiaHR0cHM6Ly9yZWxheS1hY2Nlc3MuZXhhbXBsZS5pbyIsImV4cCI6MTYwOTMzMDIzMywiaWF0IjoxNjA5MzI5MjMzLCJuYmYiOjE2MDkzMjkyMzN9.fAuyD3buu1XWV8qLojEDTImZf_IrJXEu5g3oziKbZbY"
+	expected := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b3BpYyI6ImY3NTU4ZGUwLWNiMGQtNGNiNS05NTE4LWFjNzFkMDQ0ODAwYiIsInByZWZpeCI6InNoZWxsIiwic2NvcGVzIjpbImhvc3QiXSwiYXVkIjpbImh0dHBzOi8vcmVsYXktYWNjZXNzLmV4YW1wbGUuaW8iXSwiZXhwIjoxNjA5MzMwMjMzLCJuYmYiOjE2MDkzMjkyMzMsImlhdCI6MTYwOTMyOTIzM30.9IY1QGJjw_CfcBb-nqIAFfMnw0tsl_I3n-4Guuzht74"
 
 	bearer, err := Token(audience, ct, topic, secret, scopes, iat, nbf, exp)
 
@@ -98,10 +98,13 @@ func TestAPI(t *testing.T) {
 
 	var claims permission.Token
 
-	claims.IssuedAt = time.Now().Unix() - 1
-	claims.NotBefore = time.Now().Unix() - 1
-	claims.ExpiresAt = time.Now().Unix() + 5
-	claims.Audience = audience
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after5 := jwt.NewNumericDate(time.Now().Add(5 * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after5
+
+	claims.Audience = jwt.ClaimStrings{audience}
 	claims.Topic = "123"
 	claims.ConnectionType = "shell"
 	claims.Scopes = []string{"read", "write"} //Wrong scopes for shell, deliberately....

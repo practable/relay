@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// NewPool returns a pointer to a newly initialised, empty Pool with the given name
 func NewPool(name string) *Pool {
 
 	pool := &Pool{
@@ -27,6 +28,7 @@ func (p *Pool) getTime() int64 {
 	return p.Now()
 }
 
+// WithNow sets the function which reports the current time (useful in testing)
 func (p *Pool) WithNow(now func() int64) *Pool {
 	p.Lock()
 	defer p.Unlock()
@@ -34,6 +36,7 @@ func (p *Pool) WithNow(now func() int64) *Pool {
 	return p
 }
 
+// WithDescription adds a description to the Pool
 func (p *Pool) WithDescription(d Description) *Pool {
 	p.Lock()
 	defer p.Unlock()
@@ -41,6 +44,9 @@ func (p *Pool) WithDescription(d Description) *Pool {
 	return p
 }
 
+// WithMinSesssion sets the minimum session duration that can be booked
+// the minimum bookable duration is usually set by the checking routines
+// run by the system
 func (p *Pool) WithMinSesssion(duration uint64) *Pool {
 	p.Lock()
 	defer p.Unlock()
@@ -48,6 +54,9 @@ func (p *Pool) WithMinSesssion(duration uint64) *Pool {
 	return p
 }
 
+// WithMaxSesssion sets the maximum session duration that can be booked by a user
+// usually intended to match the maximum sustained session expected of a user
+// and not set so long that a user can tie up equipment unduly (there is no cancel at the present time)
 func (p *Pool) WithMaxSesssion(duration uint64) *Pool {
 	p.Lock()
 	defer p.Unlock()
@@ -55,17 +64,25 @@ func (p *Pool) WithMaxSesssion(duration uint64) *Pool {
 	return p
 }
 
+// SetMinSesssion sets the minimum session duration that can be booked
+// the minimum bookable duration is usually set by the checking routines
+// run by the system
 func (p *Pool) SetMinSesssion(duration uint64) {
 	p.Lock()
 	defer p.Unlock()
 	p.MinSession = duration
 }
+
+// SetMaxSesssion sets the maximum session duration that can be booked by a user
+// usually intended to match the maximum sustained session expected of a user
+// and not set so long that a user can tie up equipment unduly (there is no cancel at the present time)
 func (p *Pool) SetMaxSesssion(duration uint64) {
 	p.Lock()
 	defer p.Unlock()
 	p.MaxSession = duration
 }
 
+// WithID sets the ID for the Pool
 func (p *Pool) WithID(id string) *Pool {
 	p.Lock()
 	defer p.Unlock()
@@ -73,23 +90,28 @@ func (p *Pool) WithID(id string) *Pool {
 	return p
 }
 
+// GetID returns the ID of the Pool
 func (p *Pool) GetID() string {
 	p.Lock()
 	defer p.Unlock()
 	return p.ID
 }
 
+// GetMinSession returns the minimum bookable session duration in seconds
 func (p *Pool) GetMinSession() uint64 {
 	p.Lock()
 	defer p.Unlock()
 	return p.MinSession
 }
+
+// GetMaxSession returns the maximum bookable session duration in seconds
 func (p *Pool) GetMaxSession() uint64 {
 	p.Lock()
 	defer p.Unlock()
 	return p.MaxSession
 }
 
+// AddActivity adds a single Activity to a pool
 func (p *Pool) AddActivity(activity *Activity) error {
 
 	p.RemoveStaleEntries()
@@ -117,6 +139,7 @@ func (p *Pool) AddActivity(activity *Activity) error {
 
 }
 
+// DeleteActivity removes a single Activity from the Pool
 func (p *Pool) DeleteActivity(activity *Activity) {
 	p.Lock()
 	defer p.Unlock()
@@ -128,6 +151,7 @@ func (p *Pool) DeleteActivity(activity *Activity) {
 	p.Available = av
 }
 
+// GetActivityIDs returns an array containing the IDs of all activities in the Pool
 func (p *Pool) GetActivityIDs() []string {
 
 	p.RemoveStaleEntries()
@@ -137,7 +161,7 @@ func (p *Pool) GetActivityIDs() []string {
 
 	ids := []string{}
 
-	for k, _ := range p.Activities {
+	for k := range p.Activities {
 		ids = append(ids, k)
 	}
 
@@ -145,6 +169,7 @@ func (p *Pool) GetActivityIDs() []string {
 
 }
 
+// CountInUse returns the number of activities in use now
 func (p *Pool) CountInUse() int {
 	p.RemoveStaleEntries()
 	p.RLock()
@@ -152,6 +177,7 @@ func (p *Pool) CountInUse() int {
 	return len(p.InUse)
 }
 
+// CountAvailable returns the number of activities available to book in the pool now
 func (p *Pool) CountAvailable() int {
 	p.RemoveStaleEntries()
 	p.RLock()
@@ -159,6 +185,7 @@ func (p *Pool) CountAvailable() int {
 	return len(p.Available)
 }
 
+// GetActivityByID returns a pointer to the Activity of the given ID
 func (p *Pool) GetActivityByID(id string) (*Activity, error) {
 
 	p.RemoveStaleEntries()
@@ -172,6 +199,7 @@ func (p *Pool) GetActivityByID(id string) (*Activity, error) {
 	return a, nil
 }
 
+// ActivityExists checks whether an activity of the given ID exists in the pool (returns true if exists)
 func (p *Pool) ActivityExists(id string) bool {
 
 	p.RemoveStaleEntries()
@@ -183,6 +211,7 @@ func (p *Pool) ActivityExists(id string) bool {
 	return ok
 }
 
+// ActivityInUse checks whether an activity with the given ID is currently in use (returns true if in use)
 func (p *Pool) ActivityInUse(id string) bool {
 
 	p.RemoveStaleEntries()
@@ -194,6 +223,7 @@ func (p *Pool) ActivityInUse(id string) bool {
 	return ok
 }
 
+// ActivityNextAvailableTime returns the time that the activity of the given ID will be next available
 func (p *Pool) ActivityNextAvailableTime(id string) (int64, error) {
 
 	p.RemoveStaleEntries()
@@ -215,6 +245,7 @@ func (p *Pool) ActivityNextAvailableTime(id string) (int64, error) {
 
 }
 
+// RemoveStaleEntries tidies up any entries in the InUse list that have since expired
 func (p *Pool) RemoveStaleEntries() {
 
 	p.Lock()
@@ -261,10 +292,13 @@ func (p *Pool) RemoveStaleEntries() {
 
 }
 
+// ActivityWaitAny returns the wait time for an activity to come free that can be booked for one second or more.
 func (p *Pool) ActivityWaitAny() (uint64, error) {
 	return p.ActivityWaitDuration(1) // not much you can do in one sec but they did ask...
 }
 
+// ActivityWaitDuration returns the wait time for an activity to come free that can be booked for the specified ActivityWaitDuration
+// this covers the case when an activity might come free, but have only a short time left before it expires from the manifest
 func (p *Pool) ActivityWaitDuration(duration uint64) (uint64, error) {
 
 	now := p.Now()
@@ -320,8 +354,9 @@ func (p *Pool) ActivityWaitDuration(duration uint64) (uint64, error) {
 
 }
 
-// GetAnActivityUntil returns the ID of a free activity and marks the activity
-// as 'in use' until the time requested, or throws an error if no free activities.
+// ActivityRequestAny  returns the ID of a free activity that is available for the requested duration,
+// and marks the activity as 'in use' until the time requested
+// or throws an error if no free activities.
 func (p *Pool) ActivityRequestAny(duration uint64) (string, error) {
 
 	until := p.Now() + int64(duration)
@@ -360,7 +395,7 @@ func (p *Pool) ActivityRequestAny(duration uint64) (string, error) {
 
 }
 
-// ActivityRequestUntilTime marks activity with given ID as being 'in use' until
+// ActivityRequest marks activity with given ID as being 'in use' until
 // the time requested, but throws an error if the ID does not exist or is in-use already
 func (p *Pool) ActivityRequest(duration uint64, id string) error {
 

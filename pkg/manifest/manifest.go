@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/runtime"
+	log "github.com/sirupsen/logrus"
 	apiclient "github.com/timdrysdale/relay/pkg/bc/client"
 	"github.com/timdrysdale/relay/pkg/bc/client/admin"
 	"github.com/timdrysdale/relay/pkg/bc/client/groups"
@@ -18,6 +19,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/bc/models"
 )
 
+// UploadManifest uploads a manifest to the booking server
 func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout time.Duration, m Manifest) (*models.StoreStatus, error) {
 
 	pnames := make(map[string]string)
@@ -54,7 +56,7 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 
 		pids[pref] = pid
 
-		activity_count := 0
+		activityCount := 0
 
 		for _, a := range m.GetActivitiesInPool(pref) {
 
@@ -82,13 +84,13 @@ func UploadManifest(bc *apiclient.Bc, auth runtime.ClientAuthInfoWriter, timeout
 				fmt.Printf("Error adding activity to Pool [%s/%s]: %s\n", p.Name, pid, err.Error())
 				return nil, err
 			}
-			activity_count += 1
-			// fmt.Printf("  - pool: %s\n", *a.Description.Name)
+			activityCount++
+			log.Debugf("  - pool: %s\n", *a.Description.Name)
 		}
 
 		pnames[pid] = p.Name
-		pcounts[pid] = activity_count
-		fmt.Printf("Pool of %3d: %s\n", activity_count, p.Name)
+		pcounts[pid] = activityCount
+		log.Infof("Pool of %3d: %s\n", activityCount, p.Name)
 	}
 
 	for name, g := range m.Groups {

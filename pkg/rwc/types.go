@@ -8,6 +8,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/reconws"
 )
 
+// Hub represents a messaging hub
 type Hub struct {
 	Messages  *agg.Hub
 	Clients   map[string]*Client //map Id string to client
@@ -17,14 +18,16 @@ type Hub struct {
 	Broadcast chan hub.Message //for messages incoming from the websocket server(s)
 }
 
+// Rule represents a rule for outgoing messages
 type Rule struct {
-	Id          string `json:"id"`
+	ID          string `json:"id"`
 	Stream      string `json:"stream"`
 	Destination string `json:"destination"`
 	Token       string `json:"token"`
 	File        string `json:"file"`
 }
 
+// Client represents a client for sending outgoing messages
 type Client struct {
 	Hub       *Hub //can access messaging hub via <client>.Hub.Messages
 	Messages  *hub.Client

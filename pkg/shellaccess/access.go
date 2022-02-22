@@ -21,10 +21,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/security"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/permission"
@@ -155,9 +155,9 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 			claims.ConnectionType,
 			topic,
 			[]string{"read", "write"}, // sanitise out of abundance of caution - all use cases are read+write only
-			claims.IssuedAt,
-			claims.NotBefore,
-			claims.ExpiresAt,
+			claims.IssuedAt.Unix(),
+			claims.NotBefore.Unix(),
+			claims.ExpiresAt.Unix(),
 		)
 
 		permission.SetTopicSalt(&pt, topicSalt)
@@ -216,29 +216,30 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 			return nil, fmt.Errorf("token invalid")
 		}
 
-		if claims.Audience != host {
+		if cc, ok := token.Claims.(*permission.Token); ok {
 
-			log.WithFields(log.Fields{"aud": claims.Audience, "host": host}).Info("aud does not match this host")
-			return nil, fmt.Errorf("aud %s does not match this host %s", claims.Audience, host)
-		}
+			if !cc.RegisteredClaims.VerifyAudience(host, true) {
+				log.WithFields(log.Fields{"aud": cc.RegisteredClaims.Audience, "host": host}).Info("aud does not match this host")
+				return nil, fmt.Errorf("aud %s does not match this host %s", cc.RegisteredClaims.Audience, host)
+			}
 
-		// already checked but belt and braces ....
-		if claims.ExpiresAt <= time.Now().Unix() {
-			log.Info(fmt.Sprintf("Expired at %d", claims.ExpiresAt))
-			return nil, fmt.Errorf("expired at %d", claims.ExpiresAt)
+		} else {
+			log.WithFields(log.Fields{"token": bearerToken, "host": host}).Info("Error parsing token")
+			return nil, err
 		}
 
 		return token, nil
 	}
 }
 
+// Token returns a signed token
 func Token(audience, ct, topic, secret string, scopes []string, iat, nbf, exp int64) (string, error) {
 
 	var claims permission.Token
-	claims.IssuedAt = iat
-	claims.NotBefore = nbf
-	claims.ExpiresAt = exp
-	claims.Audience = audience
+	claims.IssuedAt = jwt.NewNumericDate(time.Unix(iat, 0))
+	claims.NotBefore = jwt.NewNumericDate(time.Unix(nbf, 0))
+	claims.ExpiresAt = jwt.NewNumericDate(time.Unix(exp, 0))
+	claims.Audience = jwt.ClaimStrings{audience}
 	claims.Topic = topic
 	claims.ConnectionType = ct // e.g. shell
 	claims.Scopes = scopes     // e.g. "host", "client", or "stats"

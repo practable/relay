@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
@@ -105,8 +105,8 @@ func TestStreamUsingInternals(t *testing.T) {
 	app.Hub.Add <- streamRule
 
 	ue, _ := url.Parse(serverExternal.URL)
-	wssUrl := fmt.Sprintf("ws://localhost:%s", ue.Port())
-	destinationRule := rwc.Rule{Stream: "stream/large", Destination: wssUrl, Id: "00"}
+	wssURL := fmt.Sprintf("ws://localhost:%s", ue.Port())
+	destinationRule := rwc.Rule{Stream: "stream/large", Destination: wssURL, ID: "00"}
 	app.Websocket.Add <- destinationRule
 
 	time.Sleep(1 * time.Millisecond)
@@ -186,15 +186,15 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 	streamRule := agg.Rule{Stream: "stream/large", Feeds: []string{"video0", "audio"}}
 
 	// destination rules
-	Id := "00" //same for both as changing, not duplicating, destination
+	ID := "00" //same for both as changing, not duplicating, destination
 
 	url0, _ := url.Parse(serverExternal0.URL)
 	wss0 := fmt.Sprintf("ws://localhost:%s", url0.Port())
-	destinationRule0 := rwc.Rule{Stream: "stream/large", Destination: wss0, Id: Id}
+	destinationRule0 := rwc.Rule{Stream: "stream/large", Destination: wss0, ID: ID}
 
 	url1, _ := url.Parse(serverExternal1.URL)
 	wss1 := fmt.Sprintf("ws://localhost:%s", url1.Port())
-	destinationRule1 := rwc.Rule{Stream: "stream/large", Destination: wss1, Id: Id}
+	destinationRule1 := rwc.Rule{Stream: "stream/large", Destination: wss1, ID: ID}
 
 	// receivers
 	rxCount0 := 0
@@ -346,15 +346,16 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 	streamRule := agg.Rule{Stream: "stream/large", Feeds: []string{"video0", "audio"}}
 
 	// destination rules
-	Id := "00" //same for both as changing, not duplicating, destination
+	ID := "00" //same for both as changing, not duplicating, destination
 
 	// bearer tokens for the connections
 	var claims permission.Token
-
-	claims.IssuedAt = time.Now().Unix() - 1
-	claims.NotBefore = time.Now().Unix() - 1
-	claims.ExpiresAt = time.Now().Unix() + 30
-	claims.Audience = audience
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after := jwt.NewNumericDate(time.Now().Add(30 * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after
+	claims.Audience = jwt.ClaimStrings{audience}
 	claims.Topic = "123"
 	claims.ConnectionType = "session"
 	claims.Scopes = []string{"write"}
@@ -374,8 +375,8 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 	destination0 := audience + "/session/123"
 	destination1 := audience + "/session/456"
 
-	destinationRule0 := rwc.Rule{Stream: "stream/large", Destination: destination0, Id: Id, Token: bearer0}
-	destinationRule1 := rwc.Rule{Stream: "stream/large", Destination: destination1, Id: Id, Token: bearer1}
+	destinationRule0 := rwc.Rule{Stream: "stream/large", Destination: destination0, ID: ID, Token: bearer0}
+	destinationRule1 := rwc.Rule{Stream: "stream/large", Destination: destination1, ID: ID, Token: bearer1}
 
 	// set up some receivers for the stream
 

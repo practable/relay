@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version represents the current version
 var (
 	Version   = "Version"
 	BuildTime = "BuildTime"

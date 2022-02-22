@@ -4,6 +4,6 @@ import (
 	"net/http"
 )
 
-func (app *App) handleApi(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleAPI(w http.ResponseWriter, r *http.Request) {
 
 }

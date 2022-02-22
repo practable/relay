@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/websocket"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
@@ -69,10 +69,13 @@ func TestRelay(t *testing.T) {
 
 	var claims permission.Token
 
-	claims.IssuedAt = time.Now().Unix() - 1
-	claims.NotBefore = time.Now().Unix() - 1
-	claims.ExpiresAt = time.Now().Unix() + 30
-	claims.Audience = audience
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after := jwt.NewNumericDate(time.Now().Add(30 * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after
+
+	claims.Audience = jwt.ClaimStrings{audience}
 	claims.Topic = "123"
 	claims.ConnectionType = "shell"
 	claims.Scopes = []string{"host"}

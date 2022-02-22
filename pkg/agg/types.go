@@ -4,6 +4,7 @@ import (
 	"github.com/timdrysdale/relay/pkg/hub"
 )
 
+// Hub is the main structure representing an aggegrating hub
 type Hub struct {
 	Hub        *hub.Hub
 	Broadcast  chan hub.Message
@@ -16,11 +17,13 @@ type Hub struct {
 	SubClients map[*hub.Client]map[*SubClient]bool
 }
 
+// Rule represents which Feeds a combined to form a Stream
 type Rule struct {
 	Stream string   `json:"stream"`
 	Feeds  []string `json:"feeds"`
 }
 
+// SubClient represents subclients which are used for aggregation tasks
 type SubClient struct {
 	Client  *hub.Client
 	Stopped chan struct{}

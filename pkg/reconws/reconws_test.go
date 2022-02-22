@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/websocket"
 	"github.com/jpillora/backoff"
 	"github.com/phayes/freeport"
@@ -36,10 +36,12 @@ func makeTestToken(audience, secret string, ttl int64) (string, error) {
 
 	var claims permission.Token
 
-	claims.IssuedAt = time.Now().Unix() - 1
-	claims.NotBefore = time.Now().Unix() - 1
-	claims.ExpiresAt = time.Now().Unix() + ttl
-	claims.Audience = audience
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	afterTTL := jwt.NewNumericDate(time.Now().Add(time.Duration(ttl) * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = afterTTL
+	claims.Audience = jwt.ClaimStrings{audience}
 	claims.Topic = "123"
 	claims.ConnectionType = "session"
 	claims.Scopes = []string{"read", "write"}
@@ -417,7 +419,7 @@ func deny(w http.ResponseWriter, r *http.Request, c chan int) {
 
 func connectAfterTrying(w http.ResponseWriter, r *http.Request, n *int, connectAt int, c chan int) {
 
-	defer func() { *n += 1 }()
+	defer func() { *n++ }()
 
 	c <- *n
 
@@ -449,8 +451,6 @@ func displayLog() {
 func okString(ok bool) string {
 	if ok {
 		return "  ok"
-	} else {
-		return "  FAILED"
 	}
-
+	return "  FAILED"
 }

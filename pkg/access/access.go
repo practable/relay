@@ -4,12 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"sync"
-	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/security"
+	"github.com/golang-jwt/jwt/v4"
 	log "github.com/sirupsen/logrus"
 	"github.com/timdrysdale/relay/pkg/access/restapi"
 	"github.com/timdrysdale/relay/pkg/access/restapi/operations"
@@ -83,9 +82,9 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 				claims.ConnectionType,
 				params.SessionID,
 				claims.Scopes,
-				claims.IssuedAt,
-				claims.NotBefore,
-				claims.ExpiresAt,
+				claims.IssuedAt.Unix(),
+				claims.NotBefore.Unix(),
+				claims.ExpiresAt.Unix(),
 			)
 
 			code := cs.SubmitToken(pt)
@@ -132,26 +131,21 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 			return []byte(secret), nil
 		})
 
-		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Info(err.Error())
-			return nil, fmt.Errorf("error reading token was %s", err.Error())
-		}
-
 		if !token.Valid { //checks iat, nbf, exp
 			log.Info("Token invalid")
 			return nil, fmt.Errorf("token invalid")
 		}
 
-		if claims.Audience != host {
+		if cc, ok := token.Claims.(*permission.Token); ok {
 
-			log.WithFields(log.Fields{"aud": claims.Audience, "host": host}).Info("aud does not match this host")
-			return nil, fmt.Errorf("aud %s does not match this host %s", claims.Audience, host)
-		}
+			if !cc.RegisteredClaims.VerifyAudience(host, true) {
+				log.WithFields(log.Fields{"aud": cc.RegisteredClaims.Audience, "host": host}).Info("aud does not match this host")
+				return nil, fmt.Errorf("aud %s does not match this host %s", cc.RegisteredClaims.Audience, host)
+			}
 
-		// already checked but belt and braces ....
-		if claims.ExpiresAt <= time.Now().Unix() {
-			log.Info(fmt.Sprintf("Expired at %d", claims.ExpiresAt))
-			return nil, fmt.Errorf("expired at %d", claims.ExpiresAt)
+		} else {
+			log.WithFields(log.Fields{"token": bearerToken, "host": host}).Info("Error parsing token")
+			return nil, err
 		}
 
 		return token, nil

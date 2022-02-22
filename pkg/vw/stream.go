@@ -17,6 +17,7 @@ import (
 
 var app App
 
+// Stream runs the vw instance as a session host
 func Stream() {
 
 	defer func() {
@@ -34,9 +35,9 @@ func Stream() {
 		log.Fatal("Configuration Failed", err.Error())
 	}
 
-	if app.Opts.CpuProfile != "" {
+	if app.Opts.CPUProfile != "" {
 
-		f, err := os.Create(app.Opts.CpuProfile)
+		f, err := os.Create(app.Opts.CPUProfile)
 
 		if err != nil {
 			log.WithField("error", err).Fatal("Could not create CPU profile")
@@ -84,11 +85,11 @@ func Stream() {
 	go app.internalAPI("api")
 
 	if app.Opts.API != "" {
-		app.Websocket.Add <- rwc.Rule{Stream: "api", Destination: app.Opts.API, Id: "apiRule"}
+		app.Websocket.Add <- rwc.Rule{Stream: "api", Destination: app.Opts.API, ID: "apiRule"}
 	}
 
 	app.WaitGroup.Add(1)
-	go app.startHttp()
+	go app.startHTTP()
 
 	// take it easy, pal
 	app.WaitGroup.Wait()

@@ -47,6 +47,7 @@ func (app *App) internalAPI(topic string) {
 	}
 }
 
+// Command represents a command and associated rule
 type Command struct {
 	Verb  string
 	What  string
@@ -54,13 +55,14 @@ type Command struct {
 	Rule  *json.RawMessage
 }
 
+// RuleStream represents a rule for a stream
 type RuleStream struct {
 	Stream string
 	Feeds  []string
 }
 
 var errBadCommand = errors.New("Unrecognised Command")
-var errNoDeleteApiRule = errors.New("Cannot delete apiRule")
+var errNoDeleteAPIRule = errors.New("Cannot delete apiRule")
 
 // JSON API - note change to singular stream and destination
 //
@@ -124,7 +126,7 @@ func (app *App) handleAdminMessage(msg []byte) ([]byte, error) {
 					app.Websocket.Delete <- "deleteAll"
 					// don't lock ourselves out!
 					if app.Opts.API != "" {
-						app.Websocket.Add <- rwc.Rule{Stream: "api", Destination: app.Opts.API, Id: "apiRule"}
+						app.Websocket.Add <- rwc.Rule{Stream: "api", Destination: app.Opts.API, ID: "apiRule"}
 					}
 					reply = []byte(`{"deleted":"deleteAll"}`)
 				default:
@@ -132,7 +134,7 @@ func (app *App) handleAdminMessage(msg []byte) ([]byte, error) {
 						app.Websocket.Delete <- cmd.Which
 						reply = []byte(`{"deleted":"` + cmd.Which + `"}`)
 					} else {
-						err = errNoDeleteApiRule
+						err = errNoDeleteAPIRule
 					}
 				}
 			case "list":
