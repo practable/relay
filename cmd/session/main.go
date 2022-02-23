@@ -16,8 +16,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 package main
 
-import "github.com/timdrysdale/relay/cmd/session/cmd"
+import "github.com/practable/relay/cmd/session/cmd"
 
 func main() {
-  cmd.Execute()
+	cmd.Execute()
 }
