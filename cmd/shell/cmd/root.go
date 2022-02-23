@@ -30,17 +30,15 @@ var logFile string
 var rootCmd = &cobra.Command{
 	Use:   "shell",
 	Short: "Shell is a set of services for relaying ssh connections",
-	Long: `Available services are 
+	Long: `Shell is a set of services for relaying ssh connections.
+Three services required in total for a single connection:
+  host: the unattended remote machine 
+  client: the attended local machine 
+  relay: runs at a public IP address, shared out of band with the host and client
 
-session relay := relays websockets, with jwt-token protected access via separate http API
-session host := connects to local sshd dameon (or whatever other login shell you are relaying)
-session client := listens at a local port for connections from your ssh tool
+A relay can handle multiple connections. An administrator with multiple hosts to access, 
+should start a separate client instance for each host they wish to connect to.
 `,
-
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//Run: func(cmd *cobra.Command, args []string) {
-	//},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
