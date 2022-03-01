@@ -467,18 +467,16 @@ func requestSessionByPoolID(ps *pool.Store, l *bookingstore.Limit) func(params p
 			if err != nil {
 
 				lf := log.Fields{
-					"source":       "booking",
-					"event":        "requestSession:makeTokens:internalError",
-					"activityID":   aID,
-					"activityName": a.Description.Name,
-					"sessionID":    sID,
-					"poolID":       params.PoolID,
-					"poolName":     p.Description.Name,
-					"userID":       claims.Subject,
-					"duration":     duration,
-					"issuedAt":     iat,
-					"expiresAt":    exp,
-					"error":        err.Error(),
+					"source":     "booking",
+					"event":      "requestSession:makeTokens:internalError",
+					"activityID": aID,
+					"sessionID":  sID,
+					"poolID":     params.PoolID,
+					"userID":     claims.Subject,
+					"duration":   duration,
+					"issuedAt":   iat,
+					"expiresAt":  exp,
+					"error":      err.Error(),
 				}
 				log.WithFields(lf).Error("booking:requestSession:makeTokens:internalError")
 				cancelBooking()
