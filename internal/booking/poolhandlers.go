@@ -7,11 +7,11 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/booking/models"
 	"github.com/practable/relay/internal/booking/restapi/operations/pools"
 	"github.com/practable/relay/internal/bookingstore"
 	"github.com/practable/relay/internal/pool"
+	log "github.com/sirupsen/logrus"
 )
 
 func addActivityByPoolID(ps *pool.Store) func(params pools.AddActivityByPoolIDParams, principal interface{}) middleware.Responder {
@@ -492,15 +492,17 @@ func requestSessionByPoolID(ps *pool.Store, l *bookingstore.Limit) func(params p
 		}
 
 		lf := log.Fields{
-			"source":     "booking:requestSession",
-			"event":      "granted",
-			"activityID": aID,
-			"sessionID":  sID,
-			"poolID":     params.PoolID,
-			"userID":     claims.Subject,
-			"duration":   duration,
-			"issuedAt":   iat,
-			"expiresAt":  exp,
+			"source":       "booking:requestSession",
+			"event":        "granted",
+			"activityID":   aID,
+			"activityName": a.Description.Name,
+			"sessionID":    sID,
+			"poolID":       params.PoolID,
+			"poolName":     p.Description.Name,
+			"userID":       claims.Subject,
+			"duration":     duration,
+			"issuedAt":     iat,
+			"expiresAt":    exp,
 		}
 		log.WithFields(lf).Info("booking:requestSession:granted")
 
