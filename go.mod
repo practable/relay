@@ -27,7 +27,6 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
-	github.com/timdrysdale/relay v0.2.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	gopkg.in/yaml.v2 v2.4.0
@@ -40,7 +39,6 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-openapi/analysis v0.21.2 // indirect

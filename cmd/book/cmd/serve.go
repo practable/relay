@@ -23,9 +23,9 @@ import (
 	"os/signal"
 
 	"github.com/ory/viper"
+	"github.com/practable/relay/internal/book"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/practable/relay/internal/book"
 )
 
 // serveCmd represents the serve command
@@ -70,7 +70,7 @@ book serve
 
 			//production environment
 			log.SetFormatter(&log.JSONFormatter{})
-			log.SetLevel(log.WarnLevel)
+			log.SetLevel(log.InfoLevel)
 
 			file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 			if err == nil {
