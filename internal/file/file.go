@@ -12,14 +12,18 @@ import (
 
 // regexp for parsing a comment line
 // if the first non-whitespace char on a line is # then it is ignored
-const m = "^\\s*\\#"
+// the first capture group is the rest of the line starting at the first
+// non-whitespace character after the initial #
+// lines starting with #, ##, ### etc are treated the same
+// a + or - post fix indicates whether to echo the comment to the local output
+// + for echo, - for do not echo. No + or - is considered a -, i.e. do not echo
+const m = "^\\s*\\#+([+-]*)\\s*(.*)"
 
-var mr = regexp.MustCompile(m)
+var mre = regexp.MustCompile(m)
 
 // regexp for parsing a delay
 /* note you can include a 's' after the delay value for readability, but no other duration indicator is accepted
-e.g. these are valid delays
-[ 0.3 s] foo
+e.g. these will pass the regexp (whether fractional minutes are valid is separate issue!)
 [ 0.3s ] foo
 [0.3s ] foo
 [ 0.3s] foo
@@ -29,26 +33,20 @@ e.g. these are valid delays
 [ 0.3] foo
 [0.3 ] foo
 [0.3] foo
+[ 1h ] bar
+[ 1h5.3m0.5s ] asdf
 [] bar
-
-and these are valid comments to be echoed to output (as opposed to ignored)
-
-[#] some comment
-[ #] some comment
-[# ] some comment
-[ # ] some comment
-
 */
 
-// const d = "^\\s*\\[\\s*([0-9]*\\.*[0-9]*)\\s*[s]*\\s*\\]\\s*(.*)" // no echo command
-const d = "^\\s*\\[\\s*(\\#|[[0-9]*\\.*[0-9]*\\s*[s]*)\\s*\\]\\s*(.*)"
+//^\s*\[\s*([a-zA-Z0-9.]*)\s*]\s*(.*)
+const d = "^\\s*\\[\\s*([a-zA-Z0-9.]*)\\s*]\\s*(.*)"
 
-var dr = regexp.MustCompile(d)
+var dre = regexp.MustCompile(d)
 
 // regexp for parsing a condition
 const c = "\\s*\\<\\'([^']*)'\\s*,\\s*([0-9]*)\\s*,\\s*([0-9]*)\\s*\\>"
 
-var cr = regexp.MustCompile(c)
+var cre = regexp.MustCompile(c)
 
 // Run connects to the session and handles writing to/from files
 func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, playfilename string) {
@@ -85,12 +83,55 @@ func ParseByLine(in io.Reader, out chan interface{}) error {
 
 func ParseLine(line string) interface{} {
 
-	var r interface{}
+	// comment
+	if mre.MatchString(line) {
+		m := mre.FindStringSubmatch(line)
 
-	r = Error{fmt.Sprintf("unknown line format: %s", line)}
+		msg := m[2]
 
-	return r
+		echo := false
 
+		if m[1] == "+" {
+			echo = true
+		}
+
+		return Comment{
+			Msg:  msg,
+			Echo: echo,
+		}
+
+	}
+
+	if dre.MatchString(line) {
+
+		d := dre.FindStringSubmatch(line)
+
+		msg := d[2]
+
+		t, err := time.ParseDuration(d[1])
+
+		if err != nil {
+			return Error{fmt.Sprintf("unknown delay time format: %s", line)}
+		}
+
+		return Send{
+			Msg:   msg,
+			Delay: t,
+		}
+
+	}
+
+	if cre.MatchString(line) {
+
+	}
+
+	return line
+
+}
+
+type Comment struct {
+	Msg  string
+	Echo bool
 }
 
 type Error struct {
@@ -104,7 +145,6 @@ type Send struct {
 }
 
 type Condition struct {
-	Active  bool
 	Filter  regexp.Regexp
 	Count   int
 	Timeout time.Duration

@@ -11,7 +11,10 @@ import (
 func TestParseByLine(t *testing.T) {
 
 	s := `{"some":"msg"}
-[0.1] {"an":"other"}`
+# Non echo comment
+#- non echo comment 
+#+ echo comment
+[0.1s] {"an":"other"}`
 
 	in := strings.NewReader(s)
 
