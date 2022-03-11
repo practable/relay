@@ -32,7 +32,14 @@ http-listen (not implemented yet)
 var clientCmd = &cobra.Command{
 	Use:   "client",
 	Short: "Connect to a session relay",
-	Long:  `Connect to a session relay to exchange text data with a session host.`,
+	Long: `Connect to a session relay to exchange text data with a session host.
+
+you must set the environment variables SESSION_CLIENT_SESSION and SESSION_CLIENT_TOKEN
+
+e.g. 
+export SESSION_CLIENT_SESSION=https://relay-access.practable.io/session/govn05-data
+export SESSION_CLIENT_TOKEN=ey... #include complete JWT token
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("error: you must specify an interface e.g. file, or -h (help)")
 	},

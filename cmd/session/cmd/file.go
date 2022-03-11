@@ -17,9 +17,17 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"runtime/debug"
+	"syscall"
 
+	"github.com/practable/relay/internal/file"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // fileCmd represents the file command
@@ -28,12 +36,20 @@ var fileCmd = &cobra.Command{
 	Short: "Read/write data exchanged with relay from/to file",
 	Long: `Read/write text data exchanged with relay from/to file.
 
-File(s) are specified with environment variables:
+File(s) are specified with optional environment variables:
 SESSION_CLIENT_FILE_LOG file to write data received from relay
 SESSION_CLIENT_FILE_PLAY file to read data and send to relay
 
-Note that stdin, stdout and stderr are reserved words. You can log
-to stdout or stderr, and you can play from stdin.
+At least one file, or both, can be specified, but not neither.
+
+Development mode can be set with 
+export SESSION_CLIENT_FILE_DEVELOPMENT=true
+
+Note that - implies the appropriate choice of stdin or stdout (You can LOG
+to stdout, and you can PLAY from stdin). There is no logging to stderr
+because the go runtime writes to it for panics and crashes, so we don't
+want to close it on a logrotate (in case those messages are sent elsewhere 
+as indicated in https://pkg.go.dev/os#pkg-constants).
 
 The format of the play file is one message per line. You can include
 an optional delay, or condition for sending the message. See below 
@@ -115,10 +131,76 @@ backslash, e.g. a conditional to find 'foo' looks like this:
 
 <'\'foo\'',1,10>
 
-
+Log rotation
+If you are using logrotate(8), then send SIGHUP in your postscript. 
+Do not restart the service, as you will lose any messages sent during 
+the brief window that access is renegotiated (typically fast, but 
+theoretically you could miss a message).
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("file called")
+
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
+			}
+		}()
+
+		viper.SetEnvPrefix("SESSION_CLIENT")
+		viper.AutomaticEnv()
+
+		session := viper.GetString("session")
+		token := viper.GetString("token")
+		development := viper.GetBool("file_development")
+
+		logfilename := viper.GetString("file_log")
+		playfilename := viper.GetString("file_play")
+
+		if (len(logfilename) + len(playfilename)) < 1 {
+			fmt.Println("you must specify at least one filename. File(s) are specified via environment variables only. For details run `session client file -h`")
+			os.Exit(1)
+		}
+
+		if session == "" {
+			fmt.Println("SESSION_CLIENT_SESSION not set")
+			os.Exit(1)
+		}
+
+		if token == "" {
+			fmt.Println("SESSION_CLIENT_TOKEN not set")
+			os.Exit(1)
+		}
+
+		if development {
+			// development environment
+			fmt.Println("Development mode - logging output to stdout")
+			fmt.Printf("Session: %s\n Token: %s\n Log: %s\n, Play: %s\n", session, token, logfilename, playfilename)
+			log.SetFormatter(&log.TextFormatter{})
+			log.SetLevel(log.TraceLevel)
+			log.SetOutput(os.Stdout)
+
+		} else {
+
+			//production environment
+			log.SetFormatter(&log.JSONFormatter{})
+			log.SetLevel(log.InfoLevel)
+
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+
+		hup := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGHUP)
+
+		go func() {
+			for range hup {
+				// reopen logfile (but not playfile!)
+			}
+		}()
+
+		file.Run(ctx, hup, session, token, logfilename, playfilename)
+
 	},
 }
 
