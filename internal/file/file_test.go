@@ -99,9 +99,9 @@ func TestParseByLine(t *testing.T) {
 	expected[6] = Send{
 		Msg: `{"send":"foos"}`,
 		Condition: Condition{
-			Filter:  *regexp.MustCompile("^foo\\s*"),
-			Count:   5,
-			Timeout: time.Second*((19*60)+30) + time.Millisecond*100,
+			AcceptPattern: *regexp.MustCompile("^foo\\s*"),
+			Count:         5,
+			Timeout:       time.Second*((19*60)+30) + time.Millisecond*100,
 		},
 	}
 
@@ -127,5 +127,73 @@ func TestParseByLine(t *testing.T) {
 	}
 
 	assert.Equal(t, n, idx)
+
+}
+
+func TestFilter(t *testing.T) {
+
+	p0 := regexp.MustCompile("[a-h]")
+	p1 := regexp.MustCompile("[R-Z]")
+	p2 := regexp.MustCompile("[0-9]")
+	p3 := regexp.MustCompile("[#!&%]")
+
+	f := NewFilter()
+
+	f.AddAcceptPattern(p0)
+	f.AddAcceptPattern(p1)
+	f.AddDenyPattern(p2)
+	f.AddDenyPattern(p3)
+
+	s := `ach
+ach0
+ach!
+TUV23
+TUV%
+TUV
+ACH
+tuv
+`
+
+	expected := []bool{
+		true,
+		false,
+		false,
+		false,
+		false,
+		true,
+		false,
+		false,
+	}
+
+	n := strings.Count(s, "\n")
+	assert.Equal(t, len(expected), n)
+
+	in := strings.NewReader(s)
+	scanner := bufio.NewScanner(in)
+
+	idx := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		assert.Equal(t, expected[idx], f.Pass(line))
+		idx++
+	}
+
+	// Check all message pass after reset
+	f.Reset()
+	in = strings.NewReader(s)
+	scanner = bufio.NewScanner(in)
+
+	idx = 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		assert.Equal(t, true, f.Pass(line))
+		idx++
+	}
+
+	// Check whether delete works
+	//f.AddAcceptPattern(p0)
+	//assert.True(t, f.Pass("abc"))
+	//f.DeleteAcceptPattern(p0)
+	//assert.False(t, f.Pass("abc"))
 
 }
