@@ -51,7 +51,7 @@ var dre = regexp.MustCompile(d)
 //const c = "^\\s*\\<\\'([^']*)'\\s*,\\s*([0-9]*)\\s*,\\s*([0-9]*)\\s*\\>"
 
 // regexp for identifying a condition (needs a second step to parse the arguments)
-const ci = "^\\s*<(.*)>"
+const ci = "^\\s*<(.*)>\\s*(.*)"
 
 var cire = regexp.MustCompile(ci)
 
@@ -85,7 +85,7 @@ func ParseByLine(in io.Reader, out chan interface{}) error {
 
 	for scanner.Scan() {
 		s := scanner.Text()
-		log.Infof("Started parsing %s", s)
+		log.Debugf("Started parsing %s", s)
 		out <- ParseLine(s)
 	}
 
@@ -98,7 +98,7 @@ func ParseByLine(in io.Reader, out chan interface{}) error {
 func ParseLine(line string) interface{} {
 
 	defer func() {
-		log.Infof("Finished parsing %s", line)
+		log.Debugf("Finished parsing %s", line)
 	}()
 
 	// comment
@@ -121,7 +121,7 @@ func ParseLine(line string) interface{} {
 			verb = "echo"
 		}
 
-		log.Infof("Successfully parsed comment to %s: %s", verb, msg)
+		log.Infof("Parsed comment to %s: %s", verb, msg)
 
 		return Comment{
 			Msg:  msg,
@@ -153,7 +153,7 @@ func ParseLine(line string) interface{} {
 			}
 		}
 
-		log.Infof("Successful parsed message to send with delay of %s: %s", t, d[2])
+		log.Infof("Parsed message to send after %s: %s", t, d[2])
 
 		return Send{
 			Msg:   d[2],
@@ -164,11 +164,11 @@ func ParseLine(line string) interface{} {
 
 	if cire.MatchString(line) {
 
-		log.Infof("Condition command found in %s", line)
+		log.Debugf("Condition command found in %s", line)
 
 		c := cire.FindStringSubmatch(line)
 
-		if len(c) < 2 {
+		if len(c) < 3 {
 			return Error{fmt.Sprintf("malformed condition command with only %d arguments (need 3): %s", len(c), line)}
 		}
 
@@ -193,9 +193,9 @@ func ParseLine(line string) interface{} {
 			return Error{fmt.Sprintf("malformed condition command %s; third argument %s should be timeout duration in format like 10s or 1m. Yours was %s which could not be parsed because %s. Line was was %s", c, args[3], err.Error(), args[3], line)}
 		}
 
-		log.Infof("Successfully parsed message to send with condition to wait for %d results matching %s within %s: %s", n, args[1], d, c[1])
+		log.Infof("Parsed message to send with condition to wait for %d results matching %s within %s: %s", n, args[1], d, c[2])
 		return Send{
-			Msg: c[1],
+			Msg: c[2],
 			Condition: Condition{
 				Filter:  *re,
 				Count:   n,
