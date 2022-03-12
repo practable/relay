@@ -190,7 +190,7 @@ func ParseLine(line string) interface{} {
 
 		d, err := time.ParseDuration(args[3])
 		if err != nil {
-			return Error{fmt.Sprintf("malformed condition command %s; third argument %s should be timeout duration in format like 10s or 1m. Yours was %s which could not be parsed because %s. Line was was %s", c, args[3], err.Error(), args[3], line)}
+			return Error{fmt.Sprintf("malformed condition command %s; third argument %s should be timeout duration in format like 10s or 1m. Yours could not be parsed because %s. Line was was %s", c, args[3], err.Error(), line)}
 		}
 
 		log.Infof("Parsed message to send with condition to wait for %d results matching %s within %s: %s", n, args[1], d, c[2])
