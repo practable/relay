@@ -190,10 +190,53 @@ tuv
 		idx++
 	}
 
-	// Check whether delete works
-	//f.AddAcceptPattern(p0)
-	//assert.True(t, f.Pass("abc"))
-	//f.DeleteAcceptPattern(p0)
-	//assert.False(t, f.Pass("abc"))
+	// Check whether delete works (have to add two filters
+	// to avoid returning to allpass when you delete one)
+	assert.Equal(t, 0, len(*f.AcceptPatterns))
+	f.AddAcceptPattern(p0)
+	f.AddAcceptPattern(p1)
+	assert.Equal(t, 2, len(*f.AcceptPatterns))
+	assert.True(t, f.Pass("abc"))
+
+	f.DeleteAcceptPattern(p0)
+	assert.Equal(t, 1, len(*f.AcceptPatterns))
+	assert.False(t, f.Pass("abc"))
+
+	// check deleteDenyPattern
+	f.AddDenyPattern(p2)
+	f.AddDenyPattern(p3)
+	assert.False(t, f.Pass("T!"))
+	f.DeleteDenyPattern(p3)
+	assert.True(t, f.Pass("T!"))
+
+	// check delete when a different regexp instance is used
+	// to avoid implementations that don't compare the operation
+	// of filters and instead use something inappropriate like
+	// the value of a pointer etc. That would not work when
+	// separate lines will each generate their own regexp
+	// expressions rather than sharing a pointer
+	f.AddDenyPattern(p3)
+	assert.False(t, f.Pass("T!"))
+	p3a := regexp.MustCompile("[#!&%]")
+	f.DeleteDenyPattern(p3a)
+	assert.True(t, f.Pass("T!"))
+
+	f.AddAcceptPattern(p0)
+	assert.True(t, f.Pass("abc"))
+	p0a := regexp.MustCompile("[a-h]")
+	f.DeleteAcceptPattern(p0a)
+	assert.False(t, f.Pass("abc"))
+
+	// check that only exact filters are deleted
+	f.AddAcceptPattern(p0)
+	assert.True(t, f.Pass("abc"))
+	p5 := regexp.MustCompile("[a-h]\\s*")
+	f.DeleteAcceptPattern(p5)
+	assert.True(t, f.Pass("abc")) //passed because p0 not deleted
+
+	//regexp.Regexp stores original text, so whitespace IS different
+	p0b := regexp.MustCompile(" [a-h]")
+	f.DeleteAcceptPattern(p0b)
+	assert.True(t, f.Pass("abc")) //passed because p0 not deleted
 
 }

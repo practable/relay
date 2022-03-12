@@ -233,8 +233,8 @@ type Condition struct {
 }
 
 type Filter struct {
-	AcceptPatterns *map[*regexp.Regexp]struct{}
-	DenyPatterns   *map[*regexp.Regexp]struct{}
+	AcceptPatterns *map[string]regexp.Regexp
+	DenyPatterns   *map[string]regexp.Regexp
 }
 
 // NewFilter returns a pointer to a new,
@@ -247,8 +247,8 @@ func NewFilter() *Filter {
 }
 
 func (f *Filter) init() {
-	ap := make(map[*regexp.Regexp]struct{})
-	dp := make(map[*regexp.Regexp]struct{})
+	ap := make(map[string]regexp.Regexp)
+	dp := make(map[string]regexp.Regexp)
 	f.AcceptPatterns = &ap
 	f.DenyPatterns = &dp
 }
@@ -299,8 +299,8 @@ func (f *Filter) AllPass() bool {
 }
 
 // match checks whether a string matches any patterns in the list of patterns
-func match(line string, patterns *map[*regexp.Regexp]struct{}) bool {
-	for p := range *patterns {
+func match(line string, patterns *map[string]regexp.Regexp) bool {
+	for _, p := range *patterns {
 		if p.MatchString(line) {
 			return true
 		}
@@ -321,23 +321,23 @@ func (f *Filter) Accept(line string) bool {
 // AddAcceptPattern adds a pattern to the AcceptPatterns
 // that will be used to check if a message is accepted (passed)
 func (f *Filter) AddAcceptPattern(p *regexp.Regexp) {
-	(*f.AcceptPatterns)[p] = struct{}{}
+	(*f.AcceptPatterns)[p.String()] = *p
 }
 
 // AddDenyPattern adds a pattern to the DenyPatterns
 // that will be used to check if a message is denied (blocked)
 func (f *Filter) AddDenyPattern(p *regexp.Regexp) {
-	(*f.DenyPatterns)[p] = struct{}{}
+	(*f.DenyPatterns)[p.String()] = *p
 }
 
 // DeleteAcceptPattern will remove a given pattern from the
 // list of patterns used to check for acceptance of a line
 func (f *Filter) DeleteAcceptPattern(p *regexp.Regexp) {
-	delete(*f.AcceptPatterns, p)
+	delete(*f.AcceptPatterns, p.String())
 }
 
 // DeleteDenyPattern will remove a given pattern from the
 // list of patterns used to check for denial of a line
 func (f *Filter) DeleteDenyPattern(p *regexp.Regexp) {
-	delete(*f.DenyPatterns, p)
+	delete(*f.DenyPatterns, p.String())
 }
