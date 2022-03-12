@@ -74,7 +74,7 @@ Delay:
 Each line can be prepended by an optional delay, given in fractional 
 seconds, within square brackets, e.g.
 
-[0.1] {"some":"msg"}
+[0.1s] {"some":"msg"}
 
 A regular expression is used to separate the optional delay from 
 the message, such that the message transmitted starts with the 
@@ -91,9 +91,13 @@ For readability, it may be useful to pad the delay value inside the
 brackets with whitespace. It is also acceptable to have a zero delay, 
 or an empty delay. 
 [] valid, zero delay
-[0] valid, zero delay
-[  000.01] valid, delay of 10ms
+[0s] valid, zero delay
+[  10ms ] valid, delay of 10ms
 [ 0.1 ] valid, delay of 100ms
+
+A duration string is an unsigned decimal number with optional fraction 
+and a mandatory unit suffix, such as "300ms", "1.5h" or "2m45s". 
+Valid time units are "ms", "s", "m", "h".
 
 It is not recommended to specify delays of less than one millisecond 
 (0.001) because these are unlikely to be faithfully respected. Note

@@ -7,7 +7,10 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // regexp for parsing a comment line
@@ -43,10 +46,19 @@ const d = "^\\s*\\[\\s*([a-zA-Z0-9.]*)\\s*]\\s*(.*)"
 
 var dre = regexp.MustCompile(d)
 
-// regexp for parsing a condition
-const c = "\\s*\\<\\'([^']*)'\\s*,\\s*([0-9]*)\\s*,\\s*([0-9]*)\\s*\\>"
+// regexp for parsing a condition in one pass (but misses malformed expressions)
+// "^\s*\<\'([^']*)'\s*,\s*([0-9]*)\s*,\s*([0-9]*)\s*\>"
+//const c = "^\\s*\\<\\'([^']*)'\\s*,\\s*([0-9]*)\\s*,\\s*([0-9]*)\\s*\\>"
 
-var cre = regexp.MustCompile(c)
+// regexp for identifying a condition (needs a second step to parse the arguments)
+const ci = "^\\s*<(.*)>"
+
+var cire = regexp.MustCompile(ci)
+
+// regexp for parsing the arguments to a condition
+const ca = "^\\s*\\'([^']*)\\'\\s*,\\s*([0-9]*)\\s*,\\s*([0-9hmns\\.]*)\\s*"
+
+var care = regexp.MustCompile(ca)
 
 // Run connects to the session and handles writing to/from files
 func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, playfilename string) {
@@ -72,7 +84,9 @@ func ParseByLine(in io.Reader, out chan interface{}) error {
 	scanner := bufio.NewScanner(in)
 
 	for scanner.Scan() {
-		out <- ParseLine(scanner.Text())
+		s := scanner.Text()
+		log.Infof("Started parsing %s", s)
+		out <- ParseLine(s)
 	}
 
 	close(out) //so receiver can range over channel
@@ -83,8 +97,15 @@ func ParseByLine(in io.Reader, out chan interface{}) error {
 
 func ParseLine(line string) interface{} {
 
+	defer func() {
+		log.Infof("Finished parsing %s", line)
+	}()
+
 	// comment
 	if mre.MatchString(line) {
+
+		log.Debugf("comment found in %s", line)
+
 		m := mre.FindStringSubmatch(line)
 
 		msg := m[2]
@@ -95,6 +116,13 @@ func ParseLine(line string) interface{} {
 			echo = true
 		}
 
+		verb := "ignore"
+		if echo {
+			verb = "echo"
+		}
+
+		log.Infof("Successfully parsed comment to %s: %s", verb, msg)
+
 		return Comment{
 			Msg:  msg,
 			Echo: echo,
@@ -104,28 +132,82 @@ func ParseLine(line string) interface{} {
 
 	if dre.MatchString(line) {
 
+		log.Debugf("Delay command found in %s", line)
+
 		d := dre.FindStringSubmatch(line)
 
-		msg := d[2]
-
-		t, err := time.ParseDuration(d[1])
-
-		if err != nil {
-			return Error{fmt.Sprintf("unknown delay time format: %s", line)}
+		if len(d) < 2 {
+			return Error{fmt.Sprintf("malformed delay command: %s", line)}
 		}
 
+		var t time.Duration
+
+		if len(d[1]) > 1 {
+
+			var err error //manage the scope of t
+
+			t, err = time.ParseDuration(d[1])
+
+			if err != nil {
+				return Error{fmt.Sprintf("unknown delay time format: %s", line)}
+			}
+		}
+
+		log.Infof("Successful parsed message to send with delay of %s: %s", t, d[2])
+
 		return Send{
-			Msg:   msg,
+			Msg:   d[2],
 			Delay: t,
 		}
 
 	}
 
-	if cre.MatchString(line) {
+	if cire.MatchString(line) {
+
+		log.Infof("Condition command found in %s", line)
+
+		c := cire.FindStringSubmatch(line)
+
+		if len(c) < 2 {
+			return Error{fmt.Sprintf("malformed condition command with only %d arguments (need 3): %s", len(c), line)}
+		}
+
+		args := care.FindStringSubmatch(c[1]) // the argument to the condition
+
+		if len(args) < 4 {
+			return Error{fmt.Sprintf("malformed condition command: %s", line)}
+		}
+
+		re, err := regexp.Compile(args[1])
+		if err != nil {
+			return Error{fmt.Sprintf("malformed condition command %s; first argument %s should be regexp pattern, but did not compile because %s. Line was %s", c, args[1], err.Error(), line)}
+		}
+
+		n, err := strconv.Atoi(args[2])
+		if err != nil {
+			return Error{fmt.Sprintf("malformed condition command %s; second argument %s should be integer, count of messages to await. Line was: %s", c, args[2], line)}
+		}
+
+		d, err := time.ParseDuration(args[3])
+		if err != nil {
+			return Error{fmt.Sprintf("malformed condition command %s; third argument %s should be timeout duration in format like 10s or 1m. Yours was %s which could not be parsed because %s. Line was was %s", c, args[3], err.Error(), args[3], line)}
+		}
+
+		log.Infof("Successfully parsed message to send with condition to wait for %d results matching %s within %s: %s", n, args[1], d, c[1])
+		return Send{
+			Msg: c[1],
+			Condition: Condition{
+				Filter:  *re,
+				Count:   n,
+				Timeout: d,
+			},
+		}
 
 	}
 
-	return line
+	return Send{
+		Msg: line,
+	}
 
 }
 
