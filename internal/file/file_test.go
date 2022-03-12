@@ -47,6 +47,9 @@ func TestParseByLine(t *testing.T) {
 [0.1s] {"an":"other"}
 [] {"an":"other"}
 <'^foo\s*',5,0.3h1.5m0.1s> {"send":"foos"}
+[0.1] {"an":"other"}
+<'^foo\s*',,10s> {"send":"foos"}
+<'^foo\s*',5,> {"send":"foos"}
 `
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -63,7 +66,7 @@ func TestParseByLine(t *testing.T) {
 	}()
 
 	n := strings.Count(s, "\n")
-	assert.Equal(t, 7, n) // Update this after editing
+	assert.Equal(t, 10, n) // Update this after editing
 
 	expected := make([]interface{}, n)
 	expected[0] = Send{
@@ -101,6 +104,12 @@ func TestParseByLine(t *testing.T) {
 			Timeout: time.Second*((19*60)+30) + time.Millisecond*100,
 		},
 	}
+
+	expected[7] = Error{`unknown delay time format: [0.1] {"an":"other"}`}
+
+	expected[8] = Error{`malformed condition command [<'^foo\s*',,10s> {"send":"foos"} '^foo\s*',,10s {"send":"foos"}]; second argument  should be integer, count of messages to await. Line was: <'^foo\s*',,10s> {"send":"foos"}`}
+
+	expected[9] = Error{`malformed condition command [<'^foo\s*',5,> {"send":"foos"} '^foo\s*',5, {"send":"foos"}]; third argument  should be timeout duration in format like 10s or 1m. Yours could not be parsed because time: invalid duration "". Line was was <'^foo\s*',5,> {"send":"foos"}`}
 
 	in := strings.NewReader(s)
 
