@@ -3,6 +3,7 @@ module github.com/practable/relay
 go 1.17
 
 require (
+	github.com/client9/reopen v1.0.0
 	github.com/eclesh/welford v0.0.0-20150116075914-eec62615b1f0
 	github.com/go-openapi/errors v0.20.2
 	github.com/go-openapi/loads v0.21.1
@@ -38,7 +39,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dgraph-io/ristretto v0.0.1 // indirect
+	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-openapi/analysis v0.21.2 // indirect

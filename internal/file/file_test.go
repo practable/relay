@@ -6,12 +6,21 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/gorilla/websocket"
+	"github.com/phayes/freeport"
+	"github.com/practable/relay/internal/permission"
+	"github.com/practable/relay/internal/reconws"
+	"github.com/practable/relay/internal/relay"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -283,4 +292,203 @@ tuv
 	f.DeleteAcceptPattern(p0b)
 	assert.True(t, f.Pass("abc")) //passed because p0 not deleted
 
+}
+
+func TestAll(t *testing.T) {
+
+	// Setup logging
+	debug := false
+
+	if debug {
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
+
+	// Setup relay on local (free) port
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	ports, err := freeport.GetFreePorts(2)
+	assert.NoError(t, err)
+
+	relayPort := ports[0]
+	accessPort := ports[1]
+
+	audience := "http://[::]:" + strconv.Itoa(accessPort)
+	target := "ws://127.0.0.1:" + strconv.Itoa(relayPort)
+
+	secret := "testsecret"
+
+	wg.Add(1)
+
+	startTime := time.Now().Unix()
+	go func() {
+		time.Sleep(2 * time.Second)
+		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
+	}()
+
+	// We can't start, stop and restart the relay.Relay without causing mux issues due to net/http
+	// It panics on registration of multiple handlers
+	// so start with it not running, then after some time,
+	// and attempts have been made to connect - start relay
+	// and see if the ReconnectAuth clients will connect.
+
+	// Sign and get the complete encoded token as a string using the secret
+	bearer, err := makeTestToken(audience, secret, 30)
+
+	assert.NoError(t, err)
+
+	// now clients connect using their uris...
+
+	var timeout = 100 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	s0 := reconws.New()
+	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
+
+	s1 := reconws.New()
+	go s1.ReconnectAuth(ctx, audience+"/session/123", bearer)
+
+	time.Sleep(timeout)
+
+	data := []byte("prestart-ping-no-chance")
+
+	select {
+	case s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}:
+		t.Fatal("s0 sent messsage to dead relay")
+		select {
+		case <-s1.In:
+			t.Fatal("no message expected")
+		case <-time.After(timeout):
+		}
+	case <-time.After(timeout):
+	}
+
+	data = []byte("prestart-pong-no-chance")
+
+	select { //send may or may not happen
+	case s1.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}:
+		t.Fatal("s1 sent messsage to dead relay")
+		select {
+		case <-s0.In:
+			t.Fatal("no message expected")
+		case <-time.After(timeout):
+		}
+	case <-time.After(timeout):
+	}
+
+	// check we finished test before relay started
+	assert.True(t, startTime+2 > time.Now().Unix())
+
+	// now wait until both clients have connected
+	// one will connect before the other, so it's not
+	// possible to guarantee both get this first message
+	// and that is normal behaviour for a non-caching
+	// relay....
+	data = []byte("hello")
+	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+	s1.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
+
+	time.Sleep(timeout) // send can come online before receive
+
+	// now send a message we care about
+	data0 := []byte("ping")
+	s0.Out <- reconws.WsMessage{Data: data0, Type: websocket.TextMessage}
+	data1 := []byte("pong")
+	s1.Out <- reconws.WsMessage{Data: data1, Type: websocket.TextMessage}
+
+	gotPing := false
+	gotPong := false
+
+	for i := 0; i < 20; i++ {
+		select {
+		case msg := <-s1.In:
+			if debug {
+				t.Log(string(msg.Data))
+			}
+			if bytes.Equal(msg.Data, data0) {
+				gotPing = true
+			}
+			// sometimes the messages combine into "helloping"
+			// due to the way framing is etsimated in relay
+			if bytes.Equal(msg.Data, append(data, data0...)) {
+				gotPing = true
+			}
+		case msg := <-s0.In:
+			if debug {
+				t.Log(string(msg.Data))
+			}
+			if bytes.Equal(msg.Data, data1) {
+				gotPong = true
+				if gotPing {
+					break
+				}
+			}
+			if bytes.Equal(msg.Data, append(data, data1...)) {
+				gotPing = true
+				if gotPong {
+					break
+				}
+			}
+		case <-time.After(timeout):
+			continue
+		}
+	}
+
+	if !gotPing || !gotPong {
+		t.Error("did not get both messages")
+	}
+
+	cancel()
+	// Shutdown the Relay and check no messages are being sent
+	close(closed)
+	wg.Wait()
+
+}
+
+var upgrader = websocket.Upgrader{}
+
+func echo(w http.ResponseWriter, r *http.Request) {
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer c.Close()
+	for {
+		mt, message, err := c.ReadMessage()
+		if err != nil {
+			break
+		}
+		err = c.WriteMessage(mt, message)
+		if err != nil {
+			break
+		}
+	}
+}
+
+func makeTestToken(audience, secret string, ttl int64) (string, error) {
+
+	var claims permission.Token
+
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	afterTTL := jwt.NewNumericDate(time.Now().Add(time.Duration(ttl) * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = afterTTL
+	claims.Audience = jwt.ClaimStrings{audience}
+	claims.Topic = "123"
+	claims.ConnectionType = "session"
+	claims.Scopes = []string{"read", "write"}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign and get the complete encoded token as a string using the secret
+	return token.SignedString([]byte(secret))
 }
