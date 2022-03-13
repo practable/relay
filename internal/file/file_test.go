@@ -50,6 +50,16 @@ func TestParseByLine(t *testing.T) {
 [0.1] {"an":"other"}
 <'^foo\s*',,10s> {"send":"foos"}
 <'^foo\s*',5,> {"send":"foos"}
+|+> [a-h]
+|accept> [R-Z]
+|->[0-9]
+|deny>  [#!&%]
+|reset>
+|A> [a-h]
+|D> [0-9]
+|r> 
+|X>
+|a> ^\/(?!\/)(.*?)
 `
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -66,7 +76,7 @@ func TestParseByLine(t *testing.T) {
 	}()
 
 	n := strings.Count(s, "\n")
-	assert.Equal(t, 10, n) // Update this after editing
+	assert.Equal(t, 20, n) // Update this after editing
 
 	expected := make([]interface{}, n)
 	expected[0] = Send{
@@ -110,6 +120,40 @@ func TestParseByLine(t *testing.T) {
 	expected[8] = Error{`malformed condition command [<'^foo\s*',,10s> {"send":"foos"} '^foo\s*',,10s {"send":"foos"}]; second argument  should be integer, count of messages to await. Line was: <'^foo\s*',,10s> {"send":"foos"}`}
 
 	expected[9] = Error{`malformed condition command [<'^foo\s*',5,> {"send":"foos"} '^foo\s*',5, {"send":"foos"}]; third argument  should be timeout duration in format like 10s or 1m. Yours could not be parsed because time: invalid duration "". Line was was <'^foo\s*',5,> {"send":"foos"}`}
+
+	expected[10] = FilterAction{
+		Verb:    Accept,
+		Pattern: regexp.MustCompile(`[a-h]`),
+	}
+
+	expected[11] = FilterAction{
+		Verb:    Accept,
+		Pattern: regexp.MustCompile(`[R-Z]`),
+	}
+
+	expected[12] = FilterAction{
+		Verb:    Deny,
+		Pattern: regexp.MustCompile(`[0-9]`),
+	}
+
+	expected[13] = FilterAction{
+		Verb:    Deny,
+		Pattern: regexp.MustCompile(`[#!&%]`),
+	}
+
+	expected[14] = FilterAction{
+		Verb: Reset,
+	}
+
+	expected[15] = expected[10]
+
+	expected[16] = expected[12]
+
+	expected[17] = expected[14]
+
+	expected[18] = Error{`malformed filter command; first argument not one of [+,-,a,d,r,accept,deny,reset], but was X`}
+
+	expected[19] = Error{`malformed filter command; last argument ^\/(?!\/)(.*?) should be regexp pattern, but did not compile because error parsing regexp: invalid or unsupported Perl syntax: ` + "`(?!`. " + `Line was |a> ^\/(?!\/)(.*?)`}
 
 	in := strings.NewReader(s)
 
