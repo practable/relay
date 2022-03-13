@@ -8,9 +8,19 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+)
+
+type FilterVerb int
+
+const (
+	Unknown FilterVerb = iota
+	Accept
+	Deny
+	Reset
 )
 
 // regexp for parsing a comment line
@@ -59,6 +69,28 @@ var cire = regexp.MustCompile(ci)
 const ca = "^\\s*\\'([^']*)\\'\\s*,\\s*([0-9]*)\\s*,\\s*([0-9hmns\\.]*)\\s*"
 
 var care = regexp.MustCompile(ca)
+
+// regexp for parsing filter commands
+//^\s*\|\s*(reset|RESET|accept|ACCEPT|Accept|deny|DENY|Deny|[-+adrADR])\s*\>\s*(.*)
+/* examples:
+|reset>
+|-> asdfasdf
+|+> asdfas23452#lasdf9823
+ | + > 35
+  | - > 2427
+  | RESET > asdfasdf
+|accept>  asdfasdf
+|deny> asdfasdf
+ | Accept> s324652346
+|a> asdf
+|D> asdf
+|r>
+*/
+
+//const f = "^\\s*\\|\\s*(reset|RESET|accept|ACCEPT|Accept|deny|DENY|Deny|[-+adrADR])\\s*\\>\\s*(.*)"
+const f = "^\\s*\\|\\s*([-+a-zA-Z]+)\\s*\\>\\s*(.*)"
+
+var fre = regexp.MustCompile(f)
 
 // Run connects to the session and handles writing to/from files
 func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, playfilename string) {
@@ -205,6 +237,47 @@ func ParseLine(line string) interface{} {
 
 	}
 
+	if fre.MatchString(line) {
+
+		log.Debugf("Filter command found in %s", line)
+
+		args := fre.FindStringSubmatch(line)
+
+		if len(args) < 3 {
+			return Error{fmt.Sprintf("malformed filter command: %s", line)}
+		}
+
+		var verb FilterVerb
+
+		switch strings.ToLower(args[1]) {
+		case "-", "d", "deny":
+			verb = Deny
+		case "+", "a", "accept":
+			verb = Accept
+		case "r", "reset":
+			verb = Reset
+		}
+
+		switch verb {
+		case Unknown:
+			return Error{fmt.Sprintf("malformed filter command; first argument not one of [+,-,a,d,r,accept,deny,reset], but was %s", args[1])}
+		case Reset:
+			return FilterAction{
+				Verb: Reset,
+			}
+		case Accept, Deny:
+			re, err := regexp.Compile(args[2])
+			if err != nil {
+				return Error{fmt.Sprintf("malformed filter command; last argument %s should be regexp pattern, but did not compile because %s. Line was %s", args[2], err.Error(), line)}
+			}
+			return FilterAction{
+				Verb:    verb,
+				Pattern: re,
+			}
+		}
+
+	}
+
 	return Send{
 		Msg: line,
 	}
@@ -235,6 +308,11 @@ type Condition struct {
 type Filter struct {
 	AcceptPatterns *map[string]regexp.Regexp
 	DenyPatterns   *map[string]regexp.Regexp
+}
+
+type FilterAction struct {
+	Verb    FilterVerb
+	Pattern *regexp.Regexp
 }
 
 // NewFilter returns a pointer to a new,
