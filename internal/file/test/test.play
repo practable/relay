@@ -4,17 +4,37 @@
 #+ echo comment
 [0.1s] {"an":"other"}
 [1ms] {"an":"other"}
-<'^foo\s*',5,100ms> {"send":"foos"}
+<'^foo\s*',5,10ms> {"send":"foos"}
+[10ms]
+[1ms]a
+[1ms]b
+[1ms]c
+[1ms]d
+[1ms]e
+[1ms]f
+[1ms]g
+[1ms]
+#+ start set filter
 |+> [a-h]
 |accept> [R-Z]
 |->[0-9]
 |deny>  [#!&%]
-[10ms]ah
+#+ done set filter
+[10ms]
 [1ms]ah0#
+[1ms]AA
+[1ms]ZZ
+[1ms]abc
+[1ms]abc!
+[1ms]ah
+[10ms]
 |reset>
-[1ms]A1
-|A> [a-h]
-|D> [0-9]
-[1ms]A2
-|r> 
-[1ms]A3
+#+ reset
+[10ms]
+[1ms]ah0#
+[1ms]AA
+[1ms]ZZ
+[1ms]abc
+[1ms]abc!
+[1ms]ah
+[1s]

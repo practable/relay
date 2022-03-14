@@ -399,6 +399,7 @@ func TestParseByLine(t *testing.T) {
 |r> 
 |X>
 |a> ^\/(?!\/)(.*?)
+[10ms]
 `
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -415,7 +416,7 @@ func TestParseByLine(t *testing.T) {
 	}()
 
 	n := strings.Count(s, "\n")
-	assert.Equal(t, 20, n) // Update this after editing
+	assert.Equal(t, 21, n) // Update this after editing
 
 	expected := make([]interface{}, n)
 	expected[0] = Send{
@@ -493,6 +494,10 @@ func TestParseByLine(t *testing.T) {
 	expected[18] = Error{`malformed filter command; first argument not one of [+,-,a,d,r,accept,deny,reset], but was X`}
 
 	expected[19] = Error{`malformed filter command; last argument ^\/(?!\/)(.*?) should be regexp pattern, but did not compile because error parsing regexp: invalid or unsupported Perl syntax: ` + "`(?!`. " + `Line was |a> ^\/(?!\/)(.*?)`}
+
+	expected[20] = Wait{
+		Delay: 10 * time.Millisecond,
+	}
 
 	in := strings.NewReader(s)
 

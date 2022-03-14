@@ -28,6 +28,13 @@ type Send struct {
 	Condition Condition
 }
 
+// Wait represents an instruction to wait before
+// proceeding to subsequent instructions,
+// useful for testing mostly.
+type Wait struct {
+	Delay time.Duration
+}
+
 // Condition represents a condition for waiting for
 // a number of responses meeting a pattern, or a
 // maximum waiting time, whichever occurs first
