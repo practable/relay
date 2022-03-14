@@ -117,8 +117,9 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 	if logStdout {
 		// write filtered lines from w to stdout
 		go Write(ctx, w, os.Stdout)
-	} else {
-		// write filtered lines from w to f
+	}
+	// write filtered lines from w to f, if f has been specified and opened
+	if f != nil {
 		go Write(ctx, w, f)
 	}
 
