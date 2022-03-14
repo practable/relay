@@ -27,9 +27,9 @@ func TestPlay(t *testing.T) {
 #- non echo comment
 #+ echo comment
 [0.1s] {"an":"other"}
-[] {"an":"other"}
+[] {"yet an":"other"}
 <'^foo\s*',5,100ms> {"send":"foos"}
-[0.1] {"an":"other"}
+[0.1] {"not":"sent","bad":"delay format"}
 <'^foo\s*',,10s> {"send":"foos"}
 <'^foo\s*',5,> {"send":"foos"}
 |+> [a-h]
@@ -42,7 +42,55 @@ func TestPlay(t *testing.T) {
 |r> 
 |X>
 |a> ^\/(?!\/)(.*?)
+goodbye
+#+ finished example.play
 ` //place ` on separate line to ensure newline on last line with content
+
+	sent := []string{
+		`{"some":"msg"}`,
+		`{"an":"other"}`,
+		`{"yet an":"other"}`,
+		`{"send":"foos"}`,
+		`goodbye`,
+	}
+
+	actions := []FilterAction{
+		FilterAction{
+			Verb:    Accept,
+			Pattern: regexp.MustCompile(`[a-h]`),
+		},
+		FilterAction{
+			Verb:    Accept,
+			Pattern: regexp.MustCompile(`[R-Z]`),
+		},
+		FilterAction{
+			Verb:    Deny,
+			Pattern: regexp.MustCompile(`[0-9]`),
+		},
+		FilterAction{
+			Verb:    Deny,
+			Pattern: regexp.MustCompile(`[#!&%]`),
+		},
+		FilterAction{
+			Verb: Reset,
+		},
+		FilterAction{
+			Verb:    Accept,
+			Pattern: regexp.MustCompile(`[a-h]`),
+		},
+		FilterAction{
+			Verb:    Deny,
+			Pattern: regexp.MustCompile(`[0-9]`),
+		},
+		FilterAction{
+			Verb: Reset,
+		},
+	}
+
+	comments := []Line{
+		Line{Content: `echo comment`},
+		Line{Content: `finished example.play`},
+	}
 
 	n := strings.Count(play, "\n") + 1 //add one in case closing string quote on wrong line
 
@@ -61,11 +109,15 @@ func TestPlay(t *testing.T) {
 	s := make(chan string, n)
 	a := make(chan FilterAction, n)
 	c := make(chan ConditionCheck, n)
-
+	w := make(chan Line, n)
 	//func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan FilterAction, s chan string, c chan ConditionCheck) {
 
 	// immediately satisfy any conditions - we'll check delays on this later ...
 	go func() {
+		defer func() {
+			t.Logf("stopped first mock condition checker")
+		}()
+		t.Logf("starting first mock condition checker")
 		for {
 			select {
 			case <-ctx.Done():
@@ -87,7 +139,7 @@ func TestPlay(t *testing.T) {
 	start := time.Now()
 	var durationNoCondition time.Duration
 
-	go Play(ctx, closed, lines, a, s, c)
+	go Play(ctx, closed, lines, a, s, c, w)
 
 	select {
 	case <-closed:
@@ -96,8 +148,49 @@ func TestPlay(t *testing.T) {
 		t.Error("Play did not finish in time")
 	}
 
+	// drain channel s
+
+	// note if do not drain these channels, the test will hang
+	// because we only buffered enough for one run of Play at a time
+
+	for _, exp := range sent {
+		select {
+		case actual := <-s:
+			assert.Equal(t, exp, actual)
+		case <-time.After(time.Millisecond):
+			t.Errorf("did not get message,expected %s", exp)
+		}
+	}
+
+	// drain channel a
+	for _, exp := range actions {
+		select {
+		case actual := <-a:
+			t.Logf("action %v", actual)
+			assert.Equal(t, exp, actual)
+		case <-time.After(time.Millisecond):
+			t.Errorf("did not get action,expected %v", exp)
+		}
+	}
+
+	// drain channel w
+	for _, exp := range comments {
+		select {
+		case actual := <-w:
+			t.Logf("comment %v", actual.Content)
+			// ignore the time field, as we cannot control it
+			assert.Equal(t, exp.Content, actual.Content)
+		case <-time.After(time.Millisecond):
+			t.Errorf("did not get comment,expected %v", exp)
+		}
+	}
+
 	// now we add the delay on the condition(s)
 	go func() {
+		defer func() {
+			t.Logf("stopped first mock condition checker")
+		}()
+		t.Logf("starting second mock condition checker")
 		for {
 			select {
 			case <-ctx.Done():
@@ -120,8 +213,7 @@ func TestPlay(t *testing.T) {
 	start = time.Now()
 
 	closed = make(chan struct{})
-
-	go Play(ctx, closed, lines, a, s, c)
+	go Play(ctx, closed, lines, a, s, c, w)
 
 	select {
 	case <-closed:
@@ -133,6 +225,8 @@ func TestPlay(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Error("Play did not finish in time")
 	}
+
+	t.Log("todo Check that play writes echo messages to the log!")
 
 }
 

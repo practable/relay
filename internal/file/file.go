@@ -139,7 +139,7 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 	if len(lines) > 0 {
 		// play lines
 		close := make(chan struct{})
-		go Play(ctx, close, lines, a, s, c)
+		go Play(ctx, close, lines, a, s, c, w)
 		<-close //Play closes close when it has finished playing the file
 
 	} else {

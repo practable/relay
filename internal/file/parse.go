@@ -80,7 +80,7 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 	}
 }
 
-func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan FilterAction, s chan string, c chan ConditionCheck) {
+func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan FilterAction, s chan string, c chan ConditionCheck, w chan Line) {
 
 	defer close(closed) //signal we're done
 
@@ -89,7 +89,15 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 		log.Debugf("%d (%T)\n", idx, line)
 
 		switch line.(type) {
-
+		case Comment:
+			if c, ok := line.(Comment); ok {
+				if c.Echo {
+					w <- Line{
+						Content: c.Msg,
+						Time:    time.Now(),
+					}
+				}
+			}
 		case Error:
 			// ignore it
 		case Send:
