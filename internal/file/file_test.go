@@ -58,7 +58,7 @@ func TestRun(t *testing.T) {
 	interval := 10 * time.Millisecond
 
 	// Setup logging
-	debug := true
+	debug := false
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
