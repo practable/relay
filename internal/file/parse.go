@@ -27,20 +27,24 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 
 			case <-ctx.Done():
 				return
-			case <-time.After(current.Condition.Timeout):
-				// just in case timeout is less than a second, and milliseconds matter
-				// then this will return sooner, especially if no lines are received
-				if checking {
-					// no need to check stop - if we get here, we have timed out
-					checking = false
-					close(current.Satisfied)
-					current = ConditionCheck{} //prevent double close
-					lines = []Line{}           //delete lines recorded
-				}
-			case <-time.After(time.Second):
+				/*
+					case <-time.After(current.Condition.Timeout):
+									// just in case timeout is less than a second, and milliseconds matter
+									// then this will return sooner, especially if no lines are received
+									if checking {
+										// no need to check stop - if we get here, we have timed out
+										log.Infof("condition %s satisfied by timeout check at timeout time", current.Condition.String())
+										checking = false
+										close(current.Satisfied)
+										current = ConditionCheck{} //prevent double close
+										lines = []Line{}           //delete lines recorded
+									}
+				*/
+			case <-time.After(100 * time.Millisecond):
 				if checking {
 					// check if we have timed out
 					if time.Now().After(stop) {
+						log.Infof("condition %s satisfied by timeout check at 100ms interval", current.Condition.String())
 						checking = false
 						close(current.Satisfied)
 						current = ConditionCheck{} //prevent double close
@@ -51,11 +55,18 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 				if checking {
 
 					if current.Condition.AcceptPattern.MatchString(line.Content) {
+						log.Debugf("accepted lines: %d, want %d", len(lines), current.Condition.Count)
 						lines = append(lines, line)
+					} else {
+						log.Debugf("ignoring line, does not match")
 					}
 
 					if len(lines) >= current.Condition.Count {
 						// we've got enough lines
+						log.Infof("condition %s satisfied by receiving enough accepted lines", current.Condition.String())
+						for i, line := range lines {
+							log.Debugf("%d: %s", i, line.Content)
+						}
 						checking = false
 						close(current.Satisfied)
 						current = ConditionCheck{} //prevent double close

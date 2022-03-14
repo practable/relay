@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"regexp"
 	"time"
 )
@@ -34,6 +35,13 @@ type Condition struct {
 	AcceptPattern regexp.Regexp
 	Count         int
 	Timeout       time.Duration
+}
+
+func (c *Condition) String() string {
+	return fmt.Sprintf("<%s,%d,%s>",
+		c.AcceptPattern.String(),
+		c.Count,
+		c.Timeout)
 }
 
 // Filter represents the setting of the logging Filter
