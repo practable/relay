@@ -16,4 +16,17 @@ export SESSION_CLIENT_SESSION=$ACCESSTOKEN_AUDIENCE/$ACCESSTOKEN_CONNECTIONTYPE/
 mkdir -p $3
 export SESSION_CLIENT_FILE_LOG=$3/session.log
 export SESSION_CLIENT_FILE_DEVELOPMENT=true
-../../../cmd/session/session client file
+../../../cmd/session/session client file &
+pid=$!
+sleep 5
+mv $3/session.log $3/session.log.1
+kill -SIGHUP $pid
+sleep 5
+mv $3/session.log $3/session.log.2
+kill -SIGHUP $pid
+sleep 5
+mv $3/session.log $3/session.log.3
+kill -SIGHUP $pid
+sleep 5
+kill -SIGINT $pid
+
