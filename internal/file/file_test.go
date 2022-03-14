@@ -100,7 +100,7 @@ func TestRun(t *testing.T) {
 	// and see if the ReconnectAuth clients will connect.
 
 	// Sign and get the complete encoded token as a string using the secret
-	bearer, err := makeTestToken(audience, secret, 30)
+	bearer, err := makeTestToken(audience, secret, 60)
 
 	assert.NoError(t, err)
 
@@ -363,7 +363,16 @@ ah
 	// due to impact on github actions when uploading other code.
 
 	assert.GreaterOrEqual(t, expectedCount, idx-2, "incorrect number of lines in file")
+
+	time.Sleep(time.Second)
+
+	t.Logf("cancelling filtering test")
+
 	cancel()
+
+	time.Sleep(100 * time.Millisecond)
+
+	t.Logf("starting sighup test")
 
 	// test the sighup
 	ctx, cancel = context.WithCancel(context.Background())
@@ -373,11 +382,12 @@ ah
 		assert.NoError(t, err)
 	}
 
+	t.Logf("starting s0 reconws")
 	s0 = reconws.New()
 	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
 
 	go func() {
-		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval, false, false)
+		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval, false, false)
 		assert.NoError(t, err)
 	}()
 
@@ -400,15 +410,16 @@ ah
 
 	time.Sleep(time.Second)
 
+	t.Logf("renaming logfile")
 	err = os.Rename(testlog, testlog1)
 	assert.NoError(t, err)
-
+	t.Logf("issuing sighup")
 	sighup <- syscall.SIGHUP
-
+	t.Logf("sighup issued")
 	time.Sleep(time.Second)
 
 	cancel()
-
+	t.Logf("reading log files")
 	newf, err := os.ReadFile(testlog)
 	assert.NoError(t, err)
 	news := string(newf)
