@@ -44,6 +44,9 @@ type Condition struct {
 	Timeout       time.Duration
 }
 
+// String returns a string representation of a Condition commands
+// that mimics its representation in .play file
+// <AcceptPattern, Count, Timeout>
 func (c *Condition) String() string {
 	return fmt.Sprintf("<%s,%d,%s>",
 		c.AcceptPattern.String(),
@@ -72,10 +75,16 @@ type FilterAction struct {
 // can be taken on settings of the logging filter
 type FilterVerb int
 
+// These const represent what type of filter action
+// is needed
 const (
+	//Unknown do nothing
 	Unknown FilterVerb = iota
+	// Accept add an AcceptPattern
 	Accept
+	// Deny add a DenyPattern
 	Deny
+	// Remove all AcceptPattern and DenyPatterns (make filter all-pass again)
 	Reset
 )
 
@@ -86,6 +95,8 @@ type Line struct {
 	Content string
 }
 
+// ConditionCheck represents a condition that should be
+// checked by ConditionCheckLines.
 type ConditionCheck struct {
 	Condition Condition
 	Satisfied chan struct{}
