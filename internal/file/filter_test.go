@@ -86,6 +86,7 @@ READ0:
 		case <-time.After(10 * time.Millisecond):
 			break READ0
 		case line := <-out:
+			t.Logf("some-pass test: %s", line)
 			actual = append(actual, line)
 		}
 	}
@@ -110,6 +111,7 @@ READ1:
 		case <-time.After(10 * time.Millisecond):
 			break READ1
 		case line := <-out:
+			t.Logf("all-pass test: %s", line)
 			actual = append(actual, line)
 		}
 	}

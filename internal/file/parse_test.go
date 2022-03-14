@@ -11,6 +11,131 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestPlay(t *testing.T) {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	closed := make(chan struct{})
+
+	conditionTimeout := 100 * time.Millisecond //must match total timeout(s) of condition(s) in play
+
+	// there is one condition with a timeout of 100ms
+	// we rely on this to check response to condition
+	play := `{"some":"msg"}
+# Non echo comment
+#- non echo comment
+#+ echo comment
+[0.1s] {"an":"other"}
+[] {"an":"other"}
+<'^foo\s*',5,100ms> {"send":"foos"}
+[0.1] {"an":"other"}
+<'^foo\s*',,10s> {"send":"foos"}
+<'^foo\s*',5,> {"send":"foos"}
+|+> [a-h]
+|accept> [R-Z]
+|->[0-9]
+|deny>  [#!&%]
+|reset>
+|A> [a-h]
+|D> [0-9]
+|r> 
+|X>
+|a> ^\/(?!\/)(.*?)
+` //place ` on separate line to ensure newline on last line with content
+
+	n := strings.Count(play, "\n") + 1 //add one in case closing string quote on wrong line
+
+	pout := make(chan interface{}, n)
+
+	err := ParseByLine(strings.NewReader(play), pout)
+
+	assert.NoError(t, err)
+
+	lines := []interface{}{}
+
+	for l := range pout {
+		lines = append(lines, l)
+	}
+
+	s := make(chan string, n)
+	a := make(chan FilterAction, n)
+	c := make(chan ConditionCheck, n)
+
+	//func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan FilterAction, s chan string, c chan ConditionCheck) {
+
+	// immediately satisfy any conditions - we'll check delays on this later ...
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-closed:
+				return
+			case cc := <-c:
+				t.Logf("Condition received: %s,%d,%s",
+					cc.Condition.AcceptPattern.String(),
+					cc.Condition.Count,
+					cc.Condition.Timeout)
+				t.Logf("satisfying condition immediately")
+				close(cc.Satisfied)
+			}
+
+		}
+	}()
+
+	start := time.Now()
+	var durationNoCondition time.Duration
+
+	go Play(ctx, closed, lines, a, s, c)
+
+	select {
+	case <-closed:
+		durationNoCondition = time.Now().Sub(start) //record natural running speed without conditions
+	case <-time.After(time.Second):
+		t.Error("Play did not finish in time")
+	}
+
+	// now we add the delay on the condition(s)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-closed:
+				return
+			case cc := <-c:
+				t.Logf("Condition received: %s,%d,%s",
+					cc.Condition.AcceptPattern.String(),
+					cc.Condition.Count,
+					cc.Condition.Timeout)
+				<-time.After(cc.Condition.Timeout)
+				t.Logf("satisfying condition after %s", cc.Condition.Timeout)
+				close(cc.Satisfied)
+			}
+
+		}
+	}()
+
+	start = time.Now()
+
+	closed = make(chan struct{})
+
+	go Play(ctx, closed, lines, a, s, c)
+
+	select {
+	case <-closed:
+		duration := time.Now().Sub(start)
+		t.Logf("duration: %s", duration)
+		if duration-durationNoCondition < conditionTimeout {
+			t.Error("Play did not respect delay on condition check")
+		}
+	case <-time.After(time.Second):
+		t.Error("Play did not finish in time")
+	}
+
+}
+
 func TestParseByLine(t *testing.T) {
 
 	// put closing quote on its own line to ensure test counts lines
@@ -144,6 +269,7 @@ func TestParseByLine(t *testing.T) {
 		t.Logf("%d: %v\n", idx, o)
 		idx++
 	}
+	t.Logf("Note that Error{} are being passed due to checking handling of deliberately malformed commands - these are not errors in the test")
 
 	assert.Equal(t, n, idx)
 
