@@ -4,12 +4,157 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestConditionCheckLines(t *testing.T) {
+
+	//we need to timeout, and line count tests
+	//<'^foo\s*',5,100ms> {"send":"foos"}
+	// test 0: send nothing, must timeout (and not hang)
+	// test 1: send 6 "bar", must timeout (must check message against AcceptPattern)
+	// test 2: send 4 "foo", must timeout (must count accurately)
+	// test 3: send 5 "foo", must return before timeout (must count accurately)
+	// test 4: send 5 "foo", THEN send condition, then wait: must timeout (don't use previous)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // we can run all tests without restarting ConditionCheckLines so just defer
+
+	cc := make(chan ConditionCheck) // don't buffer, to keep some control of timing of check commands
+
+	in := make(chan Line, 10) //buffer to simplify test writing
+
+	go ConditionCheckLines(ctx, cc, in)
+
+	timeout := 150 * time.Millisecond
+
+	cond := Condition{
+		AcceptPattern: *regexp.MustCompile(`^foo\s*`),
+		Count:         5,
+		Timeout:       timeout,
+	}
+
+	ccs := []ConditionCheck{
+		ConditionCheck{
+			Satisfied: make(chan struct{}),
+			Condition: cond,
+		},
+		ConditionCheck{
+			Satisfied: make(chan struct{}),
+			Condition: cond,
+		},
+		ConditionCheck{
+			Satisfied: make(chan struct{}),
+			Condition: cond,
+		},
+		ConditionCheck{
+			Satisfied: make(chan struct{}),
+			Condition: cond,
+		},
+		ConditionCheck{
+			Satisfied: make(chan struct{}),
+			Condition: cond,
+		},
+	}
+
+	shouldTimeout := []bool{
+		true,
+		true,
+		true,
+		false,
+		true,
+	}
+
+	preLines := [][]Line{
+		[]Line{},
+		[]Line{},
+		[]Line{},
+		[]Line{},
+		[]Line{
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+		},
+	}
+
+	postLines := [][]Line{
+		[]Line{},
+		[]Line{
+			Line{Content: "bar"},
+			Line{Content: "bar"},
+			Line{Content: "bar"},
+			Line{Content: "bar"},
+			Line{Content: "bar"},
+		},
+		[]Line{
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+		},
+		[]Line{
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+			Line{Content: "foo"},
+		},
+		[]Line{},
+	}
+
+	for i := 0; i < len(ccs); i++ {
+		time.Sleep(timeout)
+		t.Logf("start test %d, timeout expected: %s",
+			i,
+			strconv.FormatBool(shouldTimeout[i]))
+
+		for _, line := range preLines[i] {
+			in <- line
+			t.Logf("pre: %s", line.Content)
+		}
+
+		time.Sleep(timeout) // avoid overlap with pre-lines
+
+		// send condition
+		start := time.Now()
+
+		cc <- ccs[i]
+		t.Logf("condition: %s, %d, %s",
+			ccs[i].Condition.AcceptPattern.String(),
+			ccs[i].Condition.Count,
+			ccs[i].Condition.Timeout,
+		)
+
+		for _, line := range postLines[i] {
+			in <- line
+			t.Logf("post: %s", line.Content)
+		}
+
+		select {
+		case <-ccs[i].Satisfied:
+			duration := time.Now().Sub(start)
+			t.Logf("finished test %d, timeout expected: %s, duration: %s",
+				i,
+				strconv.FormatBool(shouldTimeout[i]),
+				duration)
+			// we assume it passed the check if it returns within the
+			// threshold time, which is less than the timeout
+			assert.Equal(t, shouldTimeout[i], duration >= timeout)
+			t.Logf("----------------------------------------------")
+
+		case <-time.After(time.Second):
+			t.Error("condition has not timed out in time")
+		}
+	}
+
+}
 
 func TestPlay(t *testing.T) {
 
