@@ -80,11 +80,13 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 	}
 }
 
-func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan FilterAction, s chan interface{}, c chan ConditionCheck) {
+func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan FilterAction, s chan string, c chan ConditionCheck) {
 
 	defer close(closed) //signal we're done
 
-	for _, line := range lines {
+	for idx, line := range lines {
+
+		log.Debugf("%d (%T)\n", idx, line)
 
 		switch line.(type) {
 
@@ -103,6 +105,7 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 					}
 					<-satisfied //wait until, maybe forever (some users may set very long values here, days, weeks etc)
 				}
+				s <- send.Msg
 			}
 		case FilterAction:
 			if fa, ok := line.(FilterAction); ok {
@@ -166,8 +169,6 @@ func LoadFile(filename string) ([]interface{}, error) {
 	}()
 
 	err := ParseFile(filename, out)
-
-	close(out) // cause goroutine to stop
 
 	return lines, err
 

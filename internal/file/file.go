@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/client9/reopen"
+	"github.com/gorilla/websocket"
 	"github.com/practable/relay/internal/reconws"
 )
 
@@ -89,8 +90,8 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 	//channel for writing FilterActions
 	a := make(chan FilterAction, 10)
 
-	//channel for sending messages (wrapped in different types to suit line content)
-	s := make(chan interface{}, 10)
+	//channel for sending messages
+	s := make(chan string, 10)
 
 	// channel for writing to the file
 	w := make(chan Line, 10) //add some buffering in case of a burst of messages
@@ -123,6 +124,17 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 	// monitor incoming messages and respond to
 	// condition check requests from Play on c
 	go ConditionCheckLines(ctx, c, in1)
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg := <-s:
+				r.Out <- reconws.WsMessage{Type: websocket.TextMessage, Data: []byte(msg)}
+			}
+		}
+	}()
 
 	if len(lines) > 0 {
 		// play lines

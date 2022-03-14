@@ -294,10 +294,19 @@ tuv
 
 }
 
+// just for test use, see better approaches here: https://stackoverflow.com/questions/12518876/how-to-check-if-a-file-exists-in-go
+func exists(name string) bool {
+	_, err := os.Stat(name)
+	if err == nil {
+		return true
+	}
+	return false
+}
+
 func TestRun(t *testing.T) {
 
 	// Setup logging
-	debug := false
+	debug := true
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -328,7 +337,6 @@ func TestRun(t *testing.T) {
 	wg.Add(1)
 
 	go func() {
-		time.Sleep(2 * time.Second)
 		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
 	}()
 
@@ -354,9 +362,25 @@ func TestRun(t *testing.T) {
 
 	sighup := make(chan os.Signal)
 
+	testlog := "./test/test.log"
+	testlog1 := "./test/test.log.1"
+	playfilename := "./test/test.play"
+
+	if exists(testlog) {
+		err = os.Remove(testlog)
+		assert.NoError(t, err)
+	}
+	if exists(testlog1) {
+		err = os.Remove(testlog1)
+		assert.NoError(t, err)
+	}
+
 	go func() {
 
-		time.Sleep(time.Millisecond * 100)
+		s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
+			Data: []byte("This is the zeroth message")}
+
+		time.Sleep(time.Millisecond * 10)
 
 		s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
 			Data: []byte("This is the first message")}
@@ -366,14 +390,82 @@ func TestRun(t *testing.T) {
 		s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
 			Data: []byte("This is the second message")}
 
+		time.Sleep(time.Millisecond * 10)
+
+		s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
+			Data: []byte("This is the third message")}
+
+		time.Sleep(time.Millisecond * 10)
+
+		cancel()
+
 	}()
 
 	// no play file for now
-	err = Run(ctx, sighup, audience+"/session/123", bearer, "./test/test.log", "")
+	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "")
 
 	assert.NoError(t, err)
 
-	cancel()
+	dat, err := os.ReadFile(testlog)
+	assert.NoError(t, err)
+	s := string(dat)
+	t.Logf(s)
+
+	// let's see if we can get at least two messages
+	assert.Less(t, 2, strings.Count(s, "["))
+
+	if exists(testlog) {
+		err = os.Remove(testlog)
+		assert.NoError(t, err)
+	}
+
+	// now try playing a file
+	ctx, cancel = context.WithCancel(context.Background())
+
+	play := `{"some":"msg"}
+# Non echo comment
+#- non echo comment
+#+ echo comment
+[0.1s] {"an":"other"}
+[] {"an":"other"}
+<'^foo\s*',5,0.3h1.5m0.1s> {"send":"foos"}
+|+> [a-h]
+|accept> [R-Z]
+|->[0-9]
+|deny>  [#!&%]
+ah
+ah#
+|reset>
+A1
+|A> [a-h]
+|D> [0-9]
+A2
+|r> 
+A3
+`
+	err = os.WriteFile(playfilename, []byte(play), 0644)
+
+	assert.NoError(t, err)
+
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		err = Run(ctx, sighup, audience+"/session/123", bearer, "", playfilename)
+		time.Sleep(time.Second)
+		cancel()
+
+	}()
+
+	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "")
+	assert.NoError(t, err)
+
+	dat, err = os.ReadFile(testlog)
+	assert.NoError(t, err)
+	s = string(dat)
+	t.Logf(s)
+
+	// let's see if we can get at least five lines
+	assert.Less(t, 2, strings.Count(s, "\n"))
+
 	// Shutdown the Relay and check no messages are being sent
 	close(closed)
 	wg.Wait()
