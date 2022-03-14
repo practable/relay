@@ -6,6 +6,7 @@ import (
 	"context"
 	"flag"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -56,7 +57,7 @@ func TestRun(t *testing.T) {
 	interval := 10 * time.Millisecond
 
 	// Setup logging
-	debug := false
+	debug := true
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -125,36 +126,35 @@ func TestRun(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
+	// no play file for now
 	go func() {
-
-		s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
-			Data: []byte("This is the zeroth message")}
-
-		time.Sleep(time.Millisecond * 10)
-
-		s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
-			Data: []byte("This is the first message")}
-
-		time.Sleep(time.Millisecond * 10)
-
-		s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
-			Data: []byte("This is the second message")}
-
-		time.Sleep(time.Millisecond * 10)
-
-		s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
-			Data: []byte("This is the third message")}
-
-		time.Sleep(time.Millisecond * 10)
-
-		cancel()
-
+		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval)
+		assert.NoError(t, err)
 	}()
 
-	// no play file for now
-	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval)
+	time.Sleep(time.Millisecond * 1000)
 
-	assert.NoError(t, err)
+	s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
+		Data: []byte("This is the zeroth message")}
+
+	time.Sleep(time.Millisecond * 10)
+
+	s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
+		Data: []byte("This is the first message")}
+
+	time.Sleep(time.Millisecond * 10)
+
+	s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
+		Data: []byte("This is the second message")}
+
+	time.Sleep(time.Millisecond * 10)
+
+	s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
+		Data: []byte("This is the third message")}
+
+	time.Sleep(time.Millisecond * 10)
+
+	cancel()
 
 	dat, err := os.ReadFile(testlog)
 	assert.NoError(t, err)
@@ -163,6 +163,27 @@ func TestRun(t *testing.T) {
 
 	// let's see if we can get at least two messages
 	assert.Less(t, 2, strings.Count(s, "["))
+
+	ec := `This is the zeroth message
+This is the first message
+This is the second message
+This is the third message
+`
+
+	expectedCount := 4
+	actual := bufio.NewScanner(strings.NewReader(s))
+	expected := bufio.NewScanner(strings.NewReader(ec))
+
+	idx := 0
+	re := regexp.MustCompile(`^\s*\[[^\]]+\]\s*(.*)`)
+	for actual.Scan() {
+		expected.Scan() //protected from overrun by final assert in this loop
+		parsed := re.FindStringSubmatch(actual.Text())
+		assert.Equal(t, 2, len(parsed), "result checking regexp not working correctly, check test code")
+		assert.Equal(t, expected.Text(), parsed[1], "text does not match")
+		idx++
+		assert.GreaterOrEqual(t, expectedCount, idx, "too many lines in file")
+	}
 
 	if exists(testlog) {
 		err = os.Remove(testlog)
@@ -178,45 +199,43 @@ func TestRun(t *testing.T) {
 #+ echo comment
 [0.1s] {"an":"other"}
 [1ms] {"an":"other"}
-<'^foo\s*',5,100ms> {"send":"foos"}
+<'^foo\s*',5,10ms> {"send":"foos"}
+[10ms]
+[1ms]a
+[1ms]b
+[1ms]c
+[1ms]d
+[1ms]e
+[1ms]f
+[1ms]g
+[1ms]
+#+ start set filter
 |+> [a-h]
 |accept> [R-Z]
 |->[0-9]
 |deny>  [#!&%]
-[10ms]ah
+#+ done set filter
+[10ms]
 [1ms]ah0#
+[1ms]AA
+[1ms]ZZ
+[1ms]abc
+[1ms]abc!
+[1ms]ah
+[10ms]
 |reset>
-[1ms]A1
-|A> [a-h]
-|D> [0-9]
-[1ms]A2
-|r> 
-[1ms]A3
+#+ reset
+[10ms]
+[1ms]ah0#
+[1ms]AA
+[1ms]ZZ
+[1ms]abc
+[1ms]abc!
+[1ms]ah
+[1s]
 `
 	err = os.WriteFile(playfilename, []byte(play), 0644)
-
 	assert.NoError(t, err)
-
-	go func() {
-		time.Sleep(10 * time.Millisecond)
-		err = Run(ctx, sighup, audience+"/session/123", bearer, "", playfilename, interval)
-		time.Sleep(time.Second)
-		cancel()
-
-	}()
-
-	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval)
-	assert.NoError(t, err)
-
-	dat, err = os.ReadFile(testlog)
-	assert.NoError(t, err)
-	s = string(dat)
-	t.Logf(s)
-
-	//NOTE - there is a condition in the above file which should delay 19minutes ... but isn't!
-
-	// let's see if we can get at least five lines
-	assert.Less(t, 2, strings.Count(s, "\n"))
 
 	// echo to self, see that filter works...
 	ctx, cancel = context.WithCancel(context.Background())
@@ -243,11 +262,55 @@ func TestRun(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval)
+	assert.NoError(t, err)
 
 	dat, err = os.ReadFile(testlog)
 	assert.NoError(t, err)
 	s = string(dat)
 	t.Logf(s)
+
+	ec = `echo comment
+{"some":"msg"}
+{"an":"other"}
+{"an":"other"}
+{"send":"foos"}
+a
+b
+c
+d
+e
+f
+g
+start set filter
+done set filter
+ZZ
+abc
+ah
+reset
+ah0#
+AA
+ZZ
+abc
+abc!
+ah
+` //put ` on this line so last line is processed
+
+	expectedCount = 23
+	actual = bufio.NewScanner(strings.NewReader(s))
+	expected = bufio.NewScanner(strings.NewReader(ec))
+
+	idx = 0
+	re = regexp.MustCompile(`^\s*\[[^\]]+\]\s*(.*)`)
+	for actual.Scan() {
+		expected.Scan() //protected from overrun by final assert in this loop
+		parsed := re.FindStringSubmatch(actual.Text())
+		assert.Equal(t, 2, len(parsed))
+		assert.Equal(t, expected.Text(), parsed[1], "text does not match")
+		idx++
+		assert.GreaterOrEqual(t, expectedCount, idx, "too many lines in file")
+	}
+
+	assert.Equal(t, expectedCount, idx, "incorrect number of lines in file")
 
 	// Shutdown the Relay and check no messages are being sent
 	close(closed)

@@ -99,6 +99,10 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 			}
 		case Error:
 			// ignore it
+		case Wait:
+			if wait, ok := line.(Wait); ok {
+				<-time.After(wait.Delay)
+			}
 		case Send:
 			if send, ok := line.(Send); ok {
 				// wait
@@ -272,11 +276,19 @@ func ParseLine(line string) interface{} {
 			}
 		}
 
-		log.Infof("Parsed message to send after %s: %s", t, d[2])
+		if len(d[2]) > 0 {
 
-		return Send{
-			Msg:   d[2],
-			Delay: t,
+			log.Infof("Parsed message to send after %s: %s", t, d[2])
+
+			return Send{
+				Msg:   d[2],
+				Delay: t,
+			}
+		} else {
+			log.Infof("Parsed wait for %s", t)
+			return Wait{
+				Delay: t,
+			}
 		}
 
 	}
