@@ -364,8 +364,13 @@ goodbye
 	case <-closed:
 		duration := time.Now().Sub(start)
 		t.Logf("duration: %s", duration)
-		if duration-durationNoCondition < conditionTimeout {
-			t.Error("Play did not respect delay on condition check")
+		// add a tolerance for variability between runs due to factors outside control
+		// of the test, e.g. CPU loading
+		tolerance := 10 * time.Millisecond
+		if (duration - durationNoCondition) <= (conditionTimeout - tolerance) {
+			t.Errorf("Play did not respect delay on condition check; delay amount %s, expected %s",
+				duration-durationNoCondition,
+				conditionTimeout)
 		}
 	case <-time.After(time.Second):
 		t.Error("Play did not finish in time")
