@@ -53,6 +53,8 @@ func exists(name string) bool {
 
 func TestRun(t *testing.T) {
 
+	interval := 10 * time.Millisecond
+
 	// Setup logging
 	debug := false
 
@@ -150,7 +152,7 @@ func TestRun(t *testing.T) {
 	}()
 
 	// no play file for now
-	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "")
+	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval)
 
 	assert.NoError(t, err)
 
@@ -197,13 +199,13 @@ func TestRun(t *testing.T) {
 
 	go func() {
 		time.Sleep(10 * time.Millisecond)
-		err = Run(ctx, sighup, audience+"/session/123", bearer, "", playfilename)
+		err = Run(ctx, sighup, audience+"/session/123", bearer, "", playfilename, interval)
 		time.Sleep(time.Second)
 		cancel()
 
 	}()
 
-	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "")
+	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval)
 	assert.NoError(t, err)
 
 	dat, err = os.ReadFile(testlog)
@@ -240,7 +242,7 @@ func TestRun(t *testing.T) {
 	}()
 
 	time.Sleep(10 * time.Millisecond)
-	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename)
+	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval)
 
 	dat, err = os.ReadFile(testlog)
 	assert.NoError(t, err)
