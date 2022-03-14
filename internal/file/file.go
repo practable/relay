@@ -84,7 +84,7 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 			for {
 				select {
 				case <-done:
-					log.Info("done, finished playfile?, no longer listening for signup")
+					log.Info("done, finished playfile? No longer listening for signup")
 					return // we've finished the playfile, most likely
 				case <-ctx.Done():
 					log.Info("Context cancelled, no longer listening for signup")

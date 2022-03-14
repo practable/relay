@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"strconv"
 	"syscall"
 
 	"github.com/practable/relay/internal/file"
@@ -168,12 +169,12 @@ theoretically you could miss a message).
 			os.Exit(1)
 		}
 
-		if session == "" {
+		if session == "" && !check {
 			fmt.Println("SESSION_CLIENT_SESSION not set")
 			os.Exit(1)
 		}
 
-		if token == "" {
+		if token == "" && !check {
 			fmt.Println("SESSION_CLIENT_TOKEN not set")
 			os.Exit(1)
 		}
@@ -181,7 +182,13 @@ theoretically you could miss a message).
 		if development {
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
-			fmt.Printf("Session: %s\n Token: %s\n Log: %s\n, Play: %s\n", session, token, logfilename, playfilename)
+			fmt.Printf("Session: %s\nToken: %s\nLog: %s\nPlay: %s\nCheck: %s\nForce: %s\n",
+				session,
+				token,
+				logfilename,
+				playfilename,
+				strconv.FormatBool(check),
+				strconv.FormatBool(check))
 			log.SetFormatter(&log.TextFormatter{})
 			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)
@@ -199,6 +206,13 @@ theoretically you could miss a message).
 
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
+
+		go func() {
+			for range c {
+				cancel()
+				os.Exit(0)
+			}
+		}()
 
 		sighup := make(chan os.Signal, 1)
 		signal.Notify(sighup, syscall.SIGHUP)
