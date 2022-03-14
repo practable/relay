@@ -287,14 +287,14 @@ tuv
 	f.DeleteAcceptPattern(p5)
 	assert.True(t, f.Pass("abc")) //passed because p0 not deleted
 
-	//regexp.Regexp stores original text, so whitespace IS different
+	//regexp.Regexp stores original text, so whitespace IS different - don't delete
 	p0b := regexp.MustCompile(" [a-h]")
 	f.DeleteAcceptPattern(p0b)
 	assert.True(t, f.Pass("abc")) //passed because p0 not deleted
 
 }
 
-func TestAll(t *testing.T) {
+func testAll(t *testing.T) {
 
 	// Setup logging
 	debug := false

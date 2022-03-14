@@ -1,6 +1,94 @@
 package file
 
-import "regexp"
+import (
+	"context"
+	"regexp"
+	"time"
+
+	b64 "encoding/base64"
+
+	"github.com/gorilla/websocket"
+	"github.com/practable/relay/internal/reconws"
+)
+
+// Tee copies incoming Lines on in into copies on in0 and in1
+// so that they can be consumed for different purposes
+func Tee(ctx context.Context, in, in0, in1 chan Line) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case line := <-in:
+			in0 <- line
+			in1 <- line
+		}
+	}
+}
+
+func FilterLines(ctx context.Context, a chan FilterAction, in chan Line, w chan Line) {
+
+	f := NewFilter()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case action := <-a:
+
+			switch action.Verb {
+
+			case Reset:
+				f.Reset()
+			case Accept:
+				f.AddAcceptPattern(action.Pattern)
+			case Deny:
+				f.AddDenyPattern(action.Pattern)
+			case Unknown:
+				//do nothing
+			}
+
+		case line := <-in:
+
+			if f.Pass(line.Content) {
+				w <- line
+			}
+
+		}
+
+	}
+
+}
+
+func WsMessageToLine(ctx context.Context, in chan reconws.WsMessage, out chan Line) {
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case msg := <-in:
+
+			t := time.Now()
+
+			var line string
+
+			switch msg.Type {
+			case websocket.BinaryMessage:
+				line = b64.StdEncoding.EncodeToString(msg.Data)
+			case websocket.TextMessage:
+				line = string(msg.Data)
+
+			}
+
+			out <- Line{
+				Time:    t,
+				Content: line,
+			}
+		}
+
+	}
+
+}
 
 // NewFilter returns a pointer to a new,
 // initialised filter ready for use

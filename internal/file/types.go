@@ -70,3 +70,8 @@ type Line struct {
 	Time    time.Time
 	Content string
 }
+
+type ConditionCheck struct {
+	Condition Condition
+	Satisfied chan struct{}
+}
