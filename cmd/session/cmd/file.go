@@ -152,10 +152,14 @@ theoretically you could miss a message).
 		viper.SetEnvPrefix("SESSION_CLIENT")
 		viper.AutomaticEnv()
 
+		viper.SetDefault("interval", "1s")
+
 		session := viper.GetString("session")
 		token := viper.GetString("token")
 		development := viper.GetBool("file_development")
-
+		interval := viper.GetDuration("interval")
+		check := viper.GetBool("check_only")
+		force := viper.GetBool("force")
 		logfilename := viper.GetString("file_log")
 		playfilename := viper.GetString("file_play")
 
@@ -191,19 +195,19 @@ theoretically you could miss a message).
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
 
-		hup := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGHUP)
+		sighup := make(chan os.Signal, 1)
+		signal.Notify(sighup, syscall.SIGHUP)
 
-		go func() {
-			for range hup {
-				// reopen logfile (but not playfile!)
-			}
-		}()
-
-		file.Run(ctx, hup, session, token, logfilename, playfilename)
+		err := file.Run(ctx, sighup, session, token, logfilename, playfilename, interval, check, force)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
 
 	},
 }
