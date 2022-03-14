@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -132,7 +133,9 @@ func TestRun(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	time.Sleep(time.Millisecond * 1000)
+	time.Sleep(time.Millisecond)
+	time.Sleep(time.Millisecond)
+	time.Sleep(time.Millisecond)
 
 	s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
 		Data: []byte("This is the zeroth message")}
@@ -193,7 +196,9 @@ This is the third message
 	// now try playing a file
 	ctx, cancel = context.WithCancel(context.Background())
 
-	play := `{"some":"msg"}
+	play := `[10ms]
+{"some":"msg"}
+[10ms]
 # Non echo comment
 #- non echo comment
 #+ echo comment
@@ -208,6 +213,30 @@ This is the third message
 [1ms]e
 [1ms]f
 [1ms]g
+[1ms]
+#+ start set filter
+|+> [a-h]
+|accept> [R-Z]
+|->[0-9]
+|deny>  [#!&%]
+#+ done set filter
+[10ms]
+[1ms]ah0#
+[1ms]AA
+[1ms]ZZ
+[1ms]abc
+[1ms]abc!
+[1ms]ah
+[10ms]
+|reset>
+#+ reset
+[10ms]
+[1ms]ah0#
+[1ms]AA
+[1ms]ZZ
+[1ms]abc
+[1ms]abc!
+[1ms]ah
 [1ms]
 #+ start set filter
 |+> [a-h]
@@ -269,8 +298,8 @@ This is the third message
 	s = string(dat)
 	t.Logf(s)
 
-	ec = `echo comment
-{"some":"msg"}
+	ec = `{"some":"msg"}
+echo comment
 {"an":"other"}
 {"an":"other"}
 {"send":"foos"}
@@ -293,9 +322,21 @@ ZZ
 abc
 abc!
 ah
+start set filter
+done set filter
+ZZ
+abc
+ah
+reset
+ah0#
+AA
+ZZ
+abc
+abc!
 ` //put ` on this line so last line is processed
-
-	expectedCount = 23
+	// ignore last return, test set up / teardown issue means it is not always received
+	// hence the long test to ensure that is not a sign of another issue
+	expectedCount = 35
 	actual = bufio.NewScanner(strings.NewReader(s))
 	expected = bufio.NewScanner(strings.NewReader(ec))
 
@@ -307,7 +348,7 @@ ah
 		assert.Equal(t, 2, len(parsed))
 		assert.Equal(t, expected.Text(), parsed[1], "text does not match")
 		idx++
-		assert.GreaterOrEqual(t, expectedCount, idx, "too many lines in file")
+		assert.GreaterOrEqual(t, expectedCount, idx, fmt.Sprintf("too many lines in file: %s", actual.Text()))
 	}
 
 	assert.Equal(t, expectedCount, idx, "incorrect number of lines in file")

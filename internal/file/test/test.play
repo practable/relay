@@ -1,4 +1,6 @@
+[10ms]
 {"some":"msg"}
+[10ms]
 # Non echo comment
 #- non echo comment
 #+ echo comment
@@ -13,6 +15,30 @@
 [1ms]e
 [1ms]f
 [1ms]g
+[1ms]
+#+ start set filter
+|+> [a-h]
+|accept> [R-Z]
+|->[0-9]
+|deny>  [#!&%]
+#+ done set filter
+[10ms]
+[1ms]ah0#
+[1ms]AA
+[1ms]ZZ
+[1ms]abc
+[1ms]abc!
+[1ms]ah
+[10ms]
+|reset>
+#+ reset
+[10ms]
+[1ms]ah0#
+[1ms]AA
+[1ms]ZZ
+[1ms]abc
+[1ms]abc!
+[1ms]ah
 [1ms]
 #+ start set filter
 |+> [a-h]
