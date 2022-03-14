@@ -29,7 +29,7 @@ func TestConditionCheckLines(t *testing.T) {
 
 	in := make(chan Line, 10) //buffer to simplify test writing
 
-	go ConditionCheckLines(ctx, cc, in)
+	go ConditionCheckLines(ctx, cc, in, 10*time.Millisecond)
 
 	timeout := 150 * time.Millisecond
 

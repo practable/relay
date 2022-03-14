@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/client9/reopen"
 	"github.com/gorilla/websocket"
@@ -15,7 +16,9 @@ import (
 // If a playfilename is present, the connection is closed once the file has finished playing
 // A long delay can be left at the end of the playfile to keep the connection open and logging
 // Connections without a playfilename are kept open indefinitely.
-func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, playfilename string) error {
+// interval sets how often the condition check timeout is checked - this has a small effect on CPU
+// usage, and can be set at say 10ms for testing, or 1s or more for usage with long collection periods
+func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, playfilename string, interval time.Duration) error {
 
 	var err error //manage scope of f
 
@@ -123,7 +126,7 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 
 	// monitor incoming messages and respond to
 	// condition check requests from Play on c
-	go ConditionCheckLines(ctx, c, in1)
+	go ConditionCheckLines(ctx, c, in1, interval)
 
 	go func() {
 		for {

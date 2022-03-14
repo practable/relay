@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Line) {
+func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Line, interval time.Duration) {
 
 	var checking bool //true if we get a new command
 	var lines []Line  //store what we record
@@ -27,24 +27,12 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 
 			case <-ctx.Done():
 				return
-				/*
-					case <-time.After(current.Condition.Timeout):
-									// just in case timeout is less than a second, and milliseconds matter
-									// then this will return sooner, especially if no lines are received
-									if checking {
-										// no need to check stop - if we get here, we have timed out
-										log.Infof("condition %s satisfied by timeout check at timeout time", current.Condition.String())
-										checking = false
-										close(current.Satisfied)
-										current = ConditionCheck{} //prevent double close
-										lines = []Line{}           //delete lines recorded
-									}
-				*/
-			case <-time.After(100 * time.Millisecond):
+
+			case <-time.After(interval):
 				if checking {
 					// check if we have timed out
 					if time.Now().After(stop) {
-						log.Infof("condition %s satisfied by timeout check at 100ms interval", current.Condition.String())
+						log.Infof("condition %s satisfied by timeout check at %s interval", current.Condition.String(), interval)
 						checking = false
 						close(current.Satisfied)
 						current = ConditionCheck{} //prevent double close
