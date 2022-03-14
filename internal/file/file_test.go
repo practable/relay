@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -129,7 +130,7 @@ func TestRun(t *testing.T) {
 
 	// no play file for now
 	go func() {
-		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval)
+		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval, false, false)
 		assert.NoError(t, err)
 	}()
 
@@ -294,7 +295,7 @@ func TestRun(t *testing.T) {
 	}()
 
 	time.Sleep(10 * time.Millisecond)
-	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval)
+	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval, false, false)
 	assert.NoError(t, err)
 
 	dat, err = os.ReadFile(testlog)
@@ -362,6 +363,81 @@ ah
 	// due to impact on github actions when uploading other code.
 
 	assert.GreaterOrEqual(t, expectedCount, idx-2, "incorrect number of lines in file")
+	cancel()
+
+	// test the sighup
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+	if exists(testlog) {
+		err = os.Remove(testlog)
+		assert.NoError(t, err)
+	}
+
+	s0 = reconws.New()
+	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
+
+	go func() {
+		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval, false, false)
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		idx := 0
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				time.Sleep(100 * time.Millisecond)
+				s0.Out <- reconws.WsMessage{
+					Type: websocket.TextMessage,
+					Data: []byte(fmt.Sprintf("Message %d", idx)),
+				}
+				idx++
+			}
+		}
+	}()
+
+	time.Sleep(time.Second)
+
+	err = os.Rename(testlog, testlog1)
+	assert.NoError(t, err)
+
+	sighup <- syscall.SIGHUP
+
+	time.Sleep(time.Second)
+
+	cancel()
+
+	newf, err := os.ReadFile(testlog)
+	assert.NoError(t, err)
+	news := string(newf)
+	t.Logf(news)
+
+	newa := bufio.NewScanner(strings.NewReader(news))
+
+	newCount := 0
+	for newa.Scan() {
+		newCount++
+	}
+
+	oldf, err := os.ReadFile(testlog)
+	assert.NoError(t, err)
+	olds := string(oldf)
+	t.Logf(olds)
+
+	olda := bufio.NewScanner(strings.NewReader(olds))
+
+	oldCount := 0
+	for olda.Scan() {
+		oldCount++
+	}
+
+	// check there are at least three lines in each of the files
+	// allowing some room for the exact count to vary from
+	// run to run due to external timings we cannot control
+	assert.Less(t, 3, newCount)
+	assert.Less(t, 3, oldCount)
 
 	// Shutdown the Relay and check no messages are being sent
 	close(closed)

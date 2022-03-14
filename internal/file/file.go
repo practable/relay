@@ -10,6 +10,7 @@ import (
 	"github.com/client9/reopen"
 	"github.com/gorilla/websocket"
 	"github.com/practable/relay/internal/reconws"
+	log "github.com/sirupsen/logrus"
 )
 
 // Run connects to the session and handles writing to/from files
@@ -18,7 +19,7 @@ import (
 // Connections without a playfilename are kept open indefinitely.
 // interval sets how often the condition check timeout is checked - this has a small effect on CPU
 // usage, and can be set at say 10ms for testing, or 1s or more for usage with long collection periods
-func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, playfilename string, interval time.Duration) error {
+func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, playfilename string, interval time.Duration, check, force bool) error {
 
 	var err error //manage scope of f
 
@@ -35,16 +36,25 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 			os.Exit(1)
 		}
 
-		errors, err := Check(lines)
+		errorsList, err := Check(lines)
 
 		if err != nil {
 
-			for _, str := range errors {
-				fmt.Printf("%s\n", str)
+			for _, str := range errorsList {
+				log.Errorf("%s\n", str)
 			}
 
-			os.Exit(1)
+			if !force {
+				log.Errorf("%d errors detected checking play file", len(errorsList))
+				return errors.New("Error(s) checking play file")
+			}
+
+			log.Infof("Errors detected in play file, but force=true so continuing")
 		}
+	}
+
+	if check { // we've checked the file, let's return
+		return nil
 	}
 
 	// playfile ok, or omitted, so set up log to file
