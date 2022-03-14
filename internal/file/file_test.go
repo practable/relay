@@ -6,7 +6,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -306,7 +305,7 @@ func exists(name string) bool {
 func TestRun(t *testing.T) {
 
 	// Setup logging
-	debug := true
+	debug := false
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -427,21 +426,21 @@ func TestRun(t *testing.T) {
 #- non echo comment
 #+ echo comment
 [0.1s] {"an":"other"}
-[] {"an":"other"}
-<'^foo\s*',5,0.3h1.5m0.1s> {"send":"foos"}
+[1ms] {"an":"other"}
+<'^foo\s*',5,100ms> {"send":"foos"}
 |+> [a-h]
 |accept> [R-Z]
 |->[0-9]
 |deny>  [#!&%]
-ah
-ah#
+[10ms]ah
+[1ms]ah0#
 |reset>
-A1
+[1ms]A1
 |A> [a-h]
 |D> [0-9]
-A2
+[1ms]A2
 |r> 
-A3
+[1ms]A3
 `
 	err = os.WriteFile(playfilename, []byte(play), 0644)
 
@@ -463,33 +462,46 @@ A3
 	s = string(dat)
 	t.Logf(s)
 
+	//NOTE - there is a condition in the above file which should delay 19minutes ... but isn't!
+
 	// let's see if we can get at least five lines
 	assert.Less(t, 2, strings.Count(s, "\n"))
+
+	// echo to self, see that filter works...
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+	if exists(testlog) {
+		err = os.Remove(testlog)
+		assert.NoError(t, err)
+	}
+
+	s0 = reconws.New()
+	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
+
+	//echo messages back without modification
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg := <-s0.In:
+				s0.Out <- msg
+			}
+		}
+	}()
+
+	time.Sleep(10 * time.Millisecond)
+	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename)
+
+	dat, err = os.ReadFile(testlog)
+	assert.NoError(t, err)
+	s = string(dat)
+	t.Logf(s)
 
 	// Shutdown the Relay and check no messages are being sent
 	close(closed)
 	wg.Wait()
 
-}
-
-var upgrader = websocket.Upgrader{}
-
-func echo(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			break
-		}
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			break
-		}
-	}
 }
 
 func makeTestToken(audience, secret string, ttl int64) (string, error) {
