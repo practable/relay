@@ -25,6 +25,8 @@ func Tee(ctx context.Context, in, in0, in1 chan Line) {
 	}
 }
 
+// FilterLines intercepts and drops incoming lines, if they don't pass the
+// DenyPattern and AcceptPattern checks
 func FilterLines(ctx context.Context, a chan FilterAction, in chan Line, w chan Line) {
 
 	f := NewFilter()
@@ -59,6 +61,8 @@ func FilterLines(ctx context.Context, a chan FilterAction, in chan Line, w chan 
 
 }
 
+// WsMessageToLine converts reconws.WsMessage to Line format, adding a
+// timestamp.
 func WsMessageToLine(ctx context.Context, in chan reconws.WsMessage, out chan Line) {
 
 	for {

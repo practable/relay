@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// FormatLine returns a string representing a Line, ready for writing to file
 func FormatLine(line Line) string {
 	return fmt.Sprintf("[%s] %s\n", line.Time.Format(time.RFC3339Nano), line.Content)
 }

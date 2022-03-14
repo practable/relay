@@ -14,6 +14,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// ConditionCheckLines monitors incoming Lines and uses them to assess whether a current condition has been
+// met, which is expressed as Count lines maching the AcceptPattern occuring before the timeout.
+// The Satisfied channel is closed regardless of completion or timeout - there is no indication from
+// ConditionCheckLines whether the condition was satisfied. This is left to any analysis task that the
+// user is presumably coding up separately to analyse the results. In any case, for checking equipment,
+// the condition is normally used to ensure a sufficiency of data with some tolerance, so not exactly
+// meeting the condition is not as much as an issue as it might otherwise be - hence we can leave this
+// to the external analysis to decide.
 func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Line, interval time.Duration) {
 
 	var checking bool //true if we get a new command
@@ -79,6 +87,7 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 	}
 }
 
+// Play takes a slice of Line and plays each Line as required, e.g. Wait, Send (with Delay or Condition), Comment (e.g. echo to file)
 func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan FilterAction, s chan string, c chan ConditionCheck, w chan Line) {
 
 	defer close(closed) //signal we're done
@@ -140,6 +149,7 @@ func CompleteCondition(c Condition) bool {
 	return !p && !n && !t
 }
 
+// Check returns an error if any Error structs are present in the slice of lines
 func Check(lines []interface{}) ([]string, error) {
 
 	var err error
@@ -161,6 +171,8 @@ func Check(lines []interface{}) ([]string, error) {
 	return errors, err
 }
 
+// LoadFile reads a .play file and returns a slice of interfaces
+// each one representing a line in the file
 func LoadFile(filename string) ([]interface{}, error) {
 
 	var lines []interface{}
@@ -218,6 +230,8 @@ func ParseByLine(in io.Reader, out chan interface{}) error {
 
 }
 
+// ParseLine parses a line and returns a struct representing it,
+// e.g. Wait, Error, Comment, Send.
 func ParseLine(line string) interface{} {
 
 	defer func() {
@@ -284,11 +298,11 @@ func ParseLine(line string) interface{} {
 				Msg:   d[2],
 				Delay: t,
 			}
-		} else {
-			log.Infof("Parsed wait for %s", t)
-			return Wait{
-				Delay: t,
-			}
+		}
+
+		log.Infof("Parsed wait for %s", t)
+		return Wait{
+			Delay: t,
 		}
 
 	}

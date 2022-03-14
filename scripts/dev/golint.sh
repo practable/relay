@@ -1,7 +1,7 @@
 #!/bin/bash
-echo "Run this from repo root using ./workflows/golint.sh"
-cd ./pkg
+echo "Run this from repo root using ./scripts/dev/golint.sh"
+cd ./internal
 for d in */ ; do
-    echo "---pkg/${d}---"
+    echo "---internal/${d}---"
     golint ${d}
 done
