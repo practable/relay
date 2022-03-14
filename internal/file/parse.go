@@ -2,8 +2,10 @@ package file
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -11,6 +13,179 @@ import (
 
 	log "github.com/sirupsen/logrus"
 )
+
+func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Line) {
+
+	var checking bool //true if we get a new command
+	var lines []Line  //store what we record
+	var current ConditionCheck
+	var stop time.Time
+
+	go func() {
+		for {
+			select {
+
+			case <-ctx.Done():
+				return
+			case <-time.After(current.Condition.Timeout):
+				// just in case timeout is less than a second, and milliseconds matter
+				// then this will return sooner, especially if no lines are received
+				if checking {
+					// no need to check stop - if we get here, we have timed out
+					checking = false
+					close(current.Satisfied)
+					current = ConditionCheck{} //prevent double close
+					lines = []Line{}           //delete lines recorded
+				}
+			case <-time.After(time.Second):
+				if checking {
+					// check if we have timed out
+					if time.Now().After(stop) {
+						checking = false
+						close(current.Satisfied)
+						current = ConditionCheck{} //prevent double close
+						lines = []Line{}           //delete lines recorded
+					}
+				}
+			case line := <-in:
+				if checking {
+
+					if current.Condition.AcceptPattern.MatchString(line.Content) {
+						lines = append(lines, line)
+					}
+
+					if len(lines) >= current.Condition.Count {
+						// we've got enough lines
+						checking = false
+						close(current.Satisfied)
+						current = ConditionCheck{} //prevent double close
+						lines = []Line{}           //delete lines recorded
+					}
+
+				}
+			}
+		}
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case c := <-cc:
+			current = c
+			checking = true
+			stop = time.Now().Add(c.Condition.Timeout)
+
+		}
+	}
+}
+
+func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan FilterAction, s chan interface{}, c chan ConditionCheck) {
+
+	defer close(closed) //signal we're done
+
+	for _, line := range lines {
+
+		switch line.(type) {
+
+		case Error:
+			// ignore it
+		case Send:
+			if send, ok := line.(Send); ok {
+				// wait
+				<-time.After(send.Delay)
+				// see if there is a condition
+				if CompleteCondition(send.Condition) {
+					satisfied := make(chan struct{})
+					c <- ConditionCheck{
+						Satisfied: satisfied,
+						Condition: send.Condition,
+					}
+					<-satisfied //wait until, maybe forever (some users may set very long values here, days, weeks etc)
+				}
+			}
+		case FilterAction:
+			if fa, ok := line.(FilterAction); ok {
+				a <- fa
+			}
+
+		}
+
+	}
+
+}
+
+// CompleteCondition returns true if all parts of the CompleteCondition
+// are holding non-nil equivalent values.
+func CompleteCondition(c Condition) bool {
+
+	p := c.AcceptPattern.String() == ""
+	n := c.Count <= 0
+	t := c.Timeout == 0
+
+	return !p && !n && !t
+}
+
+func Check(lines []interface{}) ([]string, error) {
+
+	var err error
+
+	errors := []string{}
+
+	for _, line := range lines {
+
+		switch line.(type) {
+
+		case Error:
+			if e, ok := line.(Error); ok {
+				errors = append(errors, e.string)
+				err = fmt.Errorf("Found %d errors", len(errors))
+			}
+		}
+	}
+
+	return errors, err
+}
+
+func LoadFile(filename string) ([]interface{}, error) {
+
+	var lines []interface{}
+
+	out := make(chan interface{}, 10)
+
+	go func() {
+		for {
+			line, ok := <-out
+
+			if !ok {
+				return //avoid leaking this goroutine
+			}
+
+			lines = append(lines, line)
+		}
+	}()
+
+	err := ParseFile(filename, out)
+
+	close(out) // cause goroutine to stop
+
+	return lines, err
+
+}
+
+// ParseFile parses a file into an interface per line,
+// which is sent over the out channel.
+func ParseFile(filename string, out chan interface{}) error {
+
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	return ParseByLine(f, out)
+}
 
 // ParseByLine reads from the supplied io.Reader, line by line,
 // parsing each line into a struct representing known actions
