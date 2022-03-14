@@ -3,18 +3,18 @@
 #- non echo comment
 #+ echo comment
 [0.1s] {"an":"other"}
-[] {"an":"other"}
-<'^foo\s*',5,0.3h1.5m0.1s> {"send":"foos"}
+[1ms] {"an":"other"}
+<'^foo\s*',5,100ms> {"send":"foos"}
 |+> [a-h]
 |accept> [R-Z]
 |->[0-9]
 |deny>  [#!&%]
-ah
-ah#
+[10ms]ah
+[1ms]ah0#
 |reset>
-A1
+[1ms]A1
 |A> [a-h]
 |D> [0-9]
-A2
+[1ms]A2
 |r> 
-A3
+[1ms]A3
