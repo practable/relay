@@ -49,8 +49,7 @@ Additonal documentation (in various states of completeness) can be found on the 
 
 0. [booking](./internal/booking/README.md)
 0. [booking client](./internal/bc/README.md)
-0. [session relay](./internal/crossbar/README.md)
-0. [session host](./internal/vw/README.md)
+0. [session](./cmd/session/README.md)
 0. [shell relay](./internal/shellrelay/README.md)
 0. [shell host](./internal/shellhost/README.md)
 
