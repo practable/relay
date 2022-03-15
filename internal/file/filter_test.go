@@ -220,7 +220,7 @@ tuv
 	// check that only exact filters are deleted
 	f.AddAcceptPattern(p0)
 	assert.True(t, f.Pass("abc"))
-	p5 := regexp.MustCompile("[a-h]\\s*")
+	p5 := regexp.MustCompile(`[a-h]\s*`)
 	f.DeleteAcceptPattern(p5)
 	assert.True(t, f.Pass("abc")) //passed because p0 not deleted
 

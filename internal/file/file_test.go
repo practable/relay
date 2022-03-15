@@ -48,10 +48,7 @@ func TestMain(m *testing.M) {
 // just for test use, see better approaches here: https://stackoverflow.com/questions/12518876/how-to-check-if-a-file-exists-in-go
 func exists(name string) bool {
 	_, err := os.Stat(name)
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
 
 func TestRun(t *testing.T) {
@@ -200,6 +197,7 @@ func TestRun(t *testing.T) {
 
 	// now try playing a file
 	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
 
 	play := `[10ms]
 {"some":"msg"}

@@ -96,42 +96,34 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 
 		log.Debugf("%d (%T)\n", idx, line)
 
-		switch line.(type) {
+		switch line := line.(type) {
 		case Comment:
-			if c, ok := line.(Comment); ok {
-				if c.Echo {
-					w <- Line{
-						Content: c.Msg,
-						Time:    time.Now(),
-					}
+			if line.Echo {
+				w <- Line{
+					Content: line.Msg,
+					Time:    time.Now(),
 				}
 			}
 		case Error:
 			// ignore it
 		case Wait:
-			if wait, ok := line.(Wait); ok {
-				<-time.After(wait.Delay)
-			}
+			<-time.After(line.Delay)
 		case Send:
-			if send, ok := line.(Send); ok {
-				// wait
-				<-time.After(send.Delay)
-				// see if there is a condition
-				if CompleteCondition(send.Condition) {
-					satisfied := make(chan struct{})
-					c <- ConditionCheck{
-						Satisfied: satisfied,
-						Condition: send.Condition,
-					}
-					<-satisfied //wait until, maybe forever (some users may set very long values here, days, weeks etc)
+			// wait
+			<-time.After(line.Delay)
+			// see if there is a condition
+			if CompleteCondition(line.Condition) {
+				satisfied := make(chan struct{})
+				c <- ConditionCheck{
+					Satisfied: satisfied,
+					Condition: line.Condition,
 				}
-				s <- send.Msg
+				<-satisfied //wait until, maybe forever (some users may set very long values here, days, weeks etc)
 			}
-		case FilterAction:
-			if fa, ok := line.(FilterAction); ok {
-				a <- fa
-			}
+			s <- line.Msg
 
+		case FilterAction:
+			a <- line
 		}
 
 	}
@@ -158,13 +150,11 @@ func Check(lines []interface{}) ([]string, error) {
 
 	for _, line := range lines {
 
-		switch line.(type) {
+		switch line := line.(type) {
 
 		case Error:
-			if e, ok := line.(Error); ok {
-				errors = append(errors, e.string)
-				err = fmt.Errorf("Found %d errors", len(errors))
-			}
+			errors = append(errors, line.string)
+			err = fmt.Errorf("Found %d errors", len(errors))
 		}
 	}
 
