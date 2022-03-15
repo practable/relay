@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // FormatLine returns a string representing a Line, ready for writing to file
@@ -24,7 +26,10 @@ func Write(ctx context.Context, in chan Line, w io.Writer) {
 			if !ok {
 				return // avoid leaking the goro
 			}
-			w.Write([]byte(FormatLine(line)))
+			_, err := w.Write([]byte(FormatLine(line)))
+			if err != nil {
+				log.Errorf("error writing to file: %s", err.Error())
+			}
 		}
 	}
 }

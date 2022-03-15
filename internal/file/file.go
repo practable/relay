@@ -91,7 +91,10 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 					return //avoid leaking this goroutine if we are cancelled
 				case <-hup:
 					log.Infof("SIGHUP detected, reopening LOG file %s\n", logfilename)
-					f.Reopen()
+					err := f.Reopen()
+					if err != nil {
+						log.Errorf("error reopening file: %s", err.Error())
+					}
 				}
 			}
 		}()

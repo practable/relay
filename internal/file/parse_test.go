@@ -139,7 +139,7 @@ func TestConditionCheckLines(t *testing.T) {
 
 		select {
 		case <-ccs[i].Satisfied:
-			duration := time.Now().Sub(start)
+			duration := time.Since(start)
 			t.Logf("finished test %d, timeout expected: %s, duration: %s",
 				i,
 				strconv.FormatBool(shouldTimeout[i]),
@@ -288,7 +288,7 @@ goodbye
 
 	select {
 	case <-closed:
-		durationNoCondition = time.Now().Sub(start) //record natural running speed without conditions
+		durationNoCondition = time.Since(start) //record natural running speed without conditions
 	case <-time.After(time.Second):
 		t.Error("Play did not finish in time")
 	}
@@ -362,7 +362,7 @@ goodbye
 
 	select {
 	case <-closed:
-		duration := time.Now().Sub(start)
+		duration := time.Since(start)
 		t.Logf("duration: %s", duration)
 		// add a tolerance for variability between runs due to factors outside control
 		// of the test, e.g. CPU loading
@@ -375,9 +375,6 @@ goodbye
 	case <-time.After(time.Second):
 		t.Error("Play did not finish in time")
 	}
-
-	t.Log("todo Check that play writes echo messages to the log!")
-
 }
 
 func TestParseByLine(t *testing.T) {
@@ -454,7 +451,7 @@ func TestParseByLine(t *testing.T) {
 	expected[6] = Send{
 		Msg: `{"send":"foos"}`,
 		Condition: Condition{
-			AcceptPattern: *regexp.MustCompile("^foo\\s*"),
+			AcceptPattern: *regexp.MustCompile(`^foo\s*`),
 			Count:         5,
 			Timeout:       time.Second*((19*60)+30) + time.Millisecond*100,
 		},
