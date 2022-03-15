@@ -19,11 +19,11 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jpillora/backoff"
 	"github.com/phayes/freeport"
+	"github.com/practable/relay/internal/permission"
+	"github.com/practable/relay/internal/relay"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/practable/relay/internal/permission"
-	"github.com/practable/relay/internal/relay"
 )
 
 func init() {
