@@ -92,12 +92,20 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 
 	defer close(closed) //signal we're done
 
+	log.Infof("Playing %d lines", len(lines))
+	var count int
+
 	for idx, line := range lines {
 
 		log.Debugf("%d (%T)\n", idx, line)
 
 		switch line := line.(type) {
 		case Comment:
+			echo := "-"
+			if line.Echo {
+				echo = "+"
+			}
+			log.Infof("Line %d [#%s]: %s", idx, echo, line.Msg)
 			if line.Echo {
 				w <- Line{
 					Content: line.Msg,
@@ -105,12 +113,35 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 				}
 			}
 		case Error:
+			log.Infof("Line %d [Error, ignoring line]: %s", idx, line)
 			// ignore it
 		case Wait:
+			log.Infof("Line %d [Wait for %s]", idx, line.Delay)
 			<-time.After(line.Delay)
 		case Send:
 			// wait
+
+			log.Infof("(wait)")
+			action := "/ now"
+
+			if line.Delay > 0 {
+				action = fmt.Sprintf("/ delay %s", line.Delay)
+			}
+
+			if CompleteCondition(line.Condition) {
+
+				var delay string
+
+				if line.Delay > 0 {
+					delay = fmt.Sprintf("/ delay %s", line.Delay)
+				}
+
+				action = delay + "/ condition '" + line.Condition.AcceptPattern.String() + "'"
+			}
+
+			log.Debugf("Line %d [Send %s] (wait): %s", idx, action, line.Msg)
 			<-time.After(line.Delay)
+			log.Debugf("Line %d [Send %s] (delay complete): %s", idx, action, line.Msg)
 			// see if there is a condition
 			if CompleteCondition(line.Condition) {
 				satisfied := make(chan struct{})
@@ -119,14 +150,31 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 					Condition: line.Condition,
 				}
 				<-satisfied //wait until, maybe forever (some users may set very long values here, days, weeks etc)
+				log.Debugf("Line %d [Send %s] (condition complete): %s", idx, action, line.Msg)
 			}
 			s <- line.Msg
+			log.Infof("Line %d [Send %s] (sent): %s", idx, action, line.Msg)
 
 		case FilterAction:
+
+			var pattern string
+
+			if line.Pattern != nil {
+				pattern = line.Pattern.String()
+			}
+
+			log.Infof("Line %d [FilterAction/%s] %s", idx, line.Verb.String(), pattern)
+
 			a <- line
+		default:
+			log.Errorf("Line %d [Unknown, ignoring line]", idx)
 		}
 
+		count = idx
+
 	}
+
+	log.Debugf("len(lines)=%d, idx=%d", len(lines), count)
 
 }
 
@@ -167,21 +215,26 @@ func LoadFile(filename string) ([]interface{}, error) {
 
 	var lines []interface{}
 
-	out := make(chan interface{}, 10)
-
+	out := make(chan interface{})
+	wait := make(chan struct{})
 	go func() {
 		for {
 			line, ok := <-out
 
 			if !ok {
+				log.Debugf("Loadfile finished collecting results after %d lines", len(lines))
+				close(wait)
 				return //avoid leaking this goroutine
 			}
 
+			log.Debugf("LoadFile received %d: %v", len(lines), line)
 			lines = append(lines, line)
+
 		}
 	}()
 
 	err := ParseFile(filename, out)
+	<-wait
 
 	return lines, err
 
@@ -212,9 +265,21 @@ func ParseByLine(in io.Reader, out chan interface{}) error {
 		s := scanner.Text()
 		log.Debugf("Started parsing %s", s)
 		out <- ParseLine(s)
+		log.Debugf("Returned parsed %s", s)
 	}
 
-	close(out) //so receiver can range over channel
+WAIT:
+	for {
+		select {
+		case <-time.After(time.Millisecond):
+			//do nothing
+		default:
+			if len(out) < 1 {
+				close(out)
+				break WAIT
+			}
+		}
+	}
 
 	return scanner.Err()
 
@@ -248,7 +313,7 @@ func ParseLine(line string) interface{} {
 			verb = "echo"
 		}
 
-		log.Infof("Parsed comment to %s: %s", verb, msg)
+		log.Debugf("Parsed comment to %s: %s", verb, msg)
 
 		return Comment{
 			Msg:  msg,
@@ -282,7 +347,7 @@ func ParseLine(line string) interface{} {
 
 		if len(d[2]) > 0 {
 
-			log.Infof("Parsed message to send after %s: %s", t, d[2])
+			log.Debugf("Parsed message to send after %s: %s", t, d[2])
 
 			return Send{
 				Msg:   d[2],
@@ -290,7 +355,7 @@ func ParseLine(line string) interface{} {
 			}
 		}
 
-		log.Infof("Parsed wait for %s", t)
+		log.Debugf("Parsed wait for %s", t)
 		return Wait{
 			Delay: t,
 		}
@@ -328,7 +393,7 @@ func ParseLine(line string) interface{} {
 			return Error{fmt.Sprintf("malformed condition command %s; third argument %s should be timeout duration in format like 10s or 1m. Yours could not be parsed because %s. Line was was %s", c, args[3], err.Error(), line)}
 		}
 
-		log.Infof("Parsed message to send with condition to wait for %d results matching %s within %s: %s", n, args[1], d, c[2])
+		log.Debugf("Parsed message to send with condition to wait for %d results matching %s within %s: %s", n, args[1], d, c[2])
 		return Send{
 			Msg: c[2],
 			Condition: Condition{

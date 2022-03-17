@@ -80,17 +80,17 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 
 		// listen for sighup until we are done, or exiting
 		go func() {
-			log.Info("starting listening for sighup") //TODO demote to debug after fix
+			log.Debug("starting listening for sighup")
 			for {
 				select {
 				case <-done:
-					log.Info("done, finished playfile? No longer listening for signup")
+					log.Debug("done, finished playfile? No longer listening for signup")
 					return // we've finished the playfile, most likely
 				case <-ctx.Done():
-					log.Info("Context cancelled, no longer listening for signup")
+					log.Debug("Context cancelled, no longer listening for signup")
 					return //avoid leaking this goroutine if we are cancelled
 				case <-hup:
-					log.Infof("SIGHUP detected, reopening LOG file %s\n", logfilename)
+					log.Infof("SIGHUP detected, reopening file %s", logfilename)
 					err := f.Reopen()
 					if err != nil {
 						log.Errorf("error reopening file: %s", err.Error())
@@ -105,6 +105,8 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 	r := reconws.New()
 
 	go r.ReconnectAuth(ctx, session, token)
+
+	time.Sleep(time.Second) //TODO replace with a signal that connection is made
 
 	//channel for writing FilterActions
 	a := make(chan FilterAction, 10)
@@ -149,6 +151,7 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 		for {
 			select {
 			case <-ctx.Done():
+				log.Debugf("file.Run() cancelled")
 				return
 			case msg := <-s:
 				r.Out <- reconws.WsMessage{Type: websocket.TextMessage, Data: []byte(msg)}
@@ -161,6 +164,7 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 		close := make(chan struct{})
 		go Play(ctx, close, lines, a, s, c, w)
 		<-close //Play closes close when it has finished playing the file
+		log.Debugf("file.Run(): Play() complete")
 
 	} else {
 
