@@ -156,7 +156,15 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 			log.Infof("Line %d [Send %s] (sent): %s", idx, action, line.Msg)
 
 		case FilterAction:
-			log.Infof("Line %d [FilterAction/%s] %s", idx, line.Verb.String(), line.Pattern.String())
+
+			var pattern string
+
+			if line.Pattern != nil {
+				pattern = line.Pattern.String()
+			}
+
+			log.Infof("Line %d [FilterAction/%s] %s", idx, line.Verb.String(), pattern)
+
 			a <- line
 		default:
 			log.Errorf("Line %d [Unknown, ignoring line]", idx)

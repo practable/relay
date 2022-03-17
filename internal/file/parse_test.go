@@ -241,9 +241,12 @@ goodbye
 
 	pout := make(chan interface{}, n)
 
-	err := ParseByLine(strings.NewReader(play), pout)
-
-	assert.NoError(t, err)
+	go func() {
+		// won't complete until last value read from channel
+		err := ParseByLine(strings.NewReader(play), pout)
+		assert.NoError(t, err)
+		t.Logf("ParseByLine completed")
+	}()
 
 	lines := []interface{}{}
 
@@ -505,9 +508,12 @@ func TestParseByLine(t *testing.T) {
 
 	out := make(chan interface{}, n) // buffer >= lines in s to avoid hang
 
-	err := ParseByLine(in, out)
-
-	assert.NoError(t, err)
+	go func() {
+		// won't complete until last value read from channel
+		err := ParseByLine(in, out)
+		assert.NoError(t, err)
+		t.Logf("ParseByLine completed")
+	}()
 
 	idx := 0
 	for o := range out {
