@@ -92,7 +92,7 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 
 	defer close(closed) //signal we're done
 
-	log.Infof("Play() has %d lines to play", len(lines))
+	log.Infof("Playing %d lines", len(lines))
 	var count int
 
 	for idx, line := range lines {
@@ -105,7 +105,7 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 			if line.Echo {
 				echo = "+"
 			}
-			log.Infof("Play(%d,Comment%s): %s", idx, echo, line.Msg)
+			log.Infof("Line %d [#%s]: %s", idx, echo, line.Msg)
 			if line.Echo {
 				w <- Line{
 					Content: line.Msg,
@@ -113,24 +113,35 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 				}
 			}
 		case Error:
-			log.Infof("Play(%d,Error): ignore because %s", idx, line)
+			log.Infof("Line %d [Error, ignoring line]: %s", idx, line)
 			// ignore it
 		case Wait:
-			log.Infof("Play(%d,Wait)", idx)
+			log.Infof("Line %d [Wait for %s]", idx, line.Delay)
 			<-time.After(line.Delay)
 		case Send:
 			// wait
-			action := "now"
+
+			log.Infof("(wait)")
+			action := "/ now"
+
 			if line.Delay > 0 {
-				action = fmt.Sprintf("delay %s", line.Delay)
-			}
-			if CompleteCondition(line.Condition) {
-				action = action + " + condition"
+				action = fmt.Sprintf("/ delay %s", line.Delay)
 			}
 
-			log.Infof("Awaiting Play(%d,Send,%s) %s", idx, action, line.Msg)
+			if CompleteCondition(line.Condition) {
+
+				var delay string
+
+				if line.Delay > 0 {
+					delay = fmt.Sprintf("/ delay %s", line.Delay)
+				}
+
+				action = delay + "/ condition '" + line.Condition.AcceptPattern.String() + "'"
+			}
+
+			log.Debugf("Line %d [Send %s] (wait): %s", idx, action, line.Msg)
 			<-time.After(line.Delay)
-			log.Infof("Delay complete for Play(%d,Send,%s) %s", idx, action, line.Msg)
+			log.Debugf("Line %d [Send %s] (delay complete): %s", idx, action, line.Msg)
 			// see if there is a condition
 			if CompleteCondition(line.Condition) {
 				satisfied := make(chan struct{})
@@ -139,15 +150,16 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 					Condition: line.Condition,
 				}
 				<-satisfied //wait until, maybe forever (some users may set very long values here, days, weeks etc)
-				log.Infof("Condition complete for Play(%d,Send,%d) %s", idx, action, line.Msg)
+				log.Debugf("Line %d [Send %s] (condition complete): %s", idx, action, line.Msg)
 			}
 			s <- line.Msg
-			log.Infof("Done Play(%d,Send,%s) %s", idx, action, line.Msg)
+			log.Infof("Line %d [Send %s] (sent): %s", idx, action, line.Msg)
+
 		case FilterAction:
-			log.Infof("Play(%d,FilterAction) %v", idx, line)
+			log.Infof("Line %d [FilterAction/%s] %s", idx, line.Verb.String(), line.Pattern.String())
 			a <- line
 		default:
-			log.Errorf("Play(%d,Unknown): ignored", idx)
+			log.Errorf("Line %d [Unknown, ignoring line]", idx)
 		}
 
 		count = idx
@@ -202,12 +214,12 @@ func LoadFile(filename string) ([]interface{}, error) {
 			line, ok := <-out
 
 			if !ok {
-				log.Infof("Loadfile finished collecting results after %d lines", len(lines))
+				log.Debugf("Loadfile finished collecting results after %d lines", len(lines))
 				close(wait)
 				return //avoid leaking this goroutine
 			}
 
-			log.Infof("LoadFile received %d: %v", len(lines), line)
+			log.Debugf("LoadFile received %d: %v", len(lines), line)
 			lines = append(lines, line)
 
 		}
@@ -293,7 +305,7 @@ func ParseLine(line string) interface{} {
 			verb = "echo"
 		}
 
-		log.Infof("Parsed comment to %s: %s", verb, msg)
+		log.Debugf("Parsed comment to %s: %s", verb, msg)
 
 		return Comment{
 			Msg:  msg,
@@ -327,7 +339,7 @@ func ParseLine(line string) interface{} {
 
 		if len(d[2]) > 0 {
 
-			log.Infof("Parsed message to send after %s: %s", t, d[2])
+			log.Debugf("Parsed message to send after %s: %s", t, d[2])
 
 			return Send{
 				Msg:   d[2],
@@ -335,7 +347,7 @@ func ParseLine(line string) interface{} {
 			}
 		}
 
-		log.Infof("Parsed wait for %s", t)
+		log.Debugf("Parsed wait for %s", t)
 		return Wait{
 			Delay: t,
 		}
@@ -373,7 +385,7 @@ func ParseLine(line string) interface{} {
 			return Error{fmt.Sprintf("malformed condition command %s; third argument %s should be timeout duration in format like 10s or 1m. Yours could not be parsed because %s. Line was was %s", c, args[3], err.Error(), line)}
 		}
 
-		log.Infof("Parsed message to send with condition to wait for %d results matching %s within %s: %s", n, args[1], d, c[2])
+		log.Debugf("Parsed message to send with condition to wait for %d results matching %s within %s: %s", n, args[1], d, c[2])
 		return Send{
 			Msg: c[2],
 			Condition: Condition{
