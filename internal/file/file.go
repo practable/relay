@@ -80,17 +80,17 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 
 		// listen for sighup until we are done, or exiting
 		go func() {
-			log.Info("starting listening for sighup") //TODO demote to debug after fix
+			log.Debug("starting listening for sighup")
 			for {
 				select {
 				case <-done:
-					log.Info("done, finished playfile? No longer listening for signup")
+					log.Debug("done, finished playfile? No longer listening for signup")
 					return // we've finished the playfile, most likely
 				case <-ctx.Done():
-					log.Info("Context cancelled, no longer listening for signup")
+					log.Debug("Context cancelled, no longer listening for signup")
 					return //avoid leaking this goroutine if we are cancelled
 				case <-hup:
-					log.Infof("SIGHUP detected, reopening LOG file %s\n", logfilename)
+					log.Infof("SIGHUP detected, reopening file %s", logfilename)
 					err := f.Reopen()
 					if err != nil {
 						log.Errorf("error reopening file: %s", err.Error())
