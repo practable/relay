@@ -24,6 +24,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/practable/relay/internal/file"
 	log "github.com/sirupsen/logrus"
@@ -306,14 +307,18 @@ kill -SIGHUP pid
 				playfilename,
 				strconv.FormatBool(check),
 				strconv.FormatBool(check))
-			log.SetFormatter(&log.TextFormatter{})
+			Formatter := new(log.TextFormatter)
+			Formatter.TimestampFormat = time.RFC3339Nano
+			log.SetFormatter(Formatter)
 			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)
 
 		} else {
 
 			//production environment
-			log.SetFormatter(&log.JSONFormatter{})
+			Formatter := new(log.JSONFormatter)
+			Formatter.TimestampFormat = time.RFC3339Nano
+			log.SetFormatter(Formatter)
 			log.SetLevel(log.InfoLevel)
 
 		}
@@ -327,6 +332,7 @@ kill -SIGHUP pid
 		go func() {
 			for range c {
 				cancel()
+				log.Infof("Stopping normally due to Ctrl-C or SIGINT")
 				os.Exit(0)
 			}
 		}()
@@ -337,6 +343,7 @@ kill -SIGHUP pid
 		err := file.Run(ctx, sighup, session, token, logfilename, playfilename, interval, check, force)
 		if err != nil {
 			fmt.Println(err.Error())
+			log.Errorf("Stopping due to error: %s", err.Error())
 			os.Exit(1)
 		}
 

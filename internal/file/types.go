@@ -48,7 +48,7 @@ type Condition struct {
 // that mimics its representation in .play file
 // <AcceptPattern, Count, Timeout>
 func (c *Condition) String() string {
-	return fmt.Sprintf("<%s,%d,%s>",
+	return fmt.Sprintf("('%s',%d,%s)",
 		c.AcceptPattern.String(),
 		c.Count,
 		c.Timeout)
@@ -87,6 +87,22 @@ const (
 	// Remove all AcceptPattern and DenyPatterns (make filter all-pass again)
 	Reset
 )
+
+func (v *FilterVerb) String() string {
+
+	switch *v {
+	case Unknown:
+		return "unknown"
+	case Accept:
+		return "accept"
+	case Deny:
+		return "deny"
+	case Reset:
+		return "reset"
+	default:
+		return ""
+	}
+}
 
 // Line represents content of a line received from the relay
 // and the time it was received.

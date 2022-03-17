@@ -360,7 +360,7 @@ ah
 	// failures when it's a limitation of the testing,
 	// due to impact on github actions when uploading other code.
 
-	assert.GreaterOrEqual(t, expectedCount, idx-2, "incorrect number of lines in file")
+	assert.GreaterOrEqual(t, expectedCount, idx, "incorrect number of lines in file")
 
 	time.Sleep(time.Second)
 
