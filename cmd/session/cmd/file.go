@@ -327,6 +327,7 @@ kill -SIGHUP pid
 		go func() {
 			for range c {
 				cancel()
+				log.Infof("Stopping normally due to Ctrl-C or SIGINT")
 				os.Exit(0)
 			}
 		}()
@@ -337,6 +338,7 @@ kill -SIGHUP pid
 		err := file.Run(ctx, sighup, session, token, logfilename, playfilename, interval, check, force)
 		if err != nil {
 			fmt.Println(err.Error())
+			log.Errorf("Stopping due to error: %s", err.Error())
 			os.Exit(1)
 		}
 

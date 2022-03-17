@@ -106,6 +106,8 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 
 	go r.ReconnectAuth(ctx, session, token)
 
+	time.Sleep(time.Second) //TODO replace with a signal that connection is made
+
 	//channel for writing FilterActions
 	a := make(chan FilterAction, 10)
 
@@ -149,6 +151,7 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 		for {
 			select {
 			case <-ctx.Done():
+				log.Debugf("file.Run() cancelled")
 				return
 			case msg := <-s:
 				r.Out <- reconws.WsMessage{Type: websocket.TextMessage, Data: []byte(msg)}
@@ -161,6 +164,7 @@ func Run(ctx context.Context, hup chan os.Signal, session, token, logfilename, p
 		close := make(chan struct{})
 		go Play(ctx, close, lines, a, s, c, w)
 		<-close //Play closes close when it has finished playing the file
+		log.Debugf("file.Run(): Play() complete")
 
 	} else {
 

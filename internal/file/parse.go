@@ -92,12 +92,20 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 
 	defer close(closed) //signal we're done
 
+	log.Infof("Play() has %d lines to play", len(lines))
+	var count int
+
 	for idx, line := range lines {
 
 		log.Debugf("%d (%T)\n", idx, line)
 
 		switch line := line.(type) {
 		case Comment:
+			echo := "-"
+			if line.Echo {
+				echo = "+"
+			}
+			log.Infof("Play(%d,Comment%s): %s", idx, echo, line.Msg)
 			if line.Echo {
 				w <- Line{
 					Content: line.Msg,
@@ -105,12 +113,24 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 				}
 			}
 		case Error:
+			log.Infof("Play(%d,Error): ignore because %s", idx, line)
 			// ignore it
 		case Wait:
+			log.Infof("Play(%d,Wait)", idx)
 			<-time.After(line.Delay)
 		case Send:
 			// wait
+			action := "now"
+			if line.Delay > 0 {
+				action = fmt.Sprintf("delay %s", line.Delay)
+			}
+			if CompleteCondition(line.Condition) {
+				action = action + " + condition"
+			}
+
+			log.Infof("Awaiting Play(%d,Send,%s) %s", idx, action, line.Msg)
 			<-time.After(line.Delay)
+			log.Infof("Delay complete for Play(%d,Send,%s) %s", idx, action, line.Msg)
 			// see if there is a condition
 			if CompleteCondition(line.Condition) {
 				satisfied := make(chan struct{})
@@ -119,14 +139,22 @@ func Play(ctx context.Context, closed chan struct{}, lines []interface{}, a chan
 					Condition: line.Condition,
 				}
 				<-satisfied //wait until, maybe forever (some users may set very long values here, days, weeks etc)
+				log.Infof("Condition complete for Play(%d,Send,%d) %s", idx, action, line.Msg)
 			}
 			s <- line.Msg
-
+			log.Infof("Done Play(%d,Send,%s) %s", idx, action, line.Msg)
 		case FilterAction:
+			log.Infof("Play(%d,FilterAction) %v", idx, line)
 			a <- line
+		default:
+			log.Errorf("Play(%d,Unknown): ignored", idx)
 		}
 
+		count = idx
+
 	}
+
+	log.Debugf("len(lines)=%d, idx=%d", len(lines), count)
 
 }
 
@@ -167,21 +195,26 @@ func LoadFile(filename string) ([]interface{}, error) {
 
 	var lines []interface{}
 
-	out := make(chan interface{}, 10)
-
+	out := make(chan interface{})
+	wait := make(chan struct{})
 	go func() {
 		for {
 			line, ok := <-out
 
 			if !ok {
+				log.Infof("Loadfile finished collecting results after %d lines", len(lines))
+				close(wait)
 				return //avoid leaking this goroutine
 			}
 
+			log.Infof("LoadFile received %d: %v", len(lines), line)
 			lines = append(lines, line)
+
 		}
 	}()
 
 	err := ParseFile(filename, out)
+	<-wait
 
 	return lines, err
 
@@ -212,9 +245,21 @@ func ParseByLine(in io.Reader, out chan interface{}) error {
 		s := scanner.Text()
 		log.Debugf("Started parsing %s", s)
 		out <- ParseLine(s)
+		log.Debugf("Returned parsed %s", s)
 	}
 
-	close(out) //so receiver can range over channel
+WAIT:
+	for {
+		select {
+		case <-time.After(time.Millisecond):
+			//do nothing
+		default:
+			if len(out) < 1 {
+				close(out)
+				break WAIT
+			}
+		}
+	}
 
 	return scanner.Err()
 
