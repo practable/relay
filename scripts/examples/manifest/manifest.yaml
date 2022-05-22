@@ -1,0 +1,4870 @@
+groups:
+  develop:
+    pools:
+    - odroid  
+    - spinner-develop
+    - spinner-49g-metal-develop
+    - spinner-85g-metal-modified
+    - camera-test-A
+    - camera-test-B
+    - camera-test-C
+    - camera-test-D
+    - camera-test-E
+    - camera-test-F
+    - camera-test-G
+    - camera-test-H
+
+  spinner-develop:
+    pools:
+    - spinner-49g-metal-develop
+    
+  spinnerv2:
+    pools:
+    - spinner-max-00
+    - spinner-max-01
+    - spinner-max-02
+    - spinner-max-03
+    - spinner-max-04
+    - spinner-max-05
+    - spinner-max-06
+    - spinner-max-07
+    - spinner-max-08
+    - spinner-max-09
+    - spinner-max-10
+    - spinner-max-11
+
+  controls3:
+    pools:
+    - spinner-43g-metal
+    - spinner-49g-metal
+    - spinner-57g-metal    
+    - spinner-62g-metal
+    - spinner-85g-metal
+    - spinner-105g-metal
+    - spinner-110g-metal
+    - spinner-sim
+
+
+  everyone:
+    pools:
+    - spinner-sim
+    - penduinos
+    
+  camera-test:
+     pools:
+     - camera-test-A
+     - camera-test-B
+     - camera-test-C
+     - camera-test-D
+     - camera-test-E
+     - camera-test-F
+     - camera-test-G
+     - camera-test-H
+
+  pendulum-test:
+    pools:
+      - penduinos
+      - pend00
+      - pend01
+      - pend02
+      - pend03
+      - pend04
+      - pend05
+      - pend06
+      - pend07
+      - pend08
+      - pend09
+      - pend10
+      - pend11
+      - pend12
+      - pend13
+      - pend14
+      - pend15
+      - pend16
+      - pend17
+      - pend18
+      - pend19
+
+  pendulum-maintenance:
+    pools:
+      - pend01
+      - pend07
+      - pend08
+      - pend09
+      - pend13
+      - pend15
+      - pend17
+      
+  test:
+    pools:
+      - pend00
+      - pend01
+      - pend02
+      - pend03
+      - pend04
+      - pend05
+      - pend06
+      - pend07
+      - pend08
+      - pend09
+      - pend10
+      - pend11
+      - pend12
+      - pend13
+      - pend14
+      - pend15
+      - pend16
+      - pend17
+      - pend18
+      - pend19
+    
+  truss:
+    pools:
+      - truss-large
+
+  emag3:
+    pools:
+      - pvna00
+      - pvna01
+      - pvna02
+      - pvna03
+      - pvna04
+
+
+pools:
+  camera-test-A:
+    description:
+      name: Camera-test-A
+      type: camera-test-pool-v1.0
+      short: Logitech C920
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/camera-test-A-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/camera-test-A-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - camera-test-A-00
+    
+  camera-test-B:
+    description:
+      name: Camera-test-B
+      type: camera-test-pool-v1.0
+      short: Raspberry Pi B0103
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/camera-test-B-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/camera-test-B-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - camera-test-B-00
+    
+  camera-test-C:
+    description:
+      name: Camera-test-C
+      type: camera-test-pool-v1.0
+      short: Raspberry Pi Camera Type G.
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/camera-test-C-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/camera-test-C-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - camera-test-C-00
+    
+  camera-test-D:
+    description:
+      name: Camera-test-D
+      type: camera-test-pool-v1.0
+      short: Raspberry Pi Camera Type I.
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/camera-test-D-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/camera-test-D-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - camera-test-D-00
+    
+  camera-test-E:
+    description:
+      name: Camera-test-E
+      type: camera-test-pool-v1.0
+      short: Raspberry Pi Camera Type J.
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/camera-test-E-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/camera-test-E-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - camera-test-E-00
+    
+  camera-test-F:
+    description:
+      name: Camera-test-F
+      type: camera-test-pool-v1.0
+      short: Camera testing - just camera, no data.
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/camera-test-F-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/camera-test-F-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - camera-test-F-00
+    
+  camera-test-G:
+    description:
+      name: Camera-test-G
+      type: camera-test-pool-v1.0
+      short: Camera testing - just camera, no data.
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/camera-test-G-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/camera-test-G-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - camera-test-G-00
+    
+  camera-test-H:
+    description:
+      name: Camera-test-H
+      type: camera-test-pool-v1.0
+      short: Camera testing - just camera, no data.
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/camera-test-H-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/camera-test-H-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - camera-test-H-00  
+    
+  odroid:
+    description:
+      name: Odroid test
+      type: camera-test-pool-v1.0
+      short: Camera testing - just camera, no data.
+      long: Camera testing - just camera, no data.
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/odroid-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/odroid-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - odroid-activity-00
+    
+  penduinos:
+    description:
+      name: Penduinos
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-00
+    - penduino-activity-01
+    - penduino-activity-02
+    - penduino-activity-03
+    - penduino-activity-04
+    - penduino-activity-05
+    - penduino-activity-06
+    - penduino-activity-07
+    - penduino-activity-08
+    - penduino-activity-10
+    - penduino-activity-11
+    - penduino-activity-12
+    - penduino-activity-13
+    - penduino-activity-14
+    - penduino-activity-17
+    - penduino-activity-18
+    - penduino-activity-19
+ 
+
+  pend00:
+    description:
+      name: Penduino 00
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-00
+
+  pend01:
+    description:
+      name: Penduino 01
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-01
+
+  pend02:
+    description:
+      name: Penduino 02
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-02
+
+  pend03:
+    description:
+      name: Penduino 03
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-03
+
+  pend04:
+    description:
+      name: Penduino 04
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-04
+
+  pend05:
+    description:
+      name: Penduino 05
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-05
+
+  pend06:
+    description:
+      name: Penduino 06
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-06
+
+  pend07:
+    description:
+      name: Penduino 07
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-07
+
+  pend08:
+    description:
+      name: Penduino 08
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-08
+
+  pend09:
+    description:
+      name: Penduino 09
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-09
+    
+
+  pend10:
+    description:
+      name: Penduino 10
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-10
+
+  pend01:
+    description:
+      name: Penduino 01
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-01
+
+  pend11:
+    description:
+      name: Penduino 11
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-11
+
+  pend12:
+    description:
+      name: Penduino 12
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-12
+
+  pend13:
+    description:
+      name: Penduino 13
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-13
+
+  pend14:
+    description:
+      name: Penduino 14
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-14
+
+
+  pend15:
+    description:
+      name: Penduino 15
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-15
+
+  pend16:
+    description:
+      name: Penduino 16
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-16
+
+  pend17:
+    description:
+      name: Penduino 17
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-17
+
+  pend18:
+    description:
+      name: Penduino 18
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-18
+
+  pend19:
+    description:
+      name: Penduino 19
+      type: penduino-pool-v1.0
+      short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+      long: A single pendulum with electromagnetic drive system producing simple harmonic
+        motion. The drive and braking are variable, with the coil energised over a specified
+        angular range which can be increased or decreased to control the effect. The pendulum can
+        also be slowed down by short-circuiting the coil, without applying any power,
+        or left to swing freely with no drive or braking.
+      further: https://static.practable.io/info/penduino-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/penduino-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/penduino-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - penduino-activity-19
+    
+  pvna00:
+    description:
+      name: PVNA 00
+      type: pvna-pool-v1.0
+      short: A pocketVNA connected to a one-port circuit
+      long: A pocketVNA connected to a one-port circuit
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/pvna-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/pvna-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+      - pvna-activity-00
+    
+  pvna01:
+    description:
+      name: PVNA 01
+      type: pvna-pool-v1.0
+      short: A pocketVNA connected to a one-port circuit
+      long: A pocketVNA connected to a one-port circuit
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/pvna-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/pvna-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - pvna-activity-01
+    
+  pvna02:
+    description:
+      name: PVNA 02
+      type: pvna-pool-v1.0
+      short: A pocketVNA connected to a one-port circuit
+      long: A pocketVNA connected to a one-port circuit
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/pvna-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/pvna-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - pvna-activity-02
+    
+  pvna03:
+    description:
+      name: PVNA 03
+      type: pvna-pool-v1.0
+      short: A pocketVNA connected to a one-port circuit
+      long: A pocketVNA connected to a one-port circuit
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/pvna-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/pvna-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - pvna-activity-03
+
+  pvna04:
+    description:
+      name: PVNA 04
+      type: pvna-pool-v1.0
+      short: A pocketVNA connected to a one-port circuit
+      long: A pocketVNA connected to a one-port circuit
+      further: https://static.practable.io/info/camera-test-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/pvna-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/pvna-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - pvna-activity-04
+    
+  spinner-sim:
+    description:
+      name: Spinner (Simulated)
+      type: spinner-sim-pool-v1.0
+      short:  An in-browser physics simulation of a DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: An in-browser physics simulation of a DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+        The weight is provided by loading the disk with an equal amount of coins in each of the
+        four slots.
+      further: https://static.practable.io/info/spinner-sim-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-sim-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-sim-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-sim-00
+    - spinner-sim-01
+    - spinner-sim-02
+    - spinner-sim-03
+    - spinner-sim-04
+    - spinner-sim-05
+    - spinner-sim-06
+    - spinner-sim-07
+    - spinner-sim-08
+    - spinner-sim-09
+    - spinner-sim-10
+    - spinner-sim-11
+    - spinner-sim-12
+    - spinner-sim-13
+    - spinner-sim-14
+    - spinner-sim-15
+    - spinner-sim-16
+    - spinner-sim-17
+    - spinner-sim-18
+    - spinner-sim-19    
+    - spinner-sim-20
+    - spinner-sim-21
+    - spinner-sim-22
+    - spinner-sim-23
+    - spinner-sim-24
+    - spinner-sim-25
+    - spinner-sim-26
+    - spinner-sim-27
+    - spinner-sim-28
+    - spinner-sim-29
+    - spinner-sim-30
+    - spinner-sim-31
+    - spinner-sim-32
+    - spinner-sim-33
+    - spinner-sim-34
+    - spinner-sim-35
+    - spinner-sim-36
+    - spinner-sim-37
+    - spinner-sim-38
+    - spinner-sim-39    
+    - spinner-sim-40
+    - spinner-sim-41
+    - spinner-sim-42
+    - spinner-sim-43
+    - spinner-sim-44
+    - spinner-sim-45
+    - spinner-sim-46
+    - spinner-sim-47
+    - spinner-sim-48
+    - spinner-sim-49
+    - spinner-sim-50
+    - spinner-sim-51
+    - spinner-sim-52
+    - spinner-sim-53
+    - spinner-sim-54
+    - spinner-sim-55
+    - spinner-sim-56
+    - spinner-sim-57
+    - spinner-sim-58
+    - spinner-sim-59    
+    - spinner-sim-60
+    - spinner-sim-61
+    - spinner-sim-62
+    - spinner-sim-63
+    - spinner-sim-64
+    - spinner-sim-65
+    - spinner-sim-66
+    - spinner-sim-67
+    - spinner-sim-68
+    - spinner-sim-69
+    - spinner-sim-70
+    - spinner-sim-71
+    - spinner-sim-72
+    - spinner-sim-73
+    - spinner-sim-74
+    - spinner-sim-75
+    - spinner-sim-76
+    - spinner-sim-77
+    - spinner-sim-78
+    - spinner-sim-79    
+    - spinner-sim-80
+    - spinner-sim-81
+    - spinner-sim-82
+    - spinner-sim-83
+    - spinner-sim-84
+    - spinner-sim-85
+    - spinner-sim-86
+    - spinner-sim-87
+    - spinner-sim-88
+    - spinner-sim-89    
+    - spinner-sim-90
+    - spinner-sim-91
+    - spinner-sim-92
+    - spinner-sim-93
+    - spinner-sim-94
+    - spinner-sim-95
+    - spinner-sim-96
+    - spinner-sim-97
+    - spinner-sim-98
+    - spinner-sim-99
+
+  spinner-43g-metal:
+    description:
+      name: Spinner (43g metal disk)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 43g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-03
+
+  spinner-49g-metal:
+    description:
+      name: Spinner (49g metal disk)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 49g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a 49g spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-08
+    
+  spinner-49g-metal-develop:
+    description:
+      name: Spinner (49g metal disk)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 49g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a 49g spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-02
+    
+  spinner-57g-metal:
+    description:
+      name: Spinner (57g metal disk)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 57g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a 57g spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-08
+    - turner-activity-04
+    
+  spinner-62g-metal:
+    description:
+      name: Spinner (62g metal disk)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 62g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a 62g spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-01
+    - turner-activity-06
+
+  spinner-85g-metal-modified:
+    description:
+      name: Spinner (85g metal disk - modified)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 85g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a 85g spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-07
+    
+  spinner-85g-metal:
+    description:
+      name: Spinner (85g metal disk)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 85g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a 85g spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-07
+    
+  spinner-105g-metal:
+    description:
+      name: Spinner (105g metal disk)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 105g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a 105g spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-05
+
+  spinner-110g-metal:
+    description:
+      name: Spinner (110g metal disk)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a 110g spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a 110g spinning disk, which takes time to spin up to speed.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-00    
+    - turner-activity-02
+      
+      
+  spinner-controls3:
+    description:
+      name: Spinner (Controls 3)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+        The weight is provided by loading the disk with an equal amount of coins in each of the
+        four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+
+  spinner-00-pennies:
+    description:
+      name: Spinner (29g)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving an empty spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving an empty spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+      - turner-activity-00
+
+  spinner-04-pennies:
+    description:
+      name: Spinner (43g)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a spinning disk weighted by four pennies, which takes time to spin up to speed.
+      long: A DC-motor driving a spinning disk weighted by four pennies, which takes time to spin up to speed. The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+      - turner-activity-06
+    
+  spinner-08-pennies:
+    description:
+      name: Spinner (57g)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a spinning disk weighted by eight pennies, which takes time to spin up to speed.
+      long: A DC-motor driving a spinning disk weighted by eight pennies, which takes time to spin up to speed. The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+      - turner-activity-01
+
+  spinner-12-pennies:
+    description:
+      name: Spinner (72g)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a spinning disk weighted by 12 pennies, which takes time to spin up to speed.
+      long: A DC-motor driving a spinning disk weighted by 12 pennies, which takes time to spin up to speed. The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+      - turner-activity-03
+
+  spinner-16-pennies:
+    description:
+      name: Spinner (86g)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a spinning disk weighted by 16 pennies, which takes time to spin up to speed.
+      long: A DC-motor driving a spinning disk weighted by 16 pennies, which takes time to spin up to speed. The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+      - turner-activity-02
+      - spinner-activity-03
+
+  spinner-20-pennies:
+    description:
+      name: Spinner (100g)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a spinning disk weighted by 20 pennies, which takes time to spin up to speed.
+      long: A DC-motor driving a spinning disk weighted by 20 pennies, which takes time to spin up to speed. The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+      - turner-activity-07
+    
+  spinner-24-pennies:
+    description:
+      name: Spinner (114g)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a spinning disk weighted by 24 pennies, which takes time to spin up to speed.
+      long: A DC-motor driving a spinning disk weighted by 24 pennies, which takes time to spin up to speed. The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+
+  spinner-28-pennies:
+    description:
+      name: Spinner (129g)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a spinning disk weighted by 28 pennies, which takes time to spin up to speed.
+      long: A DC-motor driving a spinning disk weighted by 28 pennies, which takes time to spin up to speed. The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+      - spinner-activity-07
+      - spinner-activity-01      
+      - spinner-activity-05
+      
+  spinner-develop:
+    description:
+      name: Spinner (Develop)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-00
+    
+
+ 
+    
+  spinner-develop-a-old:
+    description:
+      name: Spinner (Develop A)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-01
+    - spinner-activity-02
+    - spinner-activity-03
+    - spinner-activity-04
+    - spinner-activity-05
+    - spinner-activity-07
+    - turner-activity-00
+    - turner-activity-01
+    - turner-activity-02
+    - turner-activity-03
+    - turner-activity-08
+
+    
+  spinner-develop-b:
+    description:
+      name: Spinner (Develop B) 
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-02
+    - spinner-activity-03
+
+  spinner-develop-c:
+    description:
+      name: Spinner (Develop C)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-04
+    - spinner-activity-05
+
+    
+  spinner-develop-d:
+    description:
+      name: Spinner (Develop D)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-06
+    - spinner-activity-07
+
+  spinner-develop-e:
+    description:
+      name: Spinner (Develop E)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-08
+
+  spinner-develop-f:
+    description:
+      name: Spinner (Develop F)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-00
+    - turner-activity-01
+
+  spinner-develop-g:
+    description:
+      name: Spinner (Develop G)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-02
+    - turner-activity-03
+
+  spinner-develop-h:
+    description:
+      name: Spinner (Develop H)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-05
+
+  spinner-develop-i:
+    description:
+      name: Spinner (Develop I)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-06
+    - turner-activity-07
+
+  spinner-develop-j:
+    description:
+      name: Spinner (Develop J)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-08
+    - turner-activity-09
+    
+  spinner-everyone:
+    description:
+      name: Spinner (Everyone)
+      type: spinner-pool-v1.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+
+
+  spinner-max-00:
+    description:
+      name: Spinner 2.0 (#00)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-30
+
+  spinner-max-01:
+    description:
+      name: Spinner 2.0 (#01)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-31
+
+  spinner-max-02:
+    description:
+      name: Spinner 2.0 (#02)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-32
+
+  spinner-max-03:
+    description:
+      name: Spinner 2.0 (#03)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-33
+
+
+  spinner-max-04:
+    description:
+      name: Spinner 2.0 (#04)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-34
+
+  spinner-max-05:
+    description:
+      name: Spinner 2.0 (#05)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-35
+
+  spinner-max-06:
+    description:
+      name: Spinner 2.0 (#06)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-36
+
+  spinner-max-07:
+    description:
+      name: Spinner 2.0 (#07)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-37
+
+
+  spinner-max-08:
+    description:
+      name: Spinner 2.0 (#08)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-38
+
+
+  spinner-max-09:
+    description:
+      name: Spinner 2.0 (#09)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-39
+
+  spinner-max-10:
+    description:
+      name: Spinner 2.0 (#10)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-40
+
+  spinner-max-11:
+    description:
+      name: Spinner 2.0 (#11)
+      type: spinner-pool-v2.0
+      short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.The weight is provided by loading the disk with an equal amount of coins in each of the four slots.
+      further: https://static.practable.io/info/spinner-real-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/spinner-real-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/spinner-real-2.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - spinner-activity-41
+
+  truss-large:
+    description:
+      name: Truss (Large)
+      type: truss-pool-v1.0
+      short:  An acrylic six-member truss with variable load.
+      long:  An acrylic six-member truss with variable load controlled by a stepper motor and worm-drive. Strain is reported from all members. 
+      further: https://static.practable.io/info/truss-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/truss-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/truss-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - truss-activity-00
+    
+  turner-controls3:
+    description:
+      name: Turner (Controls 3)
+      type: turner-pool-v1.0
+      short:  A DC-motor driving an extendable weighted arm.
+      long: A DC-motor driving an extendable weighted arm. The arm is weighted by coins.
+        The arm can be moved in or out to decrease or increase the angular intertia.
+      further: https://static.practable.io/info/turner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/turner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/turner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-05
+    - turner-activity-06
+    
+  turner-develop:
+    description:
+      name: Turner (Develop)
+      type: turner-pool-v1.0
+      short:  A DC-motor driving an extendable weighted arm.
+      long: A DC-motor driving an extendable weighted arm. The arm is weighted by coins.
+        The arm can be moved in or out to decrease or increase the angular intertia.
+      further: https://static.practable.io/info/turner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/turner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/turner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    
+  turner-develop-a:
+    description:
+      name: Turner (Develop A)
+      type: turner-pool-v1.0
+      short:  A DC-motor driving an extendable weighted arm.
+      long: A DC-motor driving an extendable weighted arm. The arm is weighted by coins.
+        The arm can be moved in or out to decrease or increase the angular intertia.
+      further: https://static.practable.io/info/turner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/turner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/turner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-00 
+    - turner-activity-01
+    
+  turner-develop-b:
+    description:
+      name: Turner (Develop B)
+      type: turner-pool-v1.0
+      short:  A DC-motor driving an extendable weighted arm.
+      long: A DC-motor driving an extendable weighted arm. The arm is weighted by coins.
+        The arm can be moved in or out to decrease or increase the angular intertia.
+      further: https://static.practable.io/info/turner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/turner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/turner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-02 
+    - turner-activity-03
+    
+  turner-develop-c:
+    description:
+      name: Turner (Develop C)
+      type: turner-pool-v1.0
+      short:  A DC-motor driving an extendable weighted arm.
+      long: A DC-motor driving an extendable weighted arm. The arm is weighted by coins.
+        The arm can be moved in or out to decrease or increase the angular intertia.
+      further: https://static.practable.io/info/turner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/turner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/turner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-04
+    
+  turner-develop-d:
+    description:
+      name: Turner (Develop D)
+      type: turner-pool-v1.0
+      short:  A DC-motor driving an extendable weighted arm.
+      long: A DC-motor driving an extendable weighted arm. The arm is weighted by coins.
+        The arm can be moved in or out to decrease or increase the angular intertia.
+      further: https://static.practable.io/info/turner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/turner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/turner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+
+    
+  turner-everyone:
+    description:
+      name: Turner (Everyone)
+      type: turner-pool-v1.0
+      short:  A DC-motor driving an extendable weighted arm.
+      long: A DC-motor driving an extendable weighted arm. The arm is weighted by coins.
+        The arm can be moved in or out to decrease or increase the angular intertia.
+      further: https://static.practable.io/info/turner-real-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/pools/turner-real-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/pools/turner-real-1.0/image.png
+    minsession: 2
+    maxsession: 7200
+    activities:
+    - turner-activity-07
+    - turner-activity-08
+    
+activities:
+  camera-test-A-00:
+    description: camera-test-A-activity-v1.0
+    UISet: camera-test
+    exp:  1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/prot00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot00-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/prot00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot00-video
+        verb: POST
+        scopes:
+        - read
+
+  camera-test-B-00:
+    description: camera-test-B-activity-v1.0
+    UISet: camera-test
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/prot01-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot01-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/prot01-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot01-video
+        verb: POST
+        scopes:
+        - read
+
+  camera-test-C-00:
+    description: camera-test-C-activity-v1.0
+    UISet: camera-test
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/prot02-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot02-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/prot02-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot02-video
+        verb: POST
+        scopes:
+        - read
+
+  camera-test-D-00:
+    description: camera-test-D-activity-v1.0
+    UISet: camera-test
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/prot03-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot03-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/prot03-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot03-video
+        verb: POST
+        scopes:
+        - read
+        
+  camera-test-E-00:
+    description: camera-test-E-activity-v1.0
+    UISet: camera-test
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/prot04-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot04-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/prot04-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot04-video
+        verb: POST
+        scopes:
+        - read
+        
+  camera-test-F-00:
+    description: camera-test-F-activity-v1.0
+    UISet: camera-test
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/prot05-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot05-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/prot05-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot05-video
+        verb: POST
+        scopes:
+        - read
+        
+  camera-test-G-00:
+    description: camera-test-G-activity-v1.0
+    UISet: camera-test
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/prot06-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot06-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/prot06-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot06-video
+        verb: POST
+        scopes:
+        - read
+        
+  camera-test-H-00:
+    description: camera-test-H-activity-v1.0
+    UISet: camera-test
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/prot07-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot07-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/prot07-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: prot07-video
+        verb: POST
+        scopes:
+        - read
+        
+  governor-activity-00:
+    description: governor-activity-v1.0
+    UISet: governor-dev
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn00-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn00-video
+        verb: POST
+        scopes:
+        - read
+
+
+  governor-activity-01:
+    description: governor-activity-v1.0
+    UISet: governor
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn01-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn01-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn01-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn01-video
+        verb: POST
+        scopes:
+        - read
+        
+  governor-activity-02:
+    description: governor-activity-v1.0
+    UISet: governor
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn02-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn02-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn02-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn02-video
+        verb: POST
+        scopes:
+        - read
+        
+  governor-activity-03:
+    description: governor-activity-v1.0
+    UISet: governor
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn03-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn03-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn03-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn03-video
+        verb: POST
+        scopes:
+        - read
+        
+  governor-activity-04:
+    description: governor-activity-v1.0
+    UISet: governor
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn04-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn04-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn04-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn04-video
+        verb: POST
+        scopes:
+        - read
+
+  governor-activity-05:
+    description: governor-activity-v1.0
+    UISet: governor
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn05-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn05-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn05-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn05-video
+        verb: POST
+        scopes:
+        - read
+
+  governor-activity-06:
+    description: governor-activity-v1.0
+    UISet: governor
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn06-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn06-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn06-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn06-video
+        verb: POST
+        scopes:
+        - read
+
+  governor-activity-07:
+    description: governor-activity-v1.0
+    UISet: governor
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn07-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn07-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn07-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn07-video
+        verb: POST
+        scopes:
+        - read
+
+  governor-activity-08:
+    description: governor-activity-v1.0
+    UISet: governor
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/govn08-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn08-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/govn08-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: govn08-video
+        verb: POST
+        scopes:
+        - read
+        
+  odroid-activity-00:        
+    description: odroid-activity-v1.0
+    UISet: camera-test
+    exp: 1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/odro00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: odro00-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/odro00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: odro00-video
+        verb: POST
+        scopes:
+        - read
+        
+        
+  penduino-activity-00:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend00-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend00-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-01:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend01-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend01-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend01-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend01-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-02:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend02-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend02-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend02-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend02-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-03:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend03-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend03-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend03-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend03-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-04:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend04-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend04-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend04-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend04-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-05:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend05-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend05-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend05-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend05-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-06:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend06-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend06-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend06-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend06-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-07:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend07-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend07-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend07-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend07-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-08:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend08-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend08-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend08-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend08-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-09:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend09-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend09-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend09-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend09-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-10:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend10-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend10-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend10-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend10-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-11:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend11-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend11-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend11-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend11-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-12:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend12-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend12-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend12-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend12-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-13:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend13-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend13-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend13-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend13-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-14:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend14-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend14-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend14-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend14-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-15:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend15-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend15-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend15-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend15-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-16:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend16-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend16-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend16-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend16-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-17:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend17-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend17-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend17-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend17-video
+        verb: POST
+        scopes:
+        - read
+
+
+  penduino-activity-18:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend18-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend18-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend18-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend18-video
+        verb: POST
+        scopes:
+        - read
+
+  penduino-activity-19:
+    description: penduino-activity-v1.0
+    UISet: penduino
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pend19-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend19-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/pend19-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pend19-video
+        verb: POST
+        scopes:
+        - read
+
+  pvna-activity-00:
+    config:
+      url: https://assets.practable.io/config/experiments/pvna/pvna00-0.0.json
+    description: pvna-activity-v1.0
+    UISet: pvna
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pvna00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pvna00-data
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  pvna-activity-01:
+    config:
+      url: https://assets.practable.io/config/experiments/pvna/pvna01-0.0.json
+    description: pvna-activity-v1.0
+    UISet: pvna
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pvna01-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pvna01-data
+        verb: POST
+        scopes:
+        - read
+        - write
+
+  pvna-activity-02:
+    config:
+      url: https://assets.practable.io/config/experiments/pvna/pvna02-0.0.json
+    description: pvna-activity-v1.0
+    UISet: pvna
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pvna02-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pvna02-data
+        verb: POST
+        scopes:
+        - read
+        - write
+
+  pvna-activity-03:
+    config:
+      url: https://assets.practable.io/config/experiments/pvna/pvna03-0.0.json
+    description: pvna-activity-v1.0
+    UISet: pvna
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pvna03-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pvna03-data
+        verb: POST
+        scopes:
+        - read
+        - write
+
+  pvna-activity-04:
+    config:
+      url: https://assets.practable.io/config/experiments/pvna/pvna04-0.0.json
+    description: pvna-activity-v1.0
+    UISet: pvna
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/pvna04-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: pvna04-data
+        verb: POST
+        scopes:
+        - read
+        - write
+
+  spinner-activity-00:
+    description: spinner-activity-v1.0
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin00-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin00-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-01:
+    description: spinner-activity-v1.0-28pennies
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin01-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin01-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin01-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin01-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-02:
+    description: spinner-activity-v1.0-49g-metal
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin02-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin02-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin02-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin02-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-03:
+    description: spinner-activity-v1.0-43g-metal
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin03-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin03-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin03-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin03-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-04:
+    description: spinner-activity-v1.0-43g-metal
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin04-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin04-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin04-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin04-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-05:
+    description: spinner-activity-v1.0-105g-metal
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin05-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin05-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin05-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin05-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-06:
+    description: spinner-activity-v1.0-0pennies
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin06-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin06-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin06-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin06-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-07:
+    description: spinner-activity-v1.0-85g-metal
+    UISet: spinner-v0-dev
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin07-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin07-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin07-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin07-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-08:
+    description: spinner-activity-v1.0-57g-metal
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin08-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin08-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin08-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin08-video
+        verb: POST
+        scopes:
+        - read
+        
+  spinner-activity-09:
+    description: spinner-activity-v1.0-28pennies
+    UISet: spinner-v0
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin09-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin09-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin09-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin09-video
+        verb: POST
+        scopes:
+        - read
+
+  spinner-activity-30:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin30-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin30-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin30-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin30-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin30-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin30-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-31:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin31-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin31-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin31-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin31-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin31-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin31-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-32:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin32-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin32-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin32-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin32-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin32-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin32-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-33:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin33-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin33-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin33-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin33-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin33-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin33-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-34:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin34-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin34-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin34-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin34-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin34-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin34-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-35:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin35-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin35-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin35-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin35-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin35-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin35-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-36:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin36-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin36-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin36-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin36-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin36-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin36-log
+        verb: POST
+        scopes:
+        - read
+        - write
+
+  spinner-activity-37:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin37-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin37-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin37-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin37-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin37-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin37-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-38:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin38-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin38-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin38-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin38-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin38-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin38-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-39:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin39-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin39-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin39-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin39-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin39-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin39-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-40:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin40-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin40-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin40-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin40-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin40-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin40-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-activity-41:
+    description: spinner-activity-v2.0-default
+    UISet: spinner-v2
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/spin41-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin41-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/spin41-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin41-video
+        verb: POST
+        scopes:
+        - read
+      log:
+        for: log
+        url: https://relay-access.practable.io/session/spin41-log
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: spin41-log
+        verb: POST
+        scopes:
+        - read
+        - write
+        
+  spinner-sim-00:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-01:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-02:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-03:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-04:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-05:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-06:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-07:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-08:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-09:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-10:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-11:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-12:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-13:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-14:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-15:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+    
+  spinner-sim-16:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-17:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-18:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-19:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-20:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+    
+  spinner-sim-21:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-22:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-23:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-24:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-25:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-26:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-27:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-28:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-29:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-30:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-31:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-32:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-33:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-34:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-35:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+    
+  spinner-sim-36:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-37:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-38:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-39:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-40:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+    
+  spinner-sim-41:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-42:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-43:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-44:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-45:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-46:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-47:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-48:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-49:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-50:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-51:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-52:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-53:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-54:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-55:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+    
+  spinner-sim-56:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-57:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-58:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-59:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-60:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+    
+  spinner-sim-61:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-62:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-63:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-64:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-65:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-66:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-67:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-68:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-69:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-70:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-71:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-72:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-73:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-74:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-75:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+    
+  spinner-sim-76:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-77:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-78:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-79:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-80:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-81:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-82:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-83:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-84:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-85:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-86:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-87:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-88:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-89:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-90:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-91:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-92:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-93:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-94:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-95:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+    
+  spinner-sim-96:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-97:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-98:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+  spinner-sim-99:
+    description: spinner-sim-v1.0
+    UISet: spinner-sim-v1.0
+    exp: 	1654045200
+
+    
+  truss-activity-00:
+    description: truss-activity-v1.0-large
+    UISet: truss-student
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/trus00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: trus00-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/trus00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: trus00-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-00:
+    description: spinner-activity-v1.0-110g-metal
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn00-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn00-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn00-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn00-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-01:
+    description: spinner-activity-v1.0-62g-metal
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn01-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn01-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn01-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn01-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-02:
+    description: spinner-activity-v1.0-110g-metal
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn02-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn02-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn02-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn02-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-03:
+    description: spinner-activity-v1.0-12pennies
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn03-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn03-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn03-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn03-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-04:
+    description: spinner-activity-v1.0-57g-metal
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn04-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn04-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn04-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn04-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-05:
+    description: spinner-activity-v1.0-0pennies
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn05-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn05-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn05-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn05-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-06:
+    description: spinner-activity-v1.0-62g-metal
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn06-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn06-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn06-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn06-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-07:
+    description: spinner-activity-v1.0-85g-metal
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn07-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn07-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn07-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn07-video
+        verb: POST
+        scopes:
+        - read
+
+  turner-activity-08:
+    description: spinner-activity-v1.0-49g-metal
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn08-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn08-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn08-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn08-video
+        verb: POST
+        scopes:
+        - read
+        
+  turner-activity-09:
+    description: spinner-activity-v1.0
+    UISet: spinner-v1
+    exp: 	1654045200
+    streams:
+      data:
+        for: data
+        url: https://relay-access.practable.io/session/turn08-data
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn08-data
+        verb: POST
+        scopes:
+        - read
+        - write
+      video:
+        for: video
+        url: https://relay-access.practable.io/session/turn08-video
+        audience: https://relay-access.practable.io
+        ct: session
+        topic: turn08-video
+        verb: POST
+        scopes:
+        - read
+        
+uis:
+  camera-test-ui-1.0:    
+    description:
+      name: Camera Test
+      type: camera-test-ui-1.0
+      short: See the video
+      long: See the video
+      further: https://static.practable.io/info/camera-test-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/camera-test-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/camera-test-1.0/image.png
+    url: https://static.practable.io/ui/camera-test-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - video
+   
+  debug-ui-1.0:    
+    description:
+      name: Debug
+      type: debug-ui-1.0
+      short: See the video, data, and type commands. 
+      long: See the video, data, and type commands. 
+      further: https://static.practable.io/info/debug-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/debug-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/debug-1.0/image.png
+    url: https://static.practable.io/ui/debug-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+    
+  dev-debug-ui-1.0:    
+    description:
+      name: Debug (Develop)
+      type: dev-debug-ui-1.0
+      short: See the video, data, and type commands. 
+      long: See the video, data, and type commands. 
+      further: https://static.practable.io/info/debug-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/debug-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/debug-1.0/image.png
+    url: https://dev-static.practable.io/ui/debug-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+    
+  governor-default-ui-1.0:    
+    description:
+      name: Governor (Default)
+      type: governor-default-ui-1.0
+      short: Set the arm position then control spin speed directly or via PID.
+      long: Control the arm position and spin speed. A stepper motor controls the arm position.
+        The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/governor-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/governor-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/governor-default-1.0/image.png
+    url: https://static.practable.io/ui/governor-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+  dev-governor-ui-1.0:    
+    description:
+      name: Governor (Develop)
+      type: dev-governor-ui-1.0
+      short: Set the arm position then control spin speed directly or via PID.
+      long: Control the arm position and spin speed. A stepper motor controls the arm position.
+        The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/governor-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/governor-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/governor-default-1.0/image.png
+    url: https://dev-static.practable.io/ui/governor-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+    
+  penduino-default-ui-1.0:
+    description:
+      name: Penduino (Default)
+      type: penduino-default-ui-1.0
+      short: Control an Electromagnetic Pendulum
+      long: Start the pendulum swinging, and observe the difference in decay time
+        for four different types of swinging - driving, braking, short circuit load,
+        and open circuit coil.
+      further: https://static.practable.io/info/penduino-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/penduino-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/penduino-default-1.0/image.png
+    url: https://static.practable.io/ui/penduino-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  dev-penduino-ui-1.0:
+    description:
+      name: Penduino (Develop)
+      type: dev-penduino-ui-1.0
+      short: Control an Electromagnetic Pendulum
+      long: Start the pendulum swinging, and observe the difference in decay time
+        for four different types of swinging - driving, braking, short circuit load,
+        and open circuit coil.
+      further: https://static.practable.io/info/penduino-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/penduino-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/penduino-default-1.0/image.png
+    url: https://dev-static.practable.io/ui/penduino-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  pvna-default-ui-1.0:
+    description:
+      name: PocketVNA (Default)
+      type: pvna-default-ui-1.0
+      short: Read S-parameters from pocketVNA
+      long: Read S-parameters from pocketVNA, and plot them as a function of frequency
+      further: https://static.practable.io/info/pvna-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/pvna-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/pvna-default-1.0/image.png
+    url: https://static.practable.io/ui/pvna-1.0/?config={{config}}&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+ 
+  dev-pvna-ui-1.0:
+    description:
+      name: PocketVNA (Develop)
+      type: dev-pvna-ui-1.0
+      short: Read S-parameters from pocketVNA
+      long: Read S-parameters from pocketVNA, and plot them as a function of frequency
+      further: https://static.practable.io/info/pvna-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/pvna-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/pvna-default-1.0/image.png
+    url: https://dev-static.practable.io/ui/pvna-1.0/?config={{config}}&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    
+  spinner-default-ui-1.0-view0:
+    description:
+      name: Spinner (Default)
+      type: spinner-default-ui-1.0
+      short: Control the spin speed directly or via PID.
+      long: Control the spin speed. The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/spinner-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-1.0/image.png
+    url: https://static.practable.io/ui/spinner-1.0/?v=0&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  spinner-default-ui-1.0-view1:
+    description:
+      name: Spinner (Default)
+      type: spinner-default-ui-1.0
+      short: Control the spin speed directly or via PID.
+      long: Control the spin speed. The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/spinner-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-1.0/image.png
+    url: https://static.practable.io/ui/spinner-1.0/?v=1&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+    
+  spinner-default-ui-2.0-view0:
+    description:
+      name: Spinner v2 (Default)
+      type: spinner-default-ui-2.0
+      short: Control the spin speed directly or via PID.
+      long: Control the spin speed. The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/spinner-basic-ui-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-2.0/image.png
+    url: https://static.practable.io/ui/spinner-2.0/?v=0&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  spinner-default-ui-2.0-view1:
+    description:
+      name: Spinner v2 (Default)
+      type: spinner-default-ui-1.0
+      short: Control the spin speed directly or via PID.
+      long: Control the spin speed. The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/spinner-basic-ui-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-2.0/image.png
+    url: https://static.practable.io/ui/spinner-2.0/?v=1&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+    
+  dev-spinner-ui-1.0-view0:
+    description:
+      name: Spinner (Develop)
+      type: dev-spinner-ui-1.0
+      short: Control the spin speed directly or via PID.
+      long: Control the spin speed. The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/spinner-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-1.0/image.png
+    url: https://dev-static.practable.io/ui/spinner-1.0/?v=0&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  dev-spinner-ui-2.0-view0:
+    description:
+      name: Spinner v2 (Develop)
+      type: dev-spinner-ui-2.0
+      short: Control the spin speed directly or via PID.
+      long: Control the spin speed. The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/spinner-basic-ui-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-2.0/image.png
+    url: https://dev-static.practable.io/ui/spinner-2.0/?v=0&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  dev-spinner-ui-1.0-view1:
+    description:
+      name: Spinner (Develop)
+      type: dev-spinner-ui-1.0
+      short: Control the spin speed directly or via PID.
+      long: Control the spin speed. The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/spinner-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-1.0/image.png
+    url: https://dev-static.practable.io/ui/spinner-1.0/?v=1&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video   
+
+
+  dev-spinner-ui-2.0-view1:
+    description:
+      name: Spinner v2 (Develop)
+      type: dev-spinner-ui-2.0
+      short: Control the spin speed directly or via PID.
+      long: Control the spin speed. The DC motor can be controlled by direct application of a voltage, or via setting the
+        coefficients of a proportional-integral-derivative (PID) control loop,  with the aim
+        of achieving a steady spin rate.
+      further: https://static.practable.io/info/spinner-basic-ui-2.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-2.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-2.0/image.png
+    url: https://dev-static.practable.io/ui/spinner-2.0/?v=1&streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+    
+  truss-default-ui-1.0:    
+    description:
+      name: Truss (Default)
+      type: truss-default-ui-1.0
+      short: Control the load on a six-member truss and read the strain
+      long:  Strain is reported for each member of a six-member truss. The load on the truss is controlled by a stepper motor.
+      further: https://static.practable.io/info/truss-default-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/truss-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/truss-default-1.0/image.png
+    url: https://static.practable.io/ui/truss-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  dev-truss-default-ui-1.0:    
+    description:
+      name: Truss (Develop)
+      type: dev-truss-default-ui-1.0
+      short: Control the load on a six-member truss and read the strain
+      long:  Strain is reported for each member of a six-member truss. The load on the truss is controlled by a stepper motor.
+      further: https://static.practable.io/info/truss-default-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/truss-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/truss-default-1.0/image.png
+    url: https://dev-static.practable.io/ui/truss-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  truss-noforce-ui-1.0:    
+    description:
+      name: Truss (Strain)
+      type: truss-noforce-ui-1.0
+      short: Control the load on a six-member truss and measure the strains.
+      long:  Strain is reported for each member of a six-member truss. The load on the truss is controlled by a stepper motor. Force on truss is not reported.
+      further: https://static.practable.io/info/truss-default-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/truss-noforce-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/truss-noforce-1.0/image.png
+    url: https://static.practable.io/ui/truss-noforce-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  dev-truss-noforce-ui-1.0:    
+    description:
+      name: Truss (No force, Develop)
+      type: dev-truss-noforce-ui-1.0
+      short: Control the load on a six-member truss and read the strain (no force is reported).
+      long:  Strain is reported for each member of a six-member truss. The load on the truss is controlled by a stepper motor. Force on truss is not reported.
+      further: https://static.practable.io/info/truss-default-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/truss-noforce-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/truss-noforce-1.0/image.png
+    url: https://dev-static.practable.io/ui/truss-noforce-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+    
+  turner-default-ui-1.0:    
+    description:
+      name: Turner (Default)
+      type: turner-default-ui-1.0
+      short: Set the arm extension and control rotatonal position by PID.
+      long:  The extension of the arm is controlled by a servo. The DC motor
+         can be controlled by setting the coefficients of a
+         proportional-integral-derivative (PID) control loop, and setting a
+         set-point position.
+      further: https://static.practable.io/info/turner-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/turner-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/turner-default-1.0/image.png
+    url: https://static.practable.io/ui/turner-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+    
+  dev-turner-ui-1.0:    
+    description:
+      name: Turner (Develop)
+      type: dev-turner-ui-1.0
+      short: Set the arm extension and control rotatonal position by PID.
+      long:  The extension of the arm is controlled by a servo. The DC motor
+         can be controlled by setting the coefficients of a
+         proportional-integral-derivative (PID) control loop, and setting a
+         set-point position.
+      further: https://static.practable.io/info/turner-basic-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/turner-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/turner-default-1.0/image.png
+    url: https://dev-static.practable.io/ui/turner-1.0/?streams={{streams}}&exp={{exp}}
+    streamsrequired:
+    - data
+    - video
+
+  spinner-sim-ui-1.0:
+    description:
+      name: Spinner (simulated)
+      type: spinner-sim-ui-1.0
+      short:  An in-browser physics simulation of a DC-motor driving a spinning cylindrical disk, which takes time to spin up to speed.
+      long: An in-browser physics simulation of a DC-motor driving a spinning cylindrical disk, which takes time to spin up to speed.
+        Several different weights of disk are available within the simulation. 
+      further: https://static.practable.io/info/spinner-sim-ui-1.0/index.html
+      thumb: https://assets.practable.io/images/booking/ui/spinner-default-1.0/thumb.png
+      image: https://assets.practable.io/images/booking/ui/spinner-default-1.0/image.png
+    url: https://static.practable.io/ui/spinner-sim-1.0/
+    streamsrequired:
+   
+UISets:
+
+  camera-test:
+  - camera-test-ui-1.0
+  - debug-ui-1.0
+
+  governor:
+  - governor-default-ui-1.0
+    
+  governor-dev:
+  - governor-default-ui-1.0
+  - debug-ui-1.0
+  - dev-debug-ui-1.0
+  - dev-governor-ui-1.0
+
+  penduino:
+  - penduino-default-ui-1.0
+  
+  penduino-dev:
+  - penduino-default-ui-1.0
+  - debug-ui-1.0
+  - dev-debug-ui-1.0
+  - dev-penduino-ui-1.0
+  
+  pvna:
+  - pvna-default-ui-1.0
+  
+  pvna-dev:
+  - pvna-default-ui-1.0
+  - debug-ui-1.0
+  - dev-debug-ui-1.0
+  - dev-pvna-ui-1.0    
+  
+  spinner-v0:
+  - spinner-default-ui-1.0-view0
+
+  spinner-v1:
+  - spinner-default-ui-1.0-view1
+
+  spinner-v2:
+  - spinner-default-ui-2.0-view0
+
+  spinner-v2-dev:
+  - spinner-default-ui-2.0-view0
+  - debug-ui-1.0
+  - dev-debug-ui-1.0
+  - dev-spinner-ui-2.0-view0
+  
+  spinner-v0-dev:
+  - spinner-default-ui-1.0-view0
+  - debug-ui-1.0
+  - dev-debug-ui-1.0
+  - dev-spinner-ui-1.0-view0
+  
+  spinner-v0-dev-only:
+  - dev-spinner-ui-1.0-view0
+
+  spinner:
+  - spinner-default-ui-1.0-view0
+
+  spinner-sim-v1.0:
+  - spinner-sim-ui-1.0
+  
+  spinner-dev:
+  - dev-spinner-ui-1.0-view0
+   
+  spinner-v1-dev:
+  - spinner-default-ui-1.0-view1
+  - debug-ui-1.0
+  - dev-debug-ui-1.0
+  - dev-spinner-ui-1.0-view1
+  
+  spinner-v1-dev-only:
+  - dev-spinner-ui-1.0-view1
+
+  truss-academic:
+  - truss-default-ui-1.0
+  - truss-noforce-ui-1.0
+
+  truss-student:
+  - truss-noforce-ui-1.0
+  
+  truss-dev:
+  - truss-default-ui-1.0
+  - dev-truss-default-ui-1.0
+  - debug-ui-1.0
+  - dev-debug-ui-1.0
+  - truss-noforce-ui-1.0
+  - dev-truss-noforce-ui-1.0
+ 
+  turner:
+  - turner-default-ui-1.0
+  
+  turner-dev:
+  - turner-default-ui-1.0
+  - debug-ui-1.0
+  - dev-debug-ui-1.0
+  - dev-turner-ui-1.0
+  
+descriptions:
+  camera-test-A-activity-v1.0:      
+    name: Camera Test A
+    type: camera-test-A-activity-v1.0
+    short:  Logitech C920
+    long: Logitech C920
+    further: https://static.practable.io/info/camera-test-A-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/camera-test-A-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/camera-test-A-1.0/image.png
+
+  camera-test-B-activity-v1.0:      
+    name: Camera Test B
+    type: camera-test-B-activity-v1.0
+    short:  Rasperry Pi B0103
+    long: Raspberry Pi B0103
+    further: https://static.practable.io/info/camera-test-B-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/camera-test-B-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/camera-test-B-1.0/image.png
+
+  camera-test-C-activity-v1.0:      
+    name: Camera Test C
+    type: camera-test-C-activity-v1.0
+    short:  Raspberry Pi Camera Type G
+    long: Raspberry Pi Camera Type G
+    further: https://static.practable.io/info/camera-test-C-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/camera-test-C-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/camera-test-C-1.0/image.png
+
+  camera-test-D-activity-v1.0:      
+    name: Camera Test D
+    type: camera-test-D-activity-v1.0
+    short:  Raspberry Pi Camera Type I
+    long: Camera Test D
+    further: https://static.practable.io/info/camera-test-D-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/camera-test-D-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/camera-test-D-1.0/image.png   
+
+  camera-test-E-activity-v1.0:      
+    name: Camera Test E
+    type: camera-test-E-activity-v1.0
+    short:  Raspberry Pi Camera Type J
+    long: Camera Test E
+    further: https://static.practable.io/info/camera-test-E-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/camera-test-E-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/camera-test-E-1.0/image.png
+
+  camera-test-F-activity-v1.0:      
+    name: Camera Test F
+    type: camera-test-F-activity-v1.0
+    short:  Camera Test F
+    long: Camera Test F
+    further: https://static.practable.io/info/camera-test-F-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/camera-test-F-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/camera-test-F-1.0/image.png
+
+  camera-test-G-activity-v1.0:      
+    name: Camera Test G
+    type: camera-test-G-activity-v1.0
+    short:  Camera Test G
+    long: Camera Test G
+    further: https://static.practable.io/info/camera-test-G-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/camera-test-G-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/camera-test-G-1.0/image.png
+
+  camera-test-H-activity-v1.0:      
+    name: Camera Test H
+    type: camera-test-H-activity-v1.0
+    short:  Camera Test H
+    long: Camera Test H
+    further: https://static.practable.io/info/camera-test-H-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/camera-test-H-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/camera-test-H-1.0/image.png  
+
+  odroid-activity-v1.0:
+    name: Odroid 
+    type: odroid-test-activity-v1.0
+    short:  Odroid Camera Test
+    long: Odroid Camera Test
+    further: https://static.practable.io/info/camera-test-H-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/odroid-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/odroid-1.0/image.png
+    
+  governor-activity-v1.0:      
+    name: Governor
+    type: governor-activity-v1.0
+    short:  A DC-motor driving a pair of adjustable weighted arms.
+    long: A DC-motor driving a pair of adjustable weighted arms. The arm is weighted by coins.
+        The arms can be moved in or out to decrease or increase the angular intertia.
+    further: https://static.practable.io/info/governor-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/governor-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/governor-real-1.0/image.png
+    
+  penduino-activity-v1.0:
+    name: Penduino
+    type: penduino-activity-v1.0
+    short: A pendulum driven by an electromagnet, producing simple harmonic motion.
+    long: A single pendulum with electromagnetic drive system producing simple harmonic
+      motion. The drive and braking are variable, with the coil energised over a specified
+      angular range which can be increased or decreased to control the effect. The pendulum can
+      also be slowed down by short-circuiting the coil, without applying any power,
+      or left to swing freely with no drive or braking.
+    further: https://static.practable.io/info/penduino-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/penduino-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/penduino-real-1.0/image.png
+    
+  pvna-activity-v1.0:
+    name: PocketVNA
+    type: pvna-activity-v1.0
+    short: A pocketVNA Vector Network Analyser
+    long: A pocketVNA Vector Network Analyser that can read two-port S-parameters 
+    further: https://static.practable.io/info/pvna-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/pvna-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/pvna-real-1.0/image.png
+    
+  spinner-activity-v1.0:
+    name: Spinner 
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+    long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v2.0-default:
+    name: Spinner 
+    type: spinner-activity-v2.0
+    short:  A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+    long: A DC-motor driving a weighted spinning disk, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-2.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-2.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-2.0/image.png
+
+  spinner-activity-v1.0-0pennies:
+    name: Spinner (29g)
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving an empty spinning disk, which takes time to spin up to speed.
+    long: A DC-motor driving an empty spinning disk, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v1.0-4pennies:
+    name: Spinner (43g)
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving a spinning disk weighted by four pennies, which takes time to spin up to speed.
+    long: A DC-motor driving a spinning disk weighted by four pennies, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v1.0-8pennies:
+    name: Spinner (57g)
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving a spinning disk weighted by eight pennies, which takes time to spin up to speed.
+    long: A DC-motor driving a spinning disk weighted by eight pennies, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png    
+
+  spinner-activity-v1.0-12pennies:
+    name: Spinner (72g)
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving a spinning disk weighted by 12 pennies, which takes time to spin up to speed.
+    long: A DC-motor driving a spinning disk weighted by 12 pennies, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v1.0-16pennies:
+    name: Spinner (86g)
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving a spinning disk weighted by 16 pennies, which takes time to spin up to speed.
+    long: A DC-motor driving a spinning disk weighted by 16 pennies, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v1.0-20pennies:
+    name: Spinner (100g)
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving a spinning disk weighted by 20 pennies, which takes time to spin up to speed.
+    long: A DC-motor driving a spinning disk weighted by 20 pennies, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v1.0-24pennies:
+    name: Spinner (114g)
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving a spinning disk weighted by 24 pennies, which takes time to spin up to speed.
+    long: A DC-motor driving a spinning disk weighted by 24 pennies, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v1.0-28pennies:
+    name: Spinner (129g)
+    type: spinner-activity-v1.0
+    short:  A DC-motor driving a spinning disk weighted by 28 pennies, which takes time to spin up to speed.
+    long: A DC-motor driving a spinning disk weighted by 28 pennies, which takes time to spin up to speed.
+      The weight is provided by loading the disk with an equal amount of coins in each of the
+      four slots.
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v1.0-43g-metal:
+    name: Spinner (43g metal)
+    type: spinner-activity-v1.0
+    short:  A DC-motor spinning a disk weighing 43g (14g hub and 29g steel ring of ID 45mm, OD 57mm, 4mm thick).
+    long: A DC-motor spinning disk weighing 43g (14g hub and 29g steel ring of ID 45mm, OD 57mm, 4mm thick).
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+    
+  spinner-activity-v1.0-49g-metal:
+    name: Spinner (49g metal)
+    type: spinner-activity-v1.0
+    short:  A DC-motor spinning a disk weighing 49g (14g hub and 35g steel ring of ID 45mm, OD 60mm, 4mm thick).
+    long: A DC-motor spinning disk weighing 49g (14g hub and 35g steel ring of ID 45mm, OD 60mm, 4mm thick).
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+    
+  spinner-activity-v1.0-57g-metal:
+    name: Spinner (57g metal)
+    type: spinner-activity-v1.0
+    short:  A DC-motor spinning a disk weighing 57g (13g hub and 44g steel ring of ID 45mm, OD 62mm, 4mm thick).
+    long: A DC-motor spinning disk weighing 57g (14g hub and 44g steel ring of ID 45mm, OD 62mm, 4mm thick).
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+    
+  spinner-activity-v1.0-62g-metal:
+    name: Spinner (62g metal)
+    type: spinner-activity-v1.0
+    short:  A DC-motor spinning a disk weighing 62g (13g hub and 49g steel ring of ID 45mm, OD 75mm, 4mm thick, with 12 holes of 10mm diameter on radius 30mm).
+    long: A DC-motor spinning a disk weighing 62g (13g hub and 49g steel ring of ID 45mm, OD 75mm, 4mm thick, with 12 holes of 10mm diameter on radius 30mm).
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+    
+  spinner-activity-v1.0-85g-metal:
+    name: Spinner (85g metal)
+    type: spinner-activity-v1.0
+    short:  A DC-motor spinning a disk weighing 85g (13g hub and 72g steel ring of ID 45mm, OD 85, 4mm thick, 12 holes of 13mm Dia on radius of 32.5mm).
+    long: A DC-motor spinning a disk weighing 85g (13g hub and 72g steel ring of ID 45mm, OD 85mm, 4mm thick, 12 holes of 13mm Dia on radius of 32.5mm).
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-activity-v1.0-105g-metal:
+    name: Spinner (105g metal)
+    type: spinner-activity-v1.0
+    short:  A DC-motor spinning a disk weighing 105g (14g hub and 91g steel ring of ID 45mm, OD 89, 4mm thick, 12 holes of 13mm Dia on radius of 33mm).
+    long:  A DC-motor spinning a disk weighing 105g (14g hub and 91g steel ring of ID 45mm, OD 89, 4mm thick, 12 holes of 13mm Dia on radius of 33mm).
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+    
+  spinner-activity-v1.0-110g-metal:
+    name: Spinner (110g metal)
+    type: spinner-activity-v1.0
+    short:  A DC-motor spinning a disk weighing 110g (14g hub and 96g steel ring of ID 45mm, OD 85, 4mm thick, 12 holes of 13mm Dia on radius of 32.5mm).
+    long: A DC-motor spinning a disk weighing 110g (14g hub and 96g steel ring of ID 45mm, OD 85mm, 4mm thick, 6 holes of 13mm Dia on radius of 32.5mm).
+    further: https://static.practable.io/info/spinner-real-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-real-1.0/image.png
+
+  spinner-sim-v1.0:
+    name: Spinner (simulated)
+    type: spinner-sim-activity-v1.0
+    short:  An in-browser physics simulation of a DC-motor driving a spinning cylindrical disk, which takes time to spin up to speed.
+    long: An in-browser physics simulation of a DC-motor driving a spinning cylindrical disk, which takes time to spin up to speed.
+      Several different weights of disk are available within the simulation. 
+    further: https://static.practable.io/info/spinner-sim-1.0/index.html
+    thumb: https://assets.practable.io/images/booking/activities/spinner-sim-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/spinner-sim-1.0/image.png
+       
+  truss-activity-v1.0-large:      
+    name: Truss (large)
+    type: truss-activity-v1.0-large
+    short:  An acrylic six-member truss with variable load.
+    long:  An acrylic six-member truss with variable load controlled by a stepper motor and worm-drive. Strain is reported from all members.       
+    thumb: https://assets.practable.io/images/booking/activities/truss-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/truss-real-1.0/image.png
+    
+  turner-activity-v1.0:      
+    name: Turner
+    type: turner-activity-v1.0
+    short:  A DC-motor driving an extendable weighted arm.
+    long: A DC-motor driving an extendable weighted arm. The arm is weighted by coins.
+      The arm can be moved in or out to decrease or increase the angular intertia.
+    thumb: https://assets.practable.io/images/booking/activities/turner-real-1.0/thumb.png
+    image: https://assets.practable.io/images/booking/activities/turner-real-1.0/image.png

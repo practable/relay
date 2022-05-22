@@ -14,7 +14,7 @@
 #     -  BOOKJS_ADMINTOKEN and
 #     -  BOOKJS_USERTOKEN
 #
-# - starts a booking server on port 4000
+# - starts a booking server using docker
 #   and uploads ./manifest.yaml
 #
 # - starts a static server on port 6000
@@ -37,13 +37,8 @@ paddit() {
   echo $input
 }
 
-
-# booking server settings
-export BOOK_DEVELOPMENT=true
-export BOOK_PORT=4000
+# booking server configuration (see book.env for details)
 export BOOK_FQDN=http://[::]:4000
-export BOOK_SECRET=somesecret
-export BOOK_LOGINTIME=3600
 
 # asset server settings
 export ASSET_PORT=8008
@@ -101,15 +96,15 @@ export BOOKSTATUS_TOKEN=$BOOKUPLOAD_TOKEN
 
 set | grep BOOK
 
-# start book server
-book serve > book.log 2>&1 &
+# start book server using docker
+./book.sh > book.log 2>&1 &
 export BOOK_PID=$!
 
 #wait five seconds for server to start
 sleep 1
 
 #upload manifest
-book upload ../manifest/manifest.yaml
+book upload ../../manifest/manifest.yaml
 
 
 # start asset server
@@ -180,7 +175,7 @@ then
 	then
 		export BOOKTOKEN_ADMIN=true
 		export BOOKUPLOAD_TOKEN=$(book token)
-		book upload ../manifest/manifest.yaml
+		book upload ../../manifest/manifest.yaml
 	else
 		echo "wise choice, aborting"
 	fi
