@@ -1,0 +1,14 @@
+services:
+  book:
+    build:
+      context: .
+      target: book
+  session:
+    build:
+      context: .
+      target: session
+  shell:
+    build:
+      context: .
+      target: shell
+      
