@@ -24,10 +24,10 @@ import (
 
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/ory/viper"
-	"github.com/spf13/cobra"
 	apiclient "github.com/practable/relay/internal/bc/client"
 	"github.com/practable/relay/internal/bc/client/admin"
 	"github.com/practable/relay/internal/bc/client/login"
+	"github.com/spf13/cobra"
 )
 
 // getstatusCmd represents the getstatus command
@@ -37,8 +37,9 @@ var getstatusCmd = &cobra.Command{
 	Long: `Set server details with environment variables. F
 For example:
 
-export BOOKSTATUS_HOST=localhost:4000
-export BOOKSTATUS_SCHEME=http
+export BOOKSTATUS_SCHEME=https
+export BOOKSTATUS_HOST=core.prac.io
+export BOOKSTATUS_BASE=/book/api/v1
 export BOOKSTATUS_TOKEN=$secret
 book getstatus 
 `,
@@ -46,9 +47,11 @@ book getstatus
 
 		viper.SetEnvPrefix("BOOKSTATUS")
 		viper.AutomaticEnv()
+		viper.SetDefault("base", "/api/v1")
 		viper.SetDefault("host", "book.practable.io")
 		viper.SetDefault("scheme", "https")
 
+		base := viper.GetString("base")
 		host := viper.GetString("host")
 		scheme := viper.GetString("scheme")
 		token := viper.GetString("token")
@@ -58,7 +61,7 @@ book getstatus
 			os.Exit(1)
 		}
 
-		cfg := apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{scheme})
+		cfg := apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{scheme}).WithBasePath(base)
 		loginAuth := httptransport.APIKeyAuth("Authorization", "header", token)
 		bc := apiclient.NewHTTPClientWithConfig(nil, cfg)
 		timeout := 10 * time.Second

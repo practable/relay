@@ -25,10 +25,10 @@ import (
 
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/ory/viper"
-	"github.com/spf13/cobra"
 	apiclient "github.com/practable/relay/internal/bc/client"
 	"github.com/practable/relay/internal/bc/client/login"
 	"github.com/practable/relay/internal/manifest"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
 
@@ -39,16 +39,19 @@ var uploadCmd = &cobra.Command{
 	Long: `A yaml-format booking manifest is required.
 
 export BOOKUPLOAD_TOKEN=${your_admin_login_token}
-export BOOKUPLOAD_HOST=book.practable.io
 export_BOOKUPLOAD_SCHEME=https
+export BOOKUPLOAD_HOST=core.prac.io
+export BOOKUPLOAD_BASE=/book/api/v1
 book upload your_manifest.yml
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		viper.SetEnvPrefix("BOOKUPLOAD")
 		viper.AutomaticEnv()
+		viper.SetDefault("base", "/api/v1")
 		viper.SetDefault("host", "book.practable.io")
 		viper.SetDefault("scheme", "https")
 
+		base := viper.GetString("base")
 		host := viper.GetString("host")
 		scheme := viper.GetString("scheme")
 		token := viper.GetString("token")
@@ -77,7 +80,7 @@ book upload your_manifest.yml
 			os.Exit(1)
 		}
 
-		cfg := apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{scheme})
+		cfg := apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{scheme}).WithBasePath(base)
 		loginAuth := httptransport.APIKeyAuth("Authorization", "header", token)
 		bc := apiclient.NewHTTPClientWithConfig(nil, cfg)
 		timeout := 10 * time.Second
