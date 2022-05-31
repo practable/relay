@@ -23,9 +23,9 @@ import (
 	"sync"
 
 	"github.com/ory/viper"
+	"github.com/practable/relay/internal/shellrelay"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/practable/relay/internal/shellrelay"
 )
 
 // relayCmd represents the relay command
@@ -40,7 +40,7 @@ export SHELLRELAY_RELAYPORT=10000
 export SHELLRELAY_RELAYFQDN=wss://relay-access.example.io
 export SHELLRELAY_SECRET=$your_secret
 export SHELLRELAY_DEVELOPMENT=true
-shell relay
+shell-relay relay
 
 It is expected that you will reverse proxy incoming connections (e.g. with nginx or apache). 
 No provision is made for handling TLS in shell relay because this is more convenient

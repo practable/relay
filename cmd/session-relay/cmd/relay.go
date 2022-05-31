@@ -23,8 +23,8 @@ import (
 	"os/signal"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/relay"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -52,7 +52,7 @@ export RELAY_RELAYPORT=10003
 export RELAY_RELAYFQDN=wss://relay-access.example.io
 export RELAY_SECRET=somesecret
 export RELAY_DEVELOPMENT=true
-shell relay
+session-relay relay 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 

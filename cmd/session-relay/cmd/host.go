@@ -17,8 +17,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/practable/relay/internal/vw"
+	"github.com/spf13/cobra"
 )
 
 // hostCmd represents the host command
@@ -42,7 +42,7 @@ export RELAYHOST_HTTPTIMEOUTMS=1000
 export RELAYHOST_CPUPROFULE=
 export RELAYHOST_API=
 
-session host`,
+session-relay host`,
 	Run: func(cmd *cobra.Command, args []string) {
 		vw.Stream()
 	},

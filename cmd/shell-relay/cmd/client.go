@@ -21,42 +21,42 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
 
 	"github.com/ory/viper"
+	"github.com/practable/relay/internal/shellclient"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/practable/relay/internal/shellhost"
 )
 
-// hostCmd represents the host command
-var hostCmd = &cobra.Command{
-	Use:   "host",
-	Short: "shell host connects a local shell login service to shell relay",
+// clientCmd represents the client command
+var clientCmd = &cobra.Command{
+	Use:   "client",
+	Short: "shell client forwards local shell logins to shell relay",
 	Long: `Set the operating paramters with environment variables, for example
-export SHELLHOST_LOCALPORT=22
-export SHELLHOST_RELAYSESSION=https://access.example.io/shell/abc123
-export SHELLHOST_TOKEN=ey...<snip>
-export SHELLHOST_DEVELOPMENT=true
-shell host
+export SHELLCLIENT_LOCALPORT=22
+export SHELLCLIENT_RELAYSESSION=https://access.example.io/shell/abc123
+export SHELLCLIENT_TOKEN=ey...<snip>
+export SHELLCLIENT_DEVELOPMENT=true
+shell-relay client
 `,
-
 	Run: func(cmd *cobra.Command, args []string) {
 
-		viper.SetEnvPrefix("SHELLHOST")
+		viper.SetEnvPrefix("SHELLCLIENT")
 		viper.AutomaticEnv()
 
-		viper.SetDefault("localport", 22)
+		viper.SetDefault("localport", 8082)
 		localPort := viper.GetInt("localport")
+
 		relaySession := viper.GetString("relaysession")
+
 		token := viper.GetString("token")
+
 		development := viper.GetBool("development")
 
 		if development {
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
 			fmt.Printf("Local port: %d for %s with %d-byte token\n", localPort, relaySession, len(token))
-			log.SetReportCaller(true)
 			log.SetFormatter(&log.TextFormatter{})
 			log.SetLevel(log.InfoLevel)
 			log.SetOutput(os.Stdout)
@@ -66,16 +66,17 @@ shell host
 			//production environment
 			log.SetFormatter(&log.JSONFormatter{})
 			log.SetLevel(log.WarnLevel)
+
 		}
 
 		// check inputs
 
 		if relaySession == "" {
-			fmt.Println("SHELLHOST_RELAYSESSION not set")
+			fmt.Println("SHELLCLIENT_RELAYSESSION not set")
 			os.Exit(1)
 		}
 		if token == "" {
-			fmt.Println("SHELLHOST_TOKEN not set")
+			fmt.Println("SHELLCLIENT_TOKEN not set")
 			os.Exit(1)
 		}
 
@@ -93,9 +94,7 @@ shell host
 			}
 		}()
 
-		local := "localhost:" + strconv.Itoa(localPort)
-
-		go shellhost.Host(ctx, local, relaySession, token)
+		go shellclient.Client(ctx, localPort, relaySession, token)
 
 		<-ctx.Done() //unlikely to exit this way, but block all the same
 		os.Exit(0)
@@ -104,5 +103,5 @@ shell host
 }
 
 func init() {
-	rootCmd.AddCommand(hostCmd)
+	rootCmd.AddCommand(clientCmd)
 }

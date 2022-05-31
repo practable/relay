@@ -23,79 +23,82 @@ import (
 	"time"
 
 	"github.com/ory/viper"
-	"github.com/spf13/cobra"
 	"github.com/practable/relay/internal/shellaccess"
+	"github.com/spf13/cobra"
 )
 
 // hostCmd represents the host command
 var tokenCmd = &cobra.Command{
 	Use:   "token",
-	Short: "session token generates a new token for authenticating to session relay",
+	Short: "shell token generates a new token for authenticating to shell relay",
 	Long: `Set the operating paramters with environment variables, for example
 
-export ACCESSTOKEN_LIFETIME=3600
-export ACCESSTOKEN_READ=true
-export ACCESSTOKEN_WRITE=true
-export ACCESSTOKEN_SECRET=somesecret
-export ACCESSTOKEN_TOPIC=123
-export ACCESSTOKEN_AUDIENCE=https://relay-access.example.io
-bearer=$(shell token)
+export SHELLTOKEN_LIFETIME=3600
+export SHELLTOKEN_ROLE=client
+export SHELLTOKEN_SECRET=somesecret
+export SHELLTOKEN_TOPIC=123
+export SHELLTOKEN_CONNECTIONTYPE=shell
+export SHELLTOKEN_AUDIENCE=https://shell-access.example.io
+bearer=$(shell-relay token)
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
 
-		viper.SetEnvPrefix("ACCESSTOKEN")
+		viper.SetEnvPrefix("SHELLTOKEN")
 		viper.AutomaticEnv()
 
-		viper.SetDefault("connectionType", "session")
-		viper.SetDefault("read", "true")
-		viper.SetDefault("write", "true")
-
 		lifetime := viper.GetInt64("lifetime")
+		role := viper.GetString("role")
 		audience := viper.GetString("audience")
 		secret := viper.GetString("secret")
 		topic := viper.GetString("topic")
 		connectionType := viper.GetString("connectionType")
-		read := viper.GetBool("read")
-		write := viper.GetBool("write")
 
 		// check inputs
 
 		if lifetime == 0 {
-			fmt.Println("ACCESSTOKEN_LIFETIME not set")
+			fmt.Println("SHELLTOKEN_LIFETIME not set")
+			os.Exit(1)
+		}
+		if role == "" {
+			fmt.Println("SHELLTOKEN_ROLE not set")
 			os.Exit(1)
 		}
 		if secret == "" {
-			fmt.Println("ACCESSTOKEN_SECRET not set")
+			fmt.Println("SHELLTOKEN_SECRET not set")
 			os.Exit(1)
 		}
 		if topic == "" {
-			fmt.Println("ACCESSTOKEN_TOPIC not set")
+			fmt.Println("SHELLTOKEN_TOPIC not set")
 			os.Exit(1)
 		}
-
 		if connectionType == "" {
-			fmt.Println("ACCESSTOKEN_CONNECTIONTYPE not set")
+			fmt.Println("SHELLTOKEN_CONNECTIONTYPE not set")
 			os.Exit(1)
 		}
 		if audience == "" {
-			fmt.Println("ACCESSTOKEN_AUDIENCE not set")
+			fmt.Println("SHELLTOKEN_AUDIENCE not set")
 			os.Exit(1)
 		}
 
 		var scopes []string
 
-		if write {
-			scopes = append(scopes, "write")
-		}
+		switch role {
 
-		if read {
-			scopes = append(scopes, "read")
-		}
-
-		if !read && !write {
-			fmt.Println("Neither read nor write scope, or both: no point in connecting.")
-			os.Exit(1)
+		case "host":
+			scopes = []string{"host"}
+		case "client":
+			scopes = []string{"client"}
+		case "stats":
+			scopes = []string{"stats"}
+		case "read":
+			scopes = []string{"read"}
+		case "write":
+			scopes = []string{"write"}
+		case "readwrite":
+			scopes = []string{"read", "write"}
+		default:
+			fmt.Println("Unknown role; please choose from host, client, stats, read, write, readwrite")
 		}
 
 		iat := time.Now().Unix() - 1 //ensure immediately usable
