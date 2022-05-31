@@ -24,10 +24,10 @@ import (
 
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/ory/viper"
-	"github.com/spf13/cobra"
 	apiclient "github.com/practable/relay/internal/bc/client"
 	"github.com/practable/relay/internal/bc/client/admin"
 	"github.com/practable/relay/internal/bc/client/login"
+	"github.com/spf13/cobra"
 )
 
 // setstatusCmd represents the setstatus command
@@ -37,9 +37,9 @@ var setstatusCmd = &cobra.Command{
 	Long: `Set server details with environment variables 
 and pass settings as arguments. 
 For example:
-
-export BOOKSTATUS_HOST=localhost:4000
-export BOOKSTATUS_SCHEME=http
+export BOOKSTATUS_BASE=/book/api/v1
+export BOOKSTATUS_HOST=core.prac.io
+export BOOKSTATUS_SCHEME=https
 export BOOKSTATUS_TOKEN=$secret
 book setstatus unlock "Bookings are open"
 `,
@@ -49,7 +49,9 @@ book setstatus unlock "Bookings are open"
 		viper.AutomaticEnv()
 		viper.SetDefault("host", "book.practable.io")
 		viper.SetDefault("scheme", "https")
+		viper.SetDefault("base", "/api/v1")
 
+		base := viper.GetString("base")
 		host := viper.GetString("host")
 		scheme := viper.GetString("scheme")
 		token := viper.GetString("token")
@@ -77,7 +79,7 @@ book setstatus unlock "Bookings are open"
 
 		message := os.Args[3]
 
-		cfg := apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{scheme})
+		cfg := apiclient.DefaultTransportConfig().WithHost(host).WithSchemes([]string{scheme}).WithBasePath(base)
 		loginAuth := httptransport.APIKeyAuth("Authorization", "header", token)
 		bc := apiclient.NewHTTPClientWithConfig(nil, cfg)
 		timeout := 10 * time.Second
