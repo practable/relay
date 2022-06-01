@@ -64,3 +64,159 @@ Additonal documentation (in various states of completeness) can be found on the 
 [coverage]: https://img.shields.io/badge/coverage-44%25-orange "Test coverage 44%"
 [logo]: ./img/logo.png "Relay ecosystem logo - hexagons connected in a network to a letter R"
 
+
+## Appendix
+
+In combining the commands, it would be helpful to consolidate the environment variables needed
+
+### Original list of environment variables
+
+There are approx 85 listed at present.
+
+`grep -r 'export' -r | grep -v README | grep -v '~' | sed 's/.*:export//'`
+
+```
+ BOOKRESET_TOKEN=${your_admin_login_token}
+ BOOKRESET_HOST=localhost
+_BOOKRESET_SCHEME=http
+ BOOKTOKEN_LIFETIME=300
+ BOOKTOKEN_SECRET=somesecret
+ BOOKTOKEN_ADMIN=true
+ BOOKTOKEN_AUDIENCE=https://book.example.io
+ BOOKTOKEN_GROUPS="group1 group2 group3"
+ BOOKSTATUS_BASE=/book/api/v1
+ BOOKSTATUS_HOST=core.prac.io
+ BOOKSTATUS_SCHEME=https
+ BOOKSTATUS_TOKEN=$secret
+ BOOKUPLOAD_TOKEN=${your_admin_login_token}
+_BOOKUPLOAD_SCHEME=https
+ BOOKUPLOAD_HOST=core.prac.io
+ BOOKUPLOAD_BASE=/book/api/v1
+ BOOKSTATUS_SCHEME=https
+ BOOKSTATUS_HOST=core.prac.io
+ BOOKSTATUS_BASE=/book/api/v1
+ BOOKSTATUS_TOKEN=$secret
+ BOOK_PORT=4000
+ BOOK_FQDN=https://book.practable.io
+ BOOK_LOGINTIME=3600
+ BOOK_SECRET=somesecret
+ ACCESSTOKEN_LIFETIME=86400
+ ACCESSTOKEN_ROLE=client
+ ACCESSTOKEN_SECRET=$($HOME/secret/session_secret.sh)
+ ACCESSTOKEN_TOPIC=spin35-data
+ ACCESSTOKEN_CONNECTIONTYPE=session
+ ACCESSTOKEN_AUDIENCE=https://relay-access.practable.io
+ SESSION_CLIENT_TOKEN=$(session token)
+ SESSION_CLIENT_FILE_DEVELOPMENT=true
+ SESSION_CLIENT_SESSION=$ACCESSTOKEN_AUDIENCE/$ACCESSTOKEN_CONNECTIONTYPE/$ACCESSTOKEN_TOPIC
+ SESSION_CLIENT_FILE_LOG=/var/log/session/spin35-data.log
+ SESSION_CLIENT_SESSION=$ACCESSTOKEN_AUDIENCE/$ACCESSTOKEN_CONNECTIONTYPE/$ACCESSTOKEN_TOPIC
+ SESSION_CLIENT_FILE_LOG=/var/log/session/spin35-data.log
+ SESSION_CLIENT_FILE_PLAY=/etc/practable/spin35-check.play
+ SESSION_CLIENT_FILE_INTERVAL=10ms
+ SESSION_CLIENT_FILE_FORCE=true
+ SESSION_CLIENT_FILE_CHECK_ONLY=true
+ SESSION_CLIENT_FILE_PLAY=/etc/practable/spin35-check.play
+ pid=$!
+ RELAYHOST_PORT=8888
+ RELAYHOST_LOGLEVEL=PANIC
+ RELAYHOST_MAXBUFFERLENGTH=10
+ RELAYHOST_CLIENTBUFFERLENGTH=5
+ RELAYHOST_CLIENTTIMEOUTMS=1000
+ RELAYHOST_HTTPWAITMS=5000
+ RELAYHOST_HTTPSFLUSHMS=5
+ RELAYHOST_HTTPTIMEOUTMS=1000
+ RELAYHOST_CPUPROFULE=
+ RELAYHOST_API=
+ RELAY_ACCESSPORT=10002
+ RELAY_ACCESSFQDN=https://access.example.io
+ RELAY_RELAYPORT=10003
+ RELAY_RELAYFQDN=wss://relay-access.example.io
+ RELAY_SECRET=somesecret
+ RELAY_DEVELOPMENT=true
+ SESSION_CLIENT_SESSION=https://relay-access.practable.io/session/govn05-data
+ SESSION_CLIENT_TOKEN=ey... #include complete JWT token
+ ACCESSTOKEN_LIFETIME=3600
+ ACCESSTOKEN_READ=true
+ ACCESSTOKEN_WRITE=true
+ ACCESSTOKEN_SECRET=somesecret
+ ACCESSTOKEN_TOPIC=123
+ ACCESSTOKEN_AUDIENCE=https://relay-access.example.io
+ SHELLHOST_LOCALPORT=22
+ SHELLHOST_RELAYSESSION=https://access.example.io/shell/abc123
+ SHELLHOST_TOKEN=ey...<snip>
+ SHELLHOST_DEVELOPMENT=true
+ SHELLRELAY_ACCESSPORT=10001
+ SHELLRELAY_ACCESSFQDN=https://access.example.io
+ SHELLRELAY_RELAYPORT=10000
+ SHELLRELAY_RELAYFQDN=wss://relay-access.example.io
+ SHELLRELAY_SECRET=$your_secret
+ SHELLRELAY_DEVELOPMENT=true
+ SHELLCLIENT_LOCALPORT=22
+ SHELLCLIENT_RELAYSESSION=https://access.example.io/shell/abc123
+ SHELLCLIENT_TOKEN=ey...<snip>
+ SHELLCLIENT_DEVELOPMENT=true
+ SHELLTOKEN_LIFETIME=3600
+ SHELLTOKEN_ROLE=client
+ SHELLTOKEN_SECRET=somesecret
+ SHELLTOKEN_TOPIC=123
+ SHELLTOKEN_CONNECTIONTYPE=shell
+ SHELLTOKEN_AUDIENCE=https://shell-access.example.io
+```
+
+## Reduced list
+
+There are less than 40 unique environment variables needed
+ 
+```
+#generic
+RELAY_DEVELOPMENT
+RELAY_LOGLEVEL
+RELAY_CPUPROFILE #not needed, as mispelt?
+
+# for running a command
+RELAY_TOKEN
+RELAY_HOST
+RELAY_SCHEME
+RELAY_BASE
+RELAY_SESSION #for client
+
+# for setting a token
+RELAY_LIFETIME
+RELAY_SECRET
+RELAY_AUDIENCE
+
+# specific to particular types
+RELAY_TOPIC
+RELAY_CONNECTION_TYPE
+RELAY_GROUPS
+RELAY_ADMIN
+RELAY_ROLE
+RELAY_READ
+RELAY_WRITE
+
+# for serving something
+RELAY_ACCESS_FQDN
+RELAY_ACCESS_PORT
+RELAY_RELAY_FQDN
+RELAY_RELAY_PORT
+RELAY_LOGIN_TIME_S #for book
+
+#for relay host
+RELAY_MAX_BUFFER_LENGTH
+RELAY_CLIENT_BUFFER_LENGTH
+RELAY_CLIENT_TIMEOUT_MS
+RELAY_HTTP_WAIT_MS
+RELAY_HTTP_FLUSH_MS
+RELAY_HTTP_TIMEOUT_MS
+
+
+
+# stuff to do with session client
+RELAY_LOG
+RELAY_PLAY
+RELAY_INTERVAL
+RELAY_FORCE
+RELAY_CHECK_ONLY
+
+```
