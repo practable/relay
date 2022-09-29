@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/ory/viper"
-	"github.com/spf13/cobra"
 	"github.com/practable/relay/internal/login"
+	"github.com/spf13/cobra"
 )
 
 // tokenCmd represents the token command
@@ -39,6 +39,9 @@ export BOOKTOKEN_ADMIN=true
 export BOOKTOKEN_AUDIENCE=https://book.example.io
 export BOOKTOKEN_GROUPS="group1 group2 group3"
 bearer=$(book token)
+
+If you want to set a future NBF date, then specify the NBF in RFC3339 format
+export BOOKTOKEN_NBF=2022-10-12T07:20:50Z
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
@@ -51,6 +54,7 @@ bearer=$(book token)
 		viper.SetDefault("audience", "https://book.practable.io")
 		viper.SetDefault("groups", "everyone")
 		viper.SetDefault("addscope", "")
+		viper.SetDefault("nbf", "")
 
 		lifetime := viper.GetInt64("lifetime")
 		audience := viper.GetString("audience")
@@ -59,6 +63,7 @@ bearer=$(book token)
 		groups := strings.Split(rawgroups, " ")
 		admin := viper.GetBool("admin")
 		addscope := viper.GetString("addscope")
+		startdate := viper.GetString("nbf")
 
 		// check inputs
 
@@ -80,6 +85,24 @@ bearer=$(book token)
 			os.Exit(1)
 		}
 
+		iat := time.Now().Unix() - 1 // need immediately usable tokens for testing
+		nbf := iat                   //update below if NBF is specified
+
+		if startdate != "" {
+			t, e := time.Parse(
+				time.RFC3339,
+				startdate)
+			if e != nil {
+				fmt.Printf("BOOKTOKEN_NBF time format error: %s\n", e.Error())
+			}
+			// ensure future date
+			if t.After(time.Now()) {
+				nbf = t.Unix()
+			}
+		}
+
+		exp := nbf + lifetime
+
 		var scopes []string
 
 		if admin {
@@ -91,10 +114,6 @@ bearer=$(book token)
 		if addscope != "" {
 			scopes = append(scopes, addscope)
 		}
-
-		iat := time.Now().Unix() - 1 //ensure immediately usable
-		nbf := iat
-		exp := iat + lifetime
 
 		token := login.NewToken(audience, groups, []string{}, scopes, iat, nbf, exp)
 		bearer, err := login.Signed(token, secret)
