@@ -179,8 +179,8 @@ func loginHandler(ps *pool.Store, host string) func(login.LoginParams, interface
 
 		// If I recall correctly, using float64 here is a limitation of swagger
 		exp := float64(bookingClaims.ExpiresAt.Unix())
-		iat := float64(bookingClaims.ExpiresAt.Unix())
-		nbf := float64(bookingClaims.ExpiresAt.Unix())
+		iat := float64(bookingClaims.IssuedAt.Unix())
+		nbf := float64(bookingClaims.NotBefore.Unix())
 
 		// The login token may have multiple audiences, but the booking token
 		// we issue is only valid for us, so we pass our host as the only audience.
