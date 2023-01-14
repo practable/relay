@@ -29,18 +29,109 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "API for accessing github.com/timdrysdale/crossbar websocket relay",
-    "title": "Crossbar",
+    "description": "API for accessing github.com/practable/relay websocket relay. Note scheme http and host localhost due to running behind proxy",
+    "title": "RelayAccess",
     "contact": {
       "name": "Timothy Drysdale",
       "url": "https://github.com/timdrysdale",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.3"
+    "version": "0.4"
   },
   "host": "localhost",
   "basePath": "/",
   "paths": {
+    "/bids/allowed": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all currently-allowed bids",
+        "operationId": "listAllowed",
+        "responses": {
+          "200": {
+            "description": "Current or recently in-use allowed bids",
+            "schema": {
+              "$ref": "#/definitions/Bids"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/bids/deny": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all currently-denied bids",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all currently-denied bids",
+        "operationId": "listDenied",
+        "responses": {
+          "200": {
+            "description": "List of current denied bids",
+            "schema": {
+              "$ref": "#/definitions/Bids"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.",
+        "consumes": [
+          "application/json"
+        ],
+        "summary": "Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.",
+        "operationId": "deny",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "bid",
+            "in": "query"
+          },
+          {
+            "name": "bids",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Bids"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The bids were denied successfully.",
+            "schema": {}
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          }
+        }
+      }
+    },
     "/session/{session_id}": {
       "post": {
         "security": [
@@ -65,6 +156,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "type": "object",
               "properties": {
@@ -82,6 +174,24 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Bids": {
+      "type": "object",
+      "title": "Set of booking IDs (bids)",
+      "required": [
+        "bids"
+      ],
+      "properties": {
+        "bids": {
+          "description": "list bids in string format",
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }
@@ -107,18 +217,109 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "API for accessing github.com/timdrysdale/crossbar websocket relay",
-    "title": "Crossbar",
+    "description": "API for accessing github.com/practable/relay websocket relay. Note scheme http and host localhost due to running behind proxy",
+    "title": "RelayAccess",
     "contact": {
       "name": "Timothy Drysdale",
       "url": "https://github.com/timdrysdale",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.3"
+    "version": "0.4"
   },
   "host": "localhost",
   "basePath": "/",
   "paths": {
+    "/bids/allowed": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all currently-allowed bids",
+        "operationId": "listAllowed",
+        "responses": {
+          "200": {
+            "description": "Current or recently in-use allowed bids",
+            "schema": {
+              "$ref": "#/definitions/Bids"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/bids/deny": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all currently-denied bids",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all currently-denied bids",
+        "operationId": "listDenied",
+        "responses": {
+          "200": {
+            "description": "List of current denied bids",
+            "schema": {
+              "$ref": "#/definitions/Bids"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.",
+        "consumes": [
+          "application/json"
+        ],
+        "summary": "Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.",
+        "operationId": "deny",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "bid",
+            "in": "query"
+          },
+          {
+            "name": "bids",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Bids"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The bids were denied successfully.",
+            "schema": {}
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {}
+          }
+        }
+      }
+    },
     "/session/{session_id}": {
       "post": {
         "security": [
@@ -143,6 +344,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "type": "object",
               "properties": {
@@ -160,6 +362,24 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Bids": {
+      "type": "object",
+      "title": "Set of booking IDs (bids)",
+      "required": [
+        "bids"
+      ],
+      "properties": {
+        "bids": {
+          "description": "list bids in string format",
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }

@@ -22,27 +22,68 @@ securityDefinitions:
     name: Authorization
     in: header 
 paths:
-   /token/deny:
+  /bids/allowed:
+    get:
+      description: Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection
+      summary: Get a list of all currently-allowed bids
+      operationId: listAllowed
+      deprecated: False
+      produces:
+      - application/json
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: Current or recently in-use allowed bids
+          schema:
+            $ref: '#/definitions/Bids'
+        401:
+          description: Unauthorized
+          schema: {}
+  /bids/deny:
+    get:
+      description: Get a list of all currently-denied bids
+      summary: Get a list of all currently-denied bids
+      operationId: listDenied
+      deprecated: False
+      produces:
+      - application/json
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: List of current denied bids
+          schema:
+            $ref: '#/definitions/Bids'
+        401:
+          description: Unauthorized
+          schema: {}  
     post:
-      description: Deny access to anyone using the token provided in the body, and disconnect any current sessions immediately.
-      summary: Deny access to anyone using the provided token, disconnecting any current sessions and preventing new ones. This allows sessions to be cancelled.
+      description: Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately. 
+      summary: Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.
       operationId: deny
       deprecated: false
-      requestBody:
-        description: The token to be denied
-        required: true
-        content:
-          text/plain:
-            schema:
-              type: string
+      consumes:
+      - application/json
+      parameters:
+        - name: bid
+          in: query
+          type: string
+          required: false
+        - name: bids
+          in: body
+          schema:
+            $ref: '#/definitions/Bids'
       security:
         - Bearer: []  
       responses:
         204:
-          description: The token was denied successfully.
+          description: The bids were denied successfully.
+          schema: {}
         401:
           description: Unauthorized
-          schema: {} 
+          schema: {}
+          
   /session/{session_id}:
     post:
       description: access the specified session
@@ -54,9 +95,9 @@ paths:
       parameters:
       - name: session_id
         in: path
-        required: true
         type: string
         description: Session identification code
+        required: true
       security:
         - Bearer: []  
       responses:
@@ -73,4 +114,16 @@ paths:
         401:
           description: Unauthorized
           schema: {}
-
+          
+definitions:
+  Bids:
+    title: Set of booking IDs (bids)
+    type: object
+    properties:
+      bids:
+        description: list bids in string format
+        type: array
+        items:
+          type: string
+    required:
+    - bids
