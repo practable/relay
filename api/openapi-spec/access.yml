@@ -1,8 +1,8 @@
 swagger: '2.0'
 info:
-  version: '0.3'
-  title: Crossbar
-  description: API for accessing github.com/timdrysdale/crossbar websocket relay
+  version: '0.4'
+  title: RelayAccess
+  description: API for accessing github.com/practable/relay websocket relay. Note scheme http and host localhost due to running behind proxy
   contact:
     email: timothy.d.drysdale@gmail.com
     name: Timothy Drysdale
@@ -22,6 +22,27 @@ securityDefinitions:
     name: Authorization
     in: header 
 paths:
+   /token/deny:
+    post:
+      description: Deny access to anyone using the token provided in the body, and disconnect any current sessions immediately.
+      summary: Deny access to anyone using the provided token, disconnecting any current sessions and preventing new ones. This allows sessions to be cancelled.
+      operationId: deny
+      deprecated: false
+      requestBody:
+        description: The token to be denied
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      security:
+        - Bearer: []  
+      responses:
+        204:
+          description: The token was denied successfully.
+        401:
+          description: Unauthorized
+          schema: {} 
   /session/{session_id}:
     post:
       description: access the specified session
