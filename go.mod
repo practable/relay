@@ -1,6 +1,6 @@
 module github.com/practable/relay
 
-go 1.17
+go 1.16
 
 require (
 	github.com/client9/reopen v1.0.0
@@ -68,3 +68,5 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace golang.org/x/sys => golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
