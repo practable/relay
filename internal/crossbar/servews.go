@@ -8,9 +8,9 @@ import (
 
 	"github.com/eclesh/welford"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // ConnectionType represents whether the connection is session, shell, or unsupported
@@ -121,6 +121,12 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// we must check the booking is not denied here, else a user could request access, get a code, cancel booking, then use code to start a connection
+	if config.DenyStore.IsDenied(token.BookingID) {
+		log.WithFields(log.Fields{"topic": topic, "bookingID": token.BookingID}).Warning("BookingID is deny listed")
+		return
+	}
+
 	// check permissions
 
 	var canRead, canWrite bool
@@ -140,10 +146,17 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 	}
 
 	cancelled := make(chan struct{})
-
-	// cancel the connection when the token has expired
+	denied := make(chan struct{})
+	// cancel the connection when the token has expired or when session is curtailed
 	go func() {
-		time.Sleep(time.Duration(ttl) * time.Second)
+
+		select {
+		case <-time.After(time.Duration(ttl) * time.Second):
+			log.WithField("topic", topic).Trace("Token Expired")
+		case <-denied:
+			log.WithField("topic", topic).Info("Token Denied")
+		}
+
 		close(cancelled)
 	}()
 
@@ -154,7 +167,10 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
 
 		client := &Client{hub: hub,
+			bookingID:  token.BookingID,
 			conn:       conn,
+			denied:     denied,
+			expiresAt:  (*token.ExpiresAt).Unix(),
 			send:       make(chan message, 256),
 			topic:      topic,
 			stats:      stats,

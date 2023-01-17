@@ -15,12 +15,13 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/phayes/freeport"
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
+	"github.com/practable/relay/internal/deny"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
 	"github.com/practable/relay/internal/ttlcode"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 // NOTE don't use reconws.Reconnect for production clients anymore;
@@ -55,6 +56,7 @@ func TestCrossbar(t *testing.T) {
 
 	// setup crossbar on local (free) port
 	closed := make(chan struct{})
+	denied := make(chan string)
 	var wg sync.WaitGroup
 
 	port, err := freeport.GetFreePort()
@@ -65,15 +67,18 @@ func TestCrossbar(t *testing.T) {
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
 	secret := "somesecret"
 	cs := ttlcode.NewDefaultCodeStore()
+	ds := deny.New()
+
 	config := Config{
 		Listen:    port,
 		Audience:  audience,
 		CodeStore: cs,
+		DenyStore: ds,
 		Secret:    secret,
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go Crossbar(config, closed, denied, &wg)
 	// safety margin to get crossbar running
 	time.Sleep(time.Second)
 
@@ -436,6 +441,7 @@ func BenchmarkSmallMessage(b *testing.B) {
 
 	// setup crossbar on local (free) port
 	closed := make(chan struct{})
+	denied := make(chan string)
 	var wg sync.WaitGroup
 
 	port, err := freeport.GetFreePort()
@@ -445,14 +451,17 @@ func BenchmarkSmallMessage(b *testing.B) {
 
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
 	cs := ttlcode.NewDefaultCodeStore()
+	ds := deny.New()
+
 	config := Config{
 		Listen:    port,
 		Audience:  audience,
 		CodeStore: cs,
+		DenyStore: ds,
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go Crossbar(config, closed, denied, &wg)
 
 	var timeout = 5 * time.Millisecond
 
@@ -541,6 +550,7 @@ func BenchmarkLargeMessage(b *testing.B) {
 
 	// setup crossbar on local (free) port
 	closed := make(chan struct{})
+	denied := make(chan string)
 	var wg sync.WaitGroup
 
 	port, err := freeport.GetFreePort()
@@ -550,14 +560,17 @@ func BenchmarkLargeMessage(b *testing.B) {
 
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
 	cs := ttlcode.NewDefaultCodeStore()
+	ds := deny.New()
+
 	config := Config{
 		Listen:    port,
 		Audience:  audience,
 		CodeStore: cs,
+		DenyStore: ds,
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go Crossbar(config, closed, denied, &wg)
 
 	var timeout = 5 * time.Millisecond
 
@@ -666,6 +679,7 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 	// setup crossbar on local (free) port
 	closed := make(chan struct{})
+	denied := make(chan string)
 	var wg sync.WaitGroup
 
 	port, err := freeport.GetFreePort()
@@ -675,14 +689,17 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
 	cs := ttlcode.NewDefaultCodeStore()
+	ds := deny.New()
+
 	config := Config{
 		Listen:    port,
 		Audience:  audience,
 		CodeStore: cs,
+		DenyStore: ds,
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go Crossbar(config, closed, denied, &wg)
 
 	var timeout = 5 * time.Millisecond
 

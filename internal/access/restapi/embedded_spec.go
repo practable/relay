@@ -29,18 +29,164 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "API for accessing github.com/timdrysdale/crossbar websocket relay",
-    "title": "Crossbar",
+    "description": "API for accessing github.com/practable/relay websocket relay. Note scheme http and host localhost due to running behind proxy",
+    "title": "RelayAccess",
     "contact": {
       "name": "Timothy Drysdale",
       "url": "https://github.com/timdrysdale",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.3"
+    "version": "0.4"
   },
   "host": "localhost",
   "basePath": "/",
   "paths": {
+    "/bids/allow": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all currently-allowed bids",
+        "operationId": "listAllowed",
+        "responses": {
+          "200": {
+            "description": "Current or recently in-use allowed bids",
+            "schema": {
+              "$ref": "#/definitions/BookingIDs"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Undo the denial of a booking id",
+        "consumes": [
+          "application/json"
+        ],
+        "summary": "Undo the denial of a booking id",
+        "operationId": "allow",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "bid",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "exp",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The bid was allowed successfully."
+          },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/bids/deny": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all currently-denied bids",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all currently-denied bids",
+        "operationId": "listDenied",
+        "responses": {
+          "200": {
+            "description": "List of current denied bids",
+            "schema": {
+              "$ref": "#/definitions/BookingIDs"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Refuse sessions to new connections using tokens with the bid (booking id), and disconnect any current sessions immediately. The exp term is the unix time in UTC when the booking finishes (i.e. the earliest time it is safe to remove the bid from the deny list)",
+        "consumes": [
+          "application/json"
+        ],
+        "summary": "Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.",
+        "operationId": "deny",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "bid",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "exp",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The bid was denied successfully."
+          },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/session/{session_id}": {
       "post": {
         "security": [
@@ -65,6 +211,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "type": "object",
               "properties": {
@@ -79,10 +226,49 @@ func init() {
               }
             }
           },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "schema": {}
           }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "BookingIDs": {
+      "type": "object",
+      "title": "Set of booking IDs (bids)",
+      "required": [
+        "booking_ids"
+      ],
+      "properties": {
+        "booking_ids": {
+          "description": "list bids in string format",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
         }
       }
     }
@@ -107,18 +293,164 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "API for accessing github.com/timdrysdale/crossbar websocket relay",
-    "title": "Crossbar",
+    "description": "API for accessing github.com/practable/relay websocket relay. Note scheme http and host localhost due to running behind proxy",
+    "title": "RelayAccess",
     "contact": {
       "name": "Timothy Drysdale",
       "url": "https://github.com/timdrysdale",
       "email": "timothy.d.drysdale@gmail.com"
     },
-    "version": "0.3"
+    "version": "0.4"
   },
   "host": "localhost",
   "basePath": "/",
   "paths": {
+    "/bids/allow": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all currently-allowed bids",
+        "operationId": "listAllowed",
+        "responses": {
+          "200": {
+            "description": "Current or recently in-use allowed bids",
+            "schema": {
+              "$ref": "#/definitions/BookingIDs"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Undo the denial of a booking id",
+        "consumes": [
+          "application/json"
+        ],
+        "summary": "Undo the denial of a booking id",
+        "operationId": "allow",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "bid",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "exp",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The bid was allowed successfully."
+          },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/bids/deny": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all currently-denied bids",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all currently-denied bids",
+        "operationId": "listDenied",
+        "responses": {
+          "200": {
+            "description": "List of current denied bids",
+            "schema": {
+              "$ref": "#/definitions/BookingIDs"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Refuse sessions to new connections using tokens with the bid (booking id), and disconnect any current sessions immediately. The exp term is the unix time in UTC when the booking finishes (i.e. the earliest time it is safe to remove the bid from the deny list)",
+        "consumes": [
+          "application/json"
+        ],
+        "summary": "Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.",
+        "operationId": "deny",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "bid",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "exp",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The bid was denied successfully."
+          },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/session/{session_id}": {
       "post": {
         "security": [
@@ -143,6 +475,7 @@ func init() {
         ],
         "responses": {
           "200": {
+            "description": "",
             "schema": {
               "type": "object",
               "properties": {
@@ -157,10 +490,49 @@ func init() {
               }
             }
           },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "schema": {}
           }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "BookingIDs": {
+      "type": "object",
+      "title": "Set of booking IDs (bids)",
+      "required": [
+        "booking_ids"
+      ],
+      "properties": {
+        "booking_ids": {
+          "description": "list bids in string format",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
         }
       }
     }

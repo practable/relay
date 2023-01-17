@@ -9,6 +9,8 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime"
+
+	"github.com/practable/relay/internal/access/models"
 )
 
 // SessionOKCode is the HTTP code returned for type SessionOK
@@ -47,6 +49,50 @@ func (o *SessionOK) SetPayload(payload *SessionOKBody) {
 func (o *SessionOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+// SessionBadRequestCode is the HTTP code returned for type SessionBadRequest
+const SessionBadRequestCode int = 400
+
+/*SessionBadRequest BadRequest
+
+swagger:response sessionBadRequest
+*/
+type SessionBadRequest struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Error `json:"body,omitempty"`
+}
+
+// NewSessionBadRequest creates SessionBadRequest with default headers values
+func NewSessionBadRequest() *SessionBadRequest {
+
+	return &SessionBadRequest{}
+}
+
+// WithPayload adds the payload to the session bad request response
+func (o *SessionBadRequest) WithPayload(payload *models.Error) *SessionBadRequest {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the session bad request response
+func (o *SessionBadRequest) SetPayload(payload *models.Error) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *SessionBadRequest) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(400)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

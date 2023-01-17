@@ -85,9 +85,17 @@ func TestRun(t *testing.T) {
 	secret := "testsecret"
 
 	wg.Add(1)
-
+	config := relay.Config{
+		AccessPort:       accessPort,
+		RelayPort:        relayPort,
+		Audience:         audience,
+		Secret:           secret,
+		Target:           target,
+		AllowNoBookingID: true,
+		PruneEvery:       time.Duration(time.Minute),
+	}
 	go func() {
-		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
+		go relay.Relay(closed, &wg, config)
 	}()
 
 	// We can't start, stop and restart the relay.Relay without causing mux issues due to net/http
