@@ -341,7 +341,32 @@ func TestRelay(t *testing.T) {
 	<-testdone
 
 	cancel()
+
 	// Try to remake a connection, must fail
+	start = jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after5 = jwt.NewNumericDate(time.Now().Add(5 * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after5
+	claims.BookingID = "bid0"
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	bearer, err = token.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+	bodyStr := string([]byte(body))
+	expStr := `{"code":"400","message":"bookingID has been deny-listed, probably because the session was cancelled"}` + "\n"
+
+	if expStr == bodyStr {
+		t.Logf("TestDeniedBookingIDCannotConnect...PASS")
+	} else {
+		assert.Equal(t, expStr, bodyStr)
+	}
 
 	// teardown relay
 
