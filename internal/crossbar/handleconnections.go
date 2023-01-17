@@ -53,13 +53,23 @@ func fpsFromNs(ns float64) float64 {
 	return 1 / (ns * 1e-9)
 }
 
-func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, messagesFromMe chan message, config Config) {
+func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, messagesFromMe chan message, deny chan string, config Config) {
+
+	dcs := chanmap.New() // this is where the denied channels are stored, so we can close them if we get deny requests
+
+	go func() {
+		for {
+			select {
+			case <-closed:
+				break
+			case bid := <-deny:
+				dcs.DeleteAndCloseParent(bid) //close all connections with this booking id
+			}
+		}
+	}()
+
 	hub := newHub()
-
-	dcs := chanmap.New()
-
 	hub.SetDenyChannelStore(dcs)
-
 	go hub.run()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -28,6 +28,8 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 
 	var wg sync.WaitGroup
 
+	denied := make(chan string, 64)
+
 	cs := ttlcode.NewDefaultCodeStore()
 	ds := deny.New()
 
@@ -52,7 +54,7 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 	}
 
 	wg.Add(1)
-	go crossbar.Crossbar(crossbarConfig, closed, &wg)
+	go crossbar.Crossbar(crossbarConfig, closed, denied, &wg)
 
 	wg.Add(1)
 
@@ -60,6 +62,7 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 		AllowNoBookingID: config.AllowNoBookingID,
 		CodeStore:        cs,
 		DenyStore:        ds,
+		DenyChannel:      denied,
 		Host:             config.Audience,
 		Port:             config.AccessPort,
 		Secret:           config.Secret,

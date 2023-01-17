@@ -56,6 +56,7 @@ func TestCrossbar(t *testing.T) {
 
 	// setup crossbar on local (free) port
 	closed := make(chan struct{})
+	denied := make(chan string)
 	var wg sync.WaitGroup
 
 	port, err := freeport.GetFreePort()
@@ -77,7 +78,7 @@ func TestCrossbar(t *testing.T) {
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go Crossbar(config, closed, denied, &wg)
 	// safety margin to get crossbar running
 	time.Sleep(time.Second)
 
@@ -440,6 +441,7 @@ func BenchmarkSmallMessage(b *testing.B) {
 
 	// setup crossbar on local (free) port
 	closed := make(chan struct{})
+	denied := make(chan string)
 	var wg sync.WaitGroup
 
 	port, err := freeport.GetFreePort()
@@ -459,7 +461,7 @@ func BenchmarkSmallMessage(b *testing.B) {
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go Crossbar(config, closed, denied, &wg)
 
 	var timeout = 5 * time.Millisecond
 
@@ -548,6 +550,7 @@ func BenchmarkLargeMessage(b *testing.B) {
 
 	// setup crossbar on local (free) port
 	closed := make(chan struct{})
+	denied := make(chan string)
 	var wg sync.WaitGroup
 
 	port, err := freeport.GetFreePort()
@@ -567,7 +570,7 @@ func BenchmarkLargeMessage(b *testing.B) {
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go Crossbar(config, closed, denied, &wg)
 
 	var timeout = 5 * time.Millisecond
 
@@ -676,6 +679,7 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 	// setup crossbar on local (free) port
 	closed := make(chan struct{})
+	denied := make(chan string)
 	var wg sync.WaitGroup
 
 	port, err := freeport.GetFreePort()
@@ -695,7 +699,7 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 	}
 
 	wg.Add(1)
-	go Crossbar(config, closed, &wg)
+	go Crossbar(config, closed, denied, &wg)
 
 	var timeout = 5 * time.Millisecond
 

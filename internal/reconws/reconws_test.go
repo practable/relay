@@ -115,7 +115,16 @@ func TestReconnectAuth(t *testing.T) {
 	startTime := time.Now().Unix()
 	go func() {
 		time.Sleep(2 * time.Second)
-		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
+		config := relay.Config{
+			AccessPort:       accessPort,
+			RelayPort:        relayPort,
+			Audience:         audience,
+			Secret:           secret,
+			Target:           target,
+			AllowNoBookingID: true,
+			PruneEvery:       time.Duration(time.Minute),
+		}
+		go relay.Relay(closed, &wg, config)
 	}()
 
 	// We can't start, stop and restart the relay.Relay without causing mux issues due to net/http

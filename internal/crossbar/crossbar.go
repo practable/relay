@@ -6,7 +6,7 @@ import (
 )
 
 // Crossbar creates and runs a new crossbar instance
-func Crossbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
+func Crossbar(config Config, closed <-chan struct{}, denied chan string, parentwg *sync.WaitGroup) {
 
 	var wg sync.WaitGroup
 
@@ -18,7 +18,7 @@ func Crossbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
 
 	wg.Add(1)
 
-	go handleConnections(closed, &wg, messagesToDistribute, config)
+	go handleConnections(closed, &wg, messagesToDistribute, denied, config)
 
 	wg.Wait()
 

@@ -63,7 +63,7 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 			h.mu.Unlock()
-			err := h.dcs.Delete(client.name)
+			err := h.dcs.DeleteChild(client.name) // no need to close, not denied
 			if err != nil {
 				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "booking_id": client.bookingID}).Warning("deny channel not deleted on client unregister")
 			}

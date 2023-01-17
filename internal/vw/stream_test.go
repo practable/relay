@@ -20,14 +20,14 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 	"github.com/phayes/freeport"
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/practable/relay/internal/agg"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
 	"github.com/practable/relay/internal/relay"
 	"github.com/practable/relay/internal/rwc"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStreamUsingInternals(t *testing.T) {
@@ -332,9 +332,17 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
+	config := relay.Config{
+		AccessPort:       accessPort,
+		RelayPort:        relayPort,
+		Audience:         audience,
+		Secret:           secret,
+		Target:           target,
+		AllowNoBookingID: true,
+		PruneEvery:       time.Duration(time.Minute),
+	}
+	go relay.Relay(closed, &wg, config)
 
-	//go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
 	go Stream()
 
 	time.Sleep(time.Second) // big safety margin to get crossbar running
