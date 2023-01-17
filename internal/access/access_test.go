@@ -336,6 +336,78 @@ func TestDeny(t *testing.T) {
 
 	// check the deny channel got the right messages
 	assert.Equal(t, de, denied)
+
+	// Undo the earlier denial
+	req, err = http.NewRequest("POST", audience+"/bids/allow", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	q = req.URL.Query()
+	q.Add("bid", "another-bid")
+	q.Add("exp", strconv.Itoa(int(time.Now().Unix()+5)))
+	req.URL.RawQuery = q.Encode()
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+
+	// Try getting a connection now we're allowed again - should succeed
+	claims.BookingID = "another-bid"
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	bearer, err = token.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+	err = json.Unmarshal(body, &p)
+	assert.NoError(t, err)
+	expected = "wss://relay.example.io/session/123?code="
+	assert.Equal(t, expected, p.URI[0:len(expected)])
+
+	// Get the AllowedList
+	req, err = http.NewRequest("GET", audience+"/bids/allow", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	body, _ = ioutil.ReadAll(resp.Body)
+	err = json.Unmarshal(body, &db)
+	assert.NoError(t, err)
+
+	ae = []string{"some-bid", "another-bid"}
+
+	// results could come in any order so make a map
+	aem := make(map[string]bool)
+	aam := make(map[string]bool)
+
+	for _, v := range ae {
+		aem[v] = true
+	}
+	for _, v := range db.BookingIds {
+		aam[v] = true
+	}
+
+	assert.Equal(t, aem, aam)
+
+	// Get the DeniedList
+	req, err = http.NewRequest("GET", audience+"/bids/deny", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &db)
+	assert.NoError(t, err)
+
+	de = []string{}
+	assert.Equal(t, de, db.BookingIds)
+
 	// End tests
 	close(closed)
 	wg.Wait()
