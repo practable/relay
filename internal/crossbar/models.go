@@ -6,6 +6,7 @@ import (
 
 	"github.com/eclesh/welford"
 	"github.com/gorilla/websocket"
+	"github.com/practable/relay/internal/deny"
 	"github.com/practable/relay/internal/ttlcode"
 )
 
@@ -24,6 +25,9 @@ type Config struct {
 
 	// ExchangeCode swaps a code for the associated Token
 	CodeStore *ttlcode.CodeStore
+
+	//DenyStore holds deny-listed bookingIDs
+	DenyStore *deny.Store
 }
 
 // NewDefaultConfig returns a pointer to a Config struct with default parameters
@@ -55,6 +59,15 @@ func (c *Config) WithCodeStoreTTL(ttl int64) *Config {
 
 // Client is a middleperson between the websocket connection and the hub.
 type Client struct {
+
+	// bookingID from the token
+	bookingID string
+
+	// hub closes this channel if connection is curtailed
+	denied chan struct{}
+
+	expiresAt int64
+
 	hub *Hub
 
 	// The websocket connection.
