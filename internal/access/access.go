@@ -9,11 +9,11 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/security"
 	"github.com/golang-jwt/jwt/v4"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/access/restapi"
 	"github.com/practable/relay/internal/access/restapi/operations"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/ttlcode"
+	log "github.com/sirupsen/logrus"
 )
 
 // API starts the API
@@ -26,7 +26,7 @@ import (
 // @secret- HMAC shared secret which incoming tokens will be signed with
 // @cs - pointer to the CodeStore this API shares with the crossbar websocket relay
 // @options - for future backwards compatibility (no options currently available)
-func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore) {
+func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore, allowNoBid bool) {
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {

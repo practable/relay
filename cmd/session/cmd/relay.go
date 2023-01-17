@@ -23,8 +23,8 @@ import (
 	"os/signal"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/relay"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,6 +48,7 @@ variables, for example:
 
 export RELAY_ACCESSPORT=10002
 export RELAY_ACCESSFQDN=https://access.example.io
+export RELAY_ALLOWNOBID=true
 export RELAY_RELAYPORT=10003
 export RELAY_RELAYFQDN=wss://relay-access.example.io
 export RELAY_SECRET=somesecret
@@ -63,6 +64,7 @@ shell relay
 		viper.SetDefault("relayport", 8083)
 
 		accessPort := viper.GetInt("accessport")
+		allowNoBid := viper.GetBool("allnobid")
 		relayPort := viper.GetInt("relayport")
 		development := viper.GetBool("development")
 		secret := viper.GetString("secret")
@@ -72,7 +74,7 @@ shell relay
 		if development {
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
-			fmt.Printf("Access port: %d for %s\nRelay port: %d for %s\n", accessPort, accessFQDN, relayPort, relayFQDN)
+			fmt.Printf("Access port: %d for %s\nRelay port: %d for %s\n; no bid allowed: %t", accessPort, accessFQDN, relayPort, relayFQDN, allowNoBid)
 			log.SetFormatter(&log.TextFormatter{})
 			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)
@@ -106,7 +108,7 @@ shell relay
 
 		wg.Add(1)
 
-		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
+		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target, allowNoBid)
 
 		wg.Wait()
 
