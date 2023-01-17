@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/practable/relay/internal/chanmap"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -52,8 +53,13 @@ func fpsFromNs(ns float64) float64 {
 	return 1 / (ns * 1e-9)
 }
 
-func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, clientActionsChan chan clientAction, messagesFromMe chan message, config Config) {
+func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, messagesFromMe chan message, config Config) {
 	hub := newHub()
+
+	dcs := chanmap.New()
+
+	hub.SetDenyChannelStore(dcs)
+
 	go hub.run()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

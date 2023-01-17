@@ -1,12 +1,20 @@
 package crossbar
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/practable/relay/internal/chanmap"
+	log "github.com/sirupsen/logrus"
+)
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
 	// Registered clients.
 	clients map[string]map[*Client]bool
+
+	// deny channel store
+	dcs *chanmap.Store
 
 	mu *sync.RWMutex
 
@@ -30,6 +38,10 @@ func newHub() *Hub {
 	}
 }
 
+func (h *Hub) SetDenyChannelStore(dcs *chanmap.Store) {
+	h.dcs = dcs
+}
+
 func (h *Hub) run() {
 	for {
 		select {
@@ -40,6 +52,10 @@ func (h *Hub) run() {
 			}
 			h.clients[client.topic][client] = true
 			h.mu.Unlock()
+			err := h.dcs.Add(client.bookingID, client.name, client.denied)
+			if err != nil {
+				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "booking_id": client.bookingID}).Warning("deny channel not added on client register")
+			}
 		case client := <-h.unregister:
 			h.mu.Lock()
 			if _, ok := h.clients[client.topic]; ok {
@@ -47,6 +63,10 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 			h.mu.Unlock()
+			err := h.dcs.Delete(client.name)
+			if err != nil {
+				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "booking_id": client.bookingID}).Warning("deny channel not deleted on client unregister")
+			}
 		case message := <-h.broadcast:
 			h.mu.RLock()
 			topic := message.sender.topic

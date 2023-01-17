@@ -16,15 +16,9 @@ func Crossbar(config Config, closed <-chan struct{}, parentwg *sync.WaitGroup) {
 
 	topics.directory = make(map[string][]clientDetails)
 
-	clientActionsChan := make(chan clientAction)
+	wg.Add(1)
 
-	wg.Add(2)
-
-	go handleConnections(closed, &wg, clientActionsChan, messagesToDistribute, config)
-
-	go handleClients(closed, &wg, &topics, clientActionsChan)
-
-	//go access.API(closed, &wg, config.ApiPort, config.ApiHost, config.ApiSecret, *access.DefaultOptions())
+	go handleConnections(closed, &wg, messagesToDistribute, config)
 
 	wg.Wait()
 
