@@ -8,8 +8,8 @@ import (
 type Store struct {
 	*sync.Mutex
 
-	// ChildByParent holds a map of child channels
-	ChildByParent map[string]map[string]chan struct{}
+	// ChildrenByParent holds a map of child channels
+	ChildrenByParent map[string]map[string]chan struct{}
 	// ParentByChild helps us delete efficiently, by telling us which parent map the child is in
 	ParentByChild map[string]string
 }
@@ -40,15 +40,15 @@ func (s *Store) Add(parent, child string, ch chan struct{}) error {
 		return errors.New("no channel")
 	}
 
-	if _, ok := s.ChildByParent[parent]; !ok {
-		s.ChildByParent[parent] = make(map[string]chan struct{})
+	if _, ok := s.ChildrenByParent[parent]; !ok {
+		s.ChildrenByParent[parent] = make(map[string]chan struct{})
 	}
 
-	p := s.ChildByParent[parent]
+	p := s.ChildrenByParent[parent]
 
 	p[child] = ch
 
-	s.ChildByParent[parent] = p
+	s.ChildrenByParent[parent] = p
 
 	s.ParentByChild[child] = parent
 
@@ -56,47 +56,88 @@ func (s *Store) Add(parent, child string, ch chan struct{}) error {
 }
 
 // Delete deletes the child, without closing the channel
-func (s *Store) Delete(child string) error {
+func (s *Store) DeleteChild(child string) error {
 	s.Lock()
 	defer s.Unlock()
 
-	return s.deleteAndOptionalClose(child, false)
+	return s.deleteAndOptionalCloseChild(child, false)
 
 }
 
 // DeleteAndClose closes the child's channel and deletes it
 // this approach ensures the channel cannot be closed twice
-func (s *Store) DeleteAndClose(child string) error {
+func (s *Store) DeleteAndCloseChild(child string) error {
 	s.Lock()
 	defer s.Unlock()
 
-	return s.deleteAndOptionalClose(child, true)
+	return s.deleteAndOptionalCloseChild(child, true)
 
 }
 
 // deleteAndOptionalClose is for internal use only by functions holding the lock already
-func (s *Store) deleteAndOptionalClose(child string, closeChannel bool) error {
+func (s *Store) deleteAndOptionalCloseChild(child string, closeChannel bool) error {
 
 	if child == "" {
-		return errors.New("must have a non-zero length string for child")
+		return errors.New("no child")
 	}
 
 	// if child not in map, no error - already gone
 	if parent, ok := s.ParentByChild[child]; ok {
 
-		p := s.ChildByParent[parent]
+		children := s.ChildrenByParent[parent]
 
-		if ch, ok := p[child]; ok {
+		if ch, ok := children[child]; ok {
 
 			if closeChannel {
 				close(ch)
 			}
-			delete(p, child)
+			delete(children, child)
 		}
 
-		s.ChildByParent[parent] = p
+		s.ChildrenByParent[parent] = children
 
 		delete(s.ParentByChild, child)
+	}
+
+	return nil
+
+}
+
+// DeleteParent deletes the parent, and all its children, without closing the children's channels
+func (s *Store) DeleteParent(parent string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	return s.deleteAndOptionalCloseParent(parent, false)
+
+}
+
+// DeleteParent deletes the parent, and all its children, closing the children's channels
+func (s *Store) DeleteAndCloseParent(parent string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	return s.deleteAndOptionalCloseParent(parent, true)
+
+}
+
+// deleteAndOptionalCloseParent is for internal use only by functions holding the lock already
+func (s *Store) deleteAndOptionalCloseParent(parent string, closeChannel bool) error {
+
+	if parent == "" {
+		return errors.New("no parent")
+	}
+
+	// if parent not in map, no error - already gone
+	if children, ok := s.ChildrenByParent[parent]; ok {
+
+		for _, ch := range children {
+			if closeChannel {
+				close(ch)
+			}
+		}
+
+		delete(s.ChildrenByParent, parent)
 	}
 
 	return nil
