@@ -15,6 +15,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
 	"github.com/practable/relay/internal/access/restapi/operations"
+	"github.com/practable/relay/internal/deny"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/ttlcode"
 	"github.com/sirupsen/logrus"
@@ -61,7 +62,8 @@ func TestAPI(t *testing.T) {
 	wg.Add(1)
 
 	allowNoBookingID := true //backwards compatible test
-	go API(closed, &wg, port, audience, secret, target, cs, allowNoBookingID)
+	ds := deny.New()
+	go API(closed, &wg, port, audience, secret, target, cs, ds, allowNoBookingID)
 
 	time.Sleep(100 * time.Millisecond)
 

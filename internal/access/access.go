@@ -12,6 +12,7 @@ import (
 	"github.com/practable/relay/internal/access/models"
 	"github.com/practable/relay/internal/access/restapi"
 	"github.com/practable/relay/internal/access/restapi/operations"
+	"github.com/practable/relay/internal/deny"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/ttlcode"
 	log "github.com/sirupsen/logrus"
@@ -26,8 +27,11 @@ import (
 // @target - FQDN of the relay instance e.g. wss://relay.practable.io
 // @secret- HMAC shared secret which incoming tokens will be signed with
 // @cs - pointer to the CodeStore this API shares with the crossbar websocket relay
+// @ds - pointer to the Deny list
+// allowNoBookingID - whether to accept tokens without bookingID (set to yes to be backwards compatible)
 // @options - for future backwards compatibility (no options currently available)
-func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore, allowNoBookingID bool) {
+// TODO put these options in a config struct
+func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore, ds *deny.Store, allowNoBookingID bool) {
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {
@@ -80,6 +84,15 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 				c := "400"
 				m := "empty bookingID field is not permitted"
 				return operations.NewSessionBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
+			}
+
+			if ds.IsDenied(claims.BookingID) {
+				c := "400"
+				m := "bookingID has been deny-listed, probably because the session was cancelled"
+				return operations.NewSessionBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
+			} else {
+				// track bookingIDs for which we have received connection requests
+				ds.Allow(claims.BookingID, claims.ExpiresAt.Unix())
 			}
 
 			// TODO - have the scopes been checked already?
