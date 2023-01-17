@@ -10,7 +10,7 @@ import (
 )
 
 // Relay runs a websocket relay
-func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPort int, audience, secret, target string, allowNoBid bool) {
+func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPort int, audience, secret, target string, allowNoBookingID bool) {
 
 	var wg sync.WaitGroup
 
@@ -26,7 +26,7 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, accessPort, relayPo
 	go crossbar.Crossbar(config, closed, &wg)
 
 	wg.Add(1)
-	go access.API(closed, &wg, accessPort, audience, secret, target, cs, allowNoBid)
+	go access.API(closed, &wg, accessPort, audience, secret, target, cs, allowNoBookingID)
 
 	wg.Wait()
 	parentwg.Done()

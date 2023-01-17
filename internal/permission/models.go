@@ -16,6 +16,11 @@ import (
 // Token represents a JWT token
 type Token struct {
 
+	// BookingID represents the booking id/name that the token has been generated
+	// for, so that connections can be dropped / denied if a booked session
+	// is cancelled
+	BookingID string `json:"bookingID"`
+
 	// Topic identifies the communication channel;
 	// think of it as a session_id, or room (webrtc)
 	// Don't reuse standard claim Subject as that is for a
@@ -58,6 +63,11 @@ func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf,
 			Audience:  []string{audience},
 		},
 	}
+}
+
+// SetBookingID sets the bookingID (so that connections can be cancelled if a booking is cancelled)
+func (t *Token) SetBookingID(bookingID string) {
+	t.BookingID = bookingID
 }
 
 // SetTopicSalt sets the salt for token topic

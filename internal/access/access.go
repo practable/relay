@@ -26,7 +26,7 @@ import (
 // @secret- HMAC shared secret which incoming tokens will be signed with
 // @cs - pointer to the CodeStore this API shares with the crossbar websocket relay
 // @options - for future backwards compatibility (no options currently available)
-func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore, allowNoBid bool) {
+func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, target string, cs *ttlcode.CodeStore, allowNoBookingID bool) {
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {
@@ -75,6 +75,10 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 				return operations.NewSessionUnauthorized().WithPayload("Token Wrong Topic")
 			}
 
+			if claims.BookingID == "" && !allowNoBookingID { //bid is empty
+
+			}
+
 			// TODO - have the scopes been checked already?
 
 			pt := permission.NewToken(
@@ -86,6 +90,8 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 				claims.NotBefore.Unix(),
 				claims.ExpiresAt.Unix(),
 			)
+
+			pt.SetBookingID(claims.BookingID)
 
 			code := cs.SubmitToken(pt)
 
