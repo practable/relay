@@ -61,9 +61,19 @@ func TestAPI(t *testing.T) {
 
 	wg.Add(1)
 
-	allowNoBookingID := true //backwards compatible test
 	ds := deny.New()
-	go API(closed, &wg, port, audience, secret, target, cs, ds, allowNoBookingID)
+
+	config := Config{
+		AllowNoBookingID: true, //backwards compatible test
+		CodeStore:        cs,
+		DenyStore:        ds,
+		Host:             audience,
+		Port:             port,
+		Secret:           secret,
+		Target:           target,
+	}
+
+	go API(closed, &wg, config) //port, audience, secret, target, cs, ds, allowNoBookingID)
 
 	time.Sleep(100 * time.Millisecond)
 
