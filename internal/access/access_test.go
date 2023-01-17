@@ -14,12 +14,12 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/practable/relay/internal/access/restapi/operations"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/ttlcode"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetPrefixFromPath(t *testing.T) {
@@ -60,7 +60,8 @@ func TestAPI(t *testing.T) {
 
 	wg.Add(1)
 
-	go API(closed, &wg, port, audience, secret, target, cs)
+	allowNoBookingID := true //backwards compatible test
+	go API(closed, &wg, port, audience, secret, target, cs, allowNoBookingID)
 
 	time.Sleep(100 * time.Millisecond)
 

@@ -41,7 +41,7 @@ type DenyParams struct {
 	/*
 	  In: body
 	*/
-	Bids *models.Bids
+	Bids *models.BookingIDs
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -62,7 +62,7 @@ func (o *DenyParams) BindRequest(r *http.Request, route *middleware.MatchedRoute
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.Bids
+		var body models.BookingIDs
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			res = append(res, errors.NewParseError("bids", "body", "", err))
 		} else {

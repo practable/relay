@@ -36,7 +36,7 @@ paths:
         200:
           description: Current or recently in-use allowed bids
           schema:
-            $ref: '#/definitions/Bids'
+            $ref: '#/definitions/BookingIDs'
         401:
           description: Unauthorized
           schema: {}
@@ -54,7 +54,7 @@ paths:
         200:
           description: List of current denied bids
           schema:
-            $ref: '#/definitions/Bids'
+            $ref: '#/definitions/BookingIDs'
         401:
           description: Unauthorized
           schema: {}  
@@ -73,7 +73,7 @@ paths:
         - name: bids
           in: body
           schema:
-            $ref: '#/definitions/Bids'
+            $ref: '#/definitions/BookingIDs'
       security:
         - Bearer: []  
       responses:
@@ -111,19 +111,35 @@ paths:
           examples:
             text/plain: {"code":"b142eb22-1f16-4af1-ba14-e70a7afcbcc2"}
           headers: {}
+        400:
+          description: BadRequest
+          schema:
+             $ref: '#/definitions/Error'
         401:
           description: Unauthorized
           schema: {}
-          
+       
 definitions:
-  Bids:
+  BookingIDs:
     title: Set of booking IDs (bids)
     type: object
     properties:
-      bids:
+      booking_ids:
         description: list bids in string format
         type: array
         items:
           type: string
     required:
-    - bids
+    - booking_ids
+    
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    required:
+      - code
+      - message
+ 

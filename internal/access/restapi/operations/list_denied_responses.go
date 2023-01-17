@@ -25,7 +25,7 @@ type ListDeniedOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.Bids `json:"body,omitempty"`
+	Payload *models.BookingIDs `json:"body,omitempty"`
 }
 
 // NewListDeniedOK creates ListDeniedOK with default headers values
@@ -35,13 +35,13 @@ func NewListDeniedOK() *ListDeniedOK {
 }
 
 // WithPayload adds the payload to the list denied o k response
-func (o *ListDeniedOK) WithPayload(payload *models.Bids) *ListDeniedOK {
+func (o *ListDeniedOK) WithPayload(payload *models.BookingIDs) *ListDeniedOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the list denied o k response
-func (o *ListDeniedOK) SetPayload(payload *models.Bids) {
+func (o *ListDeniedOK) SetPayload(payload *models.BookingIDs) {
 	o.Payload = payload
 }
 

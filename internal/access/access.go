@@ -9,6 +9,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/security"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/practable/relay/internal/access/models"
 	"github.com/practable/relay/internal/access/restapi"
 	"github.com/practable/relay/internal/access/restapi/operations"
 	"github.com/practable/relay/internal/permission"
@@ -75,8 +76,10 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, port int, host, secret, tar
 				return operations.NewSessionUnauthorized().WithPayload("Token Wrong Topic")
 			}
 
-			if claims.BookingID == "" && !allowNoBookingID { //bid is empty
-
+			if claims.BookingID == "" && !allowNoBookingID { //if bookingID is empty, and this is not allowed
+				c := "400"
+				m := "empty bookingID field is not permitted"
+				return operations.NewSessionBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
 			}
 
 			// TODO - have the scopes been checked already?

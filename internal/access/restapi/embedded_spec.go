@@ -58,7 +58,7 @@ func init() {
           "200": {
             "description": "Current or recently in-use allowed bids",
             "schema": {
-              "$ref": "#/definitions/Bids"
+              "$ref": "#/definitions/BookingIDs"
             }
           },
           "401": {
@@ -85,7 +85,7 @@ func init() {
           "200": {
             "description": "List of current denied bids",
             "schema": {
-              "$ref": "#/definitions/Bids"
+              "$ref": "#/definitions/BookingIDs"
             }
           },
           "401": {
@@ -116,7 +116,7 @@ func init() {
             "name": "bids",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/Bids"
+              "$ref": "#/definitions/BookingIDs"
             }
           }
         ],
@@ -171,6 +171,12 @@ func init() {
               }
             }
           },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "schema": {}
@@ -180,19 +186,34 @@ func init() {
     }
   },
   "definitions": {
-    "Bids": {
+    "BookingIDs": {
       "type": "object",
       "title": "Set of booking IDs (bids)",
       "required": [
-        "bids"
+        "booking_ids"
       ],
       "properties": {
-        "bids": {
+        "booking_ids": {
           "description": "list bids in string format",
           "type": "array",
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
         }
       }
     }
@@ -246,7 +267,7 @@ func init() {
           "200": {
             "description": "Current or recently in-use allowed bids",
             "schema": {
-              "$ref": "#/definitions/Bids"
+              "$ref": "#/definitions/BookingIDs"
             }
           },
           "401": {
@@ -273,7 +294,7 @@ func init() {
           "200": {
             "description": "List of current denied bids",
             "schema": {
-              "$ref": "#/definitions/Bids"
+              "$ref": "#/definitions/BookingIDs"
             }
           },
           "401": {
@@ -304,7 +325,7 @@ func init() {
             "name": "bids",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/Bids"
+              "$ref": "#/definitions/BookingIDs"
             }
           }
         ],
@@ -359,6 +380,12 @@ func init() {
               }
             }
           },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "schema": {}
@@ -368,19 +395,34 @@ func init() {
     }
   },
   "definitions": {
-    "Bids": {
+    "BookingIDs": {
       "type": "object",
       "title": "Set of booking IDs (bids)",
       "required": [
-        "bids"
+        "booking_ids"
       ],
       "properties": {
-        "bids": {
+        "booking_ids": {
           "description": "list bids in string format",
           "type": "array",
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
         }
       }
     }

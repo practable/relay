@@ -25,7 +25,7 @@ type ListAllowedOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.Bids `json:"body,omitempty"`
+	Payload *models.BookingIDs `json:"body,omitempty"`
 }
 
 // NewListAllowedOK creates ListAllowedOK with default headers values
@@ -35,13 +35,13 @@ func NewListAllowedOK() *ListAllowedOK {
 }
 
 // WithPayload adds the payload to the list allowed o k response
-func (o *ListAllowedOK) WithPayload(payload *models.Bids) *ListAllowedOK {
+func (o *ListAllowedOK) WithPayload(payload *models.BookingIDs) *ListAllowedOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the list allowed o k response
-func (o *ListAllowedOK) SetPayload(payload *models.Bids) {
+func (o *ListAllowedOK) SetPayload(payload *models.BookingIDs) {
 	o.Payload = payload
 }
 
