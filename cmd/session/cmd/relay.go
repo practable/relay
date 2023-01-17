@@ -22,9 +22,10 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/relay"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,10 +49,12 @@ variables, for example:
 
 export RELAY_ACCESSPORT=10002
 export RELAY_ACCESSFQDN=https://access.example.io
+export RELAY_ALLOWNOBOOKINGID=true
 export RELAY_RELAYPORT=10003
 export RELAY_RELAYFQDN=wss://relay-access.example.io
 export RELAY_SECRET=somesecret
 export RELAY_DEVELOPMENT=true
+export RELAY_PRUNEEVERY=5m #optional, advanced tuning parameter for deny list maintenance
 shell relay
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -61,18 +64,28 @@ shell relay
 
 		viper.SetDefault("accessport", 8082)
 		viper.SetDefault("relayport", 8083)
+		viper.SetDefault("pruneevery", "5m")
 
 		accessPort := viper.GetInt("accessport")
+		allowNoBookingID := viper.GetBool("allnobookingid")
 		relayPort := viper.GetInt("relayport")
 		development := viper.GetBool("development")
 		secret := viper.GetString("secret")
 		accessFQDN := viper.GetString("accessfqdn")
 		relayFQDN := viper.GetString("relayfqdn")
+		pruneEveryStr := viper.GetString("pruneevery")
+
+		pruneEvery, err := time.ParseDuration(pruneEveryStr)
+
+		if err != nil {
+			fmt.Print("cannot parse duration in RELAY_PRUNEEVERY=" + pruneEveryStr)
+			os.Exit(1)
+		}
 
 		if development {
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
-			fmt.Printf("Access port: %d for %s\nRelay port: %d for %s\n", accessPort, accessFQDN, relayPort, relayFQDN)
+			fmt.Printf("Access port: %d for %s\nRelay port: %d for %s\n; no bid allowed: %t", accessPort, accessFQDN, relayPort, relayFQDN, allowNoBookingID)
 			log.SetFormatter(&log.TextFormatter{})
 			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)
@@ -106,7 +119,17 @@ shell relay
 
 		wg.Add(1)
 
-		go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
+		config := relay.Config{
+			AccessPort:       accessPort,
+			RelayPort:        relayPort,
+			Audience:         audience,
+			Secret:           secret,
+			Target:           target,
+			AllowNoBookingID: allowNoBookingID,
+			PruneEvery:       pruneEvery,
+		}
+
+		go relay.Relay(closed, &wg, config) //accessPort, relayPort, audience, secret, target, allowNoBookingID)
 
 		wg.Wait()
 

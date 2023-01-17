@@ -42,6 +42,18 @@ func NewAccessAPI(spec *loads.Document) *AccessAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		AllowHandler: AllowHandlerFunc(func(params AllowParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation Allow has not yet been implemented")
+		}),
+		DenyHandler: DenyHandlerFunc(func(params DenyParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation Deny has not yet been implemented")
+		}),
+		ListAllowedHandler: ListAllowedHandlerFunc(func(params ListAllowedParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation ListAllowed has not yet been implemented")
+		}),
+		ListDeniedHandler: ListDeniedHandlerFunc(func(params ListDeniedParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation ListDenied has not yet been implemented")
+		}),
 		SessionHandler: SessionHandlerFunc(func(params SessionParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation Session has not yet been implemented")
 		}),
@@ -55,7 +67,7 @@ func NewAccessAPI(spec *loads.Document) *AccessAPI {
 	}
 }
 
-/*AccessAPI API for accessing github.com/timdrysdale/crossbar websocket relay */
+/*AccessAPI API for accessing github.com/practable/relay websocket relay. Note scheme http and host localhost due to running behind proxy */
 type AccessAPI struct {
 	spec            *loads.Document
 	context         *middleware.Context
@@ -71,9 +83,11 @@ type AccessAPI struct {
 	// BasicAuthenticator generates a runtime.Authenticator from the supplied basic auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	BasicAuthenticator func(security.UserPassAuthentication) runtime.Authenticator
+
 	// APIKeyAuthenticator generates a runtime.Authenticator from the supplied token auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	APIKeyAuthenticator func(string, string, security.TokenAuthentication) runtime.Authenticator
+
 	// BearerAuthenticator generates a runtime.Authenticator from the supplied bearer token auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	BearerAuthenticator func(string, security.ScopedTokenAuthentication) runtime.Authenticator
@@ -93,8 +107,17 @@ type AccessAPI struct {
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
 
+	// AllowHandler sets the operation handler for the allow operation
+	AllowHandler AllowHandler
+	// DenyHandler sets the operation handler for the deny operation
+	DenyHandler DenyHandler
+	// ListAllowedHandler sets the operation handler for the list allowed operation
+	ListAllowedHandler ListAllowedHandler
+	// ListDeniedHandler sets the operation handler for the list denied operation
+	ListDeniedHandler ListDeniedHandler
 	// SessionHandler sets the operation handler for the session operation
 	SessionHandler SessionHandler
+
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
 	ServeError func(http.ResponseWriter, *http.Request, error)
@@ -175,6 +198,18 @@ func (o *AccessAPI) Validate() error {
 		unregistered = append(unregistered, "AuthorizationAuth")
 	}
 
+	if o.AllowHandler == nil {
+		unregistered = append(unregistered, "AllowHandler")
+	}
+	if o.DenyHandler == nil {
+		unregistered = append(unregistered, "DenyHandler")
+	}
+	if o.ListAllowedHandler == nil {
+		unregistered = append(unregistered, "ListAllowedHandler")
+	}
+	if o.ListDeniedHandler == nil {
+		unregistered = append(unregistered, "ListDeniedHandler")
+	}
 	if o.SessionHandler == nil {
 		unregistered = append(unregistered, "SessionHandler")
 	}
@@ -275,6 +310,22 @@ func (o *AccessAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/bids/allow"] = NewAllow(o.context, o.AllowHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/bids/deny"] = NewDeny(o.context, o.DenyHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/bids/allow"] = NewListAllowed(o.context, o.ListAllowedHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/bids/deny"] = NewListDenied(o.context, o.ListDeniedHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

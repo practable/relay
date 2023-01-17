@@ -15,12 +15,12 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/phayes/freeport"
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/shellaccess/restapi/operations"
 	"github.com/practable/relay/internal/ttlcode"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetPrefixFromPath(t *testing.T) {
@@ -41,7 +41,7 @@ func TestTokenGeneration(t *testing.T) {
 	scopes := []string{"host"}
 	secret := "somesecret"
 
-	expected := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b3BpYyI6ImY3NTU4ZGUwLWNiMGQtNGNiNS05NTE4LWFjNzFkMDQ0ODAwYiIsInByZWZpeCI6InNoZWxsIiwic2NvcGVzIjpbImhvc3QiXSwiYXVkIjpbImh0dHBzOi8vcmVsYXktYWNjZXNzLmV4YW1wbGUuaW8iXSwiZXhwIjoxNjA5MzMwMjMzLCJuYmYiOjE2MDkzMjkyMzMsImlhdCI6MTYwOTMyOTIzM30.9IY1QGJjw_CfcBb-nqIAFfMnw0tsl_I3n-4Guuzht74"
+	expected := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJib29raW5nSUQiOiIiLCJ0b3BpYyI6ImY3NTU4ZGUwLWNiMGQtNGNiNS05NTE4LWFjNzFkMDQ0ODAwYiIsInByZWZpeCI6InNoZWxsIiwic2NvcGVzIjpbImhvc3QiXSwiYXVkIjpbImh0dHBzOi8vcmVsYXktYWNjZXNzLmV4YW1wbGUuaW8iXSwiZXhwIjoxNjA5MzMwMjMzLCJuYmYiOjE2MDkzMjkyMzMsImlhdCI6MTYwOTMyOTIzM30.lcMZzbxAhYKbjemmO5nRRHq0-h3nsUFnujWn9kE_kTw"
 
 	bearer, err := Token(audience, ct, topic, secret, scopes, iat, nbf, exp)
 

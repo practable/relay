@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -18,12 +19,12 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/websocket"
 	"github.com/phayes/freeport"
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/practable/relay/internal/access/restapi/operations"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRelay(t *testing.T) {
@@ -62,7 +63,17 @@ func TestRelay(t *testing.T) {
 
 	wg.Add(1)
 
-	go Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
+	config := Config{
+		AccessPort:       accessPort,
+		RelayPort:        relayPort,
+		Audience:         audience,
+		Secret:           secret,
+		Target:           target,
+		AllowNoBookingID: true,
+		PruneEvery:       time.Duration(time.Minute),
+	}
+
+	go Relay(closed, &wg, config) //accessPort, relayPort, audience, secret, target)
 
 	time.Sleep(time.Second) // big safety margin to get crossbar running
 
@@ -227,6 +238,136 @@ func TestRelay(t *testing.T) {
 		t.Logf("TestPreventValidCodeAtWrongSessionID...PASS")
 	}
 	cancel()
+
+	// Make a connection with a BID in token
+	start = jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after5 = jwt.NewNumericDate(time.Now().Add(5 * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after5
+	claims.BookingID = "bid0"
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	bearer, err = token.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &ping)
+	assert.NoError(t, err)
+	assert.True(t, strings.HasPrefix(ping.URI, target+"/session/123?code="))
+
+	time.Sleep(timeout)
+
+	ctx, cancel = context.WithCancel(context.Background())
+
+	s0 = reconws.New()
+	finished := make(chan error)
+	testdone := make(chan struct{})
+
+	go func() {
+		finished <- errors.New("starting")
+		err := s0.Dial(ctx, ping.URI)
+		finished <- err
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+	STARTING:
+		for {
+			select {
+			case err := <-finished:
+				if err.Error() == "starting" {
+					break STARTING
+				}
+			case <-time.After(5 * time.Second):
+				t.Log("Too slow to connect")
+				t.Error("TestDenyClosesCurrentConnection...FAIL")
+				break STARTING
+			}
+		}
+
+	DONE:
+		for {
+			select {
+			case err := <-finished:
+				if err == nil {
+					t.Logf("TestDenyClosesCurrentConnection...PASS")
+					break DONE
+				} else {
+					t.Logf(err.Error())
+					t.Logf("TestDenyClosesCurrentConnection...FAIL")
+				}
+			case <-time.After(time.Second):
+				t.Error("TestDenyClosesCurrentConnection...FAIL")
+				break DONE
+			}
+		}
+		close(testdone)
+	}()
+
+	// Cancel the BID, connection must drop (as checked by the closing of the finish channel
+	time.Sleep(time.Millisecond)
+
+	start = jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after5 = jwt.NewNumericDate(time.Now().Add(5 * time.Second))
+	var adminClaims permission.Token
+	adminClaims.Audience = jwt.ClaimStrings{audience}
+	adminClaims.IssuedAt = start
+	adminClaims.NotBefore = start
+	adminClaims.ExpiresAt = after5
+	adminClaims.Scopes = []string{"relay:admin"}
+	adminToken := jwt.NewWithClaims(jwt.SigningMethodHS256, adminClaims)
+	adminBearer, err := adminToken.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	// POST a deny request
+	req, err = http.NewRequest("POST", audience+"/bids/deny", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", adminBearer)
+	q := req.URL.Query()
+	q.Add("bid", "bid0")
+	q.Add("exp", strconv.Itoa(int(time.Now().Unix()+5)))
+	req.URL.RawQuery = q.Encode()
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+
+	<-testdone
+
+	cancel()
+
+	// Try to remake a connection, must fail
+	start = jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after5 = jwt.NewNumericDate(time.Now().Add(5 * time.Second))
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after5
+	claims.BookingID = "bid0"
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	bearer, err = token.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+	bodyStr := string([]byte(body))
+	expStr := `{"code":"400","message":"bookingID has been deny-listed, probably because the session was cancelled"}` + "\n"
+
+	if expStr == bodyStr {
+		t.Logf("TestDeniedBookingIDCannotConnect...PASS")
+	} else {
+		assert.Equal(t, expStr, bodyStr)
+	}
+
 	// teardown relay
 
 	close(closed)

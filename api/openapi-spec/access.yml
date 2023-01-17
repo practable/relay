@@ -22,27 +22,106 @@ securityDefinitions:
     name: Authorization
     in: header 
 paths:
-   /token/deny:
+  /bids/allow:
+    get:
+      description: Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection
+      summary: Get a list of all currently-allowed bids
+      operationId: listAllowed
+      deprecated: False
+      produces:
+      - application/json
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: Current or recently in-use allowed bids
+          schema:
+            $ref: '#/definitions/BookingIDs'
+        401:
+          description: Unauthorized
+          schema:
+             $ref: '#/definitions/Error'
+
     post:
-      description: Deny access to anyone using the token provided in the body, and disconnect any current sessions immediately.
-      summary: Deny access to anyone using the provided token, disconnecting any current sessions and preventing new ones. This allows sessions to be cancelled.
-      operationId: deny
+      description: Undo the denial of a booking id 
+      summary: Undo the denial of a booking id 
+      operationId: allow
       deprecated: false
-      requestBody:
-        description: The token to be denied
-        required: true
-        content:
-          text/plain:
-            schema:
-              type: string
+      consumes:
+      - application/json
+      parameters:
+        - name: bid
+          in: query
+          type: string
+          required: true
+        - name: exp
+          in: query
+          type: integer
+          required: true
       security:
         - Bearer: []  
       responses:
         204:
-          description: The token was denied successfully.
+          description: The bid was allowed successfully.
+        400:
+          description: BadRequest
+          schema:
+             $ref: '#/definitions/Error'         
         401:
           description: Unauthorized
-          schema: {} 
+          schema:
+             $ref: '#/definitions/Error'
+             
+  /bids/deny:
+    get:
+      description: Get a list of all currently-denied bids
+      summary: Get a list of all currently-denied bids
+      operationId: listDenied
+      deprecated: False
+      produces:
+      - application/json
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: List of current denied bids
+          schema:
+            $ref: '#/definitions/BookingIDs'
+        401:
+          description: Unauthorized
+          schema:
+             $ref: '#/definitions/Error'
+             
+    post:
+      description: Refuse sessions to new connections using tokens with the bid (booking id), and disconnect any current sessions immediately. The exp term is the unix time in UTC when the booking finishes (i.e. the earliest time it is safe to remove the bid from the deny list)
+      summary: Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.
+      operationId: deny
+      deprecated: false
+      consumes:
+      - application/json
+      parameters:
+        - name: bid
+          in: query
+          type: string
+          required: true
+        - name: exp
+          in: query
+          type: integer
+          required: true
+      security:
+        - Bearer: []  
+      responses:
+        204:
+          description: The bid was denied successfully.
+        400:
+          description: BadRequest
+          schema:
+             $ref: '#/definitions/Error'         
+        401:
+          description: Unauthorized
+          schema:
+             $ref: '#/definitions/Error'
+          
   /session/{session_id}:
     post:
       description: access the specified session
@@ -54,9 +133,9 @@ paths:
       parameters:
       - name: session_id
         in: path
-        required: true
         type: string
         description: Session identification code
+        required: true
       security:
         - Bearer: []  
       responses:
@@ -70,7 +149,35 @@ paths:
           examples:
             text/plain: {"code":"b142eb22-1f16-4af1-ba14-e70a7afcbcc2"}
           headers: {}
+        400:
+          description: BadRequest
+          schema:
+             $ref: '#/definitions/Error'
         401:
           description: Unauthorized
           schema: {}
-
+       
+definitions:
+  BookingIDs:
+    title: Set of booking IDs (bids)
+    type: object
+    properties:
+      booking_ids:
+        description: list bids in string format
+        type: array
+        items:
+          type: string
+    required:
+    - booking_ids
+    
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    required:
+      - code
+      - message
+ 

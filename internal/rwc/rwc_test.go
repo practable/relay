@@ -19,14 +19,14 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/websocket"
 	"github.com/phayes/freeport"
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/practable/relay/internal/agg"
 	"github.com/practable/relay/internal/hub"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
 	"github.com/practable/relay/internal/relay"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func makeTestToken(audience, secret string, ttl int64) (string, error) {
@@ -552,7 +552,16 @@ func TestConnectAuth(t *testing.T) {
 
 	wg.Add(1)
 
-	go relay.Relay(closed, &wg, accessPort, relayPort, audience, secret, target)
+	config := relay.Config{
+		AccessPort:       accessPort,
+		RelayPort:        relayPort,
+		Audience:         audience,
+		Secret:           secret,
+		Target:           target,
+		AllowNoBookingID: true,
+		PruneEvery:       time.Duration(time.Minute),
+	}
+	go relay.Relay(closed, &wg, config)
 
 	// allow relay to start up
 	time.Sleep(time.Second)
