@@ -97,8 +97,7 @@ func init() {
         ],
         "responses": {
           "204": {
-            "description": "The bid was allower successfully.",
-            "schema": {}
+            "description": "The bid was allowed successfully."
           },
           "400": {
             "description": "BadRequest",
@@ -171,8 +170,7 @@ func init() {
         ],
         "responses": {
           "204": {
-            "description": "The bid was denied successfully.",
-            "schema": {}
+            "description": "The bid was denied successfully."
           },
           "400": {
             "description": "BadRequest",
@@ -363,8 +361,7 @@ func init() {
         ],
         "responses": {
           "204": {
-            "description": "The bid was allower successfully.",
-            "schema": {}
+            "description": "The bid was allowed successfully."
           },
           "400": {
             "description": "BadRequest",
@@ -437,8 +434,7 @@ func init() {
         ],
         "responses": {
           "204": {
-            "description": "The bid was denied successfully.",
-            "schema": {}
+            "description": "The bid was denied successfully."
           },
           "400": {
             "description": "BadRequest",

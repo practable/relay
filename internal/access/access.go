@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/go-openapi/loads"
@@ -204,7 +205,7 @@ func denyHandler(config Config) func(operations.DenyParams, interface{}) middlew
 
 		if err != nil {
 			c := "401"
-			m := "token missing relay:admin scope"
+			m := "is token missing relay:admin scope? " + err.Error()
 			return operations.NewDenyUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
 		}
 
@@ -216,7 +217,7 @@ func denyHandler(config Config) func(operations.DenyParams, interface{}) middlew
 
 		if params.Exp < config.DenyStore.Now() {
 			c := "400"
-			m := "exp (booking expiry time) missing or in the past"
+			m := "booking expiry time (exp) of [" + strconv.Itoa(int(params.Exp)) + "] missing or in the past"
 			return operations.NewDenyBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
 		}
 
@@ -344,7 +345,9 @@ func claimsCheck(principal interface{}) (*permission.Token, error) {
 		return nil, errors.New("Token Claims Incorrect Type")
 	}
 
-	if !permission.HasRequiredClaims(*claims) {
+	if len(claims.Scopes) == 0 ||
+		len(claims.RegisteredClaims.Audience) == 0 ||
+		(*claims.RegisteredClaims.ExpiresAt).IsZero() {
 		return nil, errors.New("Token Missing Required Claims")
 	}
 

@@ -16,16 +16,11 @@ import (
 // AllowNoContentCode is the HTTP code returned for type AllowNoContent
 const AllowNoContentCode int = 204
 
-/*AllowNoContent The bid was allower successfully.
+/*AllowNoContent The bid was allowed successfully.
 
 swagger:response allowNoContent
 */
 type AllowNoContent struct {
-
-	/*
-	  In: Body
-	*/
-	Payload interface{} `json:"body,omitempty"`
 }
 
 // NewAllowNoContent creates AllowNoContent with default headers values
@@ -34,25 +29,12 @@ func NewAllowNoContent() *AllowNoContent {
 	return &AllowNoContent{}
 }
 
-// WithPayload adds the payload to the allow no content response
-func (o *AllowNoContent) WithPayload(payload interface{}) *AllowNoContent {
-	o.Payload = payload
-	return o
-}
-
-// SetPayload sets the payload to the allow no content response
-func (o *AllowNoContent) SetPayload(payload interface{}) {
-	o.Payload = payload
-}
-
 // WriteResponse to the client
 func (o *AllowNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
 	rw.WriteHeader(204)
-	payload := o.Payload
-	if err := producer.Produce(rw, payload); err != nil {
-		panic(err) // let the recovery middleware deal with this
-	}
 }
 
 // AllowBadRequestCode is the HTTP code returned for type AllowBadRequest

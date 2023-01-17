@@ -62,8 +62,7 @@ paths:
         - Bearer: []  
       responses:
         204:
-          description: The bid was allower successfully.
-          schema: {}
+          description: The bid was allowed successfully.
         400:
           description: BadRequest
           schema:
@@ -114,7 +113,6 @@ paths:
       responses:
         204:
           description: The bid was denied successfully.
-          schema: {}
         400:
           description: BadRequest
           schema:
