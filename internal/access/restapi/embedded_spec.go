@@ -41,7 +41,7 @@ func init() {
   "host": "localhost",
   "basePath": "/",
   "paths": {
-    "/bids/allowed": {
+    "/bids/allow": {
       "get": {
         "security": [
           {
@@ -59,6 +59,51 @@ func init() {
             "description": "Current or recently in-use allowed bids",
             "schema": {
               "$ref": "#/definitions/BookingIDs"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Undo the denial of a booking id",
+        "consumes": [
+          "application/json"
+        ],
+        "summary": "Undo the denial of a booking id",
+        "operationId": "allow",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "bid",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "exp",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The bid was allower successfully.",
+            "schema": {}
+          },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
             }
           },
           "401": {
@@ -262,7 +307,7 @@ func init() {
   "host": "localhost",
   "basePath": "/",
   "paths": {
-    "/bids/allowed": {
+    "/bids/allow": {
       "get": {
         "security": [
           {
@@ -280,6 +325,51 @@ func init() {
             "description": "Current or recently in-use allowed bids",
             "schema": {
               "$ref": "#/definitions/BookingIDs"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Undo the denial of a booking id",
+        "consumes": [
+          "application/json"
+        ],
+        "summary": "Undo the denial of a booking id",
+        "operationId": "allow",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "bid",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "exp",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The bid was allower successfully.",
+            "schema": {}
+          },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
             }
           },
           "401": {

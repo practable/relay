@@ -11,42 +11,42 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-// ListAllowedHandlerFunc turns a function with the right signature into a list allowed handler
-type ListAllowedHandlerFunc func(ListAllowedParams, interface{}) middleware.Responder
+// AllowHandlerFunc turns a function with the right signature into a allow handler
+type AllowHandlerFunc func(AllowParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListAllowedHandlerFunc) Handle(params ListAllowedParams, principal interface{}) middleware.Responder {
+func (fn AllowHandlerFunc) Handle(params AllowParams, principal interface{}) middleware.Responder {
 	return fn(params, principal)
 }
 
-// ListAllowedHandler interface for that can handle valid list allowed params
-type ListAllowedHandler interface {
-	Handle(ListAllowedParams, interface{}) middleware.Responder
+// AllowHandler interface for that can handle valid allow params
+type AllowHandler interface {
+	Handle(AllowParams, interface{}) middleware.Responder
 }
 
-// NewListAllowed creates a new http.Handler for the list allowed operation
-func NewListAllowed(ctx *middleware.Context, handler ListAllowedHandler) *ListAllowed {
-	return &ListAllowed{Context: ctx, Handler: handler}
+// NewAllow creates a new http.Handler for the allow operation
+func NewAllow(ctx *middleware.Context, handler AllowHandler) *Allow {
+	return &Allow{Context: ctx, Handler: handler}
 }
 
-/* ListAllowed swagger:route GET /bids/allow listAllowed
+/* Allow swagger:route POST /bids/allow allow
 
-Get a list of all currently-allowed bids
+Undo the denial of a booking id
 
-Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection
+Undo the denial of a booking id
 
 */
-type ListAllowed struct {
+type Allow struct {
 	Context *middleware.Context
-	Handler ListAllowedHandler
+	Handler AllowHandler
 }
 
-func (o *ListAllowed) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *Allow) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
 		*r = *rCtx
 	}
-	var Params = NewListAllowedParams()
+	var Params = NewAllowParams()
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)

@@ -42,6 +42,9 @@ func NewAccessAPI(spec *loads.Document) *AccessAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		AllowHandler: AllowHandlerFunc(func(params AllowParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation Allow has not yet been implemented")
+		}),
 		DenyHandler: DenyHandlerFunc(func(params DenyParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation Deny has not yet been implemented")
 		}),
@@ -104,6 +107,8 @@ type AccessAPI struct {
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
 
+	// AllowHandler sets the operation handler for the allow operation
+	AllowHandler AllowHandler
 	// DenyHandler sets the operation handler for the deny operation
 	DenyHandler DenyHandler
 	// ListAllowedHandler sets the operation handler for the list allowed operation
@@ -193,6 +198,9 @@ func (o *AccessAPI) Validate() error {
 		unregistered = append(unregistered, "AuthorizationAuth")
 	}
 
+	if o.AllowHandler == nil {
+		unregistered = append(unregistered, "AllowHandler")
+	}
 	if o.DenyHandler == nil {
 		unregistered = append(unregistered, "DenyHandler")
 	}
@@ -305,11 +313,15 @@ func (o *AccessAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/bids/allow"] = NewAllow(o.context, o.AllowHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/bids/deny"] = NewDeny(o.context, o.DenyHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/bids/allowed"] = NewListAllowed(o.context, o.ListAllowedHandler)
+	o.handlers["GET"]["/bids/allow"] = NewListAllowed(o.context, o.ListAllowedHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

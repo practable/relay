@@ -50,6 +50,11 @@ func configureAPI(api *operations.AccessAPI) http.Handler {
 	// Example:
 	// api.APIAuthorizer = security.Authorized()
 
+	if api.AllowHandler == nil {
+		api.AllowHandler = operations.AllowHandlerFunc(func(params operations.AllowParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation operations.Allow has not yet been implemented")
+		})
+	}
 	if api.DenyHandler == nil {
 		api.DenyHandler = operations.DenyHandlerFunc(func(params operations.DenyParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation operations.Deny has not yet been implemented")

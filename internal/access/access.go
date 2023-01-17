@@ -64,7 +64,9 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 
 	// set the Handler
 	api.SessionHandler = operations.SessionHandlerFunc(sessionHandler(config))
+	api.AllowHandler = operations.AllowHandlerFunc(allowHandler(config))
 	api.DenyHandler = operations.DenyHandlerFunc(denyHandler(config))
+
 	api.ListDeniedHandler = operations.ListDeniedHandlerFunc(listDeniedHandler(config))
 	api.ListAllowedHandler = operations.ListAllowedHandlerFunc(listAllowedHandler(config))
 
@@ -223,6 +225,42 @@ func denyHandler(config Config) func(operations.DenyParams, interface{}) middlew
 		config.DenyChannel <- params.Bid // alert crossbar we need to cancel some connections
 
 		return operations.NewDenyNoContent()
+	}
+}
+
+// allowHandler undo a previous deny operation (don't fail if there was no denial operation as it does
+// not affect security to add a booking id to the allow list - e.g. a subsequent deny operation will reverse it,
+// and it does not prevent a token from having to be valid)
+func allowHandler(config Config) func(operations.AllowParams, interface{}) middleware.Responder {
+	return func(params operations.AllowParams, principal interface{}) middleware.Responder {
+
+		// check token for whether admin or not (see booking server code)
+		// the allow listing has to be done by admin, typically a booking system
+		// else anyone could spam allow requests
+
+		_, err := isRelayAdmin(principal)
+
+		if err != nil {
+			c := "401"
+			m := "token missing relay:admin scope"
+			return operations.NewAllowUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		if params.Bid == "" {
+			c := "400"
+			m := "bid (booking id) missing"
+			return operations.NewAllowBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		if params.Exp < config.DenyStore.Now() {
+			c := "400"
+			m := "exp (booking expiry time) missing or in the past"
+			return operations.NewAllowBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		config.DenyStore.Allow(params.Bid, params.Exp)
+
+		return operations.NewAllowNoContent()
 	}
 }
 

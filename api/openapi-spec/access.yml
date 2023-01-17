@@ -22,7 +22,7 @@ securityDefinitions:
     name: Authorization
     in: header 
 paths:
-  /bids/allowed:
+  /bids/allow:
     get:
       description: Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection
       summary: Get a list of all currently-allowed bids
@@ -40,7 +40,39 @@ paths:
         401:
           description: Unauthorized
           schema:
-             $ref: '#/definitions/Error'          
+             $ref: '#/definitions/Error'
+
+    post:
+      description: Undo the denial of a booking id 
+      summary: Undo the denial of a booking id 
+      operationId: allow
+      deprecated: false
+      consumes:
+      - application/json
+      parameters:
+        - name: bid
+          in: query
+          type: string
+          required: true
+        - name: exp
+          in: query
+          type: integer
+          required: true
+      security:
+        - Bearer: []  
+      responses:
+        204:
+          description: The bid was allower successfully.
+          schema: {}
+        400:
+          description: BadRequest
+          schema:
+             $ref: '#/definitions/Error'         
+        401:
+          description: Unauthorized
+          schema:
+             $ref: '#/definitions/Error'
+             
   /bids/deny:
     get:
       description: Get a list of all currently-denied bids
