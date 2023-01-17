@@ -12,9 +12,8 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
-
-	"github.com/practable/relay/internal/access/models"
 )
 
 // NewDenyParams creates a new DenyParams object
@@ -35,13 +34,15 @@ type DenyParams struct {
 	HTTPRequest *http.Request `json:"-"`
 
 	/*
+	  Required: true
 	  In: query
 	*/
-	Bid *string
+	Bid string
 	/*
-	  In: body
+	  Required: true
+	  In: query
 	*/
-	Bids *models.BookingIDs
+	Exp int64
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -60,26 +61,9 @@ func (o *DenyParams) BindRequest(r *http.Request, route *middleware.MatchedRoute
 		res = append(res, err)
 	}
 
-	if runtime.HasBody(r) {
-		defer r.Body.Close()
-		var body models.BookingIDs
-		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			res = append(res, errors.NewParseError("bids", "body", "", err))
-		} else {
-			// validate body object
-			if err := body.Validate(route.Formats); err != nil {
-				res = append(res, err)
-			}
-
-			ctx := validate.WithOperationRequest(r.Context())
-			if err := body.ContextValidate(ctx, route.Formats); err != nil {
-				res = append(res, err)
-			}
-
-			if len(res) == 0 {
-				o.Bids = &body
-			}
-		}
+	qExp, qhkExp, _ := qs.GetOK("exp")
+	if err := o.bindExp(qExp, qhkExp, route.Formats); err != nil {
+		res = append(res, err)
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
@@ -89,18 +73,47 @@ func (o *DenyParams) BindRequest(r *http.Request, route *middleware.MatchedRoute
 
 // bindBid binds and validates parameter Bid from query.
 func (o *DenyParams) bindBid(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("bid", "query", rawData)
+	}
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
 
-	// Required: false
+	// Required: true
 	// AllowEmptyValue: false
 
-	if raw == "" { // empty values pass all other validations
-		return nil
+	if err := validate.RequiredString("bid", "query", raw); err != nil {
+		return err
 	}
-	o.Bid = &raw
+	o.Bid = raw
+
+	return nil
+}
+
+// bindExp binds and validates parameter Exp from query.
+func (o *DenyParams) bindExp(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("exp", "query", rawData)
+	}
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: true
+	// AllowEmptyValue: false
+
+	if err := validate.RequiredString("exp", "query", raw); err != nil {
+		return err
+	}
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("exp", "query", "int64", raw)
+	}
+	o.Exp = value
 
 	return nil
 }

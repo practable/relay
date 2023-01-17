@@ -9,12 +9,14 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime"
+
+	"github.com/practable/relay/internal/access/models"
 )
 
 // DenyNoContentCode is the HTTP code returned for type DenyNoContent
 const DenyNoContentCode int = 204
 
-/*DenyNoContent The bids were denied successfully.
+/*DenyNoContent The bid was denied successfully.
 
 swagger:response denyNoContent
 */
@@ -53,6 +55,50 @@ func (o *DenyNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.P
 	}
 }
 
+// DenyBadRequestCode is the HTTP code returned for type DenyBadRequest
+const DenyBadRequestCode int = 400
+
+/*DenyBadRequest BadRequest
+
+swagger:response denyBadRequest
+*/
+type DenyBadRequest struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Error `json:"body,omitempty"`
+}
+
+// NewDenyBadRequest creates DenyBadRequest with default headers values
+func NewDenyBadRequest() *DenyBadRequest {
+
+	return &DenyBadRequest{}
+}
+
+// WithPayload adds the payload to the deny bad request response
+func (o *DenyBadRequest) WithPayload(payload *models.Error) *DenyBadRequest {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the deny bad request response
+func (o *DenyBadRequest) SetPayload(payload *models.Error) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *DenyBadRequest) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(400)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 // DenyUnauthorizedCode is the HTTP code returned for type DenyUnauthorized
 const DenyUnauthorizedCode int = 401
 
@@ -65,7 +111,7 @@ type DenyUnauthorized struct {
 	/*
 	  In: Body
 	*/
-	Payload interface{} `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewDenyUnauthorized creates DenyUnauthorized with default headers values
@@ -75,13 +121,13 @@ func NewDenyUnauthorized() *DenyUnauthorized {
 }
 
 // WithPayload adds the payload to the deny unauthorized response
-func (o *DenyUnauthorized) WithPayload(payload interface{}) *DenyUnauthorized {
+func (o *DenyUnauthorized) WithPayload(payload *models.Error) *DenyUnauthorized {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the deny unauthorized response
-func (o *DenyUnauthorized) SetPayload(payload interface{}) {
+func (o *DenyUnauthorized) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 
@@ -89,8 +135,10 @@ func (o *DenyUnauthorized) SetPayload(payload interface{}) {
 func (o *DenyUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(401)
-	payload := o.Payload
-	if err := producer.Produce(rw, payload); err != nil {
-		panic(err) // let the recovery middleware deal with this
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
 	}
 }

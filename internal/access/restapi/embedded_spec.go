@@ -63,7 +63,9 @@ func init() {
           },
           "401": {
             "description": "Unauthorized",
-            "schema": {}
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -90,7 +92,9 @@ func init() {
           },
           "401": {
             "description": "Unauthorized",
-            "schema": {}
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       },
@@ -100,7 +104,7 @@ func init() {
             "Bearer": []
           }
         ],
-        "description": "Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.",
+        "description": "Refuse sessions to new connections using tokens with the bid (booking id), and disconnect any current sessions immediately. The exp term is the unix time in UTC when the booking finishes (i.e. the earliest time it is safe to remove the bid from the deny list)",
         "consumes": [
           "application/json"
         ],
@@ -110,24 +114,32 @@ func init() {
           {
             "type": "string",
             "name": "bid",
-            "in": "query"
+            "in": "query",
+            "required": true
           },
           {
-            "name": "bids",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/BookingIDs"
-            }
+            "type": "integer",
+            "name": "exp",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
           "204": {
-            "description": "The bids were denied successfully.",
+            "description": "The bid was denied successfully.",
             "schema": {}
+          },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "schema": {}
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -272,7 +284,9 @@ func init() {
           },
           "401": {
             "description": "Unauthorized",
-            "schema": {}
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -299,7 +313,9 @@ func init() {
           },
           "401": {
             "description": "Unauthorized",
-            "schema": {}
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       },
@@ -309,7 +325,7 @@ func init() {
             "Bearer": []
           }
         ],
-        "description": "Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.",
+        "description": "Refuse sessions to new connections using tokens with the bid (booking id), and disconnect any current sessions immediately. The exp term is the unix time in UTC when the booking finishes (i.e. the earliest time it is safe to remove the bid from the deny list)",
         "consumes": [
           "application/json"
         ],
@@ -319,24 +335,32 @@ func init() {
           {
             "type": "string",
             "name": "bid",
-            "in": "query"
+            "in": "query",
+            "required": true
           },
           {
-            "name": "bids",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/BookingIDs"
-            }
+            "type": "integer",
+            "name": "exp",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
           "204": {
-            "description": "The bids were denied successfully.",
+            "description": "The bid was denied successfully.",
             "schema": {}
+          },
+          "400": {
+            "description": "BadRequest",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "schema": {}
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }

@@ -69,7 +69,7 @@ type ListDeniedUnauthorized struct {
 	/*
 	  In: Body
 	*/
-	Payload interface{} `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewListDeniedUnauthorized creates ListDeniedUnauthorized with default headers values
@@ -79,13 +79,13 @@ func NewListDeniedUnauthorized() *ListDeniedUnauthorized {
 }
 
 // WithPayload adds the payload to the list denied unauthorized response
-func (o *ListDeniedUnauthorized) WithPayload(payload interface{}) *ListDeniedUnauthorized {
+func (o *ListDeniedUnauthorized) WithPayload(payload *models.Error) *ListDeniedUnauthorized {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the list denied unauthorized response
-func (o *ListDeniedUnauthorized) SetPayload(payload interface{}) {
+func (o *ListDeniedUnauthorized) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 
@@ -93,8 +93,10 @@ func (o *ListDeniedUnauthorized) SetPayload(payload interface{}) {
 func (o *ListDeniedUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(401)
-	payload := o.Payload
-	if err := producer.Produce(rw, payload); err != nil {
-		panic(err) // let the recovery middleware deal with this
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
 	}
 }

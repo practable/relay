@@ -1,6 +1,7 @@
 package access
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"sync"
@@ -62,6 +63,7 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 
 	// set the Handler
 	api.SessionHandler = operations.SessionHandlerFunc(sessionHandler(config))
+	api.DenyHandler = operations.DenyHandlerFunc(denyHandler(config))
 
 	go func() {
 		<-closed
@@ -184,4 +186,82 @@ func sessionHandler(config Config) func(operations.SessionParams, interface{}) m
 				URI: uri,
 			})
 	}
+}
+
+func denyHandler(config Config) func(operations.DenyParams, interface{}) middleware.Responder {
+	return func(params operations.DenyParams, principal interface{}) middleware.Responder {
+
+		// check token for whether admin or not (see booking server code)
+		// the deny listing has to be done by admin, typically a booking system
+		// else anyone could spam deny requests
+
+		_, err := isRelayAdmin(principal)
+
+		if err != nil {
+			c := "401"
+			m := "token missing relay:admin scope"
+			return operations.NewDenyUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		if params.Bid == "" {
+			c := "400"
+			m := "bid (booking id) missing"
+			return operations.NewDenyBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		if params.Exp < config.DenyStore.Now() {
+			c := "400"
+			m := "exp (booking expiry time) missing or in the past"
+			return operations.NewDenyBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		config.DenyStore.Deny(params.Bid, params.Exp)
+
+		return operations.NewDenyNoContent()
+	}
+}
+
+// Function isBookingAdmin does in-handler validation for booking:admin tasks
+func isRelayAdmin(principal interface{}) (*permission.Token, error) {
+
+	claims, err := claimsCheck(principal)
+
+	if err != nil {
+		return nil, err
+	}
+
+	hasAdminScope := false
+
+	for _, scope := range claims.Scopes {
+		if scope == "relay:admin" {
+			hasAdminScope = true
+		}
+	}
+
+	if !hasAdminScope {
+		return nil, errors.New("Missing relay:admin Scope")
+	}
+
+	return claims, nil
+}
+
+func claimsCheck(principal interface{}) (*permission.Token, error) {
+
+	token, ok := principal.(*jwt.Token)
+	if !ok {
+		return nil, errors.New("Token Not JWT")
+	}
+
+	// save checking for key existence individually by checking all at once
+	claims, ok := token.Claims.(*permission.Token)
+
+	if !ok {
+		return nil, errors.New("Token Claims Incorrect Type")
+	}
+
+	if !permission.HasRequiredClaims(*claims) {
+		return nil, errors.New("Token Missing Required Claims")
+	}
+
+	return claims, nil
 }

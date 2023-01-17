@@ -9,11 +9,14 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
 // DenyURL generates an URL for the deny operation
 type DenyURL struct {
-	Bid *string
+	Bid string
+	Exp int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -49,12 +52,14 @@ func (o *DenyURL) Build() (*url.URL, error) {
 
 	qs := make(url.Values)
 
-	var bidQ string
-	if o.Bid != nil {
-		bidQ = *o.Bid
-	}
+	bidQ := o.Bid
 	if bidQ != "" {
 		qs.Set("bid", bidQ)
+	}
+
+	expQ := swag.FormatInt64(o.Exp)
+	if expQ != "" {
+		qs.Set("exp", expQ)
 	}
 
 	_result.RawQuery = qs.Encode()
