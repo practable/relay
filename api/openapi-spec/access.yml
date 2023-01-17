@@ -39,7 +39,8 @@ paths:
             $ref: '#/definitions/BookingIDs'
         401:
           description: Unauthorized
-          schema: {}
+          schema:
+             $ref: '#/definitions/Error'          
   /bids/deny:
     get:
       description: Get a list of all currently-denied bids
@@ -57,9 +58,11 @@ paths:
             $ref: '#/definitions/BookingIDs'
         401:
           description: Unauthorized
-          schema: {}  
+          schema:
+             $ref: '#/definitions/Error'
+             
     post:
-      description: Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately. 
+      description: Refuse sessions to new connections using tokens with the bid (booking id), and disconnect any current sessions immediately. The exp term is the unix time in UTC when the booking finishes (i.e. the earliest time it is safe to remove the bid from the deny list)
       summary: Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.
       operationId: deny
       deprecated: false
@@ -69,20 +72,25 @@ paths:
         - name: bid
           in: query
           type: string
-          required: false
-        - name: bids
-          in: body
-          schema:
-            $ref: '#/definitions/BookingIDs'
+          required: true
+        - name: exp
+          in: query
+          type: integer
+          required: true
       security:
         - Bearer: []  
       responses:
         204:
-          description: The bids were denied successfully.
+          description: The bid was denied successfully.
           schema: {}
+        400:
+          description: BadRequest
+          schema:
+             $ref: '#/definitions/Error'         
         401:
           description: Unauthorized
-          schema: {}
+          schema:
+             $ref: '#/definitions/Error'
           
   /session/{session_id}:
     post:

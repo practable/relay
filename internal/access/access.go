@@ -22,6 +22,7 @@ import (
 type Config struct {
 	AllowNoBookingID bool
 	CodeStore        *ttlcode.CodeStore
+	DenyChannel      chan string
 	DenyStore        *deny.Store
 	Host             string
 	Port             int
@@ -64,6 +65,8 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 	// set the Handler
 	api.SessionHandler = operations.SessionHandlerFunc(sessionHandler(config))
 	api.DenyHandler = operations.DenyHandlerFunc(denyHandler(config))
+	api.ListDeniedHandler = operations.ListDeniedHandlerFunc(listDeniedHandler(config))
+	api.ListAllowedHandler = operations.ListAllowedHandlerFunc(listAllowedHandler(config))
 
 	go func() {
 		<-closed
@@ -217,7 +220,51 @@ func denyHandler(config Config) func(operations.DenyParams, interface{}) middlew
 
 		config.DenyStore.Deny(params.Bid, params.Exp)
 
+		config.DenyChannel <- params.Bid // alert crossbar we need to cancel some connections
+
 		return operations.NewDenyNoContent()
+	}
+}
+
+func listDeniedHandler(config Config) func(operations.ListDeniedParams, interface{}) middleware.Responder {
+	return func(params operations.ListDeniedParams, principal interface{}) middleware.Responder {
+
+		// check token for whether admin or not (see booking server code)
+		// the deny listing has to be done by admin, typically a booking system
+		// else anyone could spam deny requests
+
+		_, err := isRelayAdmin(principal)
+
+		if err != nil {
+			c := "401"
+			m := "token missing relay:admin scope"
+			return operations.NewDenyUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		d := config.DenyStore.GetDenyList()
+
+		return operations.NewListDeniedOK().WithPayload(&models.BookingIDs{BookingIds: d})
+	}
+}
+
+func listAllowedHandler(config Config) func(operations.ListAllowedParams, interface{}) middleware.Responder {
+	return func(params operations.ListAllowedParams, principal interface{}) middleware.Responder {
+
+		// check token for whether admin or not (see booking server code)
+		// the deny listing has to be done by admin, typically a booking system
+		// else anyone could spam deny requests
+
+		_, err := isRelayAdmin(principal)
+
+		if err != nil {
+			c := "401"
+			m := "token missing relay:admin scope"
+			return operations.NewDenyUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		d := config.DenyStore.GetAllowList()
+
+		return operations.NewListAllowedOK().WithPayload(&models.BookingIDs{BookingIds: d})
 	}
 }
 
