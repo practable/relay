@@ -21,16 +21,13 @@ require (
 	github.com/jinzhu/copier v0.3.5
 	github.com/jpillora/backoff v1.0.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ory/viper v1.7.5
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
-	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
