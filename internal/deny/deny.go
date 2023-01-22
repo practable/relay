@@ -63,6 +63,8 @@ func (s *Store) Deny(ID string, expiresAt int64) {
 }
 
 func (s *Store) IsDenied(ID string) bool {
+	s.Lock()
+	defer s.Unlock()
 
 	_, ok := s.DenyList[ID]
 
