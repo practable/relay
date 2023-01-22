@@ -30,7 +30,7 @@ import (
 func TestRelay(t *testing.T) {
 
 	// Setup logging
-	debug := true
+	debug := false
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -259,7 +259,7 @@ func TestRelay(t *testing.T) {
 	body, _ = ioutil.ReadAll(resp.Body)
 
 	if debug {
-		t.Log(string(resp.Raw()))
+		t.Log(string(body))
 	}
 
 	err = json.Unmarshal(body, &ping)
