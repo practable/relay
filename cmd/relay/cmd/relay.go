@@ -68,7 +68,7 @@ relay relay
 		viper.SetDefault("pruneevery", "5m")
 
 		accessPort := viper.GetInt("accessport")
-		allowNoBookingID := viper.GetBool("allnobookingid")
+		allowNoBookingID := viper.GetBool("allownobookingid")
 		relayPort := viper.GetInt("relayport")
 		development := viper.GetBool("development")
 		secret := viper.GetString("secret")
