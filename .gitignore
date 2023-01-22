@@ -1,3 +1,6 @@
+#environment file with secrets
+relay.env
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
