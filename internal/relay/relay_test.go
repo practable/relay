@@ -30,7 +30,7 @@ import (
 func TestRelay(t *testing.T) {
 
 	// Setup logging
-	debug := false
+	debug := true
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -257,6 +257,10 @@ func TestRelay(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	body, _ = ioutil.ReadAll(resp.Body)
+
+	if debug {
+		t.Log(string(resp.Raw()))
+	}
 
 	err = json.Unmarshal(body, &ping)
 	assert.NoError(t, err)
