@@ -86,7 +86,7 @@ relay relay
 		if development {
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
-			fmt.Printf("Access port: %d for %s\nRelay port: %d for %s\n; no bid allowed: %t", accessPort, accessFQDN, relayPort, relayFQDN, allowNoBookingID)
+			fmt.Printf("Access port [%d] for FQDN[%s]\nRelay port [%d] for FQDN[%s]\nNo booking ID allowed [%t]\n", accessPort, accessFQDN, relayPort, relayFQDN, allowNoBookingID)
 			log.SetFormatter(&log.TextFormatter{})
 			log.SetLevel(log.TraceLevel)
 			log.SetOutput(os.Stdout)

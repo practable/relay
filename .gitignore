@@ -30,9 +30,7 @@ TODO.md
 *.out
 *.cov
 # binaries
-cmd/shell/shell
-cmd/session/session
-cmd/book/book
+cmd/relay/relay
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
