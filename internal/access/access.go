@@ -103,6 +103,12 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 			return []byte(secret), nil
 		})
 
+		if err != nil {
+			msg := "error parsing token " + err.Error()
+			log.Info(msg)
+			return nil, errors.New(msg)
+		}
+
 		if !token.Valid { //checks iat, nbf, exp
 			log.Info("Token invalid")
 			return nil, fmt.Errorf("token invalid")
