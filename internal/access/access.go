@@ -92,7 +92,16 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 // wrap the secret so we can get it at runtime without using global
 func validateHeader(secret, host string) security.TokenAuthentication {
 
-	return func(bearerToken string) (interface{}, error) {
+	return func(bearerToken string) (rt interface{}, re error) {
+
+		defer func() {
+			if r := recover(); r != nil {
+				log.WithFields(log.Fields{"token": bearerToken, "stack": r}).Error("panic in validateHeader")
+				re = errors.New("token unprocessable") //see names in func defintion
+				rt = nil                               //see names in func definition, overwriting return values
+			}
+		}()
+
 		// For apiKey security syntax see https://swagger.io/docs/specification/2-0/authentication/
 		claims := &permission.Token{}
 
@@ -106,12 +115,12 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 		if err != nil {
 			msg := "error parsing token " + err.Error()
 			log.Info(msg)
-			return nil, errors.New(msg)
+			return nil, errors.New("token invalid")
 		}
 
 		if !token.Valid { //checks iat, nbf, exp
 			log.Info("Token invalid")
-			return nil, fmt.Errorf("token invalid")
+			return nil, errors.New("token invalid")
 		}
 
 		if cc, ok := token.Claims.(*permission.Token); ok {

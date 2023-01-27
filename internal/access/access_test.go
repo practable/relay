@@ -413,3 +413,99 @@ func TestDeny(t *testing.T) {
 	wg.Wait()
 
 }
+
+func TestBadBearerHandledOK(t *testing.T) {
+
+	debug := false
+
+	if debug {
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
+
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	secret := "testsecret"
+
+	audience := "http://[::]:" + strconv.Itoa(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	target := "wss://relay.example.io"
+
+	wg.Add(1)
+
+	ds := deny.New()
+
+	dc := make(chan string, 2) //probably larger buffer needed in production
+
+	go func() { //collect any denials sent
+		for {
+			select {
+			case <-dc:
+				continue // just drain the channel, not testing deny channel stuff here
+			case <-closed:
+				break
+			}
+		}
+	}()
+
+	config := Config{
+		AllowNoBookingID: true, //reject tokens without bookingID
+		CodeStore:        cs,
+		DenyChannel:      dc,
+		DenyStore:        ds,
+		Host:             audience,
+		Port:             port,
+		Secret:           secret,
+		Target:           target,
+	}
+
+	go API(closed, &wg, config) //port, audience, secret, target, cs, ds, allowNoBookingID)
+
+	time.Sleep(100 * time.Millisecond)
+
+	client := &http.Client{}
+
+	// Start tests
+	req, err := http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", "eyasdfasd.asdfasdf.asdf4325") //nonsense bearer token
+
+	// make a request, which will fail, because the bearer token is bogus
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+	body, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	bodyStr := string([]byte(body))
+	assert.Equal(t, `{"code":500,"message":"token invalid"}`, bodyStr)
+
+	// make a request, which will fail, because the bearer token is empty
+	req, err = http.NewRequest("POST", audience+"/session/123", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", "") //empty bearer token
+
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	bodyStr = string([]byte(body))
+	assert.Equal(t, `{"code":401,"message":"unauthenticated for invalid credentials"}`, bodyStr)
+	resp.Body.Close()
+
+	// End tests
+	close(closed)
+	wg.Wait()
+
+}
