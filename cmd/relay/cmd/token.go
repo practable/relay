@@ -35,13 +35,16 @@ var tokenCmd = &cobra.Command{
 	Long: `Set the operating paramters with environment variables, for example
 
 export RELAY_TOKEN_AUDIENCE=https://relay-access.example.io
-export RELAY_TOKEN_CONNECTION_TYPE=session
 export RELAY_TOKEN_LIFETIME=3600
-export RELAY_TOKEN_SCOPE_READ=true
-export RELAY_TOKEN_SCOPE_WRITE=true
 export RELAY_TOKEN_SECRET=somesecret
 export RELAY_TOKEN_TOPIC=123
 bearer=$(relay token)
+
+these defaults can be altered as required:
+export RELAY_TOKEN_SCOPE_READ=true
+export RELAY_TOKEN_SCOPE_WRITE=true
+export RELAY_TOKEN_CONNECTION_TYPE=session
+
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
