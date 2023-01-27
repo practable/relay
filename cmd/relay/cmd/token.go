@@ -34,12 +34,12 @@ var tokenCmd = &cobra.Command{
 	Short: "relay token generates a new token for authenticating to a relay",
 	Long: `Set the operating paramters with environment variables, for example
 
-export REALY_TOKEN_LIFETIME=3600
-export REALY_TOKEN_READ=true
-export REALY_TOKEN_WRITE=true
-export REALY_TOKEN_SECRET=somesecret
-export REALY_TOKEN_TOPIC=123
-export REALY_TOKEN_AUDIENCE=https://relay-access.example.io
+export RELAY_TOKEN_LIFETIME=3600
+export RELAY_TOKEN_READ=true
+export RELAY_TOKEN_WRITE=true
+export RELAY_TOKEN_SECRET=somesecret
+export RELAY_TOKEN_TOPIC=123
+export RELAY_TOKEN_AUDIENCE=https://relay-access.example.io
 bearer=$(relay token)
 `,
 
