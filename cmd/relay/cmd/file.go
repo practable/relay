@@ -46,13 +46,13 @@ that is valid for the relay you are connecting to. This
 will probably be supplied by the administrator of the relay (using some
 commands similar to this example:
 
-export ACCESSTOKEN_LIFETIME=86400
-export ACCESSTOKEN_ROLE=client
-export ACCESSTOKEN_SECRET=$($HOME/secret/session_secret.sh)
-export ACCESSTOKEN_TOPIC=spin35-data
-export ACCESSTOKEN_CONNECTIONTYPE=session
-export ACCESSTOKEN_AUDIENCE=https://relay-access.practable.io
-export RELAY_CLIENT_TOKEN=$(session token)
+export RELAY_TOKEN_LIFETIME=86400
+export RELAY_TOKEN_ROLE=client
+export RELAY_TOKEN_SECRET=$($HOME/secret/session_secret.sh)
+export RELAY_TOKEN_TOPIC=spin35-data
+export RELAY_TOKEN_CONNECTIONTYPE=session
+export RELAY_TOKEN_AUDIENCE=https://example.org/access
+export RELAY_CLIENT_TOKEN=$(relay token)
 
 1. MODES OF OPERATION
 ---------------------
