@@ -34,12 +34,13 @@ var tokenCmd = &cobra.Command{
 	Short: "relay token generates a new token for authenticating to a relay",
 	Long: `Set the operating paramters with environment variables, for example
 
+export RELAY_TOKEN_AUDIENCE=https://relay-access.example.io
+export RELAY_TOKEN_CONNECTION_TYPE=session
 export RELAY_TOKEN_LIFETIME=3600
-export RELAY_TOKEN_READ=true
-export RELAY_TOKEN_WRITE=true
+export RELAY_TOKEN_SCOPE_READ=true
+export RELAY_TOKEN_SCOPE_WRITE=true
 export RELAY_TOKEN_SECRET=somesecret
 export RELAY_TOKEN_TOPIC=123
-export RELAY_TOKEN_AUDIENCE=https://relay-access.example.io
 bearer=$(relay token)
 `,
 
@@ -48,40 +49,42 @@ bearer=$(relay token)
 		viper.SetEnvPrefix("RELAY_TOKEN")
 		viper.AutomaticEnv()
 
-		viper.SetDefault("connectionType", "session")
-		viper.SetDefault("read", "true")
-		viper.SetDefault("write", "true")
+		viper.SetDefault("connection_type", "session")
+		viper.SetDefault("scope_read", "true")
+		viper.SetDefault("scope_write", "true")
 
 		lifetime := viper.GetInt64("lifetime")
 		audience := viper.GetString("audience")
 		secret := viper.GetString("secret")
 		topic := viper.GetString("topic")
-		connectionType := viper.GetString("connectionType")
-		read := viper.GetBool("read")
-		write := viper.GetBool("write")
+		connectionType := viper.GetString("connection_type")
+		read := viper.GetBool("scope_read")
+		write := viper.GetBool("scope_write")
 
 		// check inputs
 
+		ok := true
+
 		if lifetime == 0 {
-			fmt.Println("ACCESSTOKEN_LIFETIME not set")
-			os.Exit(1)
+			fmt.Println("RELAY_TOKEN_LIFETIME not set")
+			ok = false
 		}
 		if secret == "" {
-			fmt.Println("ACCESSTOKEN_SECRET not set")
-			os.Exit(1)
+			fmt.Println("RELAY_TOKEN_SECRET not set")
+			ok = false
 		}
 		if topic == "" {
-			fmt.Println("ACCESSTOKEN_TOPIC not set")
-			os.Exit(1)
+			fmt.Println("RELAY_TOKEN_TOPIC not set")
+			ok = false
 		}
 
 		if connectionType == "" {
-			fmt.Println("ACCESSTOKEN_CONNECTIONTYPE not set")
-			os.Exit(1)
+			fmt.Println("RELAY_TOKEN_CONNECTION_TYPE not set")
+			ok = false
 		}
 		if audience == "" {
-			fmt.Println("ACCESSTOKEN_AUDIENCE not set")
-			os.Exit(1)
+			fmt.Println("RELAY_TOKEN_AUDIENCE not set")
+			ok = false
 		}
 
 		var scopes []string
@@ -95,7 +98,11 @@ bearer=$(relay token)
 		}
 
 		if !read && !write {
-			fmt.Println("Neither read nor write scope, or both: no point in connecting.")
+			fmt.Println("One or both of RELAY_TOKEN_SCOPE_READ, RELAY_TOKEN_SCOPE_WRITE must be true")
+			ok = false
+		}
+
+		if !ok {
 			os.Exit(1)
 		}
 
