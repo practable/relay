@@ -35,6 +35,7 @@ var tokenCmd = &cobra.Command{
 	Long: `Set the operating paramters with environment variables, for example
 
 export RELAY_TOKEN_AUDIENCE=https://relay-access.example.io
+export RELAY_TOKEN_BOOKING_ID=some_booking_id
 export RELAY_TOKEN_LIFETIME=3600
 export RELAY_TOKEN_SECRET=somesecret
 export RELAY_TOKEN_TOPIC=123
@@ -55,7 +56,9 @@ export RELAY_TOKEN_CONNECTION_TYPE=session
 		viper.SetDefault("connection_type", "session")
 		viper.SetDefault("scope_read", "true")
 		viper.SetDefault("scope_write", "true")
+		viper.SetDefault("booking_id", "relay-token-cli")
 
+		bookingID := viper.GetString("booking_id")
 		lifetime := viper.GetInt64("lifetime")
 		audience := viper.GetString("audience")
 		secret := viper.GetString("secret")
@@ -118,6 +121,7 @@ export RELAY_TOKEN_CONNECTION_TYPE=session
 		claims.NotBefore = jwt.NewNumericDate(time.Unix(nbf, 0))
 		claims.ExpiresAt = jwt.NewNumericDate(time.Unix(exp, 0))
 		claims.Audience = jwt.ClaimStrings{audience}
+		claims.BookingID = bookingID
 		claims.Topic = topic
 		claims.ConnectionType = connectionType // e.g. session
 		claims.Scopes = scopes
