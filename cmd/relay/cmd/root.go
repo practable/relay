@@ -29,7 +29,7 @@ var rootCmd = &cobra.Command{
 	Short: "relay is a set of services for relaying video and data streams over websockets",
 	Long: `Available services are 
 
-relay relay := relays websockets, with jwt-token protected access via separate http API
+relay serve := relays websockets, with jwt-token protected access via separate http API
 relay host := acts as a bridge between data and video streams on a machine, and the external relay
 relay client := provides a connection to the relay for custom purposes e.g. testing, automation.
 `,

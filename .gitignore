@@ -1,3 +1,6 @@
+#log file location for local runs
+ignore/
+
 #environment file with secrets
 relay.env
 
