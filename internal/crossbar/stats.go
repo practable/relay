@@ -153,6 +153,7 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 					CanRead:    client.canRead,
 					CanWrite:   client.canWrite,
 					Connected:  client.stats.connectedAt.String(),
+					ExpiresAt:  client.stats.expiresAt.String(),
 					RemoteAddr: client.remoteAddr,
 					UserAgent:  client.userAgent,
 					Stats: RxTx{

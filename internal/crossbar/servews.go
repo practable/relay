@@ -164,7 +164,8 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		// initialise statistics
 		tx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
 		rx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
-		stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
+		exp := time.Unix((*token.ExpiresAt).Unix(), 0) // jwt.NumericDate underlying type is time.Time
+		stats := &Stats{connectedAt: time.Now(), expiresAt: exp, tx: tx, rx: rx}
 
 		client := &Client{hub: hub,
 			bookingID:  token.BookingID,

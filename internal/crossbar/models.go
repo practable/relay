@@ -118,6 +118,8 @@ type ClientReport struct {
 
 	Connected string `json:"connected"`
 
+	ExpiresAt string `json:"expiresAt"`
+
 	RemoteAddr string `json:"remoteAddr"`
 
 	UserAgent string `json:"userAgent"`
@@ -133,6 +135,8 @@ type StatsCommand struct {
 // Stats represents statistics for a connection
 type Stats struct {
 	connectedAt time.Time
+
+	expiresAt time.Time
 
 	rx *Frames
 

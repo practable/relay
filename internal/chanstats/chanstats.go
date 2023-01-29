@@ -27,6 +27,7 @@ import (
 // ChanStats represents recorded channel statistics
 type ChanStats struct {
 	ConnectedAt time.Time
+	ExpiresAt   time.Time
 	Rx          Messages
 	Tx          Messages
 }
@@ -41,6 +42,7 @@ type Messages struct {
 // Report represents overally statistics for a topic
 type Report struct {
 	Connected string  `json:"connected"`
+	Expires   string  `json:"expires"`
 	Tx        Details `json:"tx"`
 	Rx        Details `json:"rx"`
 }
@@ -66,6 +68,7 @@ type WelfordStats struct {
 func New() *ChanStats {
 	c := &ChanStats{}
 	c.ConnectedAt = time.Now() //expect user to update if appropriate
+	c.ExpiresAt = time.Now()   //expect user to update if appropriate
 	c.Rx = Messages{Bytes: welford.New(), Dt: welford.New()}
 	c.Tx = Messages{Bytes: welford.New(), Dt: welford.New()}
 	return c
@@ -75,6 +78,7 @@ func New() *ChanStats {
 func NewReport(s *ChanStats) *Report {
 	r := &Report{
 		Connected: s.ConnectedAt.String(),
+		Expires:   s.ExpiresAt.String(),
 		Rx:        *NewDetails(&s.Rx),
 		Tx:        *NewDetails(&s.Tx),
 	}
