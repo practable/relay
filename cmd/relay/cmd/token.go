@@ -56,6 +56,7 @@ export RELAY_TOKEN_CONNECTION_TYPE=session
 		viper.SetDefault("connection_type", "session")
 		viper.SetDefault("scope_read", "true")
 		viper.SetDefault("scope_write", "true")
+		viper.SetDefault("scope_admin", "false")
 		viper.SetDefault("booking_id", "relay-token-cli")
 
 		bookingID := viper.GetString("booking_id")
@@ -64,8 +65,9 @@ export RELAY_TOKEN_CONNECTION_TYPE=session
 		secret := viper.GetString("secret")
 		topic := viper.GetString("topic")
 		connectionType := viper.GetString("connection_type")
-		read := viper.GetBool("scope_read")
-		write := viper.GetBool("scope_write")
+		scope_admin := viper.GetBool("scope_admin")
+		scope_read := viper.GetBool("scope_read")
+		scope_write := viper.GetBool("scope_write")
 
 		// check inputs
 
@@ -95,16 +97,20 @@ export RELAY_TOKEN_CONNECTION_TYPE=session
 
 		var scopes []string
 
-		if write {
+		if scope_admin {
+			scopes = append(scopes, "relay:admin")
+		}
+
+		if scope_write {
 			scopes = append(scopes, "write")
 		}
 
-		if read {
+		if scope_read {
 			scopes = append(scopes, "read")
 		}
 
-		if !read && !write {
-			fmt.Println("One or both of RELAY_TOKEN_SCOPE_READ, RELAY_TOKEN_SCOPE_WRITE must be true")
+		if !scope_admin && !scope_read && !scope_write {
+			fmt.Println("No scopes requested. Set one or more of RELAY_TOKEN_SCOPE_ADMIN, RELAY_TOKEN_SCOPE_READ, or RELAY_TOKEN_SCOPE_WRITE to be true")
 			ok = false
 		}
 
