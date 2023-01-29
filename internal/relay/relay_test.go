@@ -266,6 +266,22 @@ func TestRelay(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, strings.HasPrefix(ping.URI, target+"/session/123?code="))
 
+	// Get another code, which we will try to exchange after the bid is denied
+
+	var denyMe operations.SessionOKBody
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	if debug {
+		t.Log(string(body))
+	}
+
+	err = json.Unmarshal(body, &denyMe)
+	assert.NoError(t, err)
+	assert.True(t, strings.HasPrefix(denyMe.URI, target+"/session/123?code="))
+	//
+
 	time.Sleep(timeout)
 
 	ctx, cancel = context.WithCancel(context.Background())
@@ -343,8 +359,36 @@ func TestRelay(t *testing.T) {
 	assert.Equal(t, 204, resp.StatusCode)
 
 	<-testdone
-
 	cancel()
+
+	// Try to use the code we obtained before posting the deny request
+	/* TODO -work out how to detect that the connection has been closed
+		       by the server. Logging suggests this has happened
+	ctx, cancel = context.WithCancel(context.Background())
+			sd := reconws.New()
+
+			ce := make(chan error)
+
+			go func() {
+				ce <- sd.Dial(ctx, denyMe.URI)
+			}()
+
+			//force dialler to try sending a message (should fail)
+			sd.Out <- reconws.WsMessage{Data: []byte("ping"), Type: websocket.TextMessage}
+			sd.Out <- reconws.WsMessage{Data: []byte("ping"), Type: websocket.TextMessage}
+
+			select { //the websocket connection should be accepted, then almost immmediately closed due to invalid token, thus dial returns immediately with no error due to normal closing of socket
+			case err := <-ce:
+				assert.NoError(t, err)
+				t.Log("TestDeniedCodeDenied...PASS")
+			case <-time.After(2 * time.Second):
+				t.Error("TestDeniedCodeDenied...FAIL")
+			}
+
+			<-time.After(2 * time.Second)
+
+			cancel()
+	*/
 
 	// Try to remake a connection, must fail
 	start = jwt.NewNumericDate(time.Now().Add(-time.Second))

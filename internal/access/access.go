@@ -238,7 +238,8 @@ func denyHandler(config Config) func(operations.DenyParams, interface{}) middlew
 
 		config.DenyStore.Deny(params.Bid, params.Exp)
 
-		config.DenyChannel <- params.Bid // alert crossbar we need to cancel some connections
+		config.CodeStore.DeleteByBookingID(params.Bid) //remove any tokens with the bookingID in them
+		config.DenyChannel <- params.Bid               // alert crossbar we need to cancel some connections
 
 		return operations.NewDenyNoContent()
 	}
