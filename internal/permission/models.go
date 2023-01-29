@@ -19,7 +19,7 @@ type Token struct {
 	// BookingID represents the booking id/name that the token has been generated
 	// for, so that connections can be dropped / denied if a booked session
 	// is cancelled
-	BookingID string `json:"bookingID"`
+	BookingID string `json:"booking_id"`
 
 	// Topic identifies the communication channel;
 	// think of it as a session_id, or room (webrtc)
@@ -35,16 +35,6 @@ type Token struct {
 	// Scopes controlling access to relay;
 	// either ["read"],["write"], or ["read","write"] for session, or ["host"]/["client"] for shell
 	Scopes []string `json:"scopes"`
-
-	// ConnectionIDSalt remains hidden within a relay
-	// and is used to obscure the actual topic used in a hub
-	// from visibility in access logs e.g. in shellbar
-	TopicSalt string `json:"topicSalt,omitempty"  yaml:",omitempty"`
-
-	// AlertHost controls whether making _this_
-	// particular connection should alert the host
-	// This is needed for ssh hosts in shellbar
-	AlertHost bool `json:"alertHost,omitempty" yaml:",omitempty"`
 
 	jwt.RegisteredClaims `yaml:",omitempty"`
 }
@@ -68,16 +58,6 @@ func NewToken(audience, connectionType, topic string, scopes []string, iat, nbf,
 // SetBookingID sets the bookingID (so that connections can be cancelled if a booking is cancelled)
 func (t *Token) SetBookingID(bookingID string) {
 	t.BookingID = bookingID
-}
-
-// SetTopicSalt sets the salt for token topic
-func SetTopicSalt(token *Token, salt string) {
-	token.TopicSalt = salt
-}
-
-// SetAlertHost sets the boolean value of AlertHost
-func SetAlertHost(token *Token, alertHost bool) {
-	token.AlertHost = alertHost
 }
 
 // HasRequiredClaims returns false if the Token is missing any required elements
