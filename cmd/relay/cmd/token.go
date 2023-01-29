@@ -45,7 +45,7 @@ these defaults can be altered as required:
 export RELAY_TOKEN_SCOPE_READ=true
 export RELAY_TOKEN_SCOPE_WRITE=true
 export RELAY_TOKEN_CONNECTION_TYPE=session
-
+The scopes read and write do NOT modify the permissions granted with relay:admin scope so can be omitted for admin tokens
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
@@ -81,12 +81,12 @@ export RELAY_TOKEN_CONNECTION_TYPE=session
 			fmt.Println("RELAY_TOKEN_SECRET not set")
 			ok = false
 		}
-		if topic == "" {
+		if topic == "" && !scope_admin {
 			fmt.Println("RELAY_TOKEN_TOPIC not set")
 			ok = false
 		}
 
-		if connectionType == "" {
+		if connectionType == "" && !scope_admin {
 			fmt.Println("RELAY_TOKEN_CONNECTION_TYPE not set")
 			ok = false
 		}
