@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/ttlcode"
+	"github.com/stretchr/testify/assert"
 )
 
 func createToken() permission.Token {
@@ -146,4 +146,34 @@ func TestTokensAreDistinct(t *testing.T) {
 
 	assert.Equal(t, token0, tok0)
 	assert.Equal(t, token1, tok1)
+}
+
+func TestDeleteByBookingID(t *testing.T) {
+
+	t.Parallel()
+
+	ttl := int64(3)
+
+	c := ttlcode.NewDefaultCodeStore().
+		WithTTL(ttl)
+	defer c.Close()
+
+	token0 := createToken()
+	token0.BookingID = "bid0"
+	code0 := c.SubmitToken(token0)
+
+	token1 := createToken()
+	token1.BookingID = "bid1"
+	code1 := c.SubmitToken(token1)
+
+	c.DeleteByBookingID("bid1")
+
+	tok0, err := c.ExchangeCode(code0)
+	assert.NoError(t, err)
+	assert.Equal(t, token0, tok0)
+
+	tok1, err := c.ExchangeCode(code1) //should be gone
+	assert.Error(t, err)
+	assert.Equal(t, "invalid code", err.Error())
+	assert.Equal(t, permission.Token{}, tok1)
 }

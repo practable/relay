@@ -127,10 +127,16 @@ func (c *CodeStore) ExchangeCode(code string) (permission.Token, error) {
 func (c *CodeStore) CleanExpired() {
 	c.Lock()
 	defer c.Unlock()
+	expired := []string{}
+
 	for code, token := range c.store {
 		if token.Expired() {
-			delete(c.store, code)
+			expired = append(expired, code)
 		}
+	}
+
+	for _, code := range expired {
+		delete(c.store, code)
 	}
 }
 
@@ -142,4 +148,19 @@ func (c *CodeStore) GetTTL() int64 {
 // GetCodeCount counts the number of tokens in the store
 func (c *CodeStore) GetCodeCount() int {
 	return len(c.store)
+}
+
+func (c *CodeStore) DeleteByBookingID(bid string) {
+
+	stale := []string{}
+
+	for code, token := range c.store {
+		if token.Token.BookingID == bid {
+			stale = append(stale, code)
+		}
+	}
+	for _, code := range stale {
+		delete(c.store, code)
+	}
+
 }
