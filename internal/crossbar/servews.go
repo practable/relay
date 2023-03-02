@@ -52,7 +52,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	log.WithFields(log.Fields{"topic": topic}).Error("new connection upgraded to websocket") //Cannot return any http responses from here on
+	log.WithFields(log.Fields{"topic": topic}).Debug("new connection upgraded to websocket") //Cannot return any http responses from here on
 
 	// Enforce permissions by exchanging the authcode for a connection ticket
 	// which contains expiry time, route, and permissions
