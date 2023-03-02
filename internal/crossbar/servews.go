@@ -150,7 +150,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 			conn:       conn,
 			denied:     denied,
 			expiresAt:  (*token.ExpiresAt).Unix(),
-			send:       make(chan message, 256),
+			send:       make(chan message, int(config.BufferSize)),
 			topic:      topic,
 			stats:      stats,
 			name:       uuid.New().String(),

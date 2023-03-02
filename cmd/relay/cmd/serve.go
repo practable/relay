@@ -53,6 +53,7 @@ variables, for example:
 
 export RELAY_ALLOW_NO_BOOKING_ID=true
 export RELAY_AUDIENCE=https://example.org
+export RELAY_BUFFER_SIZE=128
 export RELAY_LOG_LEVEL=warn
 export RELAY_LOG_FORMAT=json
 export RELAY_LOG_FILE=/var/log/relay/relay.log
@@ -77,6 +78,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 
 		viper.SetDefault("allow_no_booking_id", false) // default to most secure option; set true for backwards compatibility
 		viper.SetDefault("audience", "")               //so we can check it's been provided
+		viper.SetDefault("buffer_size", 128)
 		viper.SetDefault("log_file", "/var/log/relay/relay.log")
 		viper.SetDefault("log_format", "json")
 		viper.SetDefault("log_level", "warn")
@@ -90,6 +92,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 
 		allowNoBookingID := viper.GetBool("allow_no_booking_id")
 		audience := viper.GetString("audience")
+		bufferSize := viper.GetInt64("buffer_size")
 		logFile := viper.GetString("log_file")
 		logFormat := viper.GetString("log_format")
 		logLevel := viper.GetString("log_level")
@@ -181,6 +184,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 		log.Infof("relay version: %s", versionString())
 		log.Infof("Allow no booking ID: [%t]", allowNoBookingID)
 		log.Infof("Audience: [%s]", audience)
+		log.Infof("Buffer Size: [%d]", bufferSize)
 		log.Infof("Log file: [%s]", logFile)
 		log.Infof("Log format: [%s]", logFormat)
 		log.Infof("Log level: [%s]", logLevel)
@@ -223,12 +227,13 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 
 		config := relay.Config{
 			AccessPort:       portAccess,
-			RelayPort:        portRelay,
+			AllowNoBookingID: allowNoBookingID,
 			Audience:         audience,
+			BufferSize:       bufferSize,
+			PruneEvery:       tidyEvery,
+			RelayPort:        portRelay,
 			Secret:           secret,
 			Target:           URL,
-			AllowNoBookingID: allowNoBookingID,
-			PruneEvery:       tidyEvery,
 		}
 
 		go relay.Relay(closed, &wg, config) //accessPort, relayPort, audience, secret, target, allowNoBookingID)

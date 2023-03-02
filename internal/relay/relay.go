@@ -19,6 +19,7 @@ type Config struct {
 	Target           string
 	AllowNoBookingID bool
 	PruneEvery       time.Duration
+	BufferSize       int64
 }
 
 // Relay runs a websocket relay
@@ -46,11 +47,16 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 		}
 	}()
 
+	if config.BufferSize < 1 || config.BufferSize > 512 {
+		log.WithFields(log.Fields{"requested": config.BufferSize, "actual": 256}).Warn("Overriding configured buffer size because out of range 1-512")
+		config.BufferSize = 256
+	}
 	crossbarConfig := crossbar.Config{
-		Listen:    config.RelayPort,
-		Audience:  config.Target,
-		CodeStore: cs,
-		DenyStore: ds,
+		Listen:     config.RelayPort,
+		Audience:   config.Target,
+		CodeStore:  cs,
+		DenyStore:  ds,
+		BufferSize: config.BufferSize,
 	}
 
 	wg.Add(1)
