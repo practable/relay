@@ -40,7 +40,7 @@ func (c *Client) readPump() {
 
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Errorf("error: %v", err)
+				log.Tracef("readPump error: %v", err)
 			}
 			break
 		}
@@ -72,10 +72,10 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
-		log.Debug("write pump dead")
+		log.Trace("write pump dead")
 	}()
 	for {
-		log.Debug("Write pump alive")
+		log.Trace("write pump alive")
 		select {
 
 		case message, ok := <-c.send:
@@ -89,7 +89,8 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				// The hub closed the channel.
 				err := c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				if err != nil {
-					log.Errorf("writePump closeMessage error: %s", err.Error())
+					// this error not important as channel is closed or closing anyway
+					log.Tracef("writePump closeMessage error: %s", err.Error())
 				}
 				return
 			}
@@ -104,13 +105,13 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				n, err := w.Write(message.data)
 
 				if err != nil {
-					log.Errorf("writePump writing error: %v", err)
+					log.Tracef("writePump writing error: %v", err)
 				}
 
 				size := len(message.data)
 
-				if n != size {
-					log.Errorf("writePump incomplete write %d of %d", n, size)
+				if err == nil && n != size {
+					log.Errorf("writePump incomplete write %d of %d", n, size) //don't log this if already a writing error
 				}
 
 				// Add queued chunks to the current websocket message, without delimiter.
@@ -123,11 +124,11 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 
 					n, err := w.Write(followOnMessage.data)
 					if err != nil {
-						log.Errorf("writePump writing error: %v", err)
+						log.WithField("error", err.Error()).Error("writePump writing error for follow on message")
 					}
 
-					if n != len(followOnMessage.data) {
-						log.Errorf("writePump incomplete write %d of %d", n, size)
+					if err == nil && n != len(followOnMessage.data) {
+						log.WithFields(log.Fields{"wanted": size, "actual": n}).Error("writePump incomplete write")
 					}
 
 					size += n

@@ -31,9 +31,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/jpillora/backoff"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/access/restapi/operations"
 	"github.com/practable/relay/internal/chanstats"
+	log "github.com/sirupsen/logrus"
 )
 
 // WsMessage represents a websocket message
@@ -201,9 +201,9 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 			if err == nil {
 				boff.Reset()
 				waitBeforeDial = false
-				log.Debugf("%s: dial finished successfully, resetting timeout to zero", id)
+				log.Tracef("%s: dial finished successfully, resetting timeout to zero", id)
 			} else {
-				log.WithField("error", err).Debugf("%s: Dial finished with error, increasing timeout", id)
+				log.WithField("error", err).Tracef("%s: Dial finished with error, increasing timeout", id)
 			}
 			//TODO immediate return if cancelled....?
 		}
@@ -287,13 +287,13 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 			// optionally forward messages
 			if r.ForwardIncoming {
 				r.In <- WsMessage{Data: data, Type: mt}
-				log.Debugf("%s: received %d-byte message", id, len(data))
+				log.Tracef("%s: received %d-byte message", id, len(data))
 				//update stats
 				r.Stats.Rx.Bytes.Add(float64(len(data)))
 				r.Stats.Rx.Dt.Add(time.Since(r.Stats.Rx.Last).Seconds())
 				r.Stats.Rx.Last = time.Now()
 			} else {
-				log.Debugf("%s: ignored %d-byte message", id, len(data))
+				log.Tracef("%s: ignored %d-byte message", id, len(data))
 			}
 		}
 	}()
@@ -312,7 +312,7 @@ LOOPWRITING:
 				log.WithField("error", err).Infof("%s: error writing to conn; closing", id)
 				break LOOPWRITING
 			}
-			log.Debugf("%s: sent %d-byte message", id, len(msg.Data))
+			log.Tracef("%s: sent %d-byte message", id, len(msg.Data))
 			//update stats
 			r.Stats.Tx.Bytes.Add(float64(len(msg.Data)))
 			r.Stats.Tx.Dt.Add(time.Since(r.Stats.Tx.Last).Seconds())
@@ -331,7 +331,7 @@ LOOPWRITING:
 			break LOOPWRITING
 		}
 	}
-	log.Debugf("%s: done", id)
+	log.Tracef("%s: done", id)
 	return err
 
 }

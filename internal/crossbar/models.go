@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/practable/relay/internal/deny"
 	"github.com/practable/relay/internal/ttlcode"
+	log "github.com/sirupsen/logrus"
 )
 
 // Config represents configuration options for a crossbar instance
@@ -28,6 +29,9 @@ type Config struct {
 
 	//DenyStore holds deny-listed bookingIDs
 	DenyStore *deny.Store
+
+	//BufferSize sets the buffer size for client communications channels
+	BufferSize int64
 }
 
 // NewDefaultConfig returns a pointer to a Config struct with default parameters
@@ -35,18 +39,33 @@ func NewDefaultConfig() *Config {
 	c := &Config{}
 	c.Listen = 3000
 	c.CodeStore = ttlcode.NewDefaultCodeStore()
+	c.BufferSize = 128
+	log.WithFields(log.Fields{"BufferSize": c.BufferSize, "listen": c.Listen, "ttl": c.CodeStore.GetTTL()}).Info("crossbar default config")
+	return c
+}
+
+// WithBufferSize specifies the client channel buffer size
+func (c *Config) WithBufferSize(n int64) *Config {
+	if n > 0 && n <= 512 {
+		c.BufferSize = n
+	} else {
+		log.WithFields(log.Fields{"requested": n, "actual": c.BufferSize}).Error("BufferSize must be between 1 - 512 (128 recommended)")
+	}
+	log.WithFields(log.Fields{"BufferSize": n}).Info("crossbar buffer size set")
 	return c
 }
 
 // WithListen specified which (int) port to listen on
 func (c *Config) WithListen(listen int) *Config {
 	c.Listen = listen
+	log.WithFields(log.Fields{"listen": listen}).Info("crossbar listening port set")
 	return c
 }
 
 // WithAudience specificies the audience for the tokens
 func (c *Config) WithAudience(audience string) *Config {
 	c.Audience = audience
+	log.WithFields(log.Fields{"audience": audience}).Info("crossbar audience set")
 	return c
 }
 
@@ -54,6 +73,7 @@ func (c *Config) WithAudience(audience string) *Config {
 func (c *Config) WithCodeStoreTTL(ttl int64) *Config {
 	c.CodeStore = ttlcode.NewDefaultCodeStore().
 		WithTTL(ttl)
+	log.WithFields(log.Fields{"ttl": ttl}).Info("crossbar ttl set")
 	return c
 }
 

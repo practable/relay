@@ -87,7 +87,7 @@ func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, message
 
 	go func() {
 		if err := h.ListenAndServe(); err != nil {
-			log.Infof("ListenAndServe: %s ", err.Error()) //TODO upgrade to fatal once httptest is supported
+			log.Errorf("ListenAndServe: %s ", err.Error()) //TODO upgrade to fatal once httptest is supported
 		}
 	}()
 
@@ -97,10 +97,10 @@ func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, message
 	defer cancel()
 	err := h.Shutdown(ctx)
 	if err != nil {
-		log.Infof("ListenAndServe.Shutdown(): %s", err.Error())
+		log.Errorf("ListenAndServe.Shutdown(): %s", err.Error())
 	}
 
 	wg.Wait()
 	parentwg.Done()
-	log.Trace("handleConnections is done")
+	log.Debug("handleConnections is done")
 }

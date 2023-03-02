@@ -114,24 +114,24 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 
 		if err != nil {
 			msg := "error parsing token " + err.Error()
-			log.Info(msg)
+			log.Error(msg)
 			return nil, errors.New("token invalid")
 		}
 
 		if !token.Valid { //checks iat, nbf, exp
-			log.Info("Token invalid")
+			log.Error("Token invalid")
 			return nil, errors.New("token invalid")
 		}
 
 		if cc, ok := token.Claims.(*permission.Token); ok {
 
 			if !cc.RegisteredClaims.VerifyAudience(host, true) {
-				log.WithFields(log.Fields{"aud": cc.RegisteredClaims.Audience, "host": host}).Info("aud does not match this host")
+				log.WithFields(log.Fields{"aud": cc.RegisteredClaims.Audience, "host": host}).Error("aud does not match this host")
 				return nil, fmt.Errorf("aud %s does not match this host %s", cc.RegisteredClaims.Audience, host)
 			}
 
 		} else {
-			log.WithFields(log.Fields{"token": bearerToken, "host": host}).Info("Error parsing token")
+			log.WithFields(log.Fields{"token": bearerToken, "host": host}).Error("Error parsing token")
 			return nil, err
 		}
 
