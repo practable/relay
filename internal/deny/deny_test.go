@@ -20,15 +20,22 @@ func TestDeny(t *testing.T) {
 	ds.Deny("id2", 1673952010)
 	ds.Deny("id3", 1673952020)
 
-	ae := []string{"id0", "id1"}
-	aa := ds.GetAllowList()
+	aem := map[string]bool{"id0": true, "id1": true}
+	aal := ds.GetAllowList()
+	aam := make(map[string]bool)
+	for _, id := range aal {
+		aam[id] = true
+	}
+	assert.Equal(t, aem, aam)
 
-	assert.Equal(t, ae, aa)
+	dem := map[string]bool{"id2": true, "id3": true}
+	dal := ds.GetDenyList()
+	dam := make(map[string]bool)
+	for _, id := range dal {
+		dam[id] = true
+	}
 
-	de := []string{"id2", "id3"}
-	da := ds.GetDenyList()
-
-	assert.Equal(t, de, da)
+	assert.Equal(t, dem, dam)
 
 	// Check status
 	assert.Equal(t, false, ds.IsDenied("id0"))
@@ -43,12 +50,12 @@ func TestDeny(t *testing.T) {
 
 	ds.Prune()
 
-	ae = []string{"id1"}
-	aa = ds.GetAllowList()
+	ae := []string{"id1"}
+	aa := ds.GetAllowList()
 	assert.Equal(t, ae, aa)
 
-	de = []string{"id3"}
-	da = ds.GetDenyList()
+	de := []string{"id3"}
+	da := ds.GetDenyList()
 	assert.Equal(t, de, da)
 
 	// Check status
