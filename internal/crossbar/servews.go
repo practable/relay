@@ -1,7 +1,6 @@
 package crossbar
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -31,12 +30,8 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	path := slashify(r.URL.Path)
 
-	log.WithField("path", path).Trace()
-
 	prefix := getConnectionTypeFromPath(path)
 	topic := getTopicFromPath(path)
-
-	log.Trace(fmt.Sprintf("%s -> %s and %s\n", path, prefix, topic))
 
 	if prefix == "session" {
 		ct = Session
@@ -45,21 +40,19 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		ct = Unsupported //TODO implement shell!
 	}
 
-	log.WithField("connectionType", ct).Trace()
-
 	if ct == Unsupported {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		log.WithField("connectionType", prefix).Error("connectionType unsuported")
+		log.WithFields(log.Fields{"connection_type": prefix, "path": path}).Error("new connection rejected because connectionType unsupported")
 		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.WithField("error", err).Error("serveWs failed to upgrade to websocket")
+		log.WithFields(log.Fields{"path": path, "error": err.Error()}).Error("new connection failed to upgrade to websocket")
 		return
 	}
 
-	log.Trace("upgraded to ws") //Cannot return any http responses from here on
+	log.WithFields(log.Fields{"topic": topic}).Error("new connection upgraded to websocket") //Cannot return any http responses from here on
 
 	// Enforce permissions by exchanging the authcode for a connection ticket
 	// which contains expiry time, route, and permissions
@@ -68,11 +61,9 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	code := r.URL.Query().Get("code")
 
-	log.WithField("code", code).Trace()
-
 	// if no code or empty, return 401
 	if code == "" {
-		log.WithField("topic", topic).Info("Unauthorized - No Code")
+		log.WithFields(log.Fields{"topic": topic}).Error("unauthorized because no code")
 		return
 	}
 
@@ -80,30 +71,29 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 
 	token, err := config.CodeStore.ExchangeCode(code)
 
-	log.WithFields(log.Fields{"token": util.Compact(token), "error": err}).Trace("Exchange code")
-
 	if err != nil {
-		log.WithField("topic", topic).Info("Unauthorized - Invalid Code")
+		log.WithFields(log.Fields{"error": err.Error(), "topic": topic, "booking_id": token.BookingID}).Error("unauthorized because invalid code")
 		return
 	}
+
+	// if debugging, we want to show the token
+	log.WithFields(log.Fields{"topic": topic, "token": util.Compact(token)}).Debug("code exchanged ok")
 
 	// check token is a permission token so we can process it properly
 	// It's been validated so we don't need to re-do that
 	if !permission.HasRequiredClaims(token) {
-		log.WithField("topic", topic).Info("Unauthorized - original token missing claims")
+		log.WithFields(log.Fields{"topic": topic, "booking_id": token.BookingID}).Error("unauthorized because token missing claims")
 		return
 	}
 
 	now := config.CodeStore.GetTime()
 
 	if token.NotBefore.After(time.Unix(now, 0)) {
-		log.WithField("topic", topic).Info("Unauthorized - Too early")
+		log.WithFields(log.Fields{"topic": topic, "booking_id": token.BookingID}).Error("unauthorized because too early")
 		return
 	}
 
 	ttl := token.ExpiresAt.Unix() - now
-
-	log.WithFields(log.Fields{"ttl": ttl, "topic": topic}).Trace()
 
 	audok := false
 
@@ -117,13 +107,13 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 	expired := ttl < 0
 
 	if (!audok) || topicBad || expired {
-		log.WithFields(log.Fields{"audienceOK": audok, "topicOK": !topicBad, "expired": expired, "topic": topic}).Trace("Token invalid")
+		log.WithFields(log.Fields{"audience_ok": audok, "topic_ok": !topicBad, "expired": expired, "topic": topic, "booking_id": token.BookingID}).Error("unauthorized because token invalid")
 		return
 	}
 
 	// we must check the booking is not denied here, else a user could request access, get a code, cancel booking, then use code to start a connection
 	if config.DenyStore.IsDenied(token.BookingID) {
-		log.WithFields(log.Fields{"topic": topic, "bookingID": token.BookingID}).Warning("BookingID is deny listed")
+		log.WithFields(log.Fields{"topic": topic, "booking_id": token.BookingID}).Error("unauthorized because booking_id is deny listed")
 		return
 	}
 
@@ -141,24 +131,12 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 	}
 
 	if !(canRead || canWrite) {
-		log.WithFields(log.Fields{"topic": topic, "scopes": token.Scopes}).Trace("No valid scopes")
+		log.WithFields(log.Fields{"topic": topic, "booking_id": token.BookingID, "scopes": token.Scopes}).Error("unauthorized because no valid scopes in token")
 		return
 	}
 
 	cancelled := make(chan struct{})
 	denied := make(chan struct{})
-	// cancel the connection when the token has expired or when session is curtailed
-	go func() {
-
-		select {
-		case <-time.After(time.Duration(ttl) * time.Second):
-			log.WithField("topic", topic).Trace("Token Expired")
-		case <-denied:
-			log.WithField("topic", topic).Info("Token Denied")
-		}
-
-		close(cancelled)
-	}()
 
 	if ct == Session {
 		// initialise statistics
@@ -183,6 +161,35 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 			canWrite:   canWrite,
 		}
 		client.hub.register <- client
+
+		cf := log.Fields{
+			"booking_id":  token.BookingID,
+			"expires_at":  (*token.ExpiresAt).Unix(),
+			"topic":       topic,
+			"stats":       true,
+			"buffer_size": config.BufferSize,
+			"name":        uuid.New().String(),
+			"user_agent":  r.UserAgent(),
+			"remote_addr": r.Header.Get("X-Forwarded-For"),
+			"audience":    config.Audience,
+			"can_read":    canRead,
+			"can_write":   canWrite,
+		}
+
+		log.WithFields(cf).Infof("new connection")
+
+		// cancel the connection when the token has expired or when session is curtailed
+		go func() {
+
+			select {
+			case <-time.After(time.Duration(ttl) * time.Second):
+				log.WithFields(cf).WithField("reason", "token expired").Info("connection closed")
+			case <-denied:
+				log.WithFields(cf).WithField("reason", "token denied").Info("connection closed")
+			}
+
+			close(cancelled)
+		}()
 
 		go client.writePump(closed, cancelled)
 		go client.readPump()
