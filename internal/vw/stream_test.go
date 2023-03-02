@@ -167,6 +167,7 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 	}
 	//go streamCmd.Run(streamCmd, nil) //streamCmd will populate the global app
 	go Stream()
+	t.Log("If this test fails with exit status 1 with no messages, check for external process using port 8888")
 
 	// destination websocket reporting channels
 	msgSize0 := make(chan int)
