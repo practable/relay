@@ -13,13 +13,14 @@ import (
 
 type Config struct {
 	AccessPort       int
-	RelayPort        int
-	Audience         string
-	Secret           string
-	Target           string
 	AllowNoBookingID bool
-	PruneEvery       time.Duration
+	Audience         string
 	BufferSize       int64
+	PruneEvery       time.Duration
+	RelayPort        int
+	Secret           string
+	StatsEvery       time.Duration
+	Target           string
 }
 
 // Relay runs a websocket relay
@@ -51,12 +52,19 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 		log.WithFields(log.Fields{"requested": config.BufferSize, "actual": 256}).Warn("Overriding configured buffer size because out of range 1-512")
 		config.BufferSize = 256
 	}
+
+	if config.StatsEvery < time.Duration(time.Second) {
+		log.WithFields(log.Fields{"requested": config.StatsEvery, "actual": "1s"}).Warn("Overriding configured stats every because smaller than 1s")
+		config.StatsEvery = time.Duration(time.Second) //we have to balance fast testing vs high CPU load in production if too short
+	}
+
 	crossbarConfig := crossbar.Config{
 		Listen:     config.RelayPort,
 		Audience:   config.Target,
 		CodeStore:  cs,
 		DenyStore:  ds,
 		BufferSize: config.BufferSize,
+		StatsEvery: config.StatsEvery,
 	}
 
 	wg.Add(1)

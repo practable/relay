@@ -70,11 +70,12 @@ func TestCrossbar(t *testing.T) {
 	ds := deny.New()
 
 	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-		DenyStore: ds,
-		Secret:    secret,
+		Listen:     port,
+		Audience:   audience,
+		CodeStore:  cs,
+		DenyStore:  ds,
+		Secret:     secret,
+		StatsEvery: time.Duration(time.Second),
 	}
 
 	wg.Add(1)

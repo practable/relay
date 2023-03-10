@@ -15,14 +15,11 @@ import (
 // Use this struct to pass configuration as argument during testing
 type Config struct {
 
-	// Listen is the listening port
-	Listen int
-
 	// Audience must match the host in token
 	Audience string
 
-	// Secret is used to validating statsTokens
-	Secret string
+	//BufferSize sets the buffer size for client communications channels
+	BufferSize int64
 
 	// ExchangeCode swaps a code for the associated Token
 	CodeStore *ttlcode.CodeStore
@@ -30,8 +27,14 @@ type Config struct {
 	//DenyStore holds deny-listed bookingIDs
 	DenyStore *deny.Store
 
-	//BufferSize sets the buffer size for client communications channels
-	BufferSize int64
+	// Listen is the listening port
+	Listen int
+
+	// Secret is used to validating statsTokens
+	Secret string
+
+	//StatsEvery sets how often stats are reported
+	StatsEvery time.Duration
 }
 
 // NewDefaultConfig returns a pointer to a Config struct with default parameters
@@ -40,6 +43,7 @@ func NewDefaultConfig() *Config {
 	c.Listen = 3000
 	c.CodeStore = ttlcode.NewDefaultCodeStore()
 	c.BufferSize = 128
+	c.StatsEvery = time.Duration(5 * time.Second)
 	log.WithFields(log.Fields{"BufferSize": c.BufferSize, "listen": c.Listen, "ttl": c.CodeStore.GetTTL()}).Info("crossbar default config")
 	return c
 }
@@ -52,6 +56,13 @@ func (c *Config) WithBufferSize(n int64) *Config {
 		log.WithFields(log.Fields{"requested": n, "actual": c.BufferSize}).Error("BufferSize must be between 1 - 512 (128 recommended)")
 	}
 	log.WithFields(log.Fields{"BufferSize": n}).Info("crossbar buffer size set")
+	return c
+}
+
+// WithStatsEvery specifies how often to send stats
+func (c *Config) WithStatsEvery(statsEvery time.Duration) *Config {
+	c.StatsEvery = statsEvery
+	log.WithFields(log.Fields{"statsEvery": statsEvery}).Info("crossbar statsEvery set")
 	return c
 }
 

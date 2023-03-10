@@ -32,12 +32,12 @@ func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, hub *Hub, config Co
 	}
 	client.hub.register <- client
 
-	go client.statsReporter(closed, wg)
+	go client.statsReporter(closed, wg, config.StatsEvery)
 
 }
 
 // StatsReporter sends a stats update in response to {"cmd":"update"}.
-func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
+func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup, statsEvery time.Duration) {
 
 	defer wg.Done()
 
@@ -101,7 +101,7 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 				continue
 			}
 
-		case <-time.After(5 * time.Second):
+		case <-time.After(statsEvery):
 			log.Trace("StatsReporter routine send...")
 		}
 
@@ -148,12 +148,22 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup) {
 					}
 				}
 				client.stats.rx.mu.RUnlock()
+
+				c, err := client.stats.connectedAt.UTC().MarshalText()
+				if err != nil {
+					log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "connectedAt": client.stats.connectedAt}).Error("stats cannot marshal connectedAt time to string")
+				}
+				ea, err := client.stats.connectedAt.UTC().MarshalText()
+				if err != nil {
+					log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "expiresAt": client.stats.expiresAt}).Error("stats cannot marshal expiresAt time to string")
+				}
+
 				report := &ClientReport{
 					Topic:      client.topic,
 					CanRead:    client.canRead,
 					CanWrite:   client.canWrite,
-					Connected:  client.stats.connectedAt.String(),
-					ExpiresAt:  client.stats.expiresAt.String(),
+					Connected:  string(c),
+					ExpiresAt:  string(ea),
 					RemoteAddr: client.remoteAddr,
 					UserAgent:  client.userAgent,
 					Stats: RxTx{

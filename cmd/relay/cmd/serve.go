@@ -62,6 +62,7 @@ export RELAY_PORT_PROFILE=6061
 export RELAY_PORT_RELAY=3001
 export RELAY_PROFILE=true
 export RELAY_SECRET=somesecret
+export RELAY_STATS_EVERY=5s
 export RELAY_TIDY_EVERY=5m 
 export RELAY_URL=wss://example.io/relay 
 relay serve 
@@ -87,6 +88,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 		viper.SetDefault("profile", "true")
 		viper.SetDefault("profile_port", 6061)
 		viper.SetDefault("secret", "") //so we can check it's been provided
+		viper.SetDefault("stats_every", "5s")
 		viper.SetDefault("tidy_every", "5m")
 		viper.SetDefault("url", "") //so we can check it's been provided
 
@@ -101,6 +103,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 		portRelay := viper.GetInt("port_relay")
 		profile := viper.GetBool("profile")
 		secret := viper.GetString("secret")
+		statsEveryStr := viper.GetString("stats_every")
 		tidyEveryStr := viper.GetString("tidy_every")
 		URL := viper.GetString("url")
 
@@ -127,6 +130,12 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 		}
 
 		// parse durations
+		statsEvery, err := time.ParseDuration(statsEveryStr)
+
+		if err != nil {
+			fmt.Print("cannot parse duration in RELAY_STATS_EVERY=" + statsEveryStr)
+			os.Exit(1)
+		}
 
 		tidyEvery, err := time.ParseDuration(tidyEveryStr)
 
@@ -193,6 +202,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 		log.Infof("Port for relay: [%d]", portRelay)
 		log.Infof("Profiling is on: [%t]", profile)
 		log.Debugf("Secret: [%s...%s]", secret[:4], secret[len(secret)-4:])
+		log.Infof("Stats every: [%s]", statsEvery)
 		log.Infof("Tidy every: [%s]", tidyEvery)
 		log.Infof("URL: [%s]", URL)
 
@@ -233,6 +243,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 			PruneEvery:       tidyEvery,
 			RelayPort:        portRelay,
 			Secret:           secret,
+			StatsEvery:       statsEvery,
 			Target:           URL,
 		}
 
