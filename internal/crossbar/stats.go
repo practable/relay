@@ -153,7 +153,7 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup, stats
 				if err != nil {
 					log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "connectedAt": client.stats.connectedAt}).Error("stats cannot marshal connectedAt time to string")
 				}
-				ea, err := client.stats.connectedAt.UTC().MarshalText()
+				ea, err := client.stats.expiresAt.UTC().MarshalText()
 				if err != nil {
 					log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "expiresAt": client.stats.expiresAt}).Error("stats cannot marshal expiresAt time to string")
 				}
