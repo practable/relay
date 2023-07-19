@@ -141,8 +141,6 @@ type ReportStats struct {
 
 // ClientReport represents information about a client's connection, permissions, and statistics
 type ClientReport struct {
-	Topic string `json:"topic"`
-
 	CanRead bool `json:"canRead"`
 
 	CanWrite bool `json:"canWrite"`
@@ -153,9 +151,11 @@ type ClientReport struct {
 
 	RemoteAddr string `json:"remoteAddr"`
 
-	UserAgent string `json:"userAgent"`
-
 	Stats RxTx `json:"stats"`
+
+	Topic string `json:"topic"`
+
+	UserAgent string `json:"userAgent"`
 }
 
 // StatsCommand represents a command in string form
