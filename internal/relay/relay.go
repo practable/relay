@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Config holds the relay server paramters
 type Config struct {
 	AccessPort       int
 	AllowNoBookingID bool
