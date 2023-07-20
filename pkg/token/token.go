@@ -14,7 +14,7 @@ func New(iat, nbf, exp time.Time, scopes []string, aud, bid, connectionType, sec
 
 	claims.IssuedAt = jwt.NewNumericDate(iat)
 	claims.NotBefore = jwt.NewNumericDate(nbf)
-	claims.ExpiresAt = jwt.NewNumericDate(iat)
+	claims.ExpiresAt = jwt.NewNumericDate(exp)
 
 	claims.Audience = jwt.ClaimStrings{aud}
 	claims.BookingID = bid
