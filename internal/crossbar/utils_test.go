@@ -1,12 +1,8 @@
 package crossbar
 
 import (
-	"bufio"
-	"bytes"
-	"os"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,16 +26,6 @@ func TestSlashify(t *testing.T) {
 		t.Errorf("Slashify not coping with internal slashes %s -> %s", b, slashify(b))
 	}
 
-}
-
-func suppressLog() {
-	var ignore bytes.Buffer
-	logignore := bufio.NewWriter(&ignore)
-	log.SetOutput(logignore)
-}
-
-func displayLog() {
-	log.SetOutput(os.Stdout)
 }
 
 func TestGetConnectionTypeFromPath(t *testing.T) {
