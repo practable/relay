@@ -43,10 +43,10 @@ func (h *Hub) Run(closed chan struct{}) {
 			}
 			h.Clients[client.Topic][client] = true
 		case client := <-h.Unregister:
-			if _, ok := h.Clients[client.Topic]; ok {
-				delete(h.Clients[client.Topic], client)
-				//client knows it is finished, so no need to close(client.Send)
-			}
+			// no guard needed SCC-S1033
+			delete(h.Clients[client.Topic], client)
+			//client knows it is finished, so no need to close(client.Send)
+
 		case message := <-h.Broadcast:
 			topic := message.Sender.Topic
 			for client := range h.Clients[topic] {
@@ -74,10 +74,10 @@ func (h *Hub) RunWithStats(closed chan struct{}) {
 			}
 			h.Clients[client.Topic][client] = true
 		case client := <-h.Unregister:
-			if _, ok := h.Clients[client.Topic]; ok {
-				delete(h.Clients[client.Topic], client)
-				//client knows it is finished, so no need to close(client.Send)
-			}
+			// no guard needed SCC-S1033
+			delete(h.Clients[client.Topic], client)
+			//client knows it is finished, so no need to close(client.Send)
+
 		case message := <-h.Broadcast:
 
 			topic := message.Sender.Topic

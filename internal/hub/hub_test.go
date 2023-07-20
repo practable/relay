@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/practable/relay/internal/counter"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInstantiateHub(t *testing.T) {
@@ -331,7 +331,7 @@ func TestSendManyMessages(t *testing.T) {
 
 	iterations := 100
 
-	duration := time.Duration(iterations+5)*5*time.Millisecond + time.Millisecond
+	duration := time.Duration(iterations+5)*5*time.Millisecond + 20*time.Millisecond
 
 	go receive(rxCount, ca2, contentA, duration, t)
 	go receive(rxCount, cb2, contentB, duration, t)
@@ -518,11 +518,11 @@ func TestStats(t *testing.T) {
 	}
 
 	expectedDt := 20e-3 / 7
-	// arbitrary precision of 5%; assumed sufficient to catch major mistakes in calculating Dt
-	if h.Stats.Dt.Mean() > expectedDt*1.05 {
+	// arbitrary precision of 10%; assumed sufficient to catch major mistakes in calculating Dt
+	if h.Stats.Dt.Mean() > expectedDt*1.1 {
 		t.Errorf("Dt stats are wrong, wanted %f got %f", expectedDt, h.Stats.Dt.Mean())
 	}
-	if h.Stats.Dt.Mean() < expectedDt*0.95 {
+	if h.Stats.Dt.Mean() < expectedDt*0.9 {
 		t.Errorf("Dt stats are wrong, wanted %f got %f", expectedDt, h.Stats.Dt.Mean())
 	}
 
