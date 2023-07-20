@@ -20,6 +20,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Config specifies parameters for the access service
 type Config struct {
 	AllowNoBookingID bool
 	CodeStore        *ttlcode.CodeStore
@@ -177,10 +178,9 @@ func sessionHandler(config Config) func(operations.SessionParams, interface{}) m
 			c := "400"
 			m := "bookingID has been deny-listed, probably because the session was cancelled"
 			return operations.NewSessionBadRequest().WithPayload(&models.Error{Code: &c, Message: &m})
-		} else {
-			// track bookingIDs for which we have received connection requests
-			config.DenyStore.Allow(claims.BookingID, claims.ExpiresAt.Unix())
 		}
+		// track bookingIDs for which we have received connection requests
+		config.DenyStore.Allow(claims.BookingID, claims.ExpiresAt.Unix())
 
 		// TODO - have the scopes been checked already?
 
