@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// Store maps parents and children channels e.g. for associating with bookingIDs
 type Store struct {
 	*sync.Mutex
 
@@ -14,6 +15,7 @@ type Store struct {
 	ParentByChild map[string]string
 }
 
+// New returns a store with initialised maps
 func New() *Store {
 
 	return &Store{
@@ -24,7 +26,7 @@ func New() *Store {
 
 }
 
-// parent is typically a bookingID, child for clientname
+// Add a parent-child relationship. A parent is typically a bookingID, child for clientname
 func (s *Store) Add(parent, child string, ch chan struct{}) error {
 
 	s.Lock()
@@ -55,7 +57,7 @@ func (s *Store) Add(parent, child string, ch chan struct{}) error {
 	return nil
 }
 
-// Delete deletes the child, without closing the channel
+// DeleteChild deletes the child, without closing the channel
 func (s *Store) DeleteChild(child string) error {
 	s.Lock()
 	defer s.Unlock()
@@ -64,7 +66,7 @@ func (s *Store) DeleteChild(child string) error {
 
 }
 
-// DeleteAndClose closes the child's channel and deletes it
+// DeleteAndCloseChild closes the child's channel and deletes it
 // this approach ensures the channel cannot be closed twice
 func (s *Store) DeleteAndCloseChild(child string) error {
 	s.Lock()
@@ -74,7 +76,7 @@ func (s *Store) DeleteAndCloseChild(child string) error {
 
 }
 
-// deleteAndOptionalClose is for internal use only by functions holding the lock already
+// deleteAndOptionalCloseChild is for internal use only by functions holding the lock already
 func (s *Store) deleteAndOptionalCloseChild(child string, closeChannel bool) error {
 
 	if child == "" {
@@ -112,7 +114,7 @@ func (s *Store) DeleteParent(parent string) error {
 
 }
 
-// DeleteParent deletes the parent, and all its children, closing the children's channels
+// DeleteAndCloseParent deletes the parent, and all its children, closing the children's channels
 func (s *Store) DeleteAndCloseParent(parent string) error {
 	s.Lock()
 	defer s.Unlock()
