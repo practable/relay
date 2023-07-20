@@ -49,10 +49,9 @@ func (s *Store) Allow(ID string, expiresAt int64) {
 	s.Lock()
 	defer s.Unlock()
 
-	//remove from Deny list, if already there
-	if _, ok := s.DenyList[ID]; ok {
-		delete(s.DenyList, ID)
-	}
+	//remove from Deny list (no gaurd needed SCC-1033)
+	delete(s.DenyList, ID)
+
 	s.AllowList[ID] = expiresAt
 }
 
@@ -61,10 +60,8 @@ func (s *Store) Deny(ID string, expiresAt int64) {
 	s.Lock()
 	defer s.Unlock()
 
-	//remove from Allow list, if already there
-	if _, ok := s.AllowList[ID]; ok {
-		delete(s.AllowList, ID)
-	}
+	//remove from Allow list (no gaurd needed SCC-1033)
+	delete(s.AllowList, ID)
 	s.DenyList[ID] = expiresAt
 }
 
