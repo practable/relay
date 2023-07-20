@@ -38,6 +38,7 @@ func newHub() *Hub {
 	}
 }
 
+// SetDenyChannelStore adds a pointer to the channel map store to the hub
 func (h *Hub) SetDenyChannelStore(dcs *chanmap.Store) {
 	h.dcs = dcs
 }
