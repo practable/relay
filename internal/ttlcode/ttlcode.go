@@ -150,6 +150,7 @@ func (c *CodeStore) GetCodeCount() int {
 	return len(c.store)
 }
 
+// DeleteByBookingID uses the booking ID to delete a store entry
 func (c *CodeStore) DeleteByBookingID(bid string) {
 
 	stale := []string{}
