@@ -63,7 +63,11 @@ func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, message
 			case <-closed:
 				break
 			case bid := <-deny:
-				dcs.DeleteAndCloseParent(bid) //close all connections with this booking id
+				err := dcs.DeleteAndCloseParent(bid) //close all connections with this booking id
+				if err != nil {
+					log.WithFields(log.Fields{"error": err.Error(), "bid": bid}).Error("error closing connections for bid")
+				}
+
 			}
 		}
 	}()
