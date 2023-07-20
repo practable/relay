@@ -12,10 +12,6 @@ func Crossbar(config Config, closed <-chan struct{}, denied chan string, parentw
 
 	messagesToDistribute := make(chan message, 10) //TODO make buffer length configurable
 
-	var topics topicDirectory
-
-	topics.directory = make(map[string][]clientDetails)
-
 	wg.Add(1)
 
 	go handleConnections(closed, &wg, messagesToDistribute, denied, config)

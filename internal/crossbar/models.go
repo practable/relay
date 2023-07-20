@@ -191,19 +191,3 @@ type message struct {
 	mt     int
 	data   []byte //text data are converted to/from bytes as needed
 }
-
-// TODO - remove unused types below this line (some still in use)
-
-type clientDetails struct {
-	name         string
-	topic        string
-	messagesChan chan message
-}
-
-// userActionType represents the type of of action requested
-//type clientActionType int
-
-type topicDirectory struct {
-	sync.Mutex
-	directory map[string][]clientDetails
-}
