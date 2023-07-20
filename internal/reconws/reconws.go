@@ -191,7 +191,7 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 				continue
 			}
 
-			log.Infof("%s: successful relay access request", id)
+			log.WithFields(log.Fields{"body": session, "URI": session.URI}).Infof("%s: successful relay access request", id)
 
 			dialCtx, cancel := context.WithCancel(ctx)
 

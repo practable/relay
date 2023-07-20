@@ -7,7 +7,8 @@ import (
 	"github.com/practable/relay/internal/permission"
 )
 
-func New(iat, nbf, exp time.Time, scopes []string, aud, connectionType, secret, topic string) (string, error) {
+// New returns a signed JWT token
+func New(iat, nbf, exp time.Time, scopes []string, aud, bid, connectionType, secret, topic string) (string, error) {
 
 	var claims permission.Token
 
@@ -16,6 +17,7 @@ func New(iat, nbf, exp time.Time, scopes []string, aud, connectionType, secret, 
 	claims.ExpiresAt = jwt.NewNumericDate(iat)
 
 	claims.Audience = jwt.ClaimStrings{aud}
+	claims.BookingID = bid
 	claims.Topic = topic
 	claims.ConnectionType = connectionType
 	claims.Scopes = scopes

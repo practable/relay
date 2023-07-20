@@ -14,13 +14,14 @@ func TestNew(t *testing.T) {
 	exp := time.Unix(1658308108, 0)
 	scopes := []string{"read", "write"}
 	aud := "https://example.com"
+	bid := "xxx000"
 	connectionType := "session"
 	secret := "some_secret"
 	topic := "expt00"
 
-	token, err := New(iat, nbf, exp, scopes, aud, connectionType, secret, topic)
+	token, err := New(iat, nbf, exp, scopes, aud, bid, connectionType, secret, topic)
 
-	expected := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJib29raW5nX2lkIjoiIiwidG9waWMiOiJleHB0MDAiLCJwcmVmaXgiOiJzZXNzaW9uIiwic2NvcGVzIjpbInJlYWQiLCJ3cml0ZSJdLCJhdWQiOlsiaHR0cHM6Ly9leGFtcGxlLmNvbSJdLCJleHAiOjE2NTgzMDYxMDgsIm5iZiI6MTY1ODMwNzEwOCwiaWF0IjoxNjU4MzA2MTA4fQ.s6d03Q747gzRvMlOHZSabThlbX29KfXr8v2kMRRq6Zs"
+	expected := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJib29raW5nX2lkIjoieHh4MDAwIiwidG9waWMiOiJleHB0MDAiLCJwcmVmaXgiOiJzZXNzaW9uIiwic2NvcGVzIjpbInJlYWQiLCJ3cml0ZSJdLCJhdWQiOlsiaHR0cHM6Ly9leGFtcGxlLmNvbSJdLCJleHAiOjE2NTgzMDYxMDgsIm5iZiI6MTY1ODMwNzEwOCwiaWF0IjoxNjU4MzA2MTA4fQ.H1I0xZ62zfF4YcKT3k2TISlwv384MvWzYWM-ZxjSeNg"
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, token)
