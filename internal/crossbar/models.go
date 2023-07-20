@@ -200,20 +200,8 @@ type clientDetails struct {
 	messagesChan chan message
 }
 
-// requests to add or delete subscribers are represented by this struct
-type clientAction struct {
-	action clientActionType
-	client clientDetails
-}
-
 // userActionType represents the type of of action requested
-type clientActionType int
-
-// clientActionType constants
-const (
-	clientAdd clientActionType = iota
-	clientDelete
-)
+//type clientActionType int
 
 type topicDirectory struct {
 	sync.Mutex
