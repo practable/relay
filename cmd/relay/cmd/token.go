@@ -44,6 +44,7 @@ bearer=$(relay token)
 these defaults can be altered as required:
 export RELAY_TOKEN_SCOPE_READ=true
 export RELAY_TOKEN_SCOPE_WRITE=true
+export RELAY_TOKEN_SCOPE_OTHER=expt
 export RELAY_TOKEN_CONNECTION_TYPE=session
 The scopes read and write do NOT modify the permissions granted with relay:admin scope so can be omitted for admin tokens
 `,
@@ -52,8 +53,8 @@ The scopes read and write do NOT modify the permissions granted with relay:admin
 
 		viper.SetEnvPrefix("RELAY_TOKEN")
 		viper.AutomaticEnv()
-
 		viper.SetDefault("connection_type", "session")
+		viper.SetDefault("scope_other", "")
 		viper.SetDefault("scope_read", "true")
 		viper.SetDefault("scope_write", "true")
 		viper.SetDefault("scope_admin", "false")
@@ -65,6 +66,7 @@ The scopes read and write do NOT modify the permissions granted with relay:admin
 		secret := viper.GetString("secret")
 		topic := viper.GetString("topic")
 		connectionType := viper.GetString("connection_type")
+		scope_other := viper.GetString("scope_other")
 		scope_admin := viper.GetBool("scope_admin")
 		scope_read := viper.GetBool("scope_read")
 		scope_write := viper.GetBool("scope_write")
@@ -107,6 +109,10 @@ The scopes read and write do NOT modify the permissions granted with relay:admin
 
 		if scope_read {
 			scopes = append(scopes, "read")
+		}
+
+		if scope_other != "" {
+			scopes = append(scopes, scope_other)
 		}
 
 		if !scope_admin && !scope_read && !scope_write {
