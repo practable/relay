@@ -28,6 +28,7 @@ type Report struct {
 	ExpiresAt  time.Time `json:"expiresAt"`
 	RemoteAddr string    `json:"remoteAddr"`
 	UserAgent  string    `json:"userAgent"`
+	Scopes     []string  `json:"scopes"`
 	Stats      RxTx      `json:"stats"`
 }
 
