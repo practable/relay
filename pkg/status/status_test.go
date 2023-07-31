@@ -258,3 +258,23 @@ func TestStatus(t *testing.T) {
 	wg.Wait()
 
 }
+
+func TestMocking(t *testing.T) {
+
+	s := New()
+
+	tr := []Report{Report{Topic: "test00"}}
+	go func() {
+		s.Status <- tr
+	}()
+
+	select {
+	case <-time.After(time.Second):
+		t.Error("did not receive report")
+
+	case ar := <-s.Status:
+
+		assert.Equal(t, tr, ar)
+	}
+
+}
