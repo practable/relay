@@ -74,6 +74,53 @@ Websocket connections cannot be secured by tokens sent in the headers, and it is
 <figcaption align = "center"><b>Dataflow diagram of the `host` to `relay` connection, reproduced from [1] under CC-BY-4.0 license</b></figcaption>
 </figure>
 
+## Status client
+
+The status client `pkg/status` is useful for obtaining status information from another golang service, as per the example below from [status](https://github.com/practable/status).
+```
+import (	
+   rc "github.com/practable/relay/pkg/status"
+)
+
+<snip>
+    iat := time.Now()
+    nbf := time.Now()
+    exp := time.Now().Add(s.Config.ReconnectRelayEvery)
+    log.WithFields(log.Fields{"iat": iat, "nbf": nbf, "exp": exp}).Trace("Token times")
+    aud := s.Config.SchemeRelay + "://" + path.Join(s.Config.HostRelay, s.Config.BasepathRelay)
+    bid := "status-server"
+    connectionType := "session"
+    scopes := []string{"read"}
+    topic := "stats"
+    token, err := token.New(iat, nbf, exp, scopes, aud, bid, connectionType, s.Config.SecretRelay, topic)
+    log.Tracef("token: [%s]", token)
+    if err != nil {
+    	log.WithField("error", err.Error()).Error("Relay stats token generation failed")
+    	time.Sleep(5 * time.Second) //rate-limit retries if there is a long standing issue
+    	break
+    }
+    ctxStats, cancel := context.WithTimeout(ctx, s.Config.ReconnectRelayEvery)
+    to := aud + "/" + connectionType + "/" + topic
+    log.Tracef("to: [%s]", to)
+    r.Connect(ctxStats, to, token)
+    cancel() // call to save leaking, even though cancelled before getting to here
+<.snip>
+
+```
+
+It can be mocked in testing by eliminating the call to connect to, and just passing populated `[]Report{}` to the `Status` channel. 
+
+```
+s := New()
+
+go func() {
+	s.Status <- []Report{Report{Topic: "test00"}}
+}()
+
+mockReport := <-s.Status:
+
+```
+
 ## History
 
 Two other key elements of our system used to be contained in this repo, but now have their own:
