@@ -10,6 +10,7 @@ package status
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -21,15 +22,15 @@ import (
 // Used to unmarshal report data in the format from internal/crossbar/models.ClientReport
 
 type Report struct {
-	Topic      string    `json:"topic"`
 	CanRead    bool      `json:"canRead"`
 	CanWrite   bool      `json:"canWrite"`
 	Connected  time.Time `json:"connected"`
 	ExpiresAt  time.Time `json:"expiresAt"`
 	RemoteAddr string    `json:"remoteAddr"`
-	UserAgent  string    `json:"userAgent"`
 	Scopes     []string  `json:"scopes"`
 	Stats      RxTx      `json:"stats"`
+	Topic      string    `json:"topic"`
+	UserAgent  string    `json:"userAgent"`
 }
 
 //RxTx represents statistics for both receive and transmit
@@ -83,7 +84,7 @@ func (s *Status) Connect(ctx context.Context, to, token string) {
 
 func (s *Statistics) UnmarshalJSON(data []byte) (err error) {
 
-	var tmp struct {
+	var tmpString struct {
 		// durations are set to string for now
 		Last string  `json:"last"` //duration since last message
 		Size float64 `json:"size"`
@@ -91,31 +92,56 @@ func (s *Statistics) UnmarshalJSON(data []byte) (err error) {
 		// There is no Never field in the reports
 	}
 
-	if err = json.Unmarshal(data, &tmp); err != nil {
-		return err
+	// added to support marshalling of experimental reports into json/yaml in status,
+	// which results in durations in nanoseconds
+	var tmpNumber struct {
+		// durations are set to string for now
+		Last int64   `json:"last"` //duration since last message
+		Size float64 `json:"size"`
+		FPS  float64 `json:"fps"`
+		// There is no Never field in the reports
 	}
 
-	tmp.Last = strings.TrimSpace(strings.ToLower(tmp.Last))
+	errString := json.Unmarshal(data, &tmpString)
 
-	// set default durations
-	if tmp.Last == "never" || tmp.Last == "" {
-		s.Never = true
-		tmp.Last = "999h"
-	} else {
-		s.Never = false
+	if errString == nil {
+
+		tmpString.Last = strings.TrimSpace(strings.ToLower(tmpString.Last))
+
+		// set default durations
+		if tmpString.Last == "never" || tmpString.Last == "" {
+			s.Never = true
+			tmpString.Last = "999h"
+		} else {
+			s.Never = false
+		}
+
+		// parse durations
+
+		ld, err := time.ParseDuration(tmpString.Last)
+		if err != nil {
+			return err
+		}
+
+		s.Last = ld
+		s.Size = tmpString.Size
+		s.FPS = tmpString.FPS
+
+		return nil
 	}
 
-	// parse durations
+	errNumber := json.Unmarshal(data, &tmpNumber)
 
-	ld, err := time.ParseDuration(tmp.Last)
-	if err != nil {
-		return err
+	if errNumber == nil {
+
+		// duration is in nanoseconds
+		s.Last = time.Duration(tmpNumber.Last) * time.Nanosecond
+		s.Size = tmpNumber.Size
+		s.FPS = tmpNumber.FPS
+
+		return nil
 	}
 
-	s.Last = ld
-	s.Size = tmp.Size
-	s.FPS = tmp.FPS
-
-	return nil
+	return fmt.Errorf("%s %s", errString.Error(), errNumber.Error())
 
 }

@@ -54,8 +54,11 @@ func TestUnmarshal(t *testing.T) {
 
 	ma := []byte(`[{"topic":"stats","canRead":true,"canWrite":true,"connected":"2023-03-10T14:04:45.294633437Z","expiresAt":"2023-03-10T14:04:45.294633437Z","remoteAddr":"internal","userAgent":"crossbar","stats":{"tx":{"last":"Never","size":0,"fps":0},"rx":{"last":"Never","size":0,"fps":0}}},{"topic":"stats","canRead":true,"canWrite":false,"connected":"2023-03-10T14:04:48.102847403Z","expiresAt":"2023-03-10T14:04:48.102847403Z","remoteAddr":"","userAgent":"Go-http-client/1.1","stats":{"tx":{"last":"Never","size":0,"fps":0},"rx":{"last":"Never","size":0,"fps":0}}},{"topic":"123","canRead":true,"canWrite":true,"connected":"2023-03-10T14:04:46.294717207Z","expiresAt":"2023-03-10T14:04:46.294717207Z","remoteAddr":"","userAgent":"Go-http-client/1.1","stats":{"tx":{"last":"2.90373838s","size":5,"fps":20.173318460352565},"rx":{"last":"2.903832419s","size":5,"fps":20.192179268105992}}},{"topic":"123","canRead":true,"canWrite":true,"connected":"2023-03-10T14:04:46.29484872Z","expiresAt":"2023-03-10T14:04:46.29484872Z","remoteAddr":"","userAgent":"Go-http-client/1.1","stats":{"tx":{"last":"2.903868479s","size":5,"fps":20.225188461845494},"rx":{"last":"2.903726512s","size":4,"fps":10.097985601322723}}}]`)
 
+	mb := []byte(`{"topic":"stats","canRead":true,"canWrite":true,"connected":"2023-03-10T14:04:45.294633437Z","expiresAt":"2023-03-10T14:04:45.294633437Z","remoteAddr":"internal","userAgent":"crossbar","stats":{"tx":{"last":3600000000000,"size":0,"fps":0},"rx":{"last":100000000,"size":0,"fps":0}}}`)
+
 	assert.True(t, json.Valid(m))
 	assert.True(t, json.Valid(ma))
+	assert.True(t, json.Valid(mb))
 
 	var report Report
 
@@ -68,7 +71,11 @@ func TestUnmarshal(t *testing.T) {
 	err = json.Unmarshal(ma, &reports)
 
 	assert.NoError(t, err)
+	err = json.Unmarshal(mb, &report)
 
+	assert.NoError(t, err)
+
+	assert.Equal(t, time.Hour, report.Stats.Tx.Last)
 }
 
 func TestStatus(t *testing.T) {
