@@ -74,6 +74,7 @@ func TestCrossbar(t *testing.T) {
 		Audience:   audience,
 		CodeStore:  cs,
 		DenyStore:  ds,
+		Hub:        New(),
 		Secret:     secret,
 		StatsEvery: time.Duration(time.Second),
 	}

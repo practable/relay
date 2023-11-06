@@ -40,6 +40,9 @@ type Config struct {
 	//DenyStore holds deny-listed bookingIDs
 	DenyStore *deny.Store
 
+	//Hub holds the clients and topics and manages message distribution
+	Hub *Hub
+
 	// Listen is the listening port
 	Listen int
 
@@ -404,6 +407,10 @@ type Hub struct {
 	unregister chan *Client
 }
 
+func New() *Hub {
+	return newHub()
+}
+
 func newHub() *Hub {
 	return &Hub{
 		mu:         &sync.RWMutex{},
@@ -474,7 +481,7 @@ const (
 )
 
 // serveWs handles websocket requests from clients.
-func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Request, config Config) {
+func serveWs(closed <-chan struct{}, w http.ResponseWriter, r *http.Request, config Config) {
 
 	// check if topic is of a supported type before we go any further
 	ct := Unsupported
@@ -596,7 +603,7 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 		exp := time.Unix((*token.ExpiresAt).Unix(), 0) // jwt.NumericDate underlying type is time.Time
 		stats := &Stats{connectedAt: time.Now(), expiresAt: exp, tx: tx, rx: rx}
 
-		client := &Client{hub: hub,
+		client := &Client{hub: config.Hub,
 			bookingID:  token.BookingID,
 			conn:       conn,
 			denied:     denied,
@@ -652,13 +659,13 @@ func serveWs(closed <-chan struct{}, hub *Hub, w http.ResponseWriter, r *http.Re
 }
 
 // StatsClient starts a routine which sends stats reports on demand.
-func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, hub *Hub, config Config) {
+func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 
 	tx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
 	rx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
 	stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
 
-	client := &Client{hub: hub,
+	client := &Client{hub: config.Hub,
 		send:       make(chan message, 256),
 		topic:      "stats",
 		stats:      stats,
@@ -953,18 +960,18 @@ func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, message
 		}
 	}()
 
-	hub := newHub()
-	hub.SetDenyChannelStore(dcs)
-	go hub.run()
+	//hub := newHub() // shift this initialisation outside this function so we can share hub with access server for handling /status endpoint
+	config.Hub.SetDenyChannelStore(dcs)
+	go config.Hub.run()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		serveWs(closed, hub, w, r, config)
+		serveWs(closed, w, r, config)
 	})
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go statsClient(closed, &wg, hub, config)
+	go statsClient(closed, &wg, config)
 
 	addr := ":" + strconv.Itoa(config.Listen)
 
