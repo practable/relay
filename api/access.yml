@@ -147,7 +147,7 @@ paths:
               uri:
                 type: string
           examples:
-            text/plain: {"code":"b142eb22-1f16-4af1-ba14-e70a7afcbcc2"}
+            application/json: {"code":"b142eb22-1f16-4af1-ba14-e70a7afcbcc2"}
           headers: {}
         400:
           description: BadRequest
@@ -156,7 +156,28 @@ paths:
         401:
           description: Unauthorized
           schema: {}
-       
+
+  /status:
+    get:
+      description: Get a list of all current connections
+      summary: Get a list of all current connections
+      operationId: getStatus
+      deprecated: False
+      produces:
+      - application/json
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: List of current connections
+          schema:
+            $ref: '#/definitions/Status'
+        401:
+          description: Unauthorized
+          schema:
+             $ref: '#/definitions/Error'          
+
+            
 definitions:
   BookingIDs:
     title: Set of booking IDs (bids)
@@ -170,6 +191,19 @@ definitions:
     required:
     - booking_ids
     
+  Details:
+    title: Connection details
+    type: object
+    properties:
+      last:
+        type: string
+      size:
+        type: number
+        format: float
+      fps:
+        type: number
+        format: float
+        
   Error:
     type: object
     properties:
@@ -180,4 +214,42 @@ definitions:
     required:
       - code
       - message
- 
+      
+  Report:
+    type: object
+    properties:
+      can_read:
+        type: boolean
+      can_write:
+        type: boolean
+      connected:
+        type: string
+      expires_at:
+        type: string
+      remote_addr:
+        type: string
+      scopes:
+        type: array
+        items:
+          type: string
+      stats:
+        $ref: '#/definitions/Stats'
+      topic:
+        type: string
+      user_agent:
+        type: string
+        
+  Stats:
+    title: connection statistics
+    type: object
+    properties:
+      rx:
+        $ref: '#/definitions/Details'
+      tx:
+        $ref: '#/definitions/Details'
+          
+  Status:
+    title: status reports
+    type: array
+    items:
+      $ref: '#/definitions/Report'
