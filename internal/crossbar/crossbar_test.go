@@ -182,6 +182,29 @@ func TestCrossbar(t *testing.T) {
 	cancel()
 	time.Sleep(timeout)
 
+	// *** TestGetStatus
+	reports := config.Hub.GetStats()
+
+	// these tests are just checking there was a stats report, but not much about it
+	// so far there is only the stats reporter connected
+	passed := true
+
+	if !(len(reports) == 1) {
+		t.Log("TestGetStats() not 1 report")
+		passed = false
+	}
+
+	if !("crossbar" == reports[0].UserAgent) {
+		t.Log("incorrect user agent")
+		passed = false
+	}
+
+	if passed {
+		t.Log("TestGetStats()...PASS")
+	} else {
+		t.Log("TestGetStats()...FAIL")
+	}
+
 	// *** TestCannotConnectWithReusedCode ***
 	// try the last test again, without getting new codes
 
@@ -452,14 +475,18 @@ func BenchmarkSmallMessage(b *testing.B) {
 	}
 
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
+	secret := "somesecret"
 	cs := ttlcode.NewDefaultCodeStore()
 	ds := deny.New()
 
 	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-		DenyStore: ds,
+		Listen:     port,
+		Audience:   audience,
+		CodeStore:  cs,
+		DenyStore:  ds,
+		Hub:        New(),
+		Secret:     secret,
+		StatsEvery: time.Duration(time.Second),
 	}
 
 	wg.Add(1)
@@ -561,14 +588,18 @@ func BenchmarkLargeMessage(b *testing.B) {
 	}
 
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
+	secret := "somesecret"
 	cs := ttlcode.NewDefaultCodeStore()
 	ds := deny.New()
 
 	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-		DenyStore: ds,
+		Listen:     port,
+		Audience:   audience,
+		CodeStore:  cs,
+		DenyStore:  ds,
+		Hub:        New(),
+		Secret:     secret,
+		StatsEvery: time.Duration(time.Second),
 	}
 
 	wg.Add(1)
@@ -690,14 +721,18 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 	}
 
 	audience := "ws://127.0.0.1:" + strconv.Itoa(port)
+	secret := "somesecret"
 	cs := ttlcode.NewDefaultCodeStore()
 	ds := deny.New()
 
 	config := Config{
-		Listen:    port,
-		Audience:  audience,
-		CodeStore: cs,
-		DenyStore: ds,
+		Listen:     port,
+		Audience:   audience,
+		CodeStore:  cs,
+		DenyStore:  ds,
+		Hub:        New(),
+		Secret:     secret,
+		StatsEvery: time.Duration(time.Second),
 	}
 
 	wg.Add(1)

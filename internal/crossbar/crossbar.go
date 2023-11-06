@@ -421,6 +421,86 @@ func newHub() *Hub {
 	}
 }
 
+func (h *Hub) GetStats() []*ClientReport {
+
+	var reports []*ClientReport
+
+	h.mu.RLock()
+	for _, topic := range h.clients {
+		for client := range topic {
+
+			client.stats.tx.mu.RLock()
+
+			var tx ReportStats
+
+			if client.stats.tx.size.Count() > 0 {
+				tx = ReportStats{
+					Last: time.Since(client.stats.tx.last).String(),
+					Size: math.Round(client.stats.tx.size.Mean()),
+					Fps:  fpsFromNs(client.stats.tx.ns.Mean()),
+				}
+			} else {
+				tx = ReportStats{
+					Last: "Never",
+					Size: 0,
+					Fps:  0,
+				}
+			}
+
+			client.stats.tx.mu.RUnlock()
+
+			client.stats.rx.mu.RLock()
+
+			var rx ReportStats
+
+			if client.stats.rx.size.Count() > 0 {
+				rx = ReportStats{
+					Last: time.Since(client.stats.rx.last).String(),
+					Size: math.Round(client.stats.rx.size.Mean()),
+					Fps:  fpsFromNs(client.stats.rx.ns.Mean()),
+				}
+			} else {
+				rx = ReportStats{
+					Last: "Never",
+					Size: 0,
+					Fps:  0,
+				}
+			}
+			client.stats.rx.mu.RUnlock()
+
+			c, err := client.stats.connectedAt.UTC().MarshalText()
+			if err != nil {
+				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "connectedAt": client.stats.connectedAt}).Error("stats cannot marshal connectedAt time to string")
+			}
+			ea, err := client.stats.expiresAt.UTC().MarshalText()
+			if err != nil {
+				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "expiresAt": client.stats.expiresAt}).Error("stats cannot marshal expiresAt time to string")
+			}
+
+			report := &ClientReport{
+				Topic:      client.topic,
+				CanRead:    client.canRead,
+				CanWrite:   client.canWrite,
+				Connected:  string(c),
+				ExpiresAt:  string(ea),
+				RemoteAddr: client.remoteAddr,
+				Scopes:     client.scopes,
+				UserAgent:  client.userAgent,
+				Stats: RxTx{
+					Tx: tx,
+					Rx: rx,
+				},
+			}
+
+			reports = append(reports, report)
+
+		} //for client in topic
+	} // for topic in hub
+	h.mu.RUnlock()
+	return reports
+
+}
+
 // SetDenyChannelStore adds a pointer to the channel map store to the hub
 func (h *Hub) SetDenyChannelStore(dcs *chanmap.Store) {
 	h.dcs = dcs
