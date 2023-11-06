@@ -59,12 +59,15 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 		config.StatsEvery = time.Duration(time.Second) //we have to balance fast testing vs high CPU load in production if too short
 	}
 
+	hub := crossbar.New()
+
 	crossbarConfig := crossbar.Config{
 		Listen:     config.RelayPort,
 		Audience:   config.Target,
+		BufferSize: config.BufferSize,
 		CodeStore:  cs,
 		DenyStore:  ds,
-		BufferSize: config.BufferSize,
+		Hub:        hub,
 		StatsEvery: config.StatsEvery,
 	}
 
@@ -79,6 +82,7 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 		DenyStore:        ds,
 		DenyChannel:      denied,
 		Host:             config.Audience,
+		Hub:              hub,
 		Port:             config.AccessPort,
 		Secret:           config.Secret,
 		Target:           config.Target,
