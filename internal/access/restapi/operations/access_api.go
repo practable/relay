@@ -48,6 +48,9 @@ func NewAccessAPI(spec *loads.Document) *AccessAPI {
 		DenyHandler: DenyHandlerFunc(func(params DenyParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation Deny has not yet been implemented")
 		}),
+		GetStatusHandler: GetStatusHandlerFunc(func(params GetStatusParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetStatus has not yet been implemented")
+		}),
 		ListAllowedHandler: ListAllowedHandlerFunc(func(params ListAllowedParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation ListAllowed has not yet been implemented")
 		}),
@@ -111,6 +114,8 @@ type AccessAPI struct {
 	AllowHandler AllowHandler
 	// DenyHandler sets the operation handler for the deny operation
 	DenyHandler DenyHandler
+	// GetStatusHandler sets the operation handler for the get status operation
+	GetStatusHandler GetStatusHandler
 	// ListAllowedHandler sets the operation handler for the list allowed operation
 	ListAllowedHandler ListAllowedHandler
 	// ListDeniedHandler sets the operation handler for the list denied operation
@@ -203,6 +208,9 @@ func (o *AccessAPI) Validate() error {
 	}
 	if o.DenyHandler == nil {
 		unregistered = append(unregistered, "DenyHandler")
+	}
+	if o.GetStatusHandler == nil {
+		unregistered = append(unregistered, "GetStatusHandler")
 	}
 	if o.ListAllowedHandler == nil {
 		unregistered = append(unregistered, "ListAllowedHandler")
@@ -318,6 +326,10 @@ func (o *AccessAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/bids/deny"] = NewDeny(o.context, o.DenyHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/status"] = NewGetStatus(o.context, o.GetStatusHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

@@ -221,7 +221,7 @@ func init() {
               }
             },
             "examples": {
-              "text/plain": {
+              "application/json": {
                 "code": "b142eb22-1f16-4af1-ba14-e70a7afcbcc2"
               }
             }
@@ -235,6 +235,35 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all current connections",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all current connections",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "List of current connections",
+            "schema": {
+              "$ref": "#/definitions/Status"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -257,6 +286,23 @@ func init() {
         }
       }
     },
+    "Details": {
+      "type": "object",
+      "title": "Connection details",
+      "properties": {
+        "fps": {
+          "type": "number",
+          "format": "float"
+        },
+        "last": {
+          "type": "string"
+        },
+        "size": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "required": [
@@ -270,6 +316,60 @@ func init() {
         "message": {
           "type": "string"
         }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "properties": {
+        "can_read": {
+          "type": "boolean"
+        },
+        "can_write": {
+          "type": "boolean"
+        },
+        "connected": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "string"
+        },
+        "remote_addr": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stats": {
+          "$ref": "#/definitions/Stats"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "user_agent": {
+          "type": "string"
+        }
+      }
+    },
+    "Stats": {
+      "type": "object",
+      "title": "connection statistics",
+      "properties": {
+        "rx": {
+          "$ref": "#/definitions/Details"
+        },
+        "tx": {
+          "$ref": "#/definitions/Details"
+        }
+      }
+    },
+    "Status": {
+      "type": "array",
+      "title": "status reports",
+      "items": {
+        "$ref": "#/definitions/Report"
       }
     }
   },
@@ -485,7 +585,7 @@ func init() {
               }
             },
             "examples": {
-              "text/plain": {
+              "application/json": {
                 "code": "b142eb22-1f16-4af1-ba14-e70a7afcbcc2"
               }
             }
@@ -499,6 +599,35 @@ func init() {
           "401": {
             "description": "Unauthorized",
             "schema": {}
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get a list of all current connections",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get a list of all current connections",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "List of current connections",
+            "schema": {
+              "$ref": "#/definitions/Status"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -521,6 +650,23 @@ func init() {
         }
       }
     },
+    "Details": {
+      "type": "object",
+      "title": "Connection details",
+      "properties": {
+        "fps": {
+          "type": "number",
+          "format": "float"
+        },
+        "last": {
+          "type": "string"
+        },
+        "size": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "required": [
@@ -534,6 +680,60 @@ func init() {
         "message": {
           "type": "string"
         }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "properties": {
+        "can_read": {
+          "type": "boolean"
+        },
+        "can_write": {
+          "type": "boolean"
+        },
+        "connected": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "string"
+        },
+        "remote_addr": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stats": {
+          "$ref": "#/definitions/Stats"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "user_agent": {
+          "type": "string"
+        }
+      }
+    },
+    "Stats": {
+      "type": "object",
+      "title": "connection statistics",
+      "properties": {
+        "rx": {
+          "$ref": "#/definitions/Details"
+        },
+        "tx": {
+          "$ref": "#/definitions/Details"
+        }
+      }
+    },
+    "Status": {
+      "type": "array",
+      "title": "status reports",
+      "items": {
+        "$ref": "#/definitions/Report"
       }
     }
   },

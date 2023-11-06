@@ -13,7 +13,7 @@ import (
 	"github.com/practable/relay/internal/access/restapi/operations"
 )
 
-//go:generate swagger generate server --target ../../access --name Access --spec ../../../api/openapi-spec/access.yml --principal interface{} --exclude-main
+//go:generate swagger generate server --target ../../access --name Access --spec ../../../api/access.yml --principal interface{} --exclude-main
 
 func configureFlags(api *operations.AccessAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -58,6 +58,11 @@ func configureAPI(api *operations.AccessAPI) http.Handler {
 	if api.DenyHandler == nil {
 		api.DenyHandler = operations.DenyHandlerFunc(func(params operations.DenyParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation operations.Deny has not yet been implemented")
+		})
+	}
+	if api.GetStatusHandler == nil {
+		api.GetStatusHandler = operations.GetStatusHandlerFunc(func(params operations.GetStatusParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation operations.GetStatus has not yet been implemented")
 		})
 	}
 	if api.ListAllowedHandler == nil {
