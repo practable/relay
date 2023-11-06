@@ -14,6 +14,7 @@ import (
 	"github.com/practable/relay/internal/access/models"
 	"github.com/practable/relay/internal/access/restapi"
 	"github.com/practable/relay/internal/access/restapi/operations"
+	"github.com/practable/relay/internal/crossbar"
 	"github.com/practable/relay/internal/deny"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/ttlcode"
@@ -27,6 +28,7 @@ type Config struct {
 	DenyChannel      chan string
 	DenyStore        *deny.Store
 	Host             string
+	Hub              *crossbar.Hub
 	Port             int
 	Secret           string
 	Target           string
@@ -68,7 +70,7 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 	api.SessionHandler = operations.SessionHandlerFunc(sessionHandler(config))
 	api.AllowHandler = operations.AllowHandlerFunc(allowHandler(config))
 	api.DenyHandler = operations.DenyHandlerFunc(denyHandler(config))
-
+	api.GetStatusHandler = operations.GetStatusHandlerFunc(getStatusHandler(config))
 	api.ListDeniedHandler = operations.ListDeniedHandlerFunc(listDeniedHandler(config))
 	api.ListAllowedHandler = operations.ListAllowedHandlerFunc(listAllowedHandler(config))
 
@@ -87,6 +89,77 @@ func API(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 
 	wg.Done()
 
+}
+
+func getStatusHandler(config Config) func(operations.GetStatusParams, interface{}) middleware.Responder {
+	return func(params operations.GetStatusParams, principal interface{}) middleware.Responder {
+
+		token, ok := principal.(*jwt.Token)
+		if !ok {
+			c := "401"
+			m := "token not JWT"
+			return operations.NewGetStatusUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		// save checking for key existence individually by checking all at once
+		_, ok = token.Claims.(*permission.Token)
+
+		if !ok {
+			c := "401"
+			m := "Token Claims Incorrect Type"
+			return operations.NewGetStatusUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		//don't check for required claims because we only need the scopes
+
+		_, err := hasStatsScope(principal)
+
+		if err != nil {
+			c := "401"
+			m := "token missing relay:stats scope"
+			return operations.NewGetStatusUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
+		}
+
+		reports := config.Hub.GetStats()
+
+		mreports := []*models.Report{}
+
+		for _, r := range reports {
+
+			rx := models.Details{
+				Last: r.Stats.Rx.Last,
+				Fps:  float32(r.Stats.Rx.Fps),
+				Size: float32(r.Stats.Rx.Size),
+			}
+
+			tx := models.Details{
+				Last: r.Stats.Tx.Last,
+				Fps:  float32(r.Stats.Tx.Fps),
+				Size: float32(r.Stats.Tx.Size),
+			}
+
+			stats := models.Stats{
+				Rx: &rx,
+				Tx: &tx,
+			}
+
+			rm := models.Report{
+				CanRead:    r.CanRead,
+				CanWrite:   r.CanWrite,
+				Connected:  r.Connected,
+				ExpiresAt:  r.ExpiresAt,
+				RemoteAddr: r.RemoteAddr,
+				Scopes:     r.Scopes,
+				Stats:      &stats,
+				Topic:      r.Topic,
+				UserAgent:  r.UserAgent,
+				//todo complete
+			}
+			mreports = append(mreports, &rm)
+		}
+
+		return operations.NewGetStatusOK().WithPayload(mreports)
+	}
 }
 
 // ValidateHeader checks the bearer token.
@@ -342,6 +415,28 @@ func isRelayAdmin(principal interface{}) (*permission.Token, error) {
 
 	if !hasAdminScope {
 		return nil, errors.New("Missing relay:admin Scope")
+	}
+
+	return claims, nil
+}
+func hasStatsScope(principal interface{}) (*permission.Token, error) {
+
+	claims, err := claimsCheck(principal)
+
+	if err != nil {
+		return nil, err
+	}
+
+	hasScope := false
+
+	for _, scope := range claims.Scopes {
+		if scope == "relay:stats" {
+			hasScope = true
+		}
+	}
+
+	if !hasScope {
+		return nil, errors.New("Missing relay:stats Scope")
 	}
 
 	return claims, nil

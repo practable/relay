@@ -16,6 +16,7 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/practable/relay/internal/access/models"
 	"github.com/practable/relay/internal/access/restapi/operations"
+	"github.com/practable/relay/internal/crossbar"
 	"github.com/practable/relay/internal/deny"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/ttlcode"
@@ -123,6 +124,99 @@ func TestAPI(t *testing.T) {
 	expected := "wss://relay.example.io/session/123?code="
 
 	assert.Equal(t, expected, p.URI[0:len(expected)])
+
+	// End tests
+	close(closed)
+	wg.Wait()
+
+}
+
+func TestGetStats(t *testing.T) {
+
+	debug := false
+
+	if debug {
+		log.SetLevel(log.TraceLevel)
+		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		defer log.SetOutput(os.Stdout)
+
+	} else {
+		var ignore bytes.Buffer
+		logignore := bufio.NewWriter(&ignore)
+		log.SetOutput(logignore)
+	}
+
+	closed := make(chan struct{})
+	var wg sync.WaitGroup
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	secret := "testsecret"
+
+	audience := "http://[::]:" + strconv.Itoa(port)
+	cs := ttlcode.NewDefaultCodeStore()
+	target := "wss://relay.example.io"
+	hub := crossbar.New()
+
+	wg.Add(1)
+
+	ds := deny.New()
+
+	config := Config{
+		AllowNoBookingID: true, //backwards compatible test
+		CodeStore:        cs,
+		DenyStore:        ds,
+		Host:             audience,
+		Hub:              hub,
+		Port:             port,
+		Secret:           secret,
+		Target:           target,
+	}
+
+	go API(closed, &wg, config) //port, audience, secret, target, cs, ds, allowNoBookingID)
+
+	time.Sleep(100 * time.Millisecond)
+
+	client := &http.Client{}
+
+	// Start tests
+	req, err := http.NewRequest("GET", audience+"/status", nil)
+	assert.NoError(t, err)
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+	body, _ := ioutil.ReadAll(resp.Body)
+	bodyStr := string([]byte(body))
+	assert.Equal(t, `{"code":401,"message":"unauthenticated for invalid credentials"}`, bodyStr)
+
+	var claims permission.Token
+
+	start := jwt.NewNumericDate(time.Now().Add(-time.Second))
+	after5 := jwt.NewNumericDate(time.Now().Add(5 * time.Second))
+
+	claims.IssuedAt = start
+	claims.NotBefore = start
+	claims.ExpiresAt = after5
+	claims.Audience = jwt.ClaimStrings{audience}
+	claims.Scopes = []string{"relay:stats"}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign and get the complete encoded token as a string using the secret
+	bearer, err := token.SignedString([]byte(secret))
+	assert.NoError(t, err)
+
+	req, err = http.NewRequest("GET", audience+"/status", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	// this test does not check for a meangingful stats response,
+	// merely that the method can be called
 
 	// End tests
 	close(closed)
