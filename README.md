@@ -27,6 +27,7 @@ This repo provides a command `relay` comprising a sub-command for each part of t
 0. `relay` runs in the cloud to connect experiments and users.
 0. `token` provides tokens for use with the system
 0. `file` runs on a client to facilitate testing and maintenance connections
+0. `switch` runs on a client to change relay host rules in response to GPIO
 
 ## Browser clients
 

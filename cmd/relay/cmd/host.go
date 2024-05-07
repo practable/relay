@@ -27,21 +27,21 @@ var hostCmd = &cobra.Command{
 	Short: "Host video and data sessions",
 	Long: `Establishes a connection to the session relay, 
 listening for local tcp and websocket connections to forward, 
-according to rules submitted by to the RESTful-ish API.  There are sensible defaults
-for all parameters, and these can be overridden with environment variables. The defaults
-value are as follows:
+according to rules submitted by to the RESTful-ish API. 
 
-export RELAYHOST_PORT=8888
-export RELAYHOST_LOGLEVEL=PANIC
-export RELAYHOST_MAXBUFFERLENGTH=10
-export RELAYHOST_CLIENTBUFFERLENGTH=5
-export RELAYHOST_CLIENTTIMEOUTMS=1000
-export RELAYHOST_HTTPWAITMS=5000
-export RELAYHOST_HTTPSFLUSHMS=5
-export RELAYHOST_HTTPTIMEOUTMS=1000
-export RELAYHOST_CPUPROFULE=
-export RELAYHOST_API=
+The configurable options can be adjusted by exporting the following variables
 
+	VW_PORT                (default:"8888")
+	VW_LOGLEVEL            (default:"PANIC")
+	VW_MUXBUFFERLENGTH     (default:"10")
+	VW_CLIENTBUFFERLENGTH  (default:"5")
+	VW_CLIENTTIMEOUTMS     (default:"1000")
+	VW_HTTPWAITMS          (default:"5000")
+	VW_HTTPFLUSHMS         (default:"5")
+	VW_HTTPTIMEOUTMS       (default:"1000")
+	VW_CPUPROFILE          (default:"")
+	VW_API                 (default:"")
+ 
 relay host`,
 	Run: func(cmd *cobra.Command, args []string) {
 		vw.Stream()
