@@ -121,6 +121,56 @@ go func() {
 mockReport := <-s.Status:
 
 ```
+### Switch
+
+
+We only have one network port on the SBC, so connecting a local laptop needs to be done over a USB connection instead. Few laptops come with a network port anyway. There are various network-over-usb protocols, however it appears that windows uses a different one to linux so it might not be possible to do a direct USB connection from a linux SBC to a windows laptop. Instead, we can put a USB-network adapter port at each end of short network cable, and install that between the SBC and the USB socket for the laptop. That might seem a bit clunky, but it would avoid a protocol mismatch and also it keeps the adapters safely hidden away inside the experiment. 
+
+laptop with USB A socket -> usb cable -> usb-B socket (external) to usb-A socket (internal) -> USB-to-network adapter -> network cable -> network-to-USB adapter -> USB-A socket on SBC
+
+
+```mermaid
+flowchart LR
+    api((API))
+    gpio(GPIO)
+    local(Local\nLaptop)
+    localserve((relay\nserve))
+    microcontroller(microcontroller)
+    serve((relay\nserve))
+    switch(relay\nswitch)
+    user[Remote\nUser\nDevice]
+    wsdata[|borders:tb|ws/data]
+    wsstatus[|borders:tb|ws/status]
+
+    local<--data-->localserve
+    user<--data-->serve
+    wsdata<-.remote\nmode.->serve
+    wsstatus<-.local\nmode.->serve
+
+    subgraph experiment [Experiment]
+        gpio<-->switch
+        switch--rules-->api
+        microcontroller<--data-->wsdata
+        switch--status-->wsstatus
+        localserve
+        wsdata<-.local\nmode.->localserve
+        wsstatus<-.remote\nmode.->localserve
+        
+        subgraph relayhost [relay host]
+           wsdata     
+           wsstatus
+           api
+        end
+
+    end
+    subgraph cloud [Cloud]
+    serve
+    end
+    classDef boundary fill:none,stroke-dasharray: 5 5
+    cloud:::boundary
+    experiment:::boundary
+```
+
 
 ## History
 
