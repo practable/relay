@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -29,6 +30,52 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 	var current ConditionCheck
 	var stop time.Time
 
+	checking_mutex := &sync.RWMutex{}
+	time_mutex := &sync.RWMutex{}
+	current_mutex := &sync.RWMutex{}
+
+	getCurrent := func() ConditionCheck {
+		current_mutex.RLock()
+		defer current_mutex.RUnlock()
+		return current
+	}
+
+	setCurrent := func(to ConditionCheck) {
+		current_mutex.Lock()
+		defer current_mutex.Unlock()
+		current = to
+	}
+
+	closeCurrentSatisfied := func() {
+		current_mutex.Lock()
+		defer current_mutex.Unlock()
+		close(current.Satisfied)
+	}
+
+	setChecking := func(to bool) {
+		checking_mutex.Lock()
+		defer checking_mutex.Unlock()
+		checking = to
+	}
+
+	getChecking := func() bool {
+		checking_mutex.RLock()
+		defer checking_mutex.RUnlock()
+		return checking
+	}
+
+	setStop := func(t time.Time) {
+		time_mutex.Lock()
+		defer time_mutex.Unlock()
+		stop = t
+	}
+
+	getStop := func() time.Time {
+		time_mutex.RLock()
+		defer time_mutex.RUnlock()
+		return stop
+	}
+
 	go func() {
 		for {
 			select {
@@ -37,18 +84,19 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 				return
 
 			case <-time.After(interval):
-				if checking {
+				if getChecking() {
 					// check if we have timed out
-					if time.Now().After(stop) {
-						log.Infof("condition %s satisfied by timeout check at %s interval", current.Condition.String(), interval)
-						checking = false
-						close(current.Satisfied)
-						current = ConditionCheck{} //prevent double close
-						lines = []Line{}           //delete lines recorded
+					if time.Now().After(getStop()) {
+						cc := getCurrent()
+						log.Infof("condition %s satisfied by timeout check at %s interval", cc.Condition.String(), interval)
+						setChecking(false)
+						closeCurrentSatisfied()
+						setCurrent(ConditionCheck{}) //prevent double close
+						lines = []Line{}             //delete lines recorded
 					}
 				}
 			case line := <-in:
-				if checking {
+				if getChecking() {
 
 					if current.Condition.AcceptPattern.MatchString(line.Content) {
 						log.Debugf("accepted lines: %d, want %d", len(lines), current.Condition.Count)
@@ -56,17 +104,17 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 					} else {
 						log.Debugf("ignoring line, does not match")
 					}
-
-					if len(lines) >= current.Condition.Count {
+					cc := getCurrent()
+					if len(lines) >= cc.Condition.Count {
 						// we've got enough lines
-						log.Infof("condition %s satisfied by receiving enough accepted lines", current.Condition.String())
+						log.Infof("condition %s satisfied by receiving enough accepted lines", cc.Condition.String())
 						for i, line := range lines {
 							log.Debugf("%d: %s", i, line.Content)
 						}
-						checking = false
-						close(current.Satisfied)
-						current = ConditionCheck{} //prevent double close
-						lines = []Line{}           //delete lines recorded
+						setChecking(false)
+						closeCurrentSatisfied()
+						setCurrent(ConditionCheck{}) //prevent double close
+						lines = []Line{}             //delete lines recorded
 					}
 
 				}
@@ -79,9 +127,10 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 		case <-ctx.Done():
 			return
 		case c := <-cc:
-			current = c
-			checking = true
-			stop = time.Now().Add(c.Condition.Timeout)
+			setCurrent(c)
+			setChecking(true)
+			cc := getCurrent()
+			setStop(time.Now().Add(cc.Condition.Timeout))
 
 		}
 	}

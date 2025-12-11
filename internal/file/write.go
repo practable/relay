@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/practable/relay/internal/reconws"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,7 +27,30 @@ func Write(ctx context.Context, in chan Line, w io.Writer) {
 			if !ok {
 				return // avoid leaking the goro
 			}
+
 			_, err := w.Write([]byte(FormatLine(line)))
+
+			if err != nil {
+				log.Errorf("error writing to file: %s", err.Error())
+			}
+		}
+	}
+}
+
+// Write writes the line to the file, after formatting, returning when
+// the context is cancelled, or the in channel is closed.
+func WriteBinary(ctx context.Context, in chan reconws.WsMessage, w io.Writer) {
+
+	for {
+		select {
+		case <-ctx.Done():
+			return // avoid leaking the goro
+		case msg, ok := <-in:
+			if !ok {
+				return // avoid leaking the goro
+			}
+			_, err := w.Write(msg.Data)
+
 			if err != nil {
 				log.Errorf("error writing to file: %s", err.Error())
 			}

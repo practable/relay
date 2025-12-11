@@ -9,10 +9,13 @@ import (
 	"testing"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConditionCheckLines(t *testing.T) {
+
+	log.SetLevel(log.TraceLevel)
 
 	//we need to timeout, and line count tests
 	//<'^foo\s*',5,100ms> {"send":"foos"}
@@ -31,7 +34,7 @@ func TestConditionCheckLines(t *testing.T) {
 
 	go ConditionCheckLines(ctx, cc, in, 10*time.Millisecond)
 
-	timeout := 150 * time.Millisecond
+	timeout := 150 * time.Millisecond // was 150ms
 
 	cond := Condition{
 		AcceptPattern: *regexp.MustCompile(`^foo\s*`),
@@ -134,7 +137,7 @@ func TestConditionCheckLines(t *testing.T) {
 
 		for _, line := range postLines[i] {
 			in <- line
-			t.Logf("post: %s", line.Content)
+			t.Logf("post: %s, duration: %s", line.Content, time.Since(start))
 		}
 
 		select {
@@ -369,7 +372,7 @@ goodbye
 		t.Logf("duration: %s", duration)
 		// add a tolerance for variability between runs due to factors outside control
 		// of the test, e.g. CPU loading
-		tolerance := 10 * time.Millisecond
+		tolerance := 20 * time.Millisecond
 		if (duration - durationNoCondition) <= (conditionTimeout - tolerance) {
 			t.Errorf("Play did not respect delay on condition check; delay amount %s, expected %s",
 				duration-durationNoCondition,

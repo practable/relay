@@ -135,7 +135,7 @@ func TestRun(t *testing.T) {
 
 	// no play file for now
 	go func() {
-		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval, false, false)
+		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval, false, false, false)
 		assert.NoError(t, err)
 	}()
 
@@ -301,7 +301,7 @@ func TestRun(t *testing.T) {
 	}()
 
 	time.Sleep(10 * time.Millisecond)
-	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval, false, false)
+	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval, false, false, false)
 	assert.NoError(t, err)
 
 	dat, err = os.ReadFile(testlog)
@@ -393,7 +393,7 @@ ah
 	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
 
 	go func() {
-		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval, false, false)
+		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval, false, false, false)
 		assert.NoError(t, err)
 	}()
 
