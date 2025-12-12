@@ -152,6 +152,10 @@ func TestReconnectAuth(t *testing.T) {
 
 	time.Sleep(timeout)
 
+	//note we're trying to connect to a relay that is NOT running yet
+	// don't wait for the connection to occur before running rest of the test
+	// we want to check that we do NOT send messages to a relay that is not running
+
 	data := []byte("prestart-ping-no-chance")
 
 	select {
@@ -187,57 +191,45 @@ func TestReconnectAuth(t *testing.T) {
 	// and that is normal behaviour for a non-caching
 	// relay....
 	data = []byte("hello")
-	s0.Out <- WsMessage{Data: data, Type: websocket.TextMessage}
-	s1.Out <- WsMessage{Data: data, Type: websocket.TextMessage}
 
-	time.Sleep(timeout) // send can come online before receive
+	start := time.Now()
+	connectTimeout := time.Second * 5
 
-	// now send a message we care about
+	select {
+	case <-s0.Connected:
+		// connected, carry on
+	case <-time.After(connectTimeout):
+		t.Fatal("s0 did not connect in time")
+	}
+	select {
+	case <-s1.Connected:
+		// connected, carry on
+	case <-time.After(connectTimeout):
+		t.Fatal("s1 did not connect in time")
+	}
+	log.Debugf("Time for clients to connect: %f seconds", time.Since(start).Seconds())
+
+	// now send a message from each and check they are received by the other
 	data0 := []byte("ping")
 	s0.Out <- WsMessage{Data: data0, Type: websocket.TextMessage}
 	data1 := []byte("pong")
 	s1.Out <- WsMessage{Data: data1, Type: websocket.TextMessage}
 
-	gotPing := false
-	gotPong := false
+	timeout = time.Second * 2
 
-	for i := 0; i < 20; i++ {
-		select {
-		case msg := <-s1.In:
-			if debug {
-				t.Log(string(msg.Data))
-			}
-			if bytes.Equal(msg.Data, data0) {
-				gotPing = true
-			}
-			// sometimes the messages combine into "helloping"
-			// due to the way framing is etsimated in relay
-			if bytes.Equal(msg.Data, append(data, data0...)) {
-				gotPing = true
-			}
-		case msg := <-s0.In:
-			if debug {
-				t.Log(string(msg.Data))
-			}
-			if bytes.Equal(msg.Data, data1) {
-				gotPong = true
-				if gotPing {
-					break
-				}
-			}
-			if bytes.Equal(msg.Data, append(data, data1...)) {
-				gotPing = true
-				if gotPong {
-					break
-				}
-			}
-		case <-time.After(timeout):
-			continue
-		}
+	select {
+	case msg := <-s0.In:
+		t.Log(string(msg.Data))
+		assert.Equal(t, msg.Data, data1, "s0 did not receive expected pong message")
+	case <-time.After(timeout):
+		t.Fatal("s0 did not receive any message in time")
 	}
-
-	if !gotPing || !gotPong {
-		t.Error("did not get both messages")
+	select {
+	case msg := <-s1.In:
+		t.Log(string(msg.Data))
+		assert.Equal(t, msg.Data, data0, "s1 did not receive expected ping message")
+	case <-time.After(timeout):
+		t.Fatal("s0 did not receive any message in time")
 	}
 
 	cancel()
@@ -342,6 +334,12 @@ func TestRetryTiming(t *testing.T) {
 
 }
 
+// this test covers the closing of the previously closed Connect channel in the Dial function
+// both Reconnect and ReconnectAuth rely on Dial, and Dial implements the channel Connect
+// so either can be used to check Dial can safely reconnect after a disconnection
+// i.e. connect first time, close Connect channel
+// get disconnected, renew the Connect channel and reconnect
+// close the renewed Connect channel, without panic
 func TestReconnectAfterDisconnect(t *testing.T) {
 
 	r := New()

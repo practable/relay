@@ -46,6 +46,7 @@ type WsMessage struct {
 // ReconWs represents a websocket client that will reconnect if the connection is closed
 // connects (retrying/reconnecting if necessary) to websocket server at url
 type ReconWs struct {
+	Connected       chan struct{} // allow notification of successful connection, helps with testing
 	ForwardIncoming bool
 	In              chan WsMessage
 	Out             chan WsMessage
@@ -67,6 +68,7 @@ type RetryConfig struct {
 // New returns a pointer to a new reconnecting websocket client ReconWs
 func New() *ReconWs {
 	r := &ReconWs{
+		Connected:       make(chan struct{}),
 		In:              make(chan WsMessage),
 		Out:             make(chan WsMessage),
 		ForwardIncoming: true,
@@ -84,7 +86,10 @@ func New() *ReconWs {
 // Reconnect sets URL to connect to, and runs the client
 // run this in a separate goroutine so that the connection can be
 // ended from where it was initialised, by close((* ReconWs).Stop)
+// does not implement the connected signal; use ReconnectAuth for that
 func (r *ReconWs) Reconnect(ctx context.Context, url string) {
+
+	id := "reconws.ReconnectAuth(" + r.ID + ")"
 
 	boff := &backoff.Backoff{
 		Min:    r.Retry.Min,
@@ -110,8 +115,10 @@ func (r *ReconWs) Reconnect(ctx context.Context, url string) {
 			log.WithField("error", err).Debug("Dial finished")
 			if err == nil {
 				boff.Reset()
+				log.Tracef("%s: dial finished successfully, resetting timeout to zero", id)
 			} else {
 				time.Sleep(boff.Duration())
+				log.WithField("error", err).Tracef("%s: Dial finished with error, increasing timeout", id)
 			}
 			//TODO immediate return if cancelled....
 		}
@@ -253,7 +260,10 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 
 	// assume we are conntected?
 	r.Stats.ConnectedAt = time.Now()
-	//close(r.connected) //signal that we've connected
+	close(r.Connected) //signal that we've connected
+	defer func() {
+		r.Connected = make(chan struct{}) //reset for next time
+	}()
 
 	log.WithField("To", u).Tracef("%s: connected to %s", id, u)
 	// handle our reading tasks
