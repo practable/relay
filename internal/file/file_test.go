@@ -53,8 +53,6 @@ func exists(name string) bool {
 
 func TestRun(t *testing.T) {
 
-	interval := 10 * time.Millisecond
-
 	// Setup logging
 	debug := false
 
@@ -95,34 +93,33 @@ func TestRun(t *testing.T) {
 		PruneEvery:       time.Duration(time.Minute),
 	}
 	go func() {
+		// We can't start, stop and restart the relay.Relay without causing mux issues due to net/http
+		// It panics on registration of multiple handlers
+		// in this case it seems ok with starting straight away
 		go relay.Relay(closed, &wg, config)
 	}()
-
-	// We can't start, stop and restart the relay.Relay without causing mux issues due to net/http
-	// It panics on registration of multiple handlers
-	// so start with it not running, then after some time,
-	// and attempts have been made to connect - start relay
-	// and see if the ReconnectAuth clients will connect.
 
 	// Sign and get the complete encoded token as a string using the secret
 	bearer, err := makeTestToken(audience, secret, 60)
 
 	assert.NoError(t, err)
 
-	// now clients connect using their uris...
-
-	//var timeout = 100 * time.Millisecond
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	s0 := reconws.New()
 	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
 
+	select {
+	case <-s0.Connected:
+		// connected ok
+	case <-time.After(2 * time.Second):
+		t.Fatalf("s0 failed to connect to relay")
+	}
+
 	sighup := make(chan os.Signal)
 
 	testlog := "./test/test.log"
 	testlog1 := "./test/test.log.1"
-	playfilename := "./test/test.play"
 
 	if exists(testlog) {
 		err = os.Remove(testlog)
@@ -133,15 +130,22 @@ func TestRun(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	// no play file for now
+	connected := make(chan struct{})
+
+	// run the file logger
 	go func() {
-		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval, false, false, false)
+		err = Run(ctx, sighup, connected, audience+"/session/123", bearer, testlog, false)
 		assert.NoError(t, err)
 	}()
 
-	time.Sleep(time.Millisecond)
-	time.Sleep(time.Millisecond)
-	time.Sleep(time.Millisecond)
+	// we're waiting for the logger to start and connect
+
+	select {
+	case <-connected:
+		// connected ok
+	case <-time.After(2 * time.Second):
+		t.Fatalf("file logger failed to connect to relay")
+	}
 
 	s0.Out <- reconws.WsMessage{Type: websocket.TextMessage,
 		Data: []byte("This is the zeroth message")}
@@ -203,180 +207,7 @@ func TestRun(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	// now try playing a file
-	ctx, cancel = context.WithCancel(context.Background())
-	defer cancel()
-
-	play := `[10ms]
-{"some":"msg"}
-[10ms]
-# Non echo comment
-#- non echo comment
-#+ echo comment
-[0.1s] {"an":"other"}
-[1ms] {"an":"other"}
-<'^foo\s*',5,10ms> {"send":"foos"}
-[10ms]
-[1ms]a
-[1ms]b
-[1ms]c
-[1ms]d
-[1ms]e
-[1ms]f
-[1ms]g
-[1ms]
-#+ start set filter
-|+> [a-h]
-|accept> [R-Z]
-|->[0-9]
-|deny>  [#!&%]
-#+ done set filter
-[10ms]
-[1ms]ah0#
-[1ms]AA
-[1ms]ZZ
-[1ms]abc
-[1ms]abc!
-[1ms]ah
-[10ms]
-|reset>
-#+ reset
-[10ms]
-[1ms]ah0#
-[1ms]AA
-[1ms]ZZ
-[1ms]abc
-[1ms]abc!
-[1ms]ah
-[1ms]
-#+ start set filter
-|+> [a-h]
-|accept> [R-Z]
-|->[0-9]
-|deny>  [#!&%]
-#+ done set filter
-[10ms]
-[1ms]ah0#
-[1ms]AA
-[1ms]ZZ
-[1ms]abc
-[1ms]abc!
-[1ms]ah
-[10ms]
-|reset>
-#+ reset
-[10ms]
-[1ms]ah0#
-[1ms]AA
-[1ms]ZZ
-[1ms]abc
-[1ms]abc!
-[1ms]ah
-[1s]
-`
-	err = os.WriteFile(playfilename, []byte(play), 0644)
-	assert.NoError(t, err)
-
-	// echo to self, see that filter works...
-	ctx, cancel = context.WithCancel(context.Background())
-	defer cancel()
-	if exists(testlog) {
-		err = os.Remove(testlog)
-		assert.NoError(t, err)
-	}
-
-	s0 = reconws.New()
-	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
-
-	//echo messages back without modification
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case msg := <-s0.In:
-				s0.Out <- msg
-			}
-		}
-	}()
-
-	time.Sleep(10 * time.Millisecond)
-	err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, playfilename, interval, false, false, false)
-	assert.NoError(t, err)
-
-	dat, err = os.ReadFile(testlog)
-	assert.NoError(t, err)
-	s = string(dat)
-	t.Logf(s)
-
-	ec := `{"some":"msg"}
-echo comment
-{"an":"other"}
-{"an":"other"}
-{"send":"foos"}
-a
-b
-c
-d
-e
-f
-g
-start set filter
-done set filter
-ZZ
-abc
-ah
-reset
-ah0#
-AA
-ZZ
-abc
-abc!
-ah
-start set filter
-done set filter
-ZZ
-abc
-ah
-reset
-ah0#
-AA
-ZZ
-abc
-abc!
-ah
-` //put ` on this line so last line is processed
-
-	expectedCount = 36
-	actual = bufio.NewScanner(strings.NewReader(s))
-	expected := bufio.NewScanner(strings.NewReader(ec))
-
-	idx = 0
-	re = regexp.MustCompile(`^\s*\[[^\]]+\]\s*(.*)`)
-	for actual.Scan() {
-		expected.Scan() //protected from overrun by final assert in this loop
-		parsed := re.FindStringSubmatch(actual.Text())
-		assert.Equal(t, 2, len(parsed))
-		assert.Equal(t, expected.Text(), parsed[1], "text does not match")
-		idx++
-		assert.GreaterOrEqual(t, expectedCount, idx, fmt.Sprintf("too many lines in file: %s", actual.Text()))
-	}
-
-	// ok to drop up to two of the messages off the end
-	// there is variability in the test timing affecting
-	// last messages.. We can't have that throwing
-	// failures when it's a limitation of the testing,
-	// due to impact on github actions when uploading other code.
-
-	assert.GreaterOrEqual(t, expectedCount, idx, "incorrect number of lines in file")
-
-	time.Sleep(time.Second)
-
-	t.Logf("cancelling filtering test")
-
-	cancel()
-
-	time.Sleep(100 * time.Millisecond)
+	// playfile test was removed from here, with a cancel and a sleep
 
 	t.Logf("starting sighup test")
 
@@ -392,8 +223,10 @@ ah
 	s0 = reconws.New()
 	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
 
+	connected = make(chan struct{}) //renew connected channel since closed on previous test
+
 	go func() {
-		err = Run(ctx, sighup, audience+"/session/123", bearer, testlog, "", interval, false, false, false)
+		err = Run(ctx, sighup, connected, audience+"/session/123", bearer, testlog, false)
 		assert.NoError(t, err)
 	}()
 
@@ -455,6 +288,10 @@ ah
 	// run to run due to external timings we cannot control
 	assert.Less(t, 3, newCount)
 	assert.Less(t, 3, oldCount)
+
+	// TODO TEST binary mode
+
+	//t.Error("No binary mode test implemented yet")
 
 	// Shutdown the Relay and check no messages are being sent
 	close(closed)

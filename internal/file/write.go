@@ -2,10 +2,12 @@ package file
 
 import (
 	"context"
+	b64 "encoding/base64"
 	"fmt"
 	"io"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/practable/relay/internal/reconws"
 	log "github.com/sirupsen/logrus"
 )
@@ -56,4 +58,37 @@ func WriteBinary(ctx context.Context, in chan reconws.WsMessage, w io.Writer) {
 			}
 		}
 	}
+}
+
+// WsMessageToLine converts reconws.WsMessage to Line format, adding a
+// timestamp.
+func WsMessageToLine(ctx context.Context, in chan reconws.WsMessage, out chan Line) {
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case msg := <-in:
+
+			t := time.Now()
+
+			var line string
+
+			switch msg.Type {
+			case websocket.BinaryMessage:
+				line = b64.StdEncoding.EncodeToString(msg.Data)
+			case websocket.TextMessage:
+				line = string(msg.Data)
+
+			}
+
+			out <- Line{
+				Time:    t,
+				Content: line,
+			}
+		}
+
+	}
+
 }
