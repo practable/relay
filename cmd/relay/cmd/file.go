@@ -23,6 +23,7 @@ import (
 	"os/signal"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -38,213 +39,65 @@ var fileCmd = &cobra.Command{
 	Short: "Read/write data exchanged with relay from/to file",
 	Long: `Read/write text data exchanged with relay from/to file.
 
-0. PREQUISITES
---------------
+You need to specify configuration information using environment variables, before
+calling the executable. For example, to collect text data to stdout:
 
-If you are connecting to a session relay, then you will need a JWT token 
-that is valid for the relay you are connecting to. This
-will probably be supplied by the administrator of the relay (using some
-commands similar to this example:
+export RELAY_CLIENT_TOKEN=$(cat expt00-st-data.token)
+export RELAY_CLIENT_SESSION=https://app.practable.io/ed0/access/session/expt00-st-data
+relay client file
 
-export RELAY_TOKEN_LIFETIME=86400
-export RELAY_TOKEN_ROLE=client
-export RELAY_TOKEN_SECRET=$($HOME/secret/session_secret.sh)
-export RELAY_TOKEN_TOPIC=spin35-data
-export RELAY_TOKEN_CONNECTIONTYPE=session
-export RELAY_TOKEN_AUDIENCE=https://example.org/access
-export RELAY_CLIENT_TOKEN=$(relay token)
+or to collect binary video stream to file:
 
-1. MODES OF OPERATION
----------------------
-
-Session client file supports three main modes of operation. For all of them, you can see 
-addition logging information to stdout by setting development mode. This might be useful
-while building familiarity with the tool. It does not show the content of incoming messages
-but reports their size.
-export RELAY_CLIENT_FILE_DEVELOPMENT=true
-
-1.1 LOG 
-
-You must specify a session to connect to, and a file to log to
-export RELAY_CLIENT_SESSION=$ACCESSTOKEN_AUDIENCE/$ACCESSTOKEN_CONNECTIONTYPE/$ACCESSTOKEN_TOPIC
-export RELAY_CLIENT_FILE_LOG=/var/log/session/spin35-data.log
-session client file
-
-
-1.2 PLAY
-
-You can optionally also log any messages you get back, useful for running equipment checks.
-
-export RELAY_CLIENT_SESSION=$ACCESSTOKEN_AUDIENCE/$ACCESSTOKEN_CONNECTIONTYPE/$ACCESSTOKEN_TOPIC
-export RELAY_CLIENT_FILE_LOG=/var/log/session/spin35-data.log
-export RELAY_CLIENT_FILE_PLAY=/etc/practable/spin35-check.play
-session client file
-
-If you are sending messages that with a short timeout, or a very 
-long timeout, on conditions, then you 
-may wish to specify a custom timeout interval (default is 1s)
-export RELAY_CLIENT_FILE_INTERVAL=10ms
-
-If your play file has errors but you want to play it anyway, then 
-export RELAY_CLIENT_FILE_FORCE=true
-
-More information on the play file format is given below.
-
-
-1.3 CHECK  
-
-If you just want to check the syntax in your playfile, without 
-connecting to a relay, you can check it with
-
-export RELAY_CLIENT_FILE_CHECK_ONLY=true
-export RELAY_CLIENT_FILE_PLAY=/etc/practable/spin35-check.play
+export RELAY_CLIENT_TOKEN=$(cat expt00-st-video.token)
+export RELAY_CLIENT_SESSION=https://app.practable.io/ed0/access/session/expt00-st-video
+export RELAY_CLIENT_MODE=binary
+export RELAY_CLIENT_FILE=./video/expt00.ts
 relay client file
 
 
-2. PLAYFILE FORMAT
+0. Authorisation
+----------------
+
+You will be connecting to a secured relay, so you need to specify the topic, and provide
+a valid JWT token. If you can obtain them from your administrator, you'd specify them like 
+this example (change server details etc to suit): 
+
+export RELAY_CLIENT_TOKEN=$(cat expt00-st-data.token)
+export RELAY_CLIENT_SESSION=https://app.practable.io/ed0/access/session/expt00-st-data
+
+or if you have the relay secret, you can gerenate your own token when required, like this:
+
+export RELAY_TOKEN_LIFETIME=86400
+export RELAY_TOKEN_ROLE=client
+export RELAY_TOKEN_SECRET=$(cat $HOME/secret/relay.pat)
+export RELAY_TOKEN_TOPIC=expt00-st-data
+export RELAY_TOKEN_CONNECTIONTYPE=session
+export RELAY_TOKEN_AUDIENCE=https://app.practable.io/xx0/access
+export RELAY_CLIENT_TOKEN=$(relay token)
+export RELAY_CLIENT_SESSION=$ACCESSTOKEN_AUDIENCE/$ACCESSTOKEN_CONNECTIONTYPE/$ACCESSTOKEN_TOPIC
+
+1. Binary vs Text Mode
+----------------------
+
+Relay client file supports two modes of operation, text (with timestamps) and binary (without).
+
+You can see additional logging information on stdout by setting development mode. This might be useful
+while building familiarity with the tool. It does not show the content of incoming messages
+but reports their size. Do not use when streaming binary data to stdout as these timestamps will corrupt 
+the binary data
+
+Binary mode:
+export RELAY_CLIENT_MODE=binary
+
+Text mode (default):
+export RELAY_CLIENT_MODE=text
+
+If you do not set this variable, text mode is assumed.
+
+2. Writing to File
 ------------------
 
-The playfile lets you specify messages to send, as well as control
-when they are sent, either by specifying delays, or messages to 
-await reception of. You can also control which messages are logged
-to file, by setting filters. Note that logging ends when the playfile
-has finished, so if setting the filter for a long term logging session
-make sure you add a final wait command with a long duration, longer
-than you plan to log for (e.g. you might set this to 8760h for one year.
-
-2.1 DURATIONS
-
-A duration string is an unsigned decimal number with optional fraction 
-and a mandatory unit suffix, such as "300ms", "1.5h" or "2m45s". 
-Valid time units are "ms", "s", "m", "h".
-
-2.2 COMMANDS
-
-The format of the play file is one message per line. Each line can 
-have one command. The available commands are:
-
-- comment
-- wait
-- send/now
-- send/delay
-- send/condition
-- filter setting
-
-2.3 EXAMPLES
-
-Some example lines to show what is possible include:
-
-# comment
-#+ comment that is echoed to log file
-# send/now
-{"some":"msg"}
-# send/delay
-[1.2s] {"some":"msg"}
-# send command after receiving sufficient messages matching a pattern, or timing out
-# collect 5 "is running" messages, or wait 10s, whichever comes first, then send message
-<'\"is\"\s*:\s*\"running\"',5,10s> {"stop":"motor"}
-# wait for 100ms, without sending a message
-[100ms]
-# Add an accept filter
-|+> ^\s*{
-# Add a deny filter
-|-> "hb"
-# reset the filter to pass everything
-|r>
-
-2.3.1 COMMENTS
-
-Comments come in three formats
-# non-echo
-#- non-echo (just more explicit)
-#+ echo to log file (not sent to relay, helpful for delimiting tests)
-
-Any line starting with # is ignored as a comment. If you want to send
-a message starting with # then you simply need to prepend a delay, e.g.
-
-# This won't be sent because it is a comment
-[] # This WILL be sent (not that I'd recommend it)
-
-2.3.1 WAIT 
-
-If you specify a duration in square brackets on its own, no message
-is sent, but playback pauses for the duration specified. E.g. pause
-for two seconds:
-
-[2s]
-
-2.3.2: SEND/NOW
-
-Any message that is not of a defined type, is considered a message 
-to be sent right away, e.g. 
-
-{"some":"message"}
-set foo=bar
-
-Your message format doesn't have to be JSON
-
-2.3.3 SEND/DELAY
-
-Each line can be prepended by an optional delay within square brackets, e.g.
-
-[0.1s] {"some":"msg"}
-
-A regular expression is used to separate the optional delay from 
-the message, such that the message transmitted starts with the 
-first non-white space character occuring after the delay. There are
-no further assumptions made about the message format, so as to 
-support testing with malformed JSON or other message formats as may
-be required to interact with hardware or utilities attached to 
-session hosts. 
-Therefore it is only possible to send a message consisting of only
-whitespace, if you omit the delay. Such a message may be 
-useful for testing the rejection of non-messages, where the lack of
-a delay is less likely to be relevant.
-
-For readability, it may be useful to pad the delay value inside the
-brackets with whitespace. It is also acceptable to have a zero delay, 
-or an empty delay (for no delay)
-[] valid, zero delay
-[0s] valid, zero delay
-[  10ms ] valid, delay of 10ms
-[ 0.1s ] valid, delay of 100ms
-
-It is not recommended to specify delays of less than one millisecond 
-(0.001) because these are unlikely to be faithfully respected. Note
-that all delays are simply that - an additional delay on top of any
-overhead already incurred in sending the previous message. They 
-should not be treated as accurate inter-message spacings.
-
-2.3.4 SEND/CONDITION
-
-These are intended to speed up scripts that are waiting for some
-sort of variable duration task, like collecting a certain number
-of results, or waiting for a calibration to finish. There is no
-conditional processing of outputs i.e. there is no scripting 
-available. If you require complicated behaviours, then you should 
-consider making a direct connection to the relay from a tool you've 
-written in your favourite method. 
-
-Since there is no conditional processing, if the condition is not
-met, then it times out, and the command is sent anyway. The format 
-of the conditional is 
- 
-<'REGEXP',COUNT,TIMEOUT>
-
-All arguments are mandatory. Regexp is in golang format, so note that
-some lookahead options are not supported (an error will be thrown during 
-the check if the regexp does not compile).
-
-Your regexp should be enclosed in single quotes. You can include single 
-quotes in your regexp if they are escaped with backslash, e.g. a 
-conditional to find 'foo' looks like this:
-
-<'\'foo\'',1,10>
-
-Of course, if you just want to look for foo, that's simpler:
-<'foo',1,10>
-
-3. LOG ROTATION
+Some long running log files might become large, indicating the need for log rotation.
 
 If you are using logrotate(8), then send SIGHUP in your postscript. 
 Do NOT restart the service, as you will lose any messages sent during 
@@ -275,24 +128,27 @@ kill -SIGHUP pid
 
 		session := viper.GetString("session")
 		token := viper.GetString("token")
-		development := viper.GetBool("file_development")
-		interval := viper.GetDuration("interval")
-		check := viper.GetBool("check_only")
-		force := viper.GetBool("force")
-		logfilename := viper.GetString("file_log")
-		playfilename := viper.GetString("file_play")
+		development := viper.GetBool("development")
+		mode := viper.GetString("mode")
+		filename := viper.GetString("file")
 
-		if (len(logfilename) + len(playfilename)) < 1 {
-			fmt.Println("you must specify at least one filename. File(s) are specified via environment variables only. For details run `session client file -h`")
+		binary := false
+		mode = strings.TrimSpace(mode)
+		mode = strings.ToLower(mode)
+
+		if mode == "binary" {
+			binary = true
+		} else if !(mode == "text" || mode == "") {
+			fmt.Println("RELAY_CLIENT_MODE must be 'text', 'binary' or unset (defaulting to text)")
 			os.Exit(1)
 		}
 
-		if session == "" && !check {
+		if session == "" {
 			fmt.Println("RELAY_CLIENT_SESSION not set")
 			os.Exit(1)
 		}
 
-		if token == "" && !check {
+		if token == "" {
 			fmt.Println("RELAY_CLIENT_TOKEN not set")
 			os.Exit(1)
 		}
@@ -300,13 +156,12 @@ kill -SIGHUP pid
 		if development {
 			// development environment
 			fmt.Println("Development mode - logging output to stdout")
-			fmt.Printf("Session: %s\nToken: %s\nLog: %s\nPlay: %s\nCheck: %s\nForce: %s\n",
+			fmt.Printf("Session: %s\nToken: %s\nFile: %s\nBinary: %s\n",
 				session,
 				token,
-				logfilename,
-				playfilename,
-				strconv.FormatBool(check),
-				strconv.FormatBool(check))
+				filename,
+				strconv.FormatBool(binary),
+			)
 			Formatter := new(log.TextFormatter)
 			Formatter.TimestampFormat = time.RFC3339Nano
 			log.SetFormatter(Formatter)
@@ -340,12 +195,19 @@ kill -SIGHUP pid
 		sighup := make(chan os.Signal, 1)
 		signal.Notify(sighup, syscall.SIGHUP)
 
-		err := file.Run(ctx, sighup, session, token, logfilename, playfilename, interval, check, force)
+		connected := make(chan struct{})
+
+		err := file.Run(ctx, sighup, connected, session, token, filename, binary)
+
 		if err != nil {
 			fmt.Println(err.Error())
 			log.Errorf("Stopping due to error: %s", err.Error())
 			os.Exit(1)
 		}
+
+		<-connected //wait for connection established
+
+		log.Infof("Connected to session %s", session)
 
 	},
 }
