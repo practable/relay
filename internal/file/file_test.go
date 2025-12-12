@@ -213,7 +213,6 @@ func TestRun(t *testing.T) {
 
 	// test the sighup
 	ctx, cancel = context.WithCancel(context.Background())
-	defer cancel()
 	if exists(testlog) {
 		err = os.Remove(testlog)
 		assert.NoError(t, err)
@@ -289,9 +288,75 @@ func TestRun(t *testing.T) {
 	assert.Less(t, 3, newCount)
 	assert.Less(t, 3, oldCount)
 
-	// TODO TEST binary mode
+	// Test binary mode
+	ctx, cancel = context.WithCancel(context.Background())
 
-	//t.Error("No binary mode test implemented yet")
+	if exists(testlog) {
+		err = os.Remove(testlog)
+		assert.NoError(t, err)
+	}
+
+	t.Logf("starting s0 reconws")
+	s0 = reconws.New()
+	go s0.ReconnectAuth(ctx, audience+"/session/123", bearer)
+	select {
+	case <-s0.Connected:
+		//carry on
+	case <-time.After(2 * time.Second):
+		t.Fatalf("s0 failed to connect to relay")
+	}
+
+	// drain any old messages from previous test (there was a message 19 left over when first developing this test)
+	for {
+		select {
+		case <-s0.In:
+			// drain
+		case <-time.After(time.Millisecond * 50):
+			goto drained
+		}
+
+	}
+drained:
+
+	connected = make(chan struct{}) //renew connected channel since closed on previous test
+
+	go func() {
+		err = Run(ctx, sighup, connected, audience+"/session/123", bearer, testlog, true)
+		assert.NoError(t, err)
+	}()
+
+	select {
+	case <-connected:
+		//carry on
+	case <-time.After(2 * time.Second):
+		t.Fatalf("file logger failed to connect to relay")
+	}
+
+	data0 := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09}
+	data1 := []byte{0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19}
+	data2 := append(data0, data1...) // dots for appending a slice https://go.dev/ref/spec#Appending_and_copying_slices
+
+	s0.Out <- reconws.WsMessage{
+		Type: websocket.BinaryMessage,
+		Data: data0,
+	}
+
+	time.Sleep(time.Millisecond * 5) //make a gap between messages
+
+	s0.Out <- reconws.WsMessage{
+		Type: websocket.BinaryMessage,
+		Data: data1,
+	}
+
+	time.Sleep(time.Millisecond * 10)
+
+	cancel()
+
+	t.Logf("reading log files")
+	dataf, err := os.ReadFile(testlog)
+	assert.NoError(t, err)
+	assert.Equal(t, data2, dataf)
+	t.Logf(string(dataf))
 
 	// Shutdown the Relay and check no messages are being sent
 	close(closed)
