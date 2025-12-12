@@ -23,6 +23,14 @@ import (
 // the condition is normally used to ensure a sufficiency of data with some tolerance, so not exactly
 // meeting the condition is not as much as an issue as it might otherwise be - hence we can leave this
 // to the external analysis to decide.
+// Note from testing - set interval to something like 1ms, else if 10ms as originall was in testing then
+// the function failed to detect either enough lines, or timeouts, leading to test failures, because
+// it wasn't visiting each of the cases enough.
+// The issue still persists, just is less frequent now.
+// Propose a different architecture, which is that the timeout timer is just left to run in its own go-routine
+// and the accept lines runs the main body, returning earlier (and cancelling the timeout routine if it does)
+// need to bear in mind that this function expects to receive commands, and then do checks against them, so
+// outlives any individual condition check timing out.
 func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Line, interval time.Duration) {
 
 	var checking bool //true if we get a new command
@@ -97,7 +105,6 @@ func ConditionCheckLines(ctx context.Context, cc chan ConditionCheck, in chan Li
 				}
 			case line := <-in:
 				if getChecking() {
-
 					if current.Condition.AcceptPattern.MatchString(line.Content) {
 						log.Debugf("accepted lines: %d, want %d", len(lines), current.Condition.Count)
 						lines = append(lines, line)

@@ -32,7 +32,9 @@ func TestConditionCheckLines(t *testing.T) {
 
 	in := make(chan Line, 10) //buffer to simplify test writing
 
-	go ConditionCheckLines(ctx, cc, in, 10*time.Millisecond)
+	go ConditionCheckLines(ctx, cc, in, 100*time.Microsecond) //was 10 millisecond but this was too long and caused the function
+	// to miss timeout or enough lines depending on whether race was enabled or not
+	// or prints were added or not
 
 	timeout := 150 * time.Millisecond // was 150ms
 
