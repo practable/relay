@@ -1,0 +1,4 @@
+#!/bin/bash
+# baseline report made with gitleaks git --report-path gitleaks-report.json 
+# baseline report made on 12-12-25
+gitleaks git --baseline-path gitleaks-report.json  ./
