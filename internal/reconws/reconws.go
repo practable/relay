@@ -22,8 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"math/rand"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -94,8 +93,6 @@ func (r *ReconWs) Reconnect(ctx context.Context, url string) {
 		Jitter: r.Retry.Jitter,
 	}
 
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	// try dialling ....
 
 	for {
@@ -136,8 +133,6 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 		Jitter: r.Retry.Jitter,
 	}
 
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	// try dialling ....
 
 	waitBeforeDial := false
@@ -174,7 +169,7 @@ func (r *ReconWs) ReconnectAuth(ctx context.Context, url, token string) {
 				continue
 			}
 
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 
 			if err != nil {
 				log.WithField("error", err).Warnf("%s: failed reading access response body", id)

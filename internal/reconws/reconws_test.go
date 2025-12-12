@@ -277,6 +277,8 @@ func TestWsEcho(t *testing.T) {
 
 }
 
+// if this panics when run in vs code, you need to set the `go.testTimeout` configuration parameter
+// for vscode, to something like the 10m that `go test` uses
 func TestRetryTiming(t *testing.T) {
 
 	suppressLog()
