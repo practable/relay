@@ -1,19 +1,19 @@
 /*
-   Crossbar is a websocket relay
-   Copyright (C) 2019 Timothy Drysdale <timothy.d.drysdale@gmail.com>
+Crossbar is a websocket relay
+Copyright (C) 2019 Timothy Drysdale <timothy.d.drysdale@gmail.com>
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as
-   published by the Free Software Foundation, either version 3 of the
-   License, or (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package cmd
 
@@ -23,6 +23,7 @@ import (
 	_ "net/http/pprof" //ok in production https://medium.com/google-cloud/continuous-profiling-of-go-programs-96d4416af77b
 	"os"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -73,6 +74,8 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		runtime.SetBlockProfileRate(1) // https://pkg.go.dev/runtime#SetBlockProfileRate
 
 		viper.SetEnvPrefix("RELAY")
 		viper.AutomaticEnv()
