@@ -23,7 +23,6 @@ import (
 	_ "net/http/pprof" //ok in production https://medium.com/google-cloud/continuous-profiling-of-go-programs-96d4416af77b
 	"os"
 	"os/signal"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -75,7 +74,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		runtime.SetBlockProfileRate(1) // https://pkg.go.dev/runtime#SetBlockProfileRate
+		//runtime.SetBlockProfileRate(1) // https://pkg.go.dev/runtime#SetBlockProfileRate
 
 		viper.SetEnvPrefix("RELAY")
 		viper.AutomaticEnv()
