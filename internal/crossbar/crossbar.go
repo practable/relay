@@ -541,7 +541,13 @@ func (h *Hub) run() {
 					select {
 					case client.send <- message:
 					default:
-						h.unregister <- client
+						log.WithFields(log.Fields{
+							"topic":          client.topic,
+							"name":           client.name,
+							"remote address": client.remoteAddr,
+							"user agent":     client.userAgent,
+						}).Error("message not sent because client.send was blocked")
+						//h.unregister <- client
 						//close(client.send)
 						//delete(h.clients[topic], client)
 					}
