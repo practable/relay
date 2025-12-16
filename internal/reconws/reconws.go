@@ -31,7 +31,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jpillora/backoff"
 	"github.com/practable/relay/internal/access/restapi/operations"
-	"github.com/practable/relay/internal/chanstats"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -47,11 +46,11 @@ type WsMessage struct {
 // connects (retrying/reconnecting if necessary) to websocket server at url
 type ReconWs struct {
 	Connected       chan struct{} // allow notification of successful connection, helps with testing
+	ConnectedAt     time.Time
 	ForwardIncoming bool
 	In              chan WsMessage
 	Out             chan WsMessage
 	Retry           RetryConfig
-	Stats           *chanstats.ChanStats
 	URL             string
 	ID              string
 }
@@ -68,7 +67,8 @@ type RetryConfig struct {
 // New returns a pointer to a new reconnecting websocket client ReconWs
 func New() *ReconWs {
 	r := &ReconWs{
-		Connected:       make(chan struct{}),
+		Connected: make(chan struct{}),
+		// don't initialise connectedAt; set when connected
 		In:              make(chan WsMessage),
 		Out:             make(chan WsMessage),
 		ForwardIncoming: true,
@@ -77,8 +77,7 @@ func New() *ReconWs {
 			Max:     10 * time.Second,
 			Timeout: 1 * time.Second,
 			Jitter:  false},
-		Stats: chanstats.New(),
-		ID:    uuid.New().String()[0:6],
+		ID: uuid.New().String()[0:6],
 	}
 	return r
 }
@@ -258,8 +257,8 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 		return err
 	}
 
-	// assume we are conntected?
-	r.Stats.ConnectedAt = time.Now()
+	// assume we are connected?
+	r.ConnectedAt = time.Now()
 	close(r.Connected) //signal that we've connected
 	defer func() {
 		r.Connected = make(chan struct{}) //reset for next time
@@ -293,12 +292,7 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 			if r.ForwardIncoming {
 				r.In <- WsMessage{Data: data, Type: mt}
 				log.Tracef("%s: received %d-byte message", id, len(data))
-				//update stats
-				/*
-					r.Stats.Rx.Bytes.Add(float64(len(data)))
-					r.Stats.Rx.Dt.Add(time.Since(r.Stats.Rx.Last).Seconds())
-					r.Stats.Rx.Last = time.Now()
-				*/
+
 			} else {
 				log.Tracef("%s: ignored %d-byte message", id, len(data))
 			}
@@ -320,12 +314,6 @@ LOOPWRITING:
 				break LOOPWRITING
 			}
 			log.Tracef("%s: sent %d-byte message", id, len(msg.Data))
-			//update stats
-			/*
-				r.Stats.Tx.Bytes.Add(float64(len(msg.Data)))
-				r.Stats.Tx.Dt.Add(time.Since(r.Stats.Tx.Last).Seconds())
-				r.Stats.Tx.Last = time.Now()
-			*/
 
 		case <-ctx.Done(): // context has finished, either timeout or cancel
 			//TODO - do we need to do this?
