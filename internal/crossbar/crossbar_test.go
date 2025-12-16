@@ -149,7 +149,7 @@ func TestCrossbar(t *testing.T) {
 	select {
 	case msg := <-stats.In:
 
-		t.Log("TestGetStats...PROVISIONAL-PASS")
+		t.Log("TestGetClientReports...PROVISIONAL-PASS")
 
 		var reports []*ClientReport
 
@@ -170,20 +170,20 @@ func TestCrossbar(t *testing.T) {
 		}
 
 		if agents[session] == 2 {
-			t.Log("TestGetStats...PASS")
+			t.Log("TestGetClientReports...PASS")
 		} else {
-			t.Fatalf("TestGetStats...FAIL")
+			t.Fatalf("TestGetClientReports...FAIL")
 		}
 
 	case <-time.After(timeout):
-		t.Fatalf("TestGetStats...FAIL")
+		t.Fatalf("TestGetClientReports...FAIL")
 	}
 
 	cancel()
 	time.Sleep(timeout)
 
 	// *** TestGetStatus
-	reports := config.Hub.GetStats()
+	reports := config.Hub.GetClientReports()
 
 	// these tests are just checking there was a stats report, but not much about it
 	// so far there is only the stats reporter connected

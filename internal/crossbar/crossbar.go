@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -13,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/eclesh/welford"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/practable/relay/internal/chanmap"
@@ -59,9 +57,13 @@ type Client struct {
 	// bookingID from the token
 	bookingID string
 
+	// the time we accepted the connection from the client
+	connectedAt int64
+
 	// hub closes this channel if connection is curtailed
 	denied chan struct{}
 
+	// when the client's authorization token expires
 	expiresAt int64
 
 	hub *Hub
@@ -79,8 +81,6 @@ type Client struct {
 
 	scopes []string
 
-	stats *Stats
-
 	name string
 
 	userAgent string
@@ -91,36 +91,19 @@ type Client struct {
 	canRead, canWrite bool
 }
 
-// RxTx represents statistics for both receive and transmit
-type RxTx struct {
-	Tx ReportStats `json:"tx"`
-	Rx ReportStats `json:"rx"`
-}
-
-// ReportStats represents statistics about what has been sent/received
-type ReportStats struct {
-	Last string `json:"last"` //how many seconds ago...
-
-	Size float64 `json:"size"`
-
-	Fps float64 `json:"fps"`
-}
-
 // ClientReport represents information about a client's connection, permissions, and statistics
 type ClientReport struct {
 	CanRead bool `json:"canRead"`
 
 	CanWrite bool `json:"canWrite"`
 
-	Connected string `json:"connected"`
+	ConnectedAt string `json:"connected"`
 
 	ExpiresAt string `json:"expiresAt"`
 
 	RemoteAddr string `json:"remoteAddr"`
 
 	Scopes []string `json:"scopes"`
-
-	Stats RxTx `json:"stats"`
 
 	Topic string `json:"topic"`
 
@@ -130,28 +113,6 @@ type ClientReport struct {
 // StatsCommand represents a command in string form
 type StatsCommand struct {
 	Command string `json:"cmd"`
-}
-
-// Stats represents statistics for a connection
-type Stats struct {
-	connectedAt time.Time
-
-	expiresAt time.Time
-
-	rx *Frames
-
-	tx *Frames
-}
-
-// Frames represents statistics on (video) frames sent over a connection
-type Frames struct {
-	last time.Time
-
-	size *welford.Stats
-
-	ns *welford.Stats
-
-	mu *sync.RWMutex
 }
 
 // messages will be wrapped in this struct for muxing
@@ -270,18 +231,7 @@ func (c *Client) readPump() {
 		if c.canWrite {
 
 			c.hub.broadcast <- message{sender: *c, data: data, mt: mt}
-			/*
-				c.stats.tx.mu.Lock()
-				t := time.Now()
-				if c.stats.tx.ns.Count() > 0 {
-					c.stats.tx.ns.Add(float64(t.UnixNano() - c.stats.tx.last.UnixNano()))
-				} else {
-					c.stats.tx.ns.Add(float64(t.UnixNano() - c.stats.connectedAt.UnixNano()))
-				}
-				c.stats.tx.last = t
-				c.stats.tx.size.Add(float64(len(data)))
-				c.stats.tx.mu.Unlock()
-			*/
+
 		}
 	}
 }
@@ -357,16 +307,9 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 
 					size += n
 				}
-				c.stats.rx.mu.Lock()
-				t := time.Now()
-				if c.stats.rx.ns.Count() > 0 {
-					c.stats.rx.ns.Add(float64(t.UnixNano() - c.stats.rx.last.UnixNano()))
-				} else {
-					c.stats.rx.ns.Add(float64(t.UnixNano() - c.stats.connectedAt.UnixNano()))
-				}
-				c.stats.rx.last = t
-				c.stats.rx.size.Add(float64(size))
-				c.stats.rx.mu.Unlock()
+
+				log.Tracef("writePump wrote %d bytes", size)
+
 				if err := w.Close(); err != nil {
 					return
 				}
@@ -423,7 +366,7 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) GetStats() []*ClientReport {
+func (h *Hub) GetClientReports() []*ClientReport {
 
 	var reports []*ClientReport
 
@@ -431,67 +374,24 @@ func (h *Hub) GetStats() []*ClientReport {
 	for _, topic := range h.clients {
 		for client := range topic {
 
-			client.stats.tx.mu.RLock()
-
-			var tx ReportStats
-
-			if client.stats.tx.size.Count() > 0 {
-				tx = ReportStats{
-					Last: time.Since(client.stats.tx.last).String(),
-					Size: math.Round(client.stats.tx.size.Mean()),
-					Fps:  fpsFromNs(client.stats.tx.ns.Mean()),
-				}
-			} else {
-				tx = ReportStats{
-					Last: "Never",
-					Size: 0,
-					Fps:  0,
-				}
-			}
-
-			client.stats.tx.mu.RUnlock()
-
-			client.stats.rx.mu.RLock()
-
-			var rx ReportStats
-
-			if client.stats.rx.size.Count() > 0 {
-				rx = ReportStats{
-					Last: time.Since(client.stats.rx.last).String(),
-					Size: math.Round(client.stats.rx.size.Mean()),
-					Fps:  fpsFromNs(client.stats.rx.ns.Mean()),
-				}
-			} else {
-				rx = ReportStats{
-					Last: "Never",
-					Size: 0,
-					Fps:  0,
-				}
-			}
-			client.stats.rx.mu.RUnlock()
-
-			c, err := client.stats.connectedAt.UTC().MarshalText()
+			ca, err := time.Unix(client.connectedAt, 0).UTC().MarshalText()
 			if err != nil {
-				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "connectedAt": client.stats.connectedAt}).Error("stats cannot marshal connectedAt time to string")
+				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "connectedAt": client.connectedAt}).Error("stats cannot marshal connectedAt time to string")
 			}
-			ea, err := client.stats.expiresAt.UTC().MarshalText()
+			ea, err := time.Unix(client.expiresAt, 0).UTC().MarshalText()
 			if err != nil {
-				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "expiresAt": client.stats.expiresAt}).Error("stats cannot marshal expiresAt time to string")
+				log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "expiresAt": client.expiresAt}).Error("stats cannot marshal expiresAt time to string")
 			}
 
 			report := &ClientReport{
-				Topic:      client.topic,
-				CanRead:    client.canRead,
-				CanWrite:   client.canWrite,
-				Connected:  string(c),
-				ExpiresAt:  string(ea),
-				RemoteAddr: client.remoteAddr,
-				Scopes:     client.scopes,
-				UserAgent:  client.userAgent,
-				Stats: RxTx{
-					Tx: tx,
-					Rx: rx,
-				},
+				Topic:       client.topic,
+				CanRead:     client.canRead,
+				CanWrite:    client.canWrite,
+				ConnectedAt: string(ca),
+				ExpiresAt:   string(ea),
+				RemoteAddr:  client.remoteAddr,
+				Scopes:      client.scopes,
+				UserAgent:   client.userAgent,
 			}
 
 			reports = append(reports, report)
@@ -547,9 +447,6 @@ func (h *Hub) run() {
 							"remote address": client.remoteAddr,
 							"user agent":     client.userAgent,
 						}).Error("message not sent because client.send was blocked")
-						//h.unregister <- client
-						//close(client.send)
-						//delete(h.clients[topic], client)
 					}
 				}
 			}
@@ -685,43 +582,40 @@ func serveWs(closed <-chan struct{}, w http.ResponseWriter, r *http.Request, con
 	denied := make(chan struct{})
 
 	if ct == Session {
-		// initialise statistics
-		tx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
-		rx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
-		exp := time.Unix((*token.ExpiresAt).Unix(), 0) // jwt.NumericDate underlying type is time.Time
-		stats := &Stats{connectedAt: time.Now(), expiresAt: exp, tx: tx, rx: rx}
 
+		// Create a client
 		client := &Client{hub: config.Hub,
-			bookingID:  token.BookingID,
-			conn:       conn,
-			denied:     denied,
-			expiresAt:  (*token.ExpiresAt).Unix(),
-			send:       make(chan message, int(config.BufferSize)),
-			topic:      topic,
-			stats:      stats,
-			name:       uuid.New().String(),
-			userAgent:  r.UserAgent(),
-			remoteAddr: r.Header.Get("X-Forwarded-For"),
-			audience:   config.Audience,
-			canRead:    canRead,
-			canWrite:   canWrite,
-			scopes:     token.Scopes,
+			bookingID:   token.BookingID,
+			conn:        conn,
+			denied:      denied,
+			connectedAt: time.Now().Unix(),
+			expiresAt:   (*token.ExpiresAt).Unix(), // jwt.NumericDate underlying type is time.Time
+			send:        make(chan message, int(config.BufferSize)),
+			topic:       topic,
+			name:        uuid.New().String(),
+			userAgent:   r.UserAgent(),
+			remoteAddr:  r.Header.Get("X-Forwarded-For"),
+			audience:    config.Audience,
+			canRead:     canRead,
+			canWrite:    canWrite,
+			scopes:      token.Scopes,
 		}
 		client.hub.register <- client
 
 		cf := log.Fields{
-			"booking_id":  token.BookingID,
-			"expires_at":  (*token.ExpiresAt).Unix(),
-			"topic":       topic,
-			"stats":       true,
-			"buffer_size": config.BufferSize,
-			"name":        uuid.New().String(),
-			"user_agent":  r.UserAgent(),
-			"remote_addr": r.Header.Get("X-Forwarded-For"),
-			"audience":    config.Audience,
-			"can_read":    canRead,
-			"can_write":   canWrite,
-			"scopes":      token.Scopes,
+			"booking_id":   token.BookingID,
+			"connected_at": time.Unix(client.connectedAt, 0).String(),
+			"expires_at":   time.Unix(client.expiresAt, 0).String(),
+			"topic":        topic,
+			"stats":        true,
+			"buffer_size":  config.BufferSize,
+			"name":         uuid.New().String(),
+			"user_agent":   r.UserAgent(),
+			"remote_addr":  r.Header.Get("X-Forwarded-For"),
+			"audience":     config.Audience,
+			"can_read":     canRead,
+			"can_write":    canWrite,
+			"scopes":       token.Scopes,
 		}
 
 		log.WithFields(cf).Infof("new connection")
@@ -749,21 +643,17 @@ func serveWs(closed <-chan struct{}, w http.ResponseWriter, r *http.Request, con
 // StatsClient starts a routine which sends stats reports on demand.
 func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 
-	tx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
-	rx := &Frames{size: welford.New(), ns: welford.New(), mu: &sync.RWMutex{}}
-	stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
-
 	client := &Client{hub: config.Hub,
-		send:       make(chan message, 256),
-		topic:      "stats",
-		stats:      stats,
-		name:       "stats-generator-" + uuid.New().String(),
-		audience:   config.Audience,
-		userAgent:  "crossbar",
-		remoteAddr: "internal",
-		canRead:    true,
-		canWrite:   true,
-		scopes:     []string{"read", "stats", "write"},
+		connectedAt: time.Now().Unix(),
+		send:        make(chan message, 256),
+		topic:       "stats",
+		name:        "stats-generator-" + uuid.New().String(),
+		audience:    config.Audience,
+		userAgent:   "crossbar",
+		remoteAddr:  "internal",
+		canRead:     true,
+		canWrite:    true,
+		scopes:      []string{"read", "stats", "write"},
 	}
 	client.hub.register <- client
 
@@ -845,67 +735,24 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup, stats
 		for _, topic := range c.hub.clients {
 			for client := range topic {
 
-				client.stats.tx.mu.RLock()
-
-				var tx ReportStats
-
-				if client.stats.tx.size.Count() > 0 {
-					tx = ReportStats{
-						Last: time.Since(client.stats.tx.last).String(),
-						Size: math.Round(client.stats.tx.size.Mean()),
-						Fps:  fpsFromNs(client.stats.tx.ns.Mean()),
-					}
-				} else {
-					tx = ReportStats{
-						Last: "Never",
-						Size: 0,
-						Fps:  0,
-					}
-				}
-
-				client.stats.tx.mu.RUnlock()
-
-				client.stats.rx.mu.RLock()
-
-				var rx ReportStats
-
-				if client.stats.rx.size.Count() > 0 {
-					rx = ReportStats{
-						Last: time.Since(client.stats.rx.last).String(),
-						Size: math.Round(client.stats.rx.size.Mean()),
-						Fps:  fpsFromNs(client.stats.rx.ns.Mean()),
-					}
-				} else {
-					rx = ReportStats{
-						Last: "Never",
-						Size: 0,
-						Fps:  0,
-					}
-				}
-				client.stats.rx.mu.RUnlock()
-
-				c, err := client.stats.connectedAt.UTC().MarshalText()
+				ca, err := time.Unix(client.connectedAt, 0).UTC().MarshalText()
 				if err != nil {
-					log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "connectedAt": client.stats.connectedAt}).Error("stats cannot marshal connectedAt time to string")
+					log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "connectedAt": client.connectedAt}).Error("stats cannot marshal connectedAt time to string")
 				}
-				ea, err := client.stats.expiresAt.UTC().MarshalText()
+				ea, err := time.Unix(client.expiresAt, 0).UTC().MarshalText()
 				if err != nil {
-					log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "expiresAt": client.stats.expiresAt}).Error("stats cannot marshal expiresAt time to string")
+					log.WithFields(log.Fields{"error": err.Error(), "topic": client.topic, "expiresAt": client.expiresAt}).Error("stats cannot marshal expiresAt time to string")
 				}
 
 				report := &ClientReport{
-					Topic:      client.topic,
-					CanRead:    client.canRead,
-					CanWrite:   client.canWrite,
-					Connected:  string(c),
-					ExpiresAt:  string(ea),
-					RemoteAddr: client.remoteAddr,
-					Scopes:     client.scopes,
-					UserAgent:  client.userAgent,
-					Stats: RxTx{
-						Tx: tx,
-						Rx: rx,
-					},
+					Topic:       client.topic,
+					CanRead:     client.canRead,
+					CanWrite:    client.canWrite,
+					ConnectedAt: string(ca),
+					ExpiresAt:   string(ea),
+					RemoteAddr:  client.remoteAddr,
+					Scopes:      client.scopes,
+					UserAgent:   client.userAgent,
 				}
 
 				reports = append(reports, report)
