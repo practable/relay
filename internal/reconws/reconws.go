@@ -294,9 +294,11 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 				r.In <- WsMessage{Data: data, Type: mt}
 				log.Tracef("%s: received %d-byte message", id, len(data))
 				//update stats
-				r.Stats.Rx.Bytes.Add(float64(len(data)))
-				r.Stats.Rx.Dt.Add(time.Since(r.Stats.Rx.Last).Seconds())
-				r.Stats.Rx.Last = time.Now()
+				/*
+					r.Stats.Rx.Bytes.Add(float64(len(data)))
+					r.Stats.Rx.Dt.Add(time.Since(r.Stats.Rx.Last).Seconds())
+					r.Stats.Rx.Last = time.Now()
+				*/
 			} else {
 				log.Tracef("%s: ignored %d-byte message", id, len(data))
 			}
