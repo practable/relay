@@ -120,37 +120,19 @@ func getStatusHandler(config Config) func(operations.GetStatusParams, interface{
 			return operations.NewGetStatusUnauthorized().WithPayload(&models.Error{Code: &c, Message: &m})
 		}
 
-		reports := config.Hub.GetStats()
+		reports := config.Hub.GetClientReports()
 
 		mreports := []*models.Report{}
 
 		for _, r := range reports {
 
-			rx := models.Details{
-				Last: r.Stats.Rx.Last,
-				Fps:  float32(r.Stats.Rx.Fps),
-				Size: float32(r.Stats.Rx.Size),
-			}
-
-			tx := models.Details{
-				Last: r.Stats.Tx.Last,
-				Fps:  float32(r.Stats.Tx.Fps),
-				Size: float32(r.Stats.Tx.Size),
-			}
-
-			stats := models.Stats{
-				Rx: &rx,
-				Tx: &tx,
-			}
-
 			rm := models.Report{
 				CanRead:    r.CanRead,
 				CanWrite:   r.CanWrite,
-				Connected:  r.Connected,
+				Connected:  r.ConnectedAt,
 				ExpiresAt:  r.ExpiresAt,
 				RemoteAddr: r.RemoteAddr,
 				Scopes:     r.Scopes,
-				Stats:      &stats,
 				Topic:      r.Topic,
 				UserAgent:  r.UserAgent,
 				//todo complete
