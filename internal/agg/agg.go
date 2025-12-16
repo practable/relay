@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/jinzhu/copier"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/hub"
+	log "github.com/sirupsen/logrus"
 )
 
 // New returns a pointer to a new aggregating hub
@@ -30,29 +30,18 @@ func New() *Hub {
 
 // Run starts the aggregrating hub without collecting usage statistics
 func (h *Hub) Run(closed chan struct{}) {
-	h.RunOptionalStats(closed, false)
-}
-
-//RunWithStats starts the aggegrating hub whilst collecting usage statistics
-func (h *Hub) RunWithStats(closed chan struct{}) {
-	h.RunOptionalStats(closed, true)
-}
-
-//RunOptionalStats start the aggegrating hub, with a choice of collecting usage statistics or not
-func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
-
-	//start the hub
-	if withStats {
-		go h.Hub.RunWithStats(closed)
-	} else {
-		go h.Hub.Run(closed)
-	}
-
+	go h.Hub.Run(closed) //start the underlying hub
+	log.Debug("Aggregator hub started")
 	for {
 		select {
 		case <-closed:
+			log.Debug("Aggregator hub stopping")
 			return
+
 		case client := <-h.Register:
+
+			log.WithField("topic", client.Topic).Debug("Aggregator hub registering client to topic")
+
 			if strings.HasPrefix(client.Topic, "stream/") {
 				// register the client to the stream
 				if _, ok := h.Streams[client.Topic]; !ok {
@@ -84,7 +73,9 @@ func (h *Hub) RunOptionalStats(closed chan struct{}, withStats bool) {
 				}
 			} else {
 				// register client directly
+				log.WithField("topic", client.Topic).Trace("Aggregator hub registering non-stream client to topic")
 				h.Hub.Register <- client
+				log.WithField("topic", client.Topic).Debug("Aggregator hub registered non-stream client to topic")
 			}
 		case client := <-h.Unregister:
 			if strings.HasPrefix(client.Topic, "stream/") {

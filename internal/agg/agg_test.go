@@ -7,7 +7,14 @@ import (
 	"time"
 
 	"github.com/practable/relay/internal/hub"
+	log "github.com/sirupsen/logrus"
 )
+
+func init() {
+
+	log.SetLevel(log.WarnLevel)
+
+}
 
 func TestInstantiateHub(t *testing.T) {
 
@@ -35,30 +42,35 @@ func TestInstantiateHub(t *testing.T) {
 
 func TestRegisterClient(t *testing.T) {
 	// also exercises the RunWithStats path
-	for i := 0; i < 2; i++ {
-		topic := "/video0"
-		h := New()
-		closed := make(chan struct{})
 
-		if i == 0 {
-			go h.Run(closed)
-		} else {
-			go h.RunWithStats(closed)
-		}
+	topic := "/video0"
 
-		c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: topic, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	h := New()
 
-		h.Register <- c
+	closed := make(chan struct{})
 
-		time.Sleep(time.Millisecond)
+	go h.Run(closed)
 
-		if val, ok := h.Hub.Clients[topic][c]; !ok {
-			t.Error("Client not registered in topic")
-		} else if val == false {
-			t.Error("Client registered but not made true in map")
-		}
-		close(closed)
+	time.Sleep(100 * time.Millisecond)
+
+	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: topic, Send: make(chan hub.Message)}
+
+	select {
+	case h.Register <- c:
+	default:
+		t.Error("Could not send register")
 	}
+
+	time.Sleep(100 * time.Millisecond)
+
+	if val, ok := h.Hub.Clients[topic][c]; !ok {
+		log.WithField("Client map", h.Hub.Clients).Debug("Client not found in map")
+		t.Error("Client not registered in topic")
+	} else if val == false {
+		t.Error("Client registered but not made true in map")
+	}
+	close(closed)
+
 }
 
 func TestUnRegisterClient(t *testing.T) {
@@ -67,7 +79,7 @@ func TestUnRegisterClient(t *testing.T) {
 	h := New()
 	closed := make(chan struct{})
 	go h.Run(closed)
-	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: topic, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: topic, Send: make(chan hub.Message)}
 
 	h.Register <- c
 
@@ -80,7 +92,11 @@ func TestUnRegisterClient(t *testing.T) {
 	}
 
 	time.Sleep(time.Millisecond)
-	h.Unregister <- c
+	select {
+	case h.Unregister <- c:
+	default:
+		t.Error("Could not send unregister")
+	}
 	time.Sleep(time.Millisecond)
 	if val, ok := h.Hub.Clients[topic][c]; ok {
 		if val {
@@ -97,11 +113,11 @@ func TestSendMessage(t *testing.T) {
 	go h.Run(closed)
 
 	topicA := "/videoA"
-	c1 := &hub.Client{Hub: h.Hub, Name: "1", Topic: topicA, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
-	c2 := &hub.Client{Hub: h.Hub, Name: "2", Topic: topicA, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c1 := &hub.Client{Hub: h.Hub, Name: "1", Topic: topicA, Send: make(chan hub.Message)}
+	c2 := &hub.Client{Hub: h.Hub, Name: "2", Topic: topicA, Send: make(chan hub.Message)}
 
 	topicB := "/videoB"
-	c3 := &hub.Client{Hub: h.Hub, Name: "2", Topic: topicB, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c3 := &hub.Client{Hub: h.Hub, Name: "2", Topic: topicB, Send: make(chan hub.Message)}
 
 	h.Register <- c1
 	h.Register <- c2
@@ -157,7 +173,7 @@ func TestRegisterStreamNoRule(t *testing.T) {
 	defer close(closed)
 
 	go h.Run(closed)
-	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: topic, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: topic, Send: make(chan hub.Message)}
 
 	h.Register <- c
 
@@ -179,7 +195,7 @@ func TestUnRegisterStreamNoRule(t *testing.T) {
 	defer close(closed)
 
 	go h.Run(closed)
-	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: topic, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: topic, Send: make(chan hub.Message)}
 
 	h.Register <- c
 
@@ -303,9 +319,9 @@ func TestDeleteAllRules(t *testing.T) {
 		t.Error("Rule has incorrect number of feeds")
 	}
 	// register client to stream
-	c0 := &hub.Client{Hub: h.Hub, Name: "a0", Topic: stream0, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c0 := &hub.Client{Hub: h.Hub, Name: "a0", Topic: stream0, Send: make(chan hub.Message)}
 	h.Register <- c0
-	c1 := &hub.Client{Hub: h.Hub, Name: "a1", Topic: stream1, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c1 := &hub.Client{Hub: h.Hub, Name: "a1", Topic: stream1, Send: make(chan hub.Message)}
 	h.Register <- c1
 	time.Sleep(time.Millisecond)
 
@@ -361,7 +377,7 @@ func TestAddRuleAddDeleteStream(t *testing.T) {
 	}
 
 	// register client to stream
-	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: stream, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: stream, Send: make(chan hub.Message)}
 
 	h.Register <- c
 
@@ -446,7 +462,7 @@ func TestAddRuleAddStreamDeleteRule(t *testing.T) {
 	}
 
 	// register client to stream
-	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: stream, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: stream, Send: make(chan hub.Message)}
 
 	h.Register <- c
 
@@ -522,19 +538,19 @@ func TestStreamGetsFeedMessges(t *testing.T) {
 	h.Add <- *r
 
 	// register client to stream
-	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: stream, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: stream, Send: make(chan hub.Message)}
 
 	h.Register <- c
 
 	// add feeds
 	topic1 := "video0"
-	c1 := &hub.Client{Hub: h.Hub, Name: "1", Topic: topic1, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c1 := &hub.Client{Hub: h.Hub, Name: "1", Topic: topic1, Send: make(chan hub.Message)}
 
 	topic2 := "audio"
-	c2 := &hub.Client{Hub: h.Hub, Name: "2", Topic: topic2, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c2 := &hub.Client{Hub: h.Hub, Name: "2", Topic: topic2, Send: make(chan hub.Message)}
 
 	topic3 := "nothing"
-	c3 := &hub.Client{Hub: h.Hub, Name: "3", Topic: topic3, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c3 := &hub.Client{Hub: h.Hub, Name: "3", Topic: topic3, Send: make(chan hub.Message)}
 
 	h.Register <- c1
 	h.Register <- c2
@@ -617,19 +633,19 @@ func TestStreamWithRuleChange(t *testing.T) {
 	h.Add <- *r
 
 	// register client to stream
-	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: stream, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c := &hub.Client{Hub: h.Hub, Name: "aa", Topic: stream, Send: make(chan hub.Message)}
 
 	h.Register <- c
 
 	// add feeds
 	topic1 := "video0"
-	c1 := &hub.Client{Hub: h.Hub, Name: "1", Topic: topic1, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c1 := &hub.Client{Hub: h.Hub, Name: "1", Topic: topic1, Send: make(chan hub.Message)}
 
 	topic2 := "audio"
-	c2 := &hub.Client{Hub: h.Hub, Name: "2", Topic: topic2, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c2 := &hub.Client{Hub: h.Hub, Name: "2", Topic: topic2, Send: make(chan hub.Message)}
 
 	topic3 := "nothing"
-	c3 := &hub.Client{Hub: h.Hub, Name: "3", Topic: topic3, Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	c3 := &hub.Client{Hub: h.Hub, Name: "3", Topic: topic3, Send: make(chan hub.Message)}
 
 	h.Register <- c1
 	h.Register <- c2
