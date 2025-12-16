@@ -70,7 +70,7 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan message
+	send chan *message
 
 	// string representing the path the client connected to
 	topic string
@@ -269,7 +269,7 @@ func (c *Client) readPump() {
 
 		if c.canWrite {
 
-			c.hub.broadcast <- message{sender: *c, data: data, mt: mt}
+			c.hub.broadcast <- &message{sender: *c, data: data, mt: mt}
 			/*
 				c.stats.tx.mu.Lock()
 				t := time.Now()
@@ -357,6 +357,7 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 
 					size += n
 				}
+				/* disable stats for efficiency
 				c.stats.rx.mu.Lock()
 				t := time.Now()
 				if c.stats.rx.ns.Count() > 0 {
@@ -367,6 +368,7 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 				c.stats.rx.last = t
 				c.stats.rx.size.Add(float64(size))
 				c.stats.rx.mu.Unlock()
+				*/
 				if err := w.Close(); err != nil {
 					return
 				}
@@ -400,7 +402,7 @@ type Hub struct {
 	mu *sync.RWMutex
 
 	// Inbound messages from the clients.
-	broadcast chan message
+	broadcast chan *message
 
 	// Register requests from the clients.
 	register chan *Client
@@ -416,7 +418,7 @@ func New() *Hub {
 func newHub() *Hub {
 	return &Hub{
 		mu:         &sync.RWMutex{},
-		broadcast:  make(chan message),
+		broadcast:  make(chan *message),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[string]map[*Client]bool),
@@ -696,7 +698,7 @@ func serveWs(closed <-chan struct{}, w http.ResponseWriter, r *http.Request, con
 			conn:       conn,
 			denied:     denied,
 			expiresAt:  (*token.ExpiresAt).Unix(),
-			send:       make(chan message, int(config.BufferSize)),
+			send:       make(chan *message, int(config.BufferSize)),
 			topic:      topic,
 			stats:      stats,
 			name:       uuid.New().String(),
@@ -754,7 +756,7 @@ func statsClient(closed <-chan struct{}, wg *sync.WaitGroup, config Config) {
 	stats := &Stats{connectedAt: time.Now(), tx: tx, rx: rx}
 
 	client := &Client{hub: config.Hub,
-		send:       make(chan message, 256),
+		send:       make(chan *message, 256),
 		topic:      "stats",
 		stats:      stats,
 		name:       "stats-generator-" + uuid.New().String(),
@@ -919,7 +921,7 @@ func (c *Client) statsReporter(closed <-chan struct{}, wg *sync.WaitGroup, stats
 			return
 		}
 		// broadcast stats back to the hub (i.e. and anyone listening to this topic)
-		c.hub.broadcast <- message{sender: *c, data: reportsData, mt: websocket.TextMessage}
+		c.hub.broadcast <- &message{sender: *c, data: reportsData, mt: websocket.TextMessage}
 
 	}
 }
