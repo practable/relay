@@ -321,9 +321,11 @@ LOOPWRITING:
 			}
 			log.Tracef("%s: sent %d-byte message", id, len(msg.Data))
 			//update stats
-			r.Stats.Tx.Bytes.Add(float64(len(msg.Data)))
-			r.Stats.Tx.Dt.Add(time.Since(r.Stats.Tx.Last).Seconds())
-			r.Stats.Tx.Last = time.Now()
+			/*
+				r.Stats.Tx.Bytes.Add(float64(len(msg.Data)))
+				r.Stats.Tx.Dt.Add(time.Since(r.Stats.Tx.Last).Seconds())
+				r.Stats.Tx.Last = time.Now()
+			*/
 
 		case <-ctx.Done(): // context has finished, either timeout or cancel
 			//TODO - do we need to do this?
