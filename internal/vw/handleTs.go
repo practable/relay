@@ -9,8 +9,8 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/hub"
+	log "github.com/sirupsen/logrus"
 )
 
 func (app *App) handleTs(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +21,6 @@ func (app *App) handleTs(w http.ResponseWriter, r *http.Request) {
 	myDetails := &hub.Client{Hub: app.Hub.Hub,
 		Name:  name,
 		Send:  make(chan hub.Message),
-		Stats: hub.NewClientStats(),
 		Topic: topic}
 
 	//receive MPEGTS in 188 byte chunks

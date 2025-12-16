@@ -80,6 +80,14 @@ func TestStreamUsingInternals(t *testing.T) {
 			18988,
 		}
 
+		// as of 2025, with ffmpeg version 4.4.2-0ubuntu0.22.04.1 - these are the frame sizes
+		frameSizesNew := []int{15604,
+			18988,
+			16356,
+			16168,
+			17672,
+		}
+
 		time.Sleep(100 * time.Millisecond) //give ffmpeg time to start before looking for frames
 
 		for i := 0; i < len(frameSizes); i++ {
@@ -88,7 +96,7 @@ func TestStreamUsingInternals(t *testing.T) {
 				t.Errorf("timed out on frame  %d", i)
 			case frameSize, ok := <-msgSize:
 				if ok {
-					if frameSize != frameSizes[i] {
+					if !(frameSize == frameSizes[i] || frameSize == frameSizesNew[i]) {
 						t.Errorf("Frame size %d  wrong; got/wanted %v/%v\n", i, frameSize, frameSizes[i])
 					}
 				} else {
@@ -153,7 +161,7 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 	//                                                   sizes
 	//
 	// start up our streaming programme
-	debug := false
+	debug := true
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
@@ -232,6 +240,9 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 		}
 	}()
 
+	// avoid app being nil (should be set by Stream())
+	time.Sleep(100 * time.Millisecond)
+
 	app.Hub.Add <- streamRule
 	app.Websocket.Add <- destinationRule0
 
@@ -303,7 +314,7 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 	// start up our streaming programme
 
 	// Setup logging
-	debug := false
+	debug := true
 
 	if debug {
 		log.SetLevel(log.TraceLevel)

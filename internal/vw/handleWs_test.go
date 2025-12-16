@@ -11,10 +11,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/agg"
 	"github.com/practable/relay/internal/hub"
 	"github.com/practable/relay/internal/reconws"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -28,8 +28,8 @@ func TestHandleWsSendMessageViaClient(t *testing.T) {
 	h := agg.New()
 	go h.Run(closed)
 
-	ctx := &hub.Client{Hub: h.Hub, Name: "tx", Topic: "/greetings", Send: make(chan hub.Message), Stats: hub.NewClientStats()}
-	crx := &hub.Client{Hub: h.Hub, Name: "rx", Topic: "/greetings", Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	ctx := &hub.Client{Hub: h.Hub, Name: "tx", Topic: "/greetings", Send: make(chan hub.Message)}
+	crx := &hub.Client{Hub: h.Hub, Name: "rx", Topic: "/greetings", Send: make(chan hub.Message)}
 
 	h.Register <- crx
 
@@ -89,7 +89,7 @@ func TestHandleWsSendMessageViaWs(t *testing.T) {
 
 	time.Sleep(2 * time.Millisecond)
 
-	crx := &hub.Client{Hub: app.Hub.Hub, Name: "rx", Topic: "greetings", Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	crx := &hub.Client{Hub: app.Hub.Hub, Name: "rx", Topic: "greetings", Send: make(chan hub.Message)}
 
 	app.Hub.Register <- crx
 

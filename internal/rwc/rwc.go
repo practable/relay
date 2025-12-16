@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/agg"
 	"github.com/practable/relay/internal/hub"
 	"github.com/practable/relay/internal/reconws"
+	log "github.com/sirupsen/logrus"
 )
 
 // New returns a pointer to a new Hub
@@ -79,7 +79,7 @@ func (h *Hub) Run(closed chan struct{}) {
 				Name:  rule.Destination,
 				Topic: rule.Stream,
 				Send:  make(chan hub.Message, 2),
-				Stats: hub.NewClientStats()}
+			}
 
 			ctx, cancel := context.WithCancel(context.Background())
 			client := &Client{Hub: h,

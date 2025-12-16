@@ -78,7 +78,7 @@ func Stream() {
 
 	//TODO add waitgroup into agg/hub and rwc
 
-	go app.Hub.RunWithStats(app.Closed)
+	go app.Hub.Run(app.Closed)
 
 	go app.Websocket.Run(app.Closed)
 

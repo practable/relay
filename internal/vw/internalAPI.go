@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/agg"
 	"github.com/practable/relay/internal/hub"
 	"github.com/practable/relay/internal/rwc"
+	log "github.com/sirupsen/logrus"
 )
 
 func (app *App) internalAPI(topic string) {
@@ -18,7 +18,6 @@ func (app *App) internalAPI(topic string) {
 	c := &hub.Client{Hub: app.Hub.Hub,
 		Name:  "admin",
 		Send:  make(chan hub.Message),
-		Stats: hub.NewClientStats(),
 		Topic: topic,
 	}
 

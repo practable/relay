@@ -48,7 +48,7 @@ func TestHandleTsFrameBoundaries(t *testing.T) {
 
 	time.Sleep(2 * time.Millisecond)
 
-	crx := &hub.Client{Hub: app.Hub.Hub, Name: "rx", Topic: "video", Send: make(chan hub.Message), Stats: hub.NewClientStats()}
+	crx := &hub.Client{Hub: app.Hub.Hub, Name: "rx", Topic: "video", Send: make(chan hub.Message)}
 	app.Hub.Register <- crx
 
 	time.Sleep(2 * time.Millisecond)
@@ -76,6 +76,14 @@ func TestHandleTsFrameBoundaries(t *testing.T) {
 		//15792,
 	}
 
+	// as of 2025, with ffmpeg version 4.4.2-0ubuntu0.22.04.1 - these are the frame sizes
+	frameSizesNew := []int{15604,
+		18988,
+		16356,
+		16168,
+		17672,
+	}
+
 	go func() {
 		// did frame sizes come through correctly?
 		for i := 0; i < len(frameSizes); i++ {
@@ -84,7 +92,8 @@ func TestHandleTsFrameBoundaries(t *testing.T) {
 				t.Errorf("timed out on frame  %d", i)
 			case msg, ok := <-crx.Send:
 				if ok {
-					if len(msg.Data) != frameSizes[i] {
+					fs := len(msg.Data)
+					if !(fs == frameSizes[i] || fs == frameSizesNew[i]) {
 						t.Errorf("Frame %d content size wrong; got/wanted %v/%v\n", i, len(msg.Data), frameSizes[i])
 					}
 				} else {

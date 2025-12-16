@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/hub"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -52,7 +52,6 @@ func (app *App) handleWs(w http.ResponseWriter, r *http.Request) {
 	messageClient := &hub.Client{Hub: app.Hub.Hub,
 		Name:  uuid.New().String()[:3],
 		Send:  make(chan hub.Message),
-		Stats: hub.NewClientStats(),
 		Topic: topic,
 	}
 
