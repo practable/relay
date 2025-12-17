@@ -148,7 +148,7 @@ func (c *Client) RelayOut(ctx context.Context) {
 		if err == nil {
 			writeToFile = true
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 	}
 
 LOOP:
