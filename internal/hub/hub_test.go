@@ -3,7 +3,6 @@ package hub
 import (
 	"bytes"
 	"crypto/rand"
-	"math/big"
 	"reflect"
 	"testing"
 	"time"
@@ -346,13 +345,4 @@ COLLECT:
 			break COLLECT
 		}
 	}
-}
-
-func compareFloat64(a float64, b float64) int {
-
-	aa := big.NewFloat(a)
-	bb := big.NewFloat(b)
-
-	return aa.Cmp(bb)
-
 }
