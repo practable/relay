@@ -138,7 +138,7 @@ kill -SIGHUP pid
 
 		if mode == "binary" {
 			binary = true
-		} else if !(mode == "text" || mode == "") {
+		} else if mode != "text" && mode != "" {
 			fmt.Println("RELAY_CLIENT_MODE must be 'text', 'binary' or unset (defaulting to text)")
 			os.Exit(1)
 		}
