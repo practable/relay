@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/phayes/freeport"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +19,7 @@ func init() {
 	if debug {
 		log.SetReportCaller(true)
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: false, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: false, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {

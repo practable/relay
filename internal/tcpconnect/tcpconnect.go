@@ -102,7 +102,7 @@ func (c *TCPconnect) Dial(ctx context.Context, uri string) {
 		return
 	}
 
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	log.WithField("To", uri).Debugf("%s: connected to %s", id, uri)
 
@@ -123,7 +123,7 @@ func (c *TCPconnect) Listen(ctx context.Context, uri string, handler func(contex
 		return
 	}
 
-	defer l.Close()
+	defer func() { _ = l.Close() }()
 
 	log.WithField("uri", uri).Debugf("%s: awaiting connections at %s", id, uri)
 
@@ -218,7 +218,7 @@ func (c *TCPconnect) Echo(ctx context.Context, uri string) {
 		return
 	}
 
-	defer l.Close()
+	defer func() { _ = l.Close() }()
 
 	go func(l net.Listener) {
 
