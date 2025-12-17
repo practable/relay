@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,7 +20,6 @@ import (
 	"github.com/practable/relay/internal/deny"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/ttlcode"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,7 +37,7 @@ func TestAPI(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -86,7 +85,7 @@ func TestAPI(t *testing.T) {
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	bodyStr := string([]byte(body))
 	assert.Equal(t, `{"code":401,"message":"unauthenticated for invalid credentials"}`, bodyStr)
 
@@ -115,7 +114,7 @@ func TestAPI(t *testing.T) {
 
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	var p operations.SessionOKBody
 	err = json.Unmarshal(body, &p)
@@ -137,7 +136,7 @@ func TestGetStats(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -187,7 +186,7 @@ func TestGetStats(t *testing.T) {
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	bodyStr := string([]byte(body))
 	assert.Equal(t, `{"code":401,"message":"unauthenticated for invalid credentials"}`, bodyStr)
 
@@ -212,7 +211,7 @@ func TestGetStats(t *testing.T) {
 	assert.NoError(t, err)
 	req.Header.Add("Authorization", bearer)
 
-	resp, err = client.Do(req)
+	_, err = client.Do(req)
 	assert.NoError(t, err)
 
 	// this test does not check for a meangingful stats response,
@@ -230,7 +229,7 @@ func TestDeny(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -267,7 +266,7 @@ func TestDeny(t *testing.T) {
 			case d := <-dc:
 				denied = append(denied, d)
 			case <-closed:
-				break
+				return
 			}
 		}
 	}()
@@ -294,7 +293,7 @@ func TestDeny(t *testing.T) {
 	assert.NoError(t, err)
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	bodyStr := string([]byte(body))
 	assert.Equal(t, `{"code":401,"message":"unauthenticated for invalid credentials"}`, bodyStr)
 
@@ -324,7 +323,7 @@ func TestDeny(t *testing.T) {
 	// make a request, which will fail, because we have no bookingID!
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	bodyStr = string([]byte(body))
 	assert.Equal(t, `{"code":"400","message":"empty bookingID field is not permitted"}`+"\n", bodyStr) //not sure why this one needs a return at the end of the line when the other doesn't ... but it's what works.
@@ -343,7 +342,7 @@ func TestDeny(t *testing.T) {
 	// make a request, which will succedd now we have a bookingID!
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	var p operations.SessionOKBody
 	err = json.Unmarshal(body, &p)
@@ -393,7 +392,7 @@ func TestDeny(t *testing.T) {
 	// make a request, which will fail, because our bookingID has been denied
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	bodyStr = string([]byte(body))
 	assert.Equal(t, `{"code":"400","message":"bookingID has been deny-listed, probably because the session was cancelled"}`+"\n", bodyStr)
@@ -405,7 +404,7 @@ func TestDeny(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	var db models.BookingIDs
 
 	err = json.Unmarshal(body, &db)
@@ -421,7 +420,7 @@ func TestDeny(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &db)
 	assert.NoError(t, err)
 
@@ -455,7 +454,7 @@ func TestDeny(t *testing.T) {
 
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &p)
 	assert.NoError(t, err)
 	expected = "wss://relay.example.io/session/123?code="
@@ -468,7 +467,7 @@ func TestDeny(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &db)
 	assert.NoError(t, err)
 
@@ -494,7 +493,7 @@ func TestDeny(t *testing.T) {
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	err = json.Unmarshal(body, &db)
 	assert.NoError(t, err)
@@ -514,7 +513,7 @@ func TestBadBearerHandledOK(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -549,7 +548,7 @@ func TestBadBearerHandledOK(t *testing.T) {
 			case <-dc:
 				continue // just drain the channel, not testing deny channel stuff here
 			case <-closed:
-				break
+				return
 			}
 		}
 	}()
@@ -579,8 +578,8 @@ func TestBadBearerHandledOK(t *testing.T) {
 	// make a request, which will fail, because the bearer token is bogus
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
-	body, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	_ = resp.Body.Close()
 
 	bodyStr := string([]byte(body))
 	assert.Equal(t, `{"code":500,"message":"token invalid"}`, bodyStr)
@@ -592,11 +591,11 @@ func TestBadBearerHandledOK(t *testing.T) {
 
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	bodyStr = string([]byte(body))
 	assert.Equal(t, `{"code":401,"message":"unauthenticated for invalid credentials"}`, bodyStr)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	// End tests
 	close(closed)

@@ -181,9 +181,9 @@ func validateHeader(secret, host string) security.TokenAuthentication {
 
 		if cc, ok := token.Claims.(*permission.Token); ok {
 
-			if !cc.RegisteredClaims.VerifyAudience(host, true) {
-				log.WithFields(log.Fields{"aud": cc.RegisteredClaims.Audience, "host": host}).Error("aud does not match this host")
-				return nil, fmt.Errorf("aud %s does not match this host %s", cc.RegisteredClaims.Audience, host)
+			if !cc.VerifyAudience(host, true) {
+				log.WithFields(log.Fields{"aud": cc.Audience, "host": host}).Error("aud does not match this host")
+				return nil, fmt.Errorf("aud %s does not match this host %s", cc.Audience, host)
 			}
 
 		} else {
@@ -396,7 +396,7 @@ func isRelayAdmin(principal interface{}) (*permission.Token, error) {
 	}
 
 	if !hasAdminScope {
-		return nil, errors.New("Missing relay:admin Scope")
+		return nil, errors.New("missing relay:admin Scope")
 	}
 
 	return claims, nil
@@ -418,7 +418,7 @@ func hasStatsScope(principal interface{}) (*permission.Token, error) {
 	}
 
 	if !hasScope {
-		return nil, errors.New("Missing relay:stats Scope")
+		return nil, errors.New("missing relay:stats Scope")
 	}
 
 	return claims, nil
@@ -428,20 +428,20 @@ func claimsCheck(principal interface{}) (*permission.Token, error) {
 
 	token, ok := principal.(*jwt.Token)
 	if !ok {
-		return nil, errors.New("Token Not JWT")
+		return nil, errors.New("token Not JWT")
 	}
 
 	// save checking for key existence individually by checking all at once
 	claims, ok := token.Claims.(*permission.Token)
 
 	if !ok {
-		return nil, errors.New("Token Claims Incorrect Type")
+		return nil, errors.New("token Claims Incorrect Type")
 	}
 
 	if len(claims.Scopes) == 0 ||
-		len(claims.RegisteredClaims.Audience) == 0 ||
-		(*claims.RegisteredClaims.ExpiresAt).IsZero() {
-		return nil, errors.New("Token Missing Required Claims")
+		len(claims.Audience) == 0 ||
+		(*claims.ExpiresAt).IsZero() {
+		return nil, errors.New("token Missing Required Claims")
 	}
 
 	return claims, nil
