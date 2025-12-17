@@ -16,7 +16,8 @@ import (
 // SessionOKCode is the HTTP code returned for type SessionOK
 const SessionOKCode int = 200
 
-/*SessionOK session o k
+/*
+SessionOK session o k
 
 swagger:response sessionOK
 */
@@ -60,7 +61,8 @@ func (o *SessionOK) WriteResponse(rw http.ResponseWriter, producer runtime.Produ
 // SessionBadRequestCode is the HTTP code returned for type SessionBadRequest
 const SessionBadRequestCode int = 400
 
-/*SessionBadRequest BadRequest
+/*
+SessionBadRequest BadRequest
 
 swagger:response sessionBadRequest
 */
@@ -104,7 +106,8 @@ func (o *SessionBadRequest) WriteResponse(rw http.ResponseWriter, producer runti
 // SessionUnauthorizedCode is the HTTP code returned for type SessionUnauthorized
 const SessionUnauthorizedCode int = 401
 
-/*SessionUnauthorized Unauthorized
+/*
+SessionUnauthorized Unauthorized
 
 swagger:response sessionUnauthorized
 */

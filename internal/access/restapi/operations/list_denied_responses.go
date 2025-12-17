@@ -16,7 +16,8 @@ import (
 // ListDeniedOKCode is the HTTP code returned for type ListDeniedOK
 const ListDeniedOKCode int = 200
 
-/*ListDeniedOK List of current denied bids
+/*
+ListDeniedOK List of current denied bids
 
 swagger:response listDeniedOK
 */
@@ -60,7 +61,8 @@ func (o *ListDeniedOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pr
 // ListDeniedUnauthorizedCode is the HTTP code returned for type ListDeniedUnauthorized
 const ListDeniedUnauthorizedCode int = 401
 
-/*ListDeniedUnauthorized Unauthorized
+/*
+ListDeniedUnauthorized Unauthorized
 
 swagger:response listDeniedUnauthorized
 */

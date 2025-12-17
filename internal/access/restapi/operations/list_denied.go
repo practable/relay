@@ -29,12 +29,12 @@ func NewListDenied(ctx *middleware.Context, handler ListDeniedHandler) *ListDeni
 	return &ListDenied{Context: ctx, Handler: handler}
 }
 
-/* ListDenied swagger:route GET /bids/deny listDenied
+/*
+	ListDenied swagger:route GET /bids/deny listDenied
+
+# Get a list of all currently-denied bids
 
 Get a list of all currently-denied bids
-
-Get a list of all currently-denied bids
-
 */
 type ListDenied struct {
 	Context *middleware.Context

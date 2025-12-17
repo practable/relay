@@ -18,7 +18,7 @@ rm ./internal/access/restapi/configure_access.go
 ### generate servers
 
 ```
-swagger generate server -t internal/access -f ./api/openapi-spec/access.yml --exclude-main -A access
+swagger generate server -t internal/access -f ./api/access.yml --exclude-main -A access
 ```
 
 ### generate clients

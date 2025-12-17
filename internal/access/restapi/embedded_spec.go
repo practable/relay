@@ -286,23 +286,6 @@ func init() {
         }
       }
     },
-    "Details": {
-      "type": "object",
-      "title": "Connection details",
-      "properties": {
-        "fps": {
-          "type": "number",
-          "format": "float"
-        },
-        "last": {
-          "type": "string"
-        },
-        "size": {
-          "type": "number",
-          "format": "float"
-        }
-      }
-    },
     "Error": {
       "type": "object",
       "required": [
@@ -327,7 +310,7 @@ func init() {
         "can_write": {
           "type": "boolean"
         },
-        "connected": {
+        "connected_at": {
           "type": "string"
         },
         "expires_at": {
@@ -342,26 +325,11 @@ func init() {
             "type": "string"
           }
         },
-        "stats": {
-          "$ref": "#/definitions/Stats"
-        },
         "topic": {
           "type": "string"
         },
         "user_agent": {
           "type": "string"
-        }
-      }
-    },
-    "Stats": {
-      "type": "object",
-      "title": "connection statistics",
-      "properties": {
-        "rx": {
-          "$ref": "#/definitions/Details"
-        },
-        "tx": {
-          "$ref": "#/definitions/Details"
         }
       }
     },
@@ -650,23 +618,6 @@ func init() {
         }
       }
     },
-    "Details": {
-      "type": "object",
-      "title": "Connection details",
-      "properties": {
-        "fps": {
-          "type": "number",
-          "format": "float"
-        },
-        "last": {
-          "type": "string"
-        },
-        "size": {
-          "type": "number",
-          "format": "float"
-        }
-      }
-    },
     "Error": {
       "type": "object",
       "required": [
@@ -691,7 +642,7 @@ func init() {
         "can_write": {
           "type": "boolean"
         },
-        "connected": {
+        "connected_at": {
           "type": "string"
         },
         "expires_at": {
@@ -706,26 +657,11 @@ func init() {
             "type": "string"
           }
         },
-        "stats": {
-          "$ref": "#/definitions/Stats"
-        },
         "topic": {
           "type": "string"
         },
         "user_agent": {
           "type": "string"
-        }
-      }
-    },
-    "Stats": {
-      "type": "object",
-      "title": "connection statistics",
-      "properties": {
-        "rx": {
-          "$ref": "#/definitions/Details"
-        },
-        "tx": {
-          "$ref": "#/definitions/Details"
         }
       }
     },

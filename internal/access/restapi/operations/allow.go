@@ -29,12 +29,12 @@ func NewAllow(ctx *middleware.Context, handler AllowHandler) *Allow {
 	return &Allow{Context: ctx, Handler: handler}
 }
 
-/* Allow swagger:route POST /bids/allow allow
+/*
+	Allow swagger:route POST /bids/allow allow
+
+# Undo the denial of a booking id
 
 Undo the denial of a booking id
-
-Undo the denial of a booking id
-
 */
 type Allow struct {
 	Context *middleware.Context

@@ -16,7 +16,8 @@ import (
 // ListAllowedOKCode is the HTTP code returned for type ListAllowedOK
 const ListAllowedOKCode int = 200
 
-/*ListAllowedOK Current or recently in-use allowed bids
+/*
+ListAllowedOK Current or recently in-use allowed bids
 
 swagger:response listAllowedOK
 */
@@ -60,7 +61,8 @@ func (o *ListAllowedOK) WriteResponse(rw http.ResponseWriter, producer runtime.P
 // ListAllowedUnauthorizedCode is the HTTP code returned for type ListAllowedUnauthorized
 const ListAllowedUnauthorizedCode int = 401
 
-/*ListAllowedUnauthorized Unauthorized
+/*
+ListAllowedUnauthorized Unauthorized
 
 swagger:response listAllowedUnauthorized
 */

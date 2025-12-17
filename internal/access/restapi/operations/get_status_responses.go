@@ -16,7 +16,8 @@ import (
 // GetStatusOKCode is the HTTP code returned for type GetStatusOK
 const GetStatusOKCode int = 200
 
-/*GetStatusOK List of current connections
+/*
+GetStatusOK List of current connections
 
 swagger:response getStatusOK
 */
@@ -63,7 +64,8 @@ func (o *GetStatusOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pro
 // GetStatusUnauthorizedCode is the HTTP code returned for type GetStatusUnauthorized
 const GetStatusUnauthorizedCode int = 401
 
-/*GetStatusUnauthorized Unauthorized
+/*
+GetStatusUnauthorized Unauthorized
 
 swagger:response getStatusUnauthorized
 */

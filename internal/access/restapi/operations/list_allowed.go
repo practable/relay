@@ -29,12 +29,12 @@ func NewListAllowed(ctx *middleware.Context, handler ListAllowedHandler) *ListAl
 	return &ListAllowed{Context: ctx, Handler: handler}
 }
 
-/* ListAllowed swagger:route GET /bids/allow listAllowed
+/*
+	ListAllowed swagger:route GET /bids/allow listAllowed
 
-Get a list of all currently-allowed bids
+# Get a list of all currently-allowed bids
 
 Get a list of all currently-allowed bids (booking ids) with an ongoing or recent live connection
-
 */
 type ListAllowed struct {
 	Context *middleware.Context

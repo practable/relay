@@ -127,14 +127,14 @@ func getStatusHandler(config Config) func(operations.GetStatusParams, interface{
 		for _, r := range reports {
 
 			rm := models.Report{
-				CanRead:    r.CanRead,
-				CanWrite:   r.CanWrite,
-				Connected:  r.ConnectedAt,
-				ExpiresAt:  r.ExpiresAt,
-				RemoteAddr: r.RemoteAddr,
-				Scopes:     r.Scopes,
-				Topic:      r.Topic,
-				UserAgent:  r.UserAgent,
+				CanRead:     r.CanRead,
+				CanWrite:    r.CanWrite,
+				ConnectedAt: r.ConnectedAt,
+				ExpiresAt:   r.ExpiresAt,
+				RemoteAddr:  r.RemoteAddr,
+				Scopes:      r.Scopes,
+				Topic:       r.Topic,
+				UserAgent:   r.UserAgent,
 				//todo complete
 			}
 			mreports = append(mreports, &rm)

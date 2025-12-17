@@ -16,7 +16,8 @@ import (
 // AllowNoContentCode is the HTTP code returned for type AllowNoContent
 const AllowNoContentCode int = 204
 
-/*AllowNoContent The bid was allowed successfully.
+/*
+AllowNoContent The bid was allowed successfully.
 
 swagger:response allowNoContent
 */
@@ -40,7 +41,8 @@ func (o *AllowNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.
 // AllowBadRequestCode is the HTTP code returned for type AllowBadRequest
 const AllowBadRequestCode int = 400
 
-/*AllowBadRequest BadRequest
+/*
+AllowBadRequest BadRequest
 
 swagger:response allowBadRequest
 */
@@ -84,7 +86,8 @@ func (o *AllowBadRequest) WriteResponse(rw http.ResponseWriter, producer runtime
 // AllowUnauthorizedCode is the HTTP code returned for type AllowUnauthorized
 const AllowUnauthorizedCode int = 401
 
-/*AllowUnauthorized Unauthorized
+/*
+AllowUnauthorized Unauthorized
 
 swagger:response allowUnauthorized
 */

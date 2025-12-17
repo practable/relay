@@ -32,12 +32,12 @@ func NewSession(ctx *middleware.Context, handler SessionHandler) *Session {
 	return &Session{Context: ctx, Handler: handler}
 }
 
-/* Session swagger:route POST /session/{session_id} session
+/*
+	Session swagger:route POST /session/{session_id} session
 
 session
 
 access the specified session
-
 */
 type Session struct {
 	Context *middleware.Context

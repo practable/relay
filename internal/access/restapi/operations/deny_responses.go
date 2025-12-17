@@ -16,7 +16,8 @@ import (
 // DenyNoContentCode is the HTTP code returned for type DenyNoContent
 const DenyNoContentCode int = 204
 
-/*DenyNoContent The bid was denied successfully.
+/*
+DenyNoContent The bid was denied successfully.
 
 swagger:response denyNoContent
 */
@@ -40,7 +41,8 @@ func (o *DenyNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.P
 // DenyBadRequestCode is the HTTP code returned for type DenyBadRequest
 const DenyBadRequestCode int = 400
 
-/*DenyBadRequest BadRequest
+/*
+DenyBadRequest BadRequest
 
 swagger:response denyBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DenyBadRequest) WriteResponse(rw http.ResponseWriter, producer runtime.
 // DenyUnauthorizedCode is the HTTP code returned for type DenyUnauthorized
 const DenyUnauthorizedCode int = 401
 
-/*DenyUnauthorized Unauthorized
+/*
+DenyUnauthorized Unauthorized
 
 swagger:response denyUnauthorized
 */

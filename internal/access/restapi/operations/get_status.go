@@ -29,12 +29,12 @@ func NewGetStatus(ctx *middleware.Context, handler GetStatusHandler) *GetStatus 
 	return &GetStatus{Context: ctx, Handler: handler}
 }
 
-/* GetStatus swagger:route GET /status getStatus
+/*
+	GetStatus swagger:route GET /status getStatus
+
+# Get a list of all current connections
 
 Get a list of all current connections
-
-Get a list of all current connections
-
 */
 type GetStatus struct {
 	Context *middleware.Context

@@ -8,7 +8,6 @@ package models
 import (
 	"context"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
@@ -24,8 +23,8 @@ type Report struct {
 	// can write
 	CanWrite bool `json:"can_write,omitempty"`
 
-	// connected
-	Connected string `json:"connected,omitempty"`
+	// connected at
+	ConnectedAt string `json:"connected_at,omitempty"`
 
 	// expires at
 	ExpiresAt string `json:"expires_at,omitempty"`
@@ -36,9 +35,6 @@ type Report struct {
 	// scopes
 	Scopes []string `json:"scopes"`
 
-	// stats
-	Stats *Stats `json:"stats,omitempty"`
-
 	// topic
 	Topic string `json:"topic,omitempty"`
 
@@ -48,64 +44,11 @@ type Report struct {
 
 // Validate validates this report
 func (m *Report) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.validateStats(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
 	return nil
 }
 
-func (m *Report) validateStats(formats strfmt.Registry) error {
-	if swag.IsZero(m.Stats) { // not required
-		return nil
-	}
-
-	if m.Stats != nil {
-		if err := m.Stats.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("stats")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("stats")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ContextValidate validate this report based on the context it is used
+// ContextValidate validates this report based on context it is used
 func (m *Report) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.contextValidateStats(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *Report) contextValidateStats(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.Stats != nil {
-		if err := m.Stats.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("stats")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("stats")
-			}
-			return err
-		}
-	}
-
 	return nil
 }
 

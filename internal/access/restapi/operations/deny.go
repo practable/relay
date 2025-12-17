@@ -29,12 +29,12 @@ func NewDeny(ctx *middleware.Context, handler DenyHandler) *Deny {
 	return &Deny{Context: ctx, Handler: handler}
 }
 
-/* Deny swagger:route POST /bids/deny deny
+/*
+	Deny swagger:route POST /bids/deny deny
 
 Refuse sessions to new connections using tokens with the bid(s) (booking ids), and disconnect any current sessions immediately.
 
 Refuse sessions to new connections using tokens with the bid (booking id), and disconnect any current sessions immediately. The exp term is the unix time in UTC when the booking finishes (i.e. the earliest time it is safe to remove the bid from the deny list)
-
 */
 type Deny struct {
 	Context *middleware.Context
