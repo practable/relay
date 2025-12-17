@@ -2,13 +2,13 @@ package vw
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 	"github.com/practable/relay/internal/agg"
+	log "github.com/sirupsen/logrus"
 )
 
 func (app *App) handleStreamShowAll(w http.ResponseWriter, r *http.Request) {
@@ -47,20 +47,20 @@ func (app *App) handleStreamShow(w http.ResponseWriter, r *http.Request) {
 
 }
 
-/*  Add a new stream rule
+/*
+	Add a new stream rule
 
 Example:
 
 curl -X POST -H "Content-Type: application/json" \
 -d '{"stream":"/stream/front/large","feeds":["video0","audio0"]}'\
 http://localhost:8888/api/streams/video
-
 */
 func (app *App) handleStreamAdd(w http.ResponseWriter, r *http.Request) {
 
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	if err != nil {
 		log.Error(err)

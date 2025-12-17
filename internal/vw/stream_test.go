@@ -25,7 +25,6 @@ import (
 	"github.com/practable/relay/internal/reconws"
 	"github.com/practable/relay/internal/relay"
 	"github.com/practable/relay/internal/rwc"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -96,7 +95,7 @@ func TestStreamUsingInternals(t *testing.T) {
 				t.Errorf("timed out on frame  %d", i)
 			case frameSize, ok := <-msgSize:
 				if ok {
-					if !(frameSize == frameSizes[i] || frameSize == frameSizesNew[i]) {
+					if frameSize != frameSizes[i] && frameSize != frameSizesNew[i] {
 						t.Errorf("Frame size %d  wrong; got/wanted %v/%v\n", i, frameSize, frameSizes[i])
 					}
 				} else {
@@ -165,7 +164,7 @@ func TestStreamUsingStreamCmd(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -318,7 +317,7 @@ func TestStreamUsingStreamCmdAuth(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -524,7 +523,7 @@ func reportSize(w http.ResponseWriter, r *http.Request, msgSize chan int) {
 	if err != nil {
 		return
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {

@@ -79,7 +79,7 @@ func (app *App) handleWs(w http.ResponseWriter, r *http.Request) {
 func (c *WsHandlerClient) readPump() {
 	defer func() {
 		c.Messages.Hub.Unregister <- c.Messages
-		c.Conn.Close()
+		_ = c.Conn.Close()
 	}()
 	c.Conn.SetReadLimit(maxMessageSize)
 
@@ -118,7 +118,7 @@ func (c *WsHandlerClient) writePump(closed <-chan struct{}) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.Conn.Close()
+		_ = c.Conn.Close()
 	}()
 	for {
 		select {

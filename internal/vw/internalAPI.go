@@ -60,8 +60,8 @@ type RuleStream struct {
 	Feeds  []string
 }
 
-var errBadCommand = errors.New("Unrecognised Command")
-var errNoDeleteAPIRule = errors.New("Cannot delete apiRule")
+var errBadCommand = errors.New("unrecognised Command")
+var errNoDeleteAPIRule = errors.New("cannot delete apiRule")
 
 // JSON API - note change to singular stream and destination
 //

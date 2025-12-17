@@ -93,7 +93,7 @@ func TestHandleTsFrameBoundaries(t *testing.T) {
 			case msg, ok := <-crx.Send:
 				if ok {
 					fs := len(msg.Data)
-					if !(fs == frameSizes[i] || fs == frameSizesNew[i]) {
+					if fs != frameSizes[i] && fs != frameSizesNew[i] {
 						t.Errorf("Frame %d content size wrong; got/wanted %v/%v\n", i, len(msg.Data), frameSizes[i])
 					}
 				} else {

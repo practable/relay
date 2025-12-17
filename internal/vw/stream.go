@@ -43,7 +43,7 @@ func Stream() {
 			log.WithField("error", err).Fatal("Could not create CPU profile")
 		}
 
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
 		if err := pprof.StartCPUProfile(f); err != nil {
 			log.WithField("error", err).Fatal("Could not start CPU profile")
