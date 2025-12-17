@@ -17,7 +17,6 @@ import (
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/relay"
 	"github.com/practable/relay/pkg/client"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -85,7 +84,7 @@ func TestStatus(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
