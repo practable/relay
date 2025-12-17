@@ -66,8 +66,8 @@ func HasRequiredClaims(token Token) bool {
 	if token.Topic == "" ||
 		len(token.Scopes) == 0 ||
 		token.ConnectionType == "" ||
-		len(token.RegisteredClaims.Audience) == 0 ||
-		(*token.RegisteredClaims.ExpiresAt).IsZero() {
+		len(token.Audience) == 0 ||
+		(*token.ExpiresAt).IsZero() {
 		return false
 	}
 	return true
