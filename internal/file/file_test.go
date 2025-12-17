@@ -21,7 +21,6 @@ import (
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
 	"github.com/practable/relay/internal/relay"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,7 +30,7 @@ func TestMain(m *testing.M) {
 
 	if testing.Verbose() {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -58,7 +57,7 @@ func TestRun(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -172,7 +171,7 @@ func TestRun(t *testing.T) {
 	dat, err := os.ReadFile(testlog)
 	assert.NoError(t, err)
 	s := string(dat)
-	t.Logf(s)
+	t.Log(s)
 
 	// let's see if we can get at least two messages
 	assert.Less(t, 2, strings.Count(s, "["))
@@ -192,7 +191,7 @@ func TestRun(t *testing.T) {
 	for actual.Scan() {
 		parsed := re.FindStringSubmatch(actual.Text())
 		assert.Equal(t, 2, len(parsed), "result checking regexp not working correctly, check test code")
-		if !(parsed[1] == expt[idx] || parsed[1] == expt[idx+1]) {
+		if parsed[1] != expt[idx] && parsed[1] != expt[idx+1] {
 			t.Errorf("text does not match;\n got: %s\nexp: %s or %s\n", parsed[1], expt[idx], expt[idx+1])
 		}
 		idx++
@@ -261,7 +260,7 @@ func TestRun(t *testing.T) {
 	newf, err := os.ReadFile(testlog)
 	assert.NoError(t, err)
 	news := string(newf)
-	t.Logf(news)
+	t.Log(news)
 
 	newa := bufio.NewScanner(strings.NewReader(news))
 
@@ -273,7 +272,7 @@ func TestRun(t *testing.T) {
 	oldf, err := os.ReadFile(testlog)
 	assert.NoError(t, err)
 	olds := string(oldf)
-	t.Logf(olds)
+	t.Log(olds)
 
 	olda := bufio.NewScanner(strings.NewReader(olds))
 
@@ -356,7 +355,7 @@ drained:
 	dataf, err := os.ReadFile(testlog)
 	assert.NoError(t, err)
 	assert.Equal(t, data2, dataf)
-	t.Logf(string(dataf))
+	t.Log(string(dataf))
 
 	// Shutdown the Relay and check no messages are being sent
 	close(closed)
