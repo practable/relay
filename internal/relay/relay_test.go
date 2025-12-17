@@ -22,7 +22,6 @@ import (
 	"github.com/practable/relay/internal/access/restapi/operations"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +33,7 @@ func TestRelay(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -230,9 +229,8 @@ func TestRelay(t *testing.T) {
 	s0.Out <- reconws.WsMessage{Data: data, Type: websocket.TextMessage}
 
 	select {
-	case msg := <-s1.In:
+	case <-s1.In:
 		t.Fatal("TestPreventValidCodeAtWrongSessionID...FAIL")
-		assert.Equal(t, data, msg.Data)
 	case <-time.After(timeout):
 		cancel()
 		t.Logf("TestPreventValidCodeAtWrongSessionID...PASS")
@@ -317,11 +315,11 @@ func TestRelay(t *testing.T) {
 			select {
 			case err := <-finished:
 				if err == nil {
-					t.Logf("TestDenyClosesCurrentConnection...PASS")
+					t.Log("TestDenyClosesCurrentConnection...PASS")
 					break DONE
 				} else {
-					t.Logf(err.Error())
-					t.Logf("TestDenyClosesCurrentConnection...FAIL")
+					t.Log(err.Error())
+					t.Log("TestDenyClosesCurrentConnection...FAIL")
 				}
 			case <-time.After(time.Second):
 				t.Error("TestDenyClosesCurrentConnection...FAIL")

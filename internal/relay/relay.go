@@ -40,7 +40,7 @@ func Relay(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 		for {
 			select {
 			case <-closed:
-				break
+				return
 			case <-time.After(config.PruneEvery):
 				{
 					ds.Prune()
