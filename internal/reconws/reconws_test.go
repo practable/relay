@@ -21,7 +21,6 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/relay"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -86,7 +85,7 @@ func TestReconnectAuth(t *testing.T) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -190,7 +189,6 @@ func TestReconnectAuth(t *testing.T) {
 	// possible to guarantee both get this first message
 	// and that is normal behaviour for a non-caching
 	// relay....
-	data = []byte("hello")
 
 	start := time.Now()
 	connectTimeout := time.Second * 5
@@ -409,7 +407,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
@@ -439,7 +437,7 @@ func connectAfterTrying(w http.ResponseWriter, r *http.Request, n *int, connectA
 			return
 		}
 
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 
 		// immediately close
 		_ = conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))

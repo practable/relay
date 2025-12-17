@@ -222,8 +222,8 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 	var err error
 
 	if urlStr == "" {
-		log.Errorf("%s: Can't dial an empty Url", id)
-		return errors.New("Can't dial an empty Url")
+		log.Errorf("%s: can't dial an empty Url", id)
+		return errors.New("can't dial an empty Url")
 	}
 
 	// parse to check, dial with original string
@@ -235,13 +235,13 @@ func (r *ReconWs) Dial(ctx context.Context, urlStr string) error {
 	}
 
 	if u.Scheme != "ws" && u.Scheme != "wss" {
-		log.Errorf("%s: Url needs to start with ws or wss", id)
-		return errors.New("Url needs to start with ws or wss")
+		log.Errorf("%s: url needs to start with ws or wss", id)
+		return errors.New("url needs to start with ws or wss")
 	}
 
 	if u.User != nil {
-		log.Errorf("%s: Url can't contain user name and password", id)
-		return errors.New("Url can't contain user name and password")
+		log.Errorf("%s: url can't contain user name and password", id)
+		return errors.New("url can't contain user name and password")
 	}
 
 	// start dialing ....
@@ -324,7 +324,10 @@ LOOPWRITING:
 			} else {
 				log.Infof("%s: connection closed", id)
 			}
-			c.Close()
+			err = c.Close()
+			if err != nil {
+				log.WithField("error", err).Infof("%s: error closing connection", id)
+			}
 			break LOOPWRITING
 		}
 	}
