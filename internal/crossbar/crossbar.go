@@ -199,7 +199,10 @@ func (c *Client) readPump() {
 
 	defer func() {
 		c.hub.unregister <- c
-		c.conn.Close()
+		err := c.conn.Close()
+		if err != nil {
+			log.Errorf("readPump connection close error: %v", err)
+		}
 		log.Trace("readpump closed")
 	}()
 
@@ -245,7 +248,10 @@ func (c *Client) writePump(closed <-chan struct{}, cancelled <-chan struct{}) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		err := c.conn.Close()
+		if err != nil {
+			log.Errorf("writePump connection close error: %v", err)
+		}
 		log.Trace("write pump dead")
 	}()
 	for {
@@ -573,7 +579,7 @@ func serveWs(closed <-chan struct{}, w http.ResponseWriter, r *http.Request, con
 		}
 	}
 
-	if !(canRead || canWrite) {
+	if !canRead && !canWrite {
 		log.WithFields(log.Fields{"topic": topic, "booking_id": token.BookingID, "scopes": token.Scopes}).Error("unauthorized because no valid scopes in token")
 		return
 	}
@@ -872,10 +878,6 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-func fpsFromNs(ns float64) float64 {
-	return 1 / (ns * 1e-9)
-}
-
 func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, messagesFromMe chan message, deny chan string, config Config) {
 
 	dcs := chanmap.New() // this is where the denied channels are stored, so we can close them if we get deny requests
@@ -884,7 +886,7 @@ func handleConnections(closed <-chan struct{}, parentwg *sync.WaitGroup, message
 		for {
 			select {
 			case <-closed:
-				break
+				return
 			case bid := <-deny:
 				err := dcs.DeleteAndCloseParent(bid) //close all connections with this booking id
 				if err != nil {

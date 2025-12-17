@@ -19,7 +19,6 @@ import (
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
 	"github.com/practable/relay/internal/ttlcode"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,7 +40,7 @@ func TestCrossbar(t *testing.T) {
 	debug := false
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -189,12 +188,12 @@ func TestCrossbar(t *testing.T) {
 	// so far there is only the stats reporter connected
 	passed := true
 
-	if !(len(reports) == 1) {
+	if len(reports) != 1 {
 		t.Log("TestGetStats() not 1 report")
 		passed = false
 	}
 
-	if !("crossbar" == reports[0].UserAgent) {
+	if reports[0].UserAgent != "crossbar" {
 		t.Log("incorrect user agent")
 		passed = false
 	}
@@ -451,7 +450,7 @@ func BenchmarkSmallMessage(b *testing.B) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -564,7 +563,7 @@ func BenchmarkLargeMessage(b *testing.B) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -697,7 +696,7 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 	if debug {
 		log.SetLevel(log.TraceLevel)
-		log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, DisableColors: true})
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableColors: true})
 		defer log.SetOutput(os.Stdout)
 
 	} else {
@@ -804,21 +803,21 @@ func BenchmarkLargeRandomMessage(b *testing.B) {
 
 func TestSlashify(t *testing.T) {
 
-	if "/foo" != slashify("foo") {
+	if slashify("foo") != "/foo" {
 		t.Errorf("Slashify not prefixing slash ")
 	}
-	if "//foo" == slashify("/foo") {
+	if slashify("/foo") == "//foo" {
 		t.Errorf("Slashify prefixing additional slash")
 	}
-	if "/foo" != slashify("/foo/") {
+	if slashify("/foo/") != "/foo" {
 		t.Errorf("Slashify not removing trailing slash")
 	}
-	if "/foo" != slashify("foo/") {
+	if slashify("foo/") != "/foo" {
 		t.Errorf("Slashify not both removing trailing slash AND prefixing slash")
 	}
 
 	b := "foo/bar/rab/oof/"
-	if "/foo/bar/rab/oof" != slashify(b) {
+	if slashify(b) != "/foo/bar/rab/oof" {
 		t.Errorf("Slashify not coping with internal slashes %s -> %s", b, slashify(b))
 	}
 
