@@ -163,7 +163,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 		case "panic":
 			log.SetLevel(log.PanicLevel)
 		default:
-			fmt.Println("BOOK_LOG_LEVEL can be trace, debug, info, warn, error, fatal or panic but not " + logLevel)
+			fmt.Println("RELAY_LOG_LEVEL can be trace, debug, info, warn, error, fatal or panic but not " + logLevel)
 			os.Exit(1)
 		}
 
@@ -173,7 +173,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 		case "text":
 			log.SetFormatter(&log.TextFormatter{})
 		default:
-			fmt.Println("BOOK_LOG_FORMAT can be json or text but not " + logLevel)
+			fmt.Println("RELAY_LOG_FORMAT can be json or text but not " + logLevel)
 			os.Exit(1)
 		}
 
