@@ -178,7 +178,7 @@ func runOnce(ctx context.Context, config Config) error {
 						go func() {
 							err := executeCommand(config.Command)
 							if err != nil {
-								log.Errorf("error executing command: %s", err.Error())
+								log.Errorf("error executing command: %s", err)
 							}
 						}()
 						// avoid restarting the relay immediately so it's not stuck forever in a start-up/restart loop
@@ -201,11 +201,25 @@ func runOnce(ctx context.Context, config Config) error {
 func executeCommand(cmd string) error {
 	// variable expansion first
 	// execute the command
-	expanded := os.ExpandEnv(cmd)
-	log.Info("executing command: " + expanded)
-	args := strings.Fields(expanded)
-	c := exec.Command(args[0], args[1:]...)
-	return c.Run()
+	if cmd == "" {
+		// default to killing relay serve
+		out, err := exec.Command("pgrep", "-f", "relay serve").Output()
+		if err != nil {
+			log.Error("error finding relay serve process: " + err.Error())
+		}
+
+		// have to kill -9 or else it hangs waiting on the stuff that caused the issues
+		// in the first place, don't want a graceful shutdown here
+		log.Info("killing relay serve process with PID: " + strings.TrimSpace(string(out)))
+		return exec.Command("kill", "-9", strings.TrimSpace(string(out))).Run()
+
+	} else {
+		expanded := os.ExpandEnv(cmd)
+		log.Info("executing command: " + expanded)
+		args := strings.Fields(expanded)
+		c := exec.Command(args[0], args[1:]...)
+		return c.Run()
+	}
 
 }
 

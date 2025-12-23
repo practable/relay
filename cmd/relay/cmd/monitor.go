@@ -105,8 +105,12 @@ ${RELAY_AUDIENCE}/session/${RELAY_MONITOR_TOPIC}
 		viper.SetDefault("no_retrigger_within", "60s") //give relay time to restart and on-board connections
 		viper.SetDefault("topic", "canary-st-data")
 
-		// set a safe default action, overridable by user for something useful in production, obvs
-		viper.SetDefault("command", "echo 'latency exceeded'")
+		// default action is to find the pid of "relay serve" and kill -9 it
+		// this needs to be run with sufficient permissions to do so
+		// it also requires a two-step process to avoid killing the monitor itself
+		// so can't be passed as a single command here, hence making it the default
+		// use with care, obvs
+		viper.SetDefault("command", "")
 
 		// read configuration
 		audience := viper.GetString("audience")
