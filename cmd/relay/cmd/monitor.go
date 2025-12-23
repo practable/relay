@@ -57,9 +57,9 @@ export RELAY_MONITOR_SECRET=somesecret
 export RELAY_MONITOR_LOG_LEVEL=warn
 export RELAY_MONITOR_LOG_FORMAT=json
 export RELAY_MONITOR_LOG_FILE=/var/log/relay/monitor.log
-export RELAY_MONITOR_THRESHOLD_MS=200
-export RELAY_MONITOR_INTERVAL_MS=1000
-export RELAY_MONITOR_NO_RETRIGGER_WITHIN_S=60
+export RELAY_MONITOR_THRESHOLD=100ms
+export RELAY_MONITOR_INTERVAL=1s
+export RELAY_MONITOR_NO_RETRIGGER_WITHIN=60s
 export RELAY_MONITOR_TRIGGER_AFTER_MISSES=3
 export RELAY_MONITOR_TOPIC=canary-st-data
 # in production, this might be a script that sends an alert
@@ -264,5 +264,5 @@ ${RELAY_AUDIENCE}/session/${RELAY_MONITOR_TOPIC}
 }
 
 func init() {
-	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(monitorCmd)
 }

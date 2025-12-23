@@ -55,18 +55,18 @@ func Monitor(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 	}()
 
 	monitor(ctx, config)
-
 	log.Info("Relay monitor stopped")
+
 	parentwg.Done()
 
 }
 
-func monitor(ctx context.Context, config Config) error {
+func monitor(ctx context.Context, config Config) {
 
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return
 		default:
 			subctx, cancel := context.WithCancel(ctx)
 
@@ -128,7 +128,7 @@ func runOnce(ctx context.Context, config Config) error {
 				<-time.After(config.Interval)
 				now := big.NewInt(time.Now().UnixNano()).Bytes()
 				tx.Out <- (reconws.WsMessage{Data: []byte(now), Type: websocket.BinaryMessage})
-				log.Debug("tx sent message")
+				log.Trace("tx sent message")
 			}
 
 			time.Sleep(config.Interval)

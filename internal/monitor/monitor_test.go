@@ -68,7 +68,7 @@ func TestWithRelay(t *testing.T) {
 	time.Sleep(time.Second) // big safety margin to get crossbar running
 
 	// clean up any prior test file
-	err = os.Remove("triggered")
+	_ = os.Remove("triggered")
 
 	// Start tests
 	fmt.Printf("Starting relay monitor test\n")
