@@ -42,7 +42,7 @@ clientBufferLength (for each client's outgoing channel)
 */
 
 // rootCmd represents the base command when called without any subcommands
-var serveCmd = &cobra.Command{
+var monitorCmd = &cobra.Command{
 	Use:   "monitor",
 	Short: "monitor for websocket relay",
 	Long: `Monitor triggers a shell command when the latency of live canary connection to a relay serve instance exceeds a threshold.
@@ -114,11 +114,11 @@ ${RELAY_AUDIENCE}/session/${RELAY_MONITOR_TOPIC}
 		logLevel := viper.GetString("log_level")
 		logFormat := viper.GetString("log_format")
 		logFile := viper.GetString("log_file")
-		thresholdStr := viper.GetInt("threshold")
-		intervalStr := viper.GetInt("interval")
-		reconnectEveryStr := viper.GetInt("reconnect_every")
+		thresholdStr := viper.GetString("threshold")
+		intervalStr := viper.GetString("interval")
+		reconnectEveryStr := viper.GetString("reconnect_every")
 		triggerAfterMisses := viper.GetInt("trigger_after_misses")
-		noRetriggerWithinStr := viper.GetInt("no_retrigger_within")
+		noRetriggerWithinStr := viper.GetString("no_retrigger_within")
 		topic := viper.GetString("topic")
 		command := viper.GetString("command")
 
