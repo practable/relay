@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/gorilla/websocket"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
 	log "github.com/sirupsen/logrus"
@@ -86,7 +87,7 @@ func monitor(ctx context.Context, config Config) error {
 func runOnce(ctx context.Context, config Config) error {
 
 	// create a token
-	token, err := NewToken(config)
+	token, err := NewToken(config, time.Now())
 
 	if err != nil {
 		return errors.New("error creating token")
@@ -126,7 +127,8 @@ func runOnce(ctx context.Context, config Config) error {
 				// proceed
 				<-time.After(config.Interval)
 				now := big.NewInt(time.Now().UnixNano()).Bytes()
-				tx.Out <- (reconws.WsMessage{Data: []byte(now)})
+				tx.Out <- (reconws.WsMessage{Data: []byte(now), Type: websocket.BinaryMessage})
+				log.Debug("tx sent message")
 			}
 
 			time.Sleep(config.Interval)
@@ -146,6 +148,10 @@ func runOnce(ctx context.Context, config Config) error {
 				if !ok {
 					log.Error("rx receive channel closed")
 					return
+				}
+				if msg.Type != websocket.BinaryMessage {
+					log.Warnf("rx received non-binary message of type %d", msg.Type)
+					continue
 				}
 				b := big.NewInt(0).SetBytes(msg.Data)
 				sentTime := time.Unix(0, b.Int64())
@@ -198,10 +204,11 @@ func executeCommand(cmd string) error {
 	return c.Run()
 }
 
-func NewToken(c Config) (string, error) {
+// func NewToken creates a new JWT token for the relay
+// time is provided as a parameter to allow for easier testing
+func NewToken(c Config, now time.Time) (string, error) {
 	// create a token
 	var claims permission.Token
-	now := time.Now()
 	iat := now.Unix()
 	nbf := now.Add(-1 * time.Second).Unix()
 	exp := now.Add(c.ReconnectEvery).Unix()
