@@ -13,6 +13,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -198,10 +199,14 @@ func runOnce(ctx context.Context, config Config) error {
 
 // could mock this for testing, but easier to get it to touch a file in the current dir
 func executeCommand(cmd string) error {
+	// variable expansion first
 	// execute the command
-	args := strings.Fields(cmd)
+	expanded := os.ExpandEnv(cmd)
+	log.Info("executing command: " + expanded)
+	args := strings.Fields(expanded)
 	c := exec.Command(args[0], args[1:]...)
 	return c.Run()
+
 }
 
 // func NewToken creates a new JWT token for the relay
