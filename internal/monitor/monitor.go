@@ -145,6 +145,25 @@ func runOnce(ctx context.Context, config Config) error {
 			select {
 			case <-ctx.Done():
 				return
+			case <-time.After(config.NoRetriggerWithin):
+				log.Warn("no message received after waiting NoRetriggerWithin")
+				missCount++
+				if missCount >= config.TriggerAfterMisses {
+					// trigger command
+					log.Infof("triggering command: %s", config.Command)
+					// reset miss count
+					missCount = 0
+					// execute command
+					go func() {
+						err := executeCommand(config.Command)
+						if err != nil {
+							log.Errorf("error executing command: %s", err)
+						}
+					}()
+					// avoid restarting the relay immediately so it's not stuck forever in a start-up/restart loop
+					<-time.After(config.NoRetriggerWithin)
+				}
+
 			case msg, ok := <-rx.In:
 				if !ok {
 					log.Error("rx receive channel closed")

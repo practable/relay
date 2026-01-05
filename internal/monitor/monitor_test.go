@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -46,9 +45,6 @@ func TestWithRelay(t *testing.T) {
 	audience := "http://[::]:" + strconv.Itoa(accessPort)
 	target := "ws://127.0.0.1:" + strconv.Itoa(relayPort)
 
-	fmt.Printf("audience:%s\n", audience)
-	fmt.Printf("target:%s\n", target)
-
 	secret := "testsecret"
 
 	wg.Add(1)
@@ -71,7 +67,13 @@ func TestWithRelay(t *testing.T) {
 	_ = os.Remove("triggered")
 
 	// Start tests
-	fmt.Printf("Starting relay monitor test\n")
+
+	/*
+
+		Test that normal running relay does not trigger
+
+	*/
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// these values would be too much load for production, but make testing quicker
@@ -81,7 +83,7 @@ func TestWithRelay(t *testing.T) {
 		Command:            "touch triggered",
 		Interval:           100 * time.Millisecond,
 		LatencyThreshold:   10 * time.Millisecond,
-		NoRetriggerWithin:  10 * time.Second, // we won't retrigger during this test.
+		NoRetriggerWithin:  5 * time.Second,  // we won't retrigger during this test.
 		ReconnectEvery:     15 * time.Second, // we won't reconnect during this test.
 		Topic:              "test-topic",
 		TriggerAfterMisses: 1,
@@ -97,6 +99,12 @@ func TestWithRelay(t *testing.T) {
 
 	cancel() // stop monitor
 
+	/*
+
+		Test that a high latency will cause a trigger
+
+	*/
+
 	monitorConfig.LatencyThreshold = time.Microsecond // set unrealistic threshold to force trigger
 
 	ctx, cancel = context.WithCancel(context.Background())
@@ -109,14 +117,41 @@ func TestWithRelay(t *testing.T) {
 
 	assert.NoError(t, err, "expected file to be there after trigger")
 
-	time.Sleep(2 * time.Second) // collect some more logs
+	cancel() // stop monitor
+
+	/*
+
+		Test that a lack of messages will cause a re-trigger after the NoRetriggerWithin duration
+		Bearing in mind that the monitor must have successfully connected to the relay to
+		trigger if there are no messages
+
+	*/
+
+	// clean up any prior test file
+	err = os.Remove("triggered")
+	assert.NoError(t, err, "expected file to be cleaned up successfully between tests")
+
+	monitorConfig.LatencyThreshold = 10 * time.Millisecond // back to normal
+	monitorConfig.NoRetriggerWithin = 1 * time.Second      // shorten for the test
+
+	ctx, cancel = context.WithCancel(context.Background())
+	go monitor(ctx, monitorConfig)     //run the monitor
+	time.Sleep(500 * time.Millisecond) // let the monitor run a bit
+
+	close(closed) //stop relay
+	wg.Wait()     // wait for the relay to stop
+
+	time.Sleep(2 * time.Second) // let the monitor run longer than the time it should take to trigger
+
+	_, err = os.Stat("triggered")
+	assert.NoError(t, err, "expected monitor to trigger after relay was stopped")
+
 	// teardown test
 	_ = os.Remove("triggered")
-	cancel()      // stop monitor
-	close(closed) //stop relay
-	wg.Wait()
+	cancel() // stop monitor
 
 }
+
 func TestExecuteCommand(t *testing.T) {
 	debug := false
 
