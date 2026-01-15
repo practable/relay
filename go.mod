@@ -1,8 +1,8 @@
 module github.com/practable/relay
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.4
+toolchain go1.24.11
 
 require (
 	github.com/client9/reopen v1.0.0
@@ -25,6 +25,8 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/ory/viper v1.7.5
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
+	github.com/prometheus/client_golang v1.11.1
+	github.com/shirou/gopsutil/v4 v4.25.12
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
@@ -135,6 +137,7 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/ebitengine/purego v0.9.1 // indirect
 	github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.1.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
@@ -146,6 +149,7 @@ require (
 	github.com/go-kit/kit v0.9.0 // indirect
 	github.com/go-kit/log v0.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-openapi/analysis v0.21.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
@@ -173,7 +177,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/google/martian/v3 v3.2.1 // indirect
@@ -223,6 +227,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/pty v1.1.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/markbates/oncer v0.0.0-20181203154359-bf2de49a0be2 // indirect
@@ -250,7 +255,7 @@ require (
 	github.com/pkg/sftp v1.13.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
-	github.com/prometheus/client_golang v1.11.1 // indirect
+	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
@@ -272,12 +277,15 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tidwall/pretty v1.0.0 // indirect
+	github.com/tklauser/go-sysconf v0.3.16 // indirect
+	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.0.2 // indirect
 	github.com/xdg-go/stringprep v1.0.2 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	github.com/yuin/goldmark v1.4.13 // indirect
+	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.5 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.5 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.5 // indirect
@@ -298,7 +306,7 @@ require (
 	golang.org/x/mod v0.26.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect
 	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/telemetry v0.0.0-20250710130107-8d8967aff50b // indirect
 	golang.org/x/term v0.33.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
