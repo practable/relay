@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -719,7 +718,7 @@ func TestWriteToFile(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 
-	dat, err := ioutil.ReadFile(file)
+	dat, err := os.ReadFile(file)
 	assert.NoError(t, err)
 	assert.Equal(t, []byte(string0+string1), dat)
 

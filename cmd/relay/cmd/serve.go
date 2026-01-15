@@ -214,7 +214,7 @@ RELAY_TIDY_EVERY is an optional tuning parameter that can safely be left at the 
 				url := "localhost:" + strconv.Itoa(portProfile)
 				err := http.ListenAndServe(url, nil)
 				if err != nil {
-					log.Errorf(err.Error())
+					log.Error(err.Error())
 				}
 			}()
 		}

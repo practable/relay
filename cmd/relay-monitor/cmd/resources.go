@@ -88,6 +88,19 @@ func clamp(v, lo, hi float64) float64 {
 	return v
 }
 
+func cpuTotal(t cpu.TimesStat) float64 {
+	return t.User +
+		t.System +
+		t.Idle +
+		t.Nice +
+		t.Iowait +
+		t.Irq +
+		t.Softirq +
+		t.Steal +
+		t.Guest +
+		t.GuestNice
+}
+
 // resourcesCmd represents the resources command
 var resourcesCmd = &cobra.Command{
 	Use:   "resources",
@@ -189,7 +202,7 @@ scrape_configs:
 				t := times[0]
 
 				// total includes idle + iowait + user + system + ...
-				total := t.Total()
+				total := cpuTotal(t)
 				idle := t.Idle
 				// On Linux, Idle doesn't include iowait; if you want iowait treated as idle-ish,
 				// you can add t.Iowait here. I'm leaving it as "busy" because it represents CPU waiting.

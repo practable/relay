@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -108,7 +108,7 @@ func TestRelay(t *testing.T) {
 
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	var ping operations.SessionOKBody
 	err = json.Unmarshal(body, &ping)
@@ -122,7 +122,7 @@ func TestRelay(t *testing.T) {
 
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	var pong operations.SessionOKBody
 	err = json.Unmarshal(body, &pong)
@@ -187,7 +187,7 @@ func TestRelay(t *testing.T) {
 
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	err = json.Unmarshal(body, &ping)
 	assert.NoError(t, err)
@@ -200,7 +200,7 @@ func TestRelay(t *testing.T) {
 
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	err = json.Unmarshal(body, &pong)
 	assert.NoError(t, err)
@@ -254,7 +254,7 @@ func TestRelay(t *testing.T) {
 
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	if debug {
 		t.Log(string(body))
@@ -269,7 +269,7 @@ func TestRelay(t *testing.T) {
 	var denyMe operations.SessionOKBody
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 
 	if debug {
 		t.Log(string(body))
@@ -404,7 +404,7 @@ func TestRelay(t *testing.T) {
 	req.Header.Add("Authorization", bearer)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	bodyStr := string([]byte(body))
 	expStr := `{"code":"400","message":"bookingID has been deny-listed, probably because the session was cancelled"}` + "\n"
 
