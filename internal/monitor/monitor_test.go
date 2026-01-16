@@ -88,8 +88,8 @@ func TestWithRelay(t *testing.T) {
 		Topic:              "test-topic",
 		TriggerAfterMisses: 1,
 	}
-
-	go monitor(ctx, monitorConfig) //run the monitor
+	// no prometheus registry for this test
+	go monitor(ctx, monitorConfig, nil) //run the monitor
 
 	time.Sleep(500 * time.Millisecond) // let the monitor run a bit
 
@@ -109,7 +109,8 @@ func TestWithRelay(t *testing.T) {
 
 	ctx, cancel = context.WithCancel(context.Background())
 
-	go monitor(ctx, monitorConfig) //run the monitor
+	// no prometheus registry for this test
+	go monitor(ctx, monitorConfig, nil) //run the monitor
 
 	time.Sleep(500 * time.Millisecond) // let the monitor run a bit
 
@@ -135,8 +136,9 @@ func TestWithRelay(t *testing.T) {
 	monitorConfig.NoRetriggerWithin = 1 * time.Second      // shorten for the test
 
 	ctx, cancel = context.WithCancel(context.Background())
-	go monitor(ctx, monitorConfig)     //run the monitor
-	time.Sleep(500 * time.Millisecond) // let the monitor run a bit
+	// no prometheus registry for this test
+	go monitor(ctx, monitorConfig, nil) //run the monitor
+	time.Sleep(500 * time.Millisecond)  // let the monitor run a bit
 
 	close(closed) //stop relay
 	wg.Wait()     // wait for the relay to stop

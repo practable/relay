@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/practable/relay/internal/permission"
 	"github.com/practable/relay/internal/reconws"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -36,6 +37,59 @@ type Config struct {
 	RelaySecret        string
 	Topic              string
 	TriggerAfterMisses int
+	// Prometheus
+	PromRegistry *prometheus.Registry
+	NodeLabel    string
+}
+
+type promMetrics struct {
+	latencyHist prometheus.Observer
+	latencyLast prometheus.Gauge
+	breaches    prometheus.Counter
+	misses      prometheus.Counter
+}
+
+func newPromMetrics(reg *prometheus.Registry, node, audience, topic string) *promMetrics {
+	labels := prometheus.Labels{
+		"node":     node,
+		"audience": audience,
+		"topic":    topic,
+	}
+
+	latencyHist := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:        "relay_monitor_latency_seconds",
+		Help:        "Observed end-to-end latency of canary messages through the relay.",
+		ConstLabels: labels,
+		// buckets tuned for sub-second to multi-second websocket latency
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10},
+	})
+
+	latencyLast := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name:        "relay_monitor_latency_last_seconds",
+		Help:        "Last observed canary message latency through the relay.",
+		ConstLabels: labels,
+	})
+
+	breaches := prometheus.NewCounter(prometheus.CounterOpts{
+		Name:        "relay_monitor_latency_threshold_breaches_total",
+		Help:        "Count of messages whose latency exceeded the configured threshold.",
+		ConstLabels: labels,
+	})
+
+	misses := prometheus.NewCounter(prometheus.CounterOpts{
+		Name:        "relay_monitor_receive_timeouts_total",
+		Help:        "Count of receive timeouts (no message received within no_retrigger_within).",
+		ConstLabels: labels,
+	})
+
+	reg.MustRegister(latencyHist, latencyLast, breaches, misses)
+
+	return &promMetrics{
+		latencyHist: latencyHist,
+		latencyLast: latencyLast,
+		breaches:    breaches,
+		misses:      misses,
+	}
 }
 
 // Monitor runs a websocket relay monitor
@@ -55,14 +109,19 @@ func Monitor(closed <-chan struct{}, parentwg *sync.WaitGroup, config Config) {
 
 	}()
 
-	monitor(ctx, config)
+	var pm *promMetrics
+
+	if config.PromRegistry != nil {
+		pm = newPromMetrics(config.PromRegistry, config.NodeLabel, config.RelayAudience, config.Topic)
+	}
+	monitor(ctx, config, pm)
 	log.Info("Relay monitor stopped")
 
 	parentwg.Done()
 
 }
 
-func monitor(ctx context.Context, config Config) {
+func monitor(ctx context.Context, config Config, pm *promMetrics) {
 
 	for {
 		select {
@@ -76,7 +135,7 @@ func monitor(ctx context.Context, config Config) {
 				cancel()
 			}()
 
-			err := runOnce(subctx, config)
+			err := runOnce(subctx, config, pm)
 			if err != nil {
 				log.Errorf("error running monitor iteration: %s", err.Error())
 				<-time.After(30 * time.Second) //wait before retrying
@@ -85,7 +144,7 @@ func monitor(ctx context.Context, config Config) {
 	}
 }
 
-func runOnce(ctx context.Context, config Config) error {
+func runOnce(ctx context.Context, config Config, pm *promMetrics) error {
 
 	// create a token
 	token, err := NewToken(config, time.Now())
@@ -146,6 +205,9 @@ func runOnce(ctx context.Context, config Config) error {
 			case <-ctx.Done():
 				return
 			case <-time.After(config.NoRetriggerWithin):
+				if pm != nil {
+					pm.misses.Inc()
+				}
 				log.Warn("no message received after waiting NoRetriggerWithin")
 				missCount++
 				if missCount >= config.TriggerAfterMisses {
@@ -181,10 +243,19 @@ func runOnce(ctx context.Context, config Config) error {
 					continue
 				}
 				latency := time.Since(sentTime)
+				if pm != nil {
+					secs := latency.Seconds()
+					pm.latencyLast.Set(secs)
+					pm.latencyHist.Observe(secs)
+				}
+
 				// don't want to pollute logs with too much info, so use debug level
 				log.Debugf("message latency: %s", latency.String())
 				// check latency against threshold
 				if latency > config.LatencyThreshold {
+					if pm != nil {
+						pm.breaches.Inc()
+					}
 					// increment miss count
 					missCount++
 					log.Warnf("latency %s exceeds threshold %s (miss count %d)", latency.String(), config.LatencyThreshold.String(), missCount)

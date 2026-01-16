@@ -32,6 +32,8 @@ var rootCmd = &cobra.Command{
 relay serve := relays websockets, with jwt-token protected access via separate http API
 relay host := acts as a bridge between data and video streams on a machine, and the external relay
 relay client := provides a connection to the relay for custom purposes e.g. testing, automation.
+
+Note: for monitoring, use relay-monitor command
 `,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:

@@ -258,6 +258,7 @@ ${RELAY_AUDIENCE}/session/${RELAY_MONITOR_TOPIC}
 			RelaySecret:        secret,
 			Topic:              topic,
 			TriggerAfterMisses: triggerAfterMisses,
+			PromRegistry:       nil, //no prometheus in this version of the command
 		}
 
 		go monitor.Monitor(closed, &wg, config) //pass waitgroup to allow graceful shutdown

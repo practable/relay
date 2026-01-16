@@ -30,12 +30,13 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "relay-monitor",
 	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Long: `Use relay-monitor to share prometheus metrics from relay instances, 
+	as well as monitor the latency of a relay and restart if needed
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	relay-monitor resources # monitor CPU, memory and disk
+	relay-monitor server #monitor relay latency and restart if needed
+	
+	`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

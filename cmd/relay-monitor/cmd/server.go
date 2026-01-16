@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt" //ok in production https://medium.com/google-cloud/continuous-profiling-of-go-programs-96d4416af77b
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -27,6 +28,8 @@ import (
 	"github.com/practable/relay/internal/monitor"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -52,6 +55,8 @@ export RELAY_MONITOR_INTERVAL=1s
 export RELAY_MONITOR_NO_RETRIGGER_WITHIN=60s
 export RELAY_MONITOR_TRIGGER_AFTER_MISSES=3
 export RELAY_MONITOR_TOPIC=canary-st-data
+# since we are exporting prometheus metrics, set an appropriate address
+export RELAY_MONITOR_METRICS_ADDR=":9106"
 # in production, this might be a script that sends an alert
 # or kills the relay process for systemd to restart it
 export RELAY_MONITOR_COMMAND="echo 'latency exceeded'"
@@ -94,6 +99,7 @@ ${RELAY_AUDIENCE}/session/${RELAY_MONITOR_TOPIC}
 		viper.SetDefault("trigger_after_misses", 3)
 		viper.SetDefault("no_retrigger_within", "60s") //give relay time to restart and on-board connections
 		viper.SetDefault("topic", "canary-st-data")
+		viper.SetDefault("metrics_addr", ":9106")
 
 		// default action is to find the pid of "relay serve" and kill -9 it
 		// this needs to be run with sufficient permissions to do so
@@ -115,6 +121,33 @@ ${RELAY_AUDIENCE}/session/${RELAY_MONITOR_TOPIC}
 		noRetriggerWithinStr := viper.GetString("no_retrigger_within")
 		topic := viper.GetString("topic")
 		command := viper.GetString("command")
+
+		metricsAddr := viper.GetString("metrics_addr")
+		if metricsAddr == "" {
+			metricsAddr = ":9106"
+		}
+
+		node := os.Getenv("NODE_NAME")
+		if node == "" {
+			h, _ := os.Hostname()
+			node = h
+		}
+
+		// we will do metrics so set this registry
+		reg := prometheus.NewRegistry()
+
+		// Start metrics endpoint
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("ok\n")) })
+
+		go func() {
+			srv := &http.Server{Addr: metricsAddr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+			log.Infof("monitor metrics listening on %s", metricsAddr)
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Errorf("metrics server error: %v", err)
+			}
+		}()
 
 		// Sanity checks
 		ok := true
@@ -248,6 +281,8 @@ ${RELAY_AUDIENCE}/session/${RELAY_MONITOR_TOPIC}
 			RelaySecret:        secret,
 			Topic:              topic,
 			TriggerAfterMisses: triggerAfterMisses,
+			PromRegistry:       reg,
+			NodeLabel:          node,
 		}
 
 		go monitor.Monitor(closed, &wg, config) //pass waitgroup to allow graceful shutdown
